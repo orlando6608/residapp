@@ -134,8 +134,8 @@ Cada guía tiene además una **página de flujo** (`pruebas-N-…-flujo.html`): 
 
 | Documento | Notas | Qué hay que completar | Estado |
 | --- | --- | --- | --- |
-| [pruebas-1-auxiliar-enfermeria.html](pruebas-1-auxiliar-enfermeria.html) | `pruebas-1-auxiliar-enfermeria.notas.json` | Guía 1: Auxiliar y Enfermería (13 pruebas, 4 imprescindibles) | Pendiente |
-| [pruebas-2-medicina-indicaciones.html](pruebas-2-medicina-indicaciones.html) | `pruebas-2-medicina-indicaciones.notas.json` | Guía 2: escalado a Medicina, indicaciones y cierre del episodio (13 pruebas, 6 imprescindibles) | Pendiente |
+| [pruebas-1-auxiliar-enfermeria.html](pruebas-1-auxiliar-enfermeria.html) | `pruebas-1-auxiliar-enfermeria.notas.json` | Guía 1: Auxiliar y Enfermería (14 pruebas, 5 imprescindibles) | Pendiente |
+| [pruebas-2-medicina-indicaciones.html](pruebas-2-medicina-indicaciones.html) | `pruebas-2-medicina-indicaciones.notas.json` | Guía 2: escalado a Medicina, indicaciones y cierre del episodio (14 pruebas, 6 imprescindibles) | Pendiente |
 | [pruebas-3-basal-barthel.html](pruebas-3-basal-barthel.html) | `pruebas-3-basal-barthel.notas.json` | Guía 3: basal y Barthel (7 pruebas, 3 imprescindibles) | Pendiente |
 | [pruebas-4-direccion.html](pruebas-4-direccion.html) | `pruebas-4-direccion.notas.json` | Guía 4: Dirección Clínica, con la consulta auditada del expediente (10 pruebas, 3 imprescindibles) | Pendiente |
 | [pruebas-5-administracion.html](pruebas-5-administracion.html) | `pruebas-5-administracion.notas.json` | Guía 5: Administración del centro (19 pruebas, 3 imprescindibles) | Pendiente |
