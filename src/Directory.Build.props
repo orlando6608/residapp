@@ -3,7 +3,7 @@
   <!-- Versión única de ResidApp (versionado semántico MAYOR.MENOR.PARCHE). La fija release-please al fusionar el PR de release;
        a mano solo se toca con el visto bueno de Orlando. Mientras empiece por 0 es preproducción, sin datos reales. -->
   <PropertyGroup>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
   </PropertyGroup>
 
 </Project>
