@@ -219,7 +219,7 @@ public class FichaAntecedentesEnfermedadesTests
                 """, new { CenterId = admin.CenterId.Value, ResidentId = residentId.Value, Section = section, State = state, Count = count, AccountId = nurse.AccountId.Value }, transaction));
         }
 
-        Assert.Contains("CK_fav_apartado", (await VersionFailsAsync("MEDICACION", "NO_REFIERE", 0)).Message);
+        Assert.Matches("CK_fav_(apartado|elementos)", (await VersionFailsAsync("OTRO", "NO_REFIERE", 0)).Message);
         Assert.Contains("CK_fav_elementos", (await VersionFailsAsync("ENFERMEDADES", "CON_ENTRADAS", 0)).Message);
         Assert.Contains("CK_fav_elementos", (await VersionFailsAsync("ENFERMEDADES", "CON_ENTRADAS", 101)).Message);
         // En enfermedades, «No refiere» y «No consta» no admiten ningún elemento (las alergias sí admiten intolerancias).

@@ -30,6 +30,28 @@ public class ReferralReportPdfRendererTests
         Assert.All(rendered, page => Assert.Equal(expected, page));
     }
 
+    [Fact]
+    public void ConSesentaMedicamentos_SeGeneraElPdfSinFallar_YLaListaOcupaSuSitio()
+    {
+        var medication = new List<string> { "Medicación habitual:", "Copia informativa: la fuente es la receta electrónica o la hoja de tratamiento oficial del centro; si no coinciden, manda la oficial." };
+        medication.AddRange(Enumerable.Range(1, 60).Select(i => $"Fármaco {i}, 1 g, cada 8 h"));
+        var content = ReferralReportContent.Compose(
+            [
+                new("Identificación del residente y del centro", true, ["Nombre: Residente de prueba"]),
+                new("Medicación habitual", true, medication),
+                new("Evolución", true, ["Sin datos registrados."]),
+            ],
+            new ReferralReportInput("Desaturación que no remonta con oxigenoterapia.", null));
+        var signature = new ReferralReportSignature(
+            SystemProfile.Enfermeria, "test-pdf", new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero), "huella", "Ana Ruiz Peña (ficticia)");
+
+        var pdf = new ReferralReportPdfRenderer().Render("Residente de prueba", content, signature);
+
+        using var document = PdfReader.Open(new MemoryStream(pdf), PdfDocumentOpenMode.Import);
+        // Sesenta líneas de medicación no caben en una página: el informe sigue en las siguientes sin perder lo que viene detrás.
+        Assert.True(document.PageCount >= 2);
+    }
+
     /// <summary>El encabezado lleva el icono de la app: la primera página dibuja una imagen.</summary>
     [Fact]
     public void Encabezado_LlevaElIconoDeLaApp()

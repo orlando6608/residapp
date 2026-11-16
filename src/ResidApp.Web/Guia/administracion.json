@@ -443,8 +443,8 @@
         { "texto": "Pulsa **Conceder** para darlo o **Revocar** para quitarlo.", "botones": ["Conceder", "Revocar"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla; con el de antecedentes, rellenar o cambiar las alergias y las enfermedades e intervenciones." },
-        { "para": "Medicina", "texto": "Con los permisos de basal puede crear, completar y firmar el basal; con el de antecedentes, rellenar o cambiar las alergias y las enfermedades e intervenciones." },
+        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual." },
+        { "para": "Medicina", "texto": "Con los permisos de basal puede crear, completar y firmar el basal; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual." },
         { "para": "Dirección / Coordinación Clínica", "texto": "Con cada permiso se le abren la lectura clínica con finalidad declarada, los rangos, los plazos o los indicadores y la calidad de proceso." }
       ],
       "dudas": [

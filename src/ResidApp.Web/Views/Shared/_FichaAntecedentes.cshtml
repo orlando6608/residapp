@@ -1,12 +1,13 @@
 @using ResidApp.Domain.Residents
 @using ResidApp.Web.Models
 @model HealthBackgroundCardModel
-@* Ficha de antecedentes de salud, fases 1 y 2: alergias e intolerancias a medicamentos (script 0094) y enfermedades e intervenciones (script 0096). La ven Enfermería y
+@* Ficha de antecedentes de salud, fases 1 a 3: alergias e intolerancias a medicamentos (script 0094), enfermedades e intervenciones (script 0096) y medicación habitual (script 0097). La ven Enfermería y
    Medicina; la cambian con el permiso que da Administración. «Pendiente», «No refiere» y «No consta» se dicen distinto, y la ficha no dice «revisado»: dice cuándo y quién la
    modificó por última vez. Un apartado ilegible no oculta al otro. *@
 @{
     var allergies = Model.View.Allergies;
     var conditions = Model.View.Conditions;
+    var medication = Model.View.Medication;
     var canEdit = Model.View.CanEdit;
 }
 <section class="card mb-3" aria-labelledby="antecedentes-titulo">
@@ -85,6 +86,45 @@
         {
             <a asp-controller="FichaAntecedentes" asp-action="Enfermedades" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-primary btn-lg w-100 mt-2">
                 @(conditions is null && Model.View.UnreliableConditionsVersion is null ? "Rellenar las enfermedades e intervenciones" : "Cambiar las enfermedades e intervenciones")
+            </a>
+        }
+
+        <hr />
+        <h3 class="h6">@HealthBackgroundDisplay.MedicationTitle</h3>
+        @if (Model.View.UnreliableMedicationVersion is not null)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Ficha con error: este dato no es fiable.</strong> La última versión guardada de la medicación habitual está incompleta, así que no se enseña
+                ni se imprime en el informe de derivación. Contrasta con la receta electrónica o la hoja de tratamiento oficial del centro y con el residente o su familia@(canEdit ? ", y vuelve a rellenarla: se guardará como una versión nueva que la corrige." : ". Avisa a quien pueda rellenarla.")
+            </div>
+        }
+        else if (medication is null)
+        {
+            <p><span class="badge text-bg-warning">Pendiente</span> @HealthBackgroundDisplay.MedicationPending</p>
+        }
+        else
+        {
+            <p class="mb-2">@HealthBackgroundDisplay.MedicationState(medication.Content.State)</p>
+            <p class="text-muted small mb-2">@HealthBackgroundDisplay.MedicationCopyNotice</p>
+            @if (medication.Content.Items.Count > 0)
+            {
+                <ul class="mb-2">
+                    @foreach (var item in medication.Content.Items)
+                    {
+                        <li>@HealthBackgroundDisplay.MedicationLine(item)</li>
+                    }
+                </ul>
+            }
+            @if (HealthBackgroundDisplay.Source(medication.Content.Source) is { } medicationSource)
+            {
+                <p class="mb-1">@medicationSource</p>
+            }
+            <p class="text-muted small mb-2">@HealthBackgroundDisplay.MedicationLastModified(medication)</p>
+        }
+        @if (canEdit)
+        {
+            <a asp-controller="FichaAntecedentes" asp-action="Medicacion" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-primary btn-lg w-100 mt-2">
+                @(medication is null && Model.View.UnreliableMedicationVersion is null ? "Rellenar la medicación habitual" : "Cambiar la medicación habitual")
             </a>
         }
         else

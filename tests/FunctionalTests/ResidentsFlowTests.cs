@@ -875,8 +875,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
 
         const string communications = "Contacto telefónico con SEM a las 18 h. Avisamos a la familia del traslado a Urgencias.";
         var referralPage = await nurse.GetStringAsync($"/Enfermeria/Derivar?eventoId={eventId}");
-        Assert.Contains("la medicación habitual. Las", WebUtility.HtmlDecode(referralPage));
-        Assert.Contains("alergias a medicamentos y las enfermedades e intervenciones salen solas de la ficha del residente", WebUtility.HtmlDecode(referralPage));
+        Assert.Contains("Las alergias a medicamentos, las", WebUtility.HtmlDecode(referralPage));
+        Assert.Contains("enfermedades e intervenciones y la medicación habitual salen solas de la ficha del residente", WebUtility.HtmlDecode(referralPage));
         Assert.Contains("aria-describedby=\"derivar-informacion-ayuda\"", referralPage);
         var preview = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Derivar", new FormUrlEncodedContent(new Dictionary<string, string>
         {
@@ -907,6 +907,8 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Ficha pendiente de rellenar en este centro", preview);
         Assert.Contains("Enfermedades e intervenciones", preview);
         Assert.Contains("No equivale a «sin enfermedades»", preview);
+        Assert.Contains("Medicación habitual", preview);
+        Assert.Contains("No equivale a «no toma medicación»", preview);
         Assert.Contains(communications, preview);
         Assert.Contains("Informe de derivación firmado.", signed);
         Assert.Contains(communications, signed);
@@ -1902,6 +1904,103 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.DoesNotContain("Revisa que sea la persona correcta.", byDoctorForm);
         Assert.DoesNotContain("Revisa que sea la persona correcta.", byAuxiliar);
         Assert.DoesNotContain("Intervención Beta", byAuxiliar);
+    }
+
+    [Fact]
+    public async Task FichaDeAntecedentes_MedicacionHabitual_SeRellenaConPermiso_ConDosisYPautaObligatorias_ConLaAppEntera()
+    {
+        // Ficha de antecedentes de salud, fase 3 (script 0097): con el permiso HEALTH_BACKGROUND_EDIT, Enfermería guarda la lista con nombre, dosis y pauta (obligatorias; «no consta» vale);
+        // una fila sin dosis, una pauta que es un guion, o «No refiere» con filas se rechazan sin guardar; la ayuda del DPO está visible y no hay cuadros de texto largos; Medicina la ve con la
+        // cautela de que es una copia; una Auxiliar no llega al formulario. Los fármacos son inventados.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Medicacion Funcional");
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, residentId));
+        var formUrl = $"/FichaAntecedentes/Medicacion?residenteId={residentId}";
+        var withoutPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync(formUrl));
+        var pending = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var (nurseAccount, nurseScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @nurseSubject", new { nurseSubject });
+        var profilePage = await admin.GetStringAsync($"/Administracion/PerfilUsuario?cuentaId={nurseAccount}&ambitoId={nurseScope}");
+        await admin.PostAsync("/Administracion/PermisoPerfil", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(profilePage, "__RequestVerificationToken"), ["cuentaId"] = nurseAccount.ToString(),
+            ["ambitoId"] = nurseScope.ToString(), ["permiso"] = "HEALTH_BACKGROUND_EDIT", ["conceder"] = "true",
+        }));
+        var form = WebUtility.HtmlDecode(await nurse.GetStringAsync(formUrl));
+        var token = ExtractValue(form, "__RequestVerificationToken");
+
+        Task<string> PostAsync(Dictionary<string, string> fields) => PostFichaAsync(nurse, token, residentId, fields, "Medicacion");
+        var withoutChoice = await PostAsync(new() { ["Form.VersionVista"] = "0" });
+        var withoutDose = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "0", ["Form.Estado"] = "CON_ENTRADAS",
+            ["Form.Filas[0].Nombre"] = "Fármaco Alfa", ["Form.Filas[0].Dosis"] = "", ["Form.Filas[0].Pauta"] = "cada 8 h",
+        });
+        var dashSchedule = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "0", ["Form.Estado"] = "CON_ENTRADAS",
+            ["Form.Filas[0].Nombre"] = "Fármaco Alfa", ["Form.Filas[0].Dosis"] = "1 g", ["Form.Filas[0].Pauta"] = "-",
+        });
+        var noneWithRows = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "0", ["Form.Estado"] = "NO_REFIERE",
+            ["Form.Filas[0].Nombre"] = "Fármaco Alfa", ["Form.Filas[0].Dosis"] = "1 g", ["Form.Filas[0].Pauta"] = "cada 8 h",
+        });
+        var rejectedCount = await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.fichas_antecedentes_versiones WHERE residente_id = @residentId", new { residentId });
+        var saved = await PostAsync(new()
+        {
+            ["Form.VersionVista"] = "0", ["Form.Estado"] = "CON_ENTRADAS", ["Form.Fuente"] = "RECETA_ELECTRONICA",
+            ["Form.Filas[0].Nombre"] = "Fármaco Alfa", ["Form.Filas[0].Dosis"] = "1 g", ["Form.Filas[0].Pauta"] = "cada 8 h",
+            ["Form.Filas[1].Nombre"] = "Fármaco Beta", ["Form.Filas[1].Dosis"] = "no consta", ["Form.Filas[1].Pauta"] = "si precisa",
+        });
+        var stale = await PostAsync(new() { ["Form.VersionVista"] = "0", ["Form.Estado"] = "NO_CONSTA" });
+        var byDoctor = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Residente?residenteId={residentId}"));
+        var byDoctorForm = WebUtility.HtmlDecode(await doctor.GetStringAsync(formUrl));
+        var byAuxiliar = WebUtility.HtmlDecode(await auxiliar.GetStringAsync(formUrl));
+
+        Assert.Contains("Medicación habitual", pending);
+        Assert.Contains("No equivale a «no toma medicación»", pending);
+        Assert.DoesNotContain("Rellenar la medicación habitual", pending);
+        Assert.Contains("hace falta el permiso «Rellenar y cambiar la ficha de antecedentes de salud»", withoutPermission);
+        // La ayuda del DPO está visible, con la cautela de que es una copia; sin cuadros de texto largos; nada de observaciones.
+        Assert.Contains("Copia informativa: la fuente es la receta electrónica o la hoja de tratamiento oficial del centro; si no coinciden, manda la oficial.", form);
+        Assert.Contains("No anotes si la toma o no", form);
+        Assert.DoesNotContain("<textarea", form);
+        Assert.Contains("Revisa que sea la persona correcta.", form);
+        Assert.Contains("autocomplete=\"off\"", form);
+        var stateRadios = Regex.Matches(form, "<input[^>]*name=\"Form.Estado\"[^>]*>").Select(m => m.Value).ToList();
+        Assert.Equal(3, stateRadios.Count);
+        Assert.All(stateRadios, radio => Assert.DoesNotContain("checked", radio));
+        foreach (var rejected in new[] { withoutChoice, withoutDose, dashSchedule, noneWithRows })
+        {
+            Assert.Contains("Revisa la ficha:", rejected);
+        }
+        Assert.Equal(0, rejectedCount);
+        Assert.Contains("Ficha de medicación habitual guardada.", saved);
+        Assert.Contains("Fármaco Alfa, 1 g, cada 8 h", saved);
+        Assert.Contains("Fármaco Beta, no consta, si precisa", saved);
+        Assert.Contains("Fuente: receta electrónica.", saved);
+        Assert.Contains("Cambiar la medicación habitual", saved);
+        Assert.DoesNotContain("revisad", saved, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Otra persona ha guardado esta ficha mientras la editabas", stale);
+        Assert.Contains("value=\"Fármaco Alfa\"", stale);
+        Assert.Contains("value=\"no consta\"", stale);
+        Assert.Matches("<input[^>]*name=\"Form.Estado\"[^>]*value=\"CON_ENTRADAS\"[^>]*checked", stale);
+        Assert.Contains("Última modificación el", stale);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.fichas_antecedentes_versiones WHERE residente_id = @residentId AND apartado_codigo = 'MEDICACION'", new { residentId }));
+        Assert.Contains("Fármaco Beta, no consta, si precisa", byDoctor);
+        Assert.Contains(ResidApp.Web.Models.HealthBackgroundDisplay.MedicationCopyNotice, byDoctor);
+        Assert.DoesNotContain("Revisa que sea la persona correcta.", byDoctorForm);
+        Assert.DoesNotContain("Revisa que sea la persona correcta.", byAuxiliar);
+        Assert.DoesNotContain("Fármaco Beta", byAuxiliar);
     }
 
     private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields, string action = "Alergias")

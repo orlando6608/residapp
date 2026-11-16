@@ -178,6 +178,93 @@ public sealed class FichaAntecedentesController(
         }
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Medicacion(Guid residenteId, CancellationToken ct)
+    {
+        var loaded = await LoadAsync(residenteId, ct);
+        if (loaded is null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var (activeScope, resident, view) = loaded.Value;
+        if (!view.CanEdit)
+        {
+            TempData["Error"] = NoPermissionMessage;
+            return BackToRecord(activeScope, residenteId);
+        }
+
+        var form = MedicationFormModel.From(residenteId, view.Medication);
+        if (view.UnreliableMedicationVersion is { } unreliable)
+        {
+            form.VersionVista = unreliable;
+            return View(new MedicationEditViewModel(resident, form,
+                "La última versión guardada de esta ficha está incompleta y no es fiable. Vuelve a rellenar la medicación habitual con lo que conste en la receta o en la hoja de tratamiento y guarda: se guardará como una versión nueva que la corrige.",
+                RecordController(activeScope), MedicationLastModified(view)));
+        }
+        if (TempData["FichaConflicto"] is string)
+        {
+            return View(new MedicationEditViewModel(resident, form,
+                "Otra persona ha guardado esta ficha mientras la editabas. Aquí tienes la versión actual: revísala y, si hace falta, vuelve a hacer tu cambio.", RecordController(activeScope), MedicationLastModified(view)));
+        }
+        return View(new MedicationEditViewModel(resident, form, null, RecordController(activeScope), MedicationLastModified(view)));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Medicacion([Bind(Prefix = "Form")] MedicationFormModel form, CancellationToken ct)
+    {
+        var loaded = await LoadAsync(form.ResidenteId, ct);
+        if (loaded is null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var (activeScope, resident, view) = loaded.Value;
+        if (!view.CanEdit)
+        {
+            TempData["Error"] = NoPermissionMessage;
+            return BackToRecord(activeScope, form.ResidenteId);
+        }
+
+        MedicationRecordContent content;
+        try
+        {
+            content = form.ToContent();
+        }
+        catch (DomainValidationException)
+        {
+            return View(new MedicationEditViewModel(resident, form, MedicationInvalidMessage, RecordController(activeScope), MedicationLastModified(view)));
+        }
+
+        var result = await health.SaveMedicationAsync(new SaveMedicationCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(form.ResidenteId), form.VersionVista, form.ReasonOrNull(), content), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = "Ficha de medicación habitual guardada.";
+            return BackToRecord(activeScope, form.ResidenteId);
+        }
+
+        switch (result.Error!.Code)
+        {
+            case ApplicationFailureCode.Conflict:
+                TempData["FichaConflicto"] = "1";
+                return RedirectToAction(nameof(Medicacion), new { residenteId = form.ResidenteId });
+            case ApplicationFailureCode.InvalidInput:
+                return View(new MedicationEditViewModel(resident, form, MedicationInvalidMessage, RecordController(activeScope), MedicationLastModified(view)));
+            default:
+                TempData["Error"] = result.Error.Message;
+                return BackToRecord(activeScope, form.ResidenteId);
+        }
+    }
+
+    private static string? MedicationLastModified(HealthBackgroundView view) =>
+        view.Medication is { } record ? HealthBackgroundDisplay.MedicationLastModified(record) : null;
+
+    private const string MedicationInvalidMessage =
+        "Revisa la ficha: elige una opción; si toma medicación, escribe al menos un medicamento con su dosis y su pauta (o «no consta») y no marques «No refiere medicación habitual»; " +
+        "si no es el primer registro, indica si ha cambiado algo o corriges un error; y cada texto tiene que ser corto, de una sola línea y sin repetirse.";
+
     private const string NoPermissionMessage =
         "Para rellenar o cambiar la ficha hace falta el permiso «Rellenar y cambiar la ficha de antecedentes de salud»: pídeselo a Administración.";
 

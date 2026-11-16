@@ -15,8 +15,11 @@ public sealed record AllergyRecord(int Version, AllergyRecordContent Content, Sy
 /// <summary>La versión vigente del apartado de enfermedades e intervenciones (script 0096), con lo mismo que AllergyRecord.</summary>
 public sealed record ConditionRecord(int Version, ConditionRecordContent Content, SystemProfile ModifiedByProfile, DateTimeOffset ModifiedAt);
 
+/// <summary>La versión vigente del apartado de medicación habitual (script 0097), con lo mismo que AllergyRecord.</summary>
+public sealed record MedicationRecord(int Version, MedicationRecordContent Content, SystemProfile ModifiedByProfile, DateTimeOffset ModifiedAt);
+
 /// <summary>
-/// Ficha de antecedentes de salud, fases 1 y 2: alergias e intolerancias a medicamentos (script 0094) y enfermedades e intervenciones (script 0096). Cada guardado es una versión nueva y no se pisa la anterior;
+/// Ficha de antecedentes de salud, fases 1 a 3: alergias e intolerancias a medicamentos (script 0094) y enfermedades e intervenciones (script 0096). Cada guardado es una versión nueva y no se pisa la anterior;
 /// «pendiente» es que no hay ninguna. Guardar exige haber visto la versión vigente (expectedVersion, 0 si no había ninguna): si otra persona guardó mientras
 /// tanto, falla con HEALTH_BACKGROUND_REVISION_CONFLICT en vez de pisarla. Cada guardado deja HEALTH_BACKGROUND_SAVE en dbo.eventos_auditoria, en la misma
 /// transacción y sin el texto de la ficha. El permiso HEALTH_BACKGROUND_EDIT se vuelve a comprobar dentro de la transacción.
@@ -36,6 +39,13 @@ public interface IHealthBackgroundRepository
     /// <summary>Como SaveAllergiesAsync, para el apartado de enfermedades e intervenciones (sus versiones se cuentan aparte).</summary>
     Task<int> SaveConditionsAsync(
         HealthBackgroundTarget target, int expectedVersion, HealthBackgroundReason reason, ConditionRecordContent content, CancellationToken ct = default);
+
+    /// <summary>La versión vigente del apartado de medicación habitual, o null si está pendiente.</summary>
+    Task<MedicationRecord?> ReadMedicationAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default);
+
+    /// <summary>Como SaveAllergiesAsync, para el apartado de medicación habitual (sus versiones se cuentan aparte).</summary>
+    Task<int> SaveMedicationAsync(
+        HealthBackgroundTarget target, int expectedVersion, HealthBackgroundReason reason, MedicationRecordContent content, CancellationToken ct = default);
 }
 
 /// <summary>La versión vigente existe pero no se puede dar por fiable (no tiene todos sus elementos o no cumple las reglas del apartado; la BD no puede impedirlo del todo,
