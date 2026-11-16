@@ -161,9 +161,9 @@ public sealed class PlataformaController(PlatformApplicationService service, IMo
         var allConditions = module is not null && module.PrivacyConditions.All(code => form.Condiciones.Contains(code));
         var result = await service.ChangeCenterModuleAsync(new ChangeCenterModuleCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(form.CentroId), form.ModuloCodigo, enable, form.VigenteDesde, form.VigenteHasta,
-            form.ReferenciaAnexo, form.VersionAnexo, allConditions, form.MotivoBaja, MadridInstant(form.SolicitudRecibidaEn), form.Canal, form.ReferenciaSolicitud), ct);
+            form.ReferenciaAnexo, form.VersionAnexo, allConditions, form.MotivoBaja, MadridInstant(form.SolicitudRecibidaEn), form.Canal), ct);
         TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
-            ? (enable ? "Módulo activado. Queda en la auditoría del centro; avisa por escrito a su persona autorizada." : "Módulo apagado. Queda en la auditoría del centro; avisa por escrito a su persona autorizada.")
+            ? $"{(enable ? "Módulo activado" : "Módulo apagado")} (referencia {result.Value}). Anota esa referencia en tu respuesta al centro. Queda en la auditoría del centro; avisa por escrito a su persona autorizada."
             : result.Error!.Message;
         return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
     }

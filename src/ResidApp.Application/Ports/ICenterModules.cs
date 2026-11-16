@@ -14,9 +14,9 @@ public interface ICenterModuleRepository
 
     /// <summary>
     /// Añade el cambio (alta, renovación o baja) con el número siguiente y la auditoría <c>CENTER_MODULE_ENABLE</c> o <c>CENTER_MODULE_DISABLE</c> (solo centro y código del módulo).
-    /// Centro inexistente o reservado: MODULE_INVALID. Apagar un módulo que ya está apagado: MODULE_CHANGE_CONFLICT. Si faltan los módulos de los que depende: MODULE_DEPENDENCY_MISSING.
+    /// Devuelve la referencia de la petición, que asigna ResidApp (<see cref="NewCenterModuleChangeRules.RequestReferenceFor"/>). Centro inexistente o reservado: MODULE_INVALID. Apagar un módulo que ya está apagado: MODULE_CHANGE_CONFLICT. Si faltan los módulos de los que depende: MODULE_DEPENDENCY_MISSING.
     /// </summary>
-    Task AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default);
+    Task<string> AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default);
 
     /// <summary>Todos los cambios de módulos de un centro, el más reciente primero, para la pantalla de Plataforma. Sin la cuenta de quien los hizo.</summary>
     Task<IReadOnlyList<PlatformModuleChange>> ListChangesAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default);

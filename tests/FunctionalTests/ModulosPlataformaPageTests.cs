@@ -9,7 +9,7 @@ namespace ResidApp.FunctionalTests;
 
 /// <summary>
 /// La sección «Módulos opcionales» del detalle de un centro en Plataforma y el panel de vencimientos de la lista (ADR 0015, incremento 4), por HTTP y con SQL real: solo Plataforma
-/// enciende y apaga, con la petición del centro; la referencia no se repite; el apagado se nota en el estado; los vencimientos próximos y los vencidos sin renovar se enseñan.
+/// enciende y apaga, con la petición del centro; la referencia de la petición la asigna ResidApp y se enseña; el apagado se nota en el estado; los vencimientos próximos y los vencidos sin renovar se enseñan.
 /// </summary>
 public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<WebAppFactory>
 {
@@ -60,20 +60,20 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
         return WebUtility.HtmlDecode(await (await client.PostAsync($"/Plataforma/{action}", new FormUrlEncodedContent(all))).Content.ReadAsStringAsync());
     }
 
-    private static List<KeyValuePair<string, string>> Request(string reference, string channel = "Correo") =>
+    private static List<KeyValuePair<string, string>> Request(string channel = "Correo") =>
     [
-        new("SolicitudRecibidaEn", DateTime.UtcNow.AddHours(-6).ToString("yyyy-MM-ddTHH:mm")), new("Canal", channel), new("ReferenciaSolicitud", reference),
+        new("SolicitudRecibidaEn", DateTime.UtcNow.AddHours(-6).ToString("yyyy-MM-ddTHH:mm")), new("Canal", channel),
     ];
 
-    private static List<KeyValuePair<string, string>> Activation(Guid center, string reference, DateOnly from, DateOnly until, bool allConditions = true)
+    private static List<KeyValuePair<string, string>> Activation(Guid center, DateOnly from, DateOnly until, bool allConditions = true, string annex = "ANX-FUNC-1")
     {
         var fields = new List<KeyValuePair<string, string>>
         {
             new("CentroId", center.ToString()), new("ModuloCodigo", CenterModules.DictadoVoz), new("VigenteDesde", from.ToString("yyyy-MM-dd")),
-            new("VigenteHasta", until.ToString("yyyy-MM-dd")), new("ReferenciaAnexo", "ANX-FUNC-1"), new("VersionAnexo", "1"),
+            new("VigenteHasta", until.ToString("yyyy-MM-dd")), new("ReferenciaAnexo", annex), new("VersionAnexo", "1"),
         };
         fields.AddRange(CenterModules.All[0].PrivacyConditions.Take(allConditions ? int.MaxValue : 2).Select(c => new KeyValuePair<string, string>("Condiciones", c)));
-        fields.AddRange(Request(reference));
+        fields.AddRange(Request());
         return fields;
     }
 
@@ -93,39 +93,39 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
         var page = $"/Plataforma/Centro?centroId={center}";
 
         var before = WebUtility.HtmlDecode(await client.GetStringAsync(page));
-        var activated = await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-FUNC-1", Today.AddDays(-1), Today.AddDays(60)));
-        var repeated = await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-FUNC-1", Today.AddDays(-1), Today.AddDays(60)));
+        var activated = await PostAsync(client, page, "ActivarModulo", Activation(center, Today.AddDays(-1), Today.AddDays(60)));
+        var renewed = await PostAsync(client, page, "ActivarModulo", Activation(center, Today.AddDays(-1), Today.AddDays(90)));
         var disabled = await PostAsync(client, page, "ApagarModulo", [
-            new("CentroId", center.ToString()), new("ModuloCodigo", CenterModules.DictadoVoz), new("MotivoBaja", "PeticionCentro"), .. Request("SOL-FUNC-2", "Telefono")]);
+            new("CentroId", center.ToString()), new("ModuloCodigo", CenterModules.DictadoVoz), new("MotivoBaja", "PeticionCentro"), .. Request("Telefono")]);
 
         Assert.Contains("Módulos opcionales", before);
         Assert.Contains("Dictado por voz", before);
         Assert.Contains("Nunca activado", before);
         Assert.DoesNotContain("Apagar el módulo ahora", before);
-        Assert.Contains("Módulo activado.", activated);
+        Assert.Contains("Módulo activado (referencia DICTADO_VOZ-0001)", activated);
         Assert.Contains($"Activo hasta el {Today.AddDays(60):dd/MM/yyyy}", activated);
         Assert.Contains("Apagar el módulo ahora", activated);
-        Assert.Contains("SOL-FUNC-1", activated);
-        Assert.Contains("Esa referencia de solicitud ya se usó para este centro y módulo", repeated);
-        Assert.Contains("Módulo apagado.", disabled);
+        Assert.Contains("DICTADO_VOZ-0001", activated);
+        Assert.Contains("Módulo activado (referencia DICTADO_VOZ-0002)", renewed);
+        Assert.Contains("Módulo apagado (referencia DICTADO_VOZ-0003)", disabled);
         Assert.Contains(">Apagado<", disabled);
         Assert.Contains("Apagado: Petición del centro", disabled);
         Assert.Contains("Teléfono", disabled);
-        Assert.Equal(2, await RowsAsync(center));
-        Assert.Equal(2, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @center AND tipo_recurso = 'CENTER_MODULE'", new { center }));
+        Assert.Equal(3, await RowsAsync(center));
+        Assert.Equal(3, await CountAsync("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @center AND tipo_recurso = 'CENTER_MODULE'", new { center }));
     }
 
     [Fact]
-    public async Task Sin_todas_las_condiciones_marcadas_con_una_referencia_con_nombres_o_con_una_vigencia_futura_no_se_activa_nada()
+    public async Task Sin_todas_las_condiciones_marcadas_con_un_anexo_con_nombres_o_con_una_vigencia_futura_no_se_activa_nada()
     {
         var (center, _) = await SeedCenterAsync();
         var client = await LoginAsync(await SeedOperatorAsync());
         var page = $"/Plataforma/Centro?centroId={center}";
 
-        var missingConditions = await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-FUNC-3", Today, Today.AddDays(30), allConditions: false));
-        var withName = await PostAsync(client, page, "ActivarModulo", Activation(center, "Ana Pérez", Today, Today.AddDays(30)));
-        var future = await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-FUNC-4", Today.AddDays(3), Today.AddDays(30)));
-        var expired = await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-FUNC-5", Today.AddDays(-30), Today.AddDays(-1)));
+        var missingConditions = await PostAsync(client, page, "ActivarModulo", Activation(center, Today, Today.AddDays(30), allConditions: false));
+        var withName = await PostAsync(client, page, "ActivarModulo", Activation(center, Today, Today.AddDays(30), annex: "Ana Pérez"));
+        var future = await PostAsync(client, page, "ActivarModulo", Activation(center, Today.AddDays(3), Today.AddDays(30)));
+        var expired = await PostAsync(client, page, "ActivarModulo", Activation(center, Today.AddDays(-30), Today.AddDays(-1)));
 
         Assert.All([missingConditions, withName, future, expired], html => Assert.Contains("Revisa los datos del módulo", html));
         Assert.Equal(0, await RowsAsync(center));
@@ -137,12 +137,12 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
         var (center, _) = await SeedCenterAsync();
         var client = await LoginAsync(await SeedOperatorAsync());
         var page = $"/Plataforma/Centro?centroId={center}";
-        Assert.Contains("Módulo activado.", await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-OK-1", Today.AddDays(-1), Today.AddDays(30))));
+        Assert.Contains("Módulo activado (referencia", await PostAsync(client, page, "ActivarModulo", Activation(center, Today.AddDays(-1), Today.AddDays(30))));
 
         List<KeyValuePair<string, string>> Disable(string reason, string channel, string received) =>
         [
             new("CentroId", center.ToString()), new("ModuloCodigo", CenterModules.DictadoVoz), new("MotivoBaja", reason),
-            new("SolicitudRecibidaEn", received), new("Canal", channel), new("ReferenciaSolicitud", "SOL-MAL"),
+            new("SolicitudRecibidaEn", received), new("Canal", channel),
         ];
         var recent = DateTime.UtcNow.AddHours(-6).ToString("yyyy-MM-ddTHH:mm");
 
@@ -164,7 +164,7 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
         var (center, _) = await SeedCenterAsync();
         var client = await LoginAsync(await SeedOperatorAsync());
         var page = $"/Plataforma/Centro?centroId={center}";
-        Assert.Contains("Módulo activado.", await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-IN-1", Today.AddDays(-1), Today.AddDays(30))));
+        Assert.Contains("Módulo activado (referencia", await PostAsync(client, page, "ActivarModulo", Activation(center, Today.AddDays(-1), Today.AddDays(30))));
         using (var connection = await Db.OpenAsync())
         {
             await connection.ExecuteAsync("UPDATE dbo.centros SET estado = 'INACTIVE' WHERE id = @center", new { center });
@@ -172,15 +172,15 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
 
         var missing = Guid.NewGuid();
         var reserved = Guid.Parse("5F3A1C00-0000-4000-8000-000000000001");
-        var onMissing = await PostAsync(client, page, "ActivarModulo", Activation(missing, "SOL-IN-2", Today, Today.AddDays(30)));
-        var onReserved = await PostAsync(client, page, "ActivarModulo", Activation(reserved, "SOL-IN-3", Today, Today.AddDays(30)));
-        var reactivate = await PostAsync(client, page, "ActivarModulo", Activation(center, "SOL-IN-4", Today, Today.AddDays(30)));
+        var onMissing = await PostAsync(client, page, "ActivarModulo", Activation(missing, Today, Today.AddDays(30)));
+        var onReserved = await PostAsync(client, page, "ActivarModulo", Activation(reserved, Today, Today.AddDays(30)));
+        var reactivate = await PostAsync(client, page, "ActivarModulo", Activation(center, Today, Today.AddDays(30)));
         var disabled = await PostAsync(client, page, "ApagarModulo", [
-            new("CentroId", center.ToString()), new("ModuloCodigo", CenterModules.DictadoVoz), new("MotivoBaja", "FinContrato"), .. Request("SOL-IN-5")]);
+            new("CentroId", center.ToString()), new("ModuloCodigo", CenterModules.DictadoVoz), new("MotivoBaja", "FinContrato"), .. Request()]);
 
         Assert.Equal(0, await RowsAsync(missing));
         Assert.Equal(0, await RowsAsync(reserved));
-        Assert.Contains("Módulo apagado.", disabled);
+        Assert.Contains("Módulo apagado (referencia", disabled);
         Assert.Equal(2, await RowsAsync(center));
         Assert.Contains("Apagado: Fin del contrato", disabled);
         _ = (onMissing, onReserved, reactivate);
@@ -193,8 +193,8 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
         var (late, lateName) = await SeedCenterAsync();
         var (far, farName) = await SeedCenterAsync();
         var client = await LoginAsync(await SeedOperatorAsync());
-        Assert.Contains("Módulo activado.", await PostAsync(client, $"/Plataforma/Centro?centroId={soon}", "ActivarModulo", Activation(soon, "SOL-V-1", Today.AddDays(-5), Today.AddDays(10))));
-        Assert.Contains("Módulo activado.", await PostAsync(client, $"/Plataforma/Centro?centroId={far}", "ActivarModulo", Activation(far, "SOL-V-2", Today.AddDays(-5), Today.AddDays(200))));
+        Assert.Contains("Módulo activado (referencia", await PostAsync(client, $"/Plataforma/Centro?centroId={soon}", "ActivarModulo", Activation(soon, Today.AddDays(-5), Today.AddDays(10))));
+        Assert.Contains("Módulo activado (referencia", await PostAsync(client, $"/Plataforma/Centro?centroId={far}", "ActivarModulo", Activation(far, Today.AddDays(-5), Today.AddDays(200))));
         // Un alta que ya venció sin renovarse solo se puede dar así: la aplicación no la admite nacida vencida (la tabla es inmutable).
         using (var connection = await Db.OpenAsync())
         {
@@ -227,7 +227,7 @@ public class ModulosPlataformaPageTests(WebAppFactory factory) : IClassFixture<W
         var client = await LoginAsync(subject);
 
         var page = WebUtility.HtmlDecode(await client.GetStringAsync($"/Plataforma/Centro?centroId={center}"));
-        var post = await client.PostAsync("/Plataforma/ActivarModulo", new FormUrlEncodedContent(Activation(center, "SOL-X", Today, Today.AddDays(30))));
+        var post = await client.PostAsync("/Plataforma/ActivarModulo", new FormUrlEncodedContent(Activation(center, Today, Today.AddDays(30))));
 
         Assert.DoesNotContain("Módulos opcionales", page);
         Assert.DoesNotContain("Activar el módulo", page);

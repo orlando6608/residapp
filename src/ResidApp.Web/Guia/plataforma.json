@@ -302,7 +302,7 @@
       "palabras": ["módulo", "módulos", "dictado", "dictado por voz", "activar módulo", "renovar", "vigencia", "anexo", "vencen"],
       "permisos": [],
       "antes": [
-        "Que el **centro te lo haya pedido** y que lo tengas por escrito: necesitas cuándo llegó la petición, por qué canal y con qué referencia (un código, sin nombres de personas).",
+        "Que el **centro te lo haya pedido** y que lo tengas por escrito: necesitas cuándo llegó la petición y por qué canal. La referencia de la petición no la escribes: la asigna ResidApp al guardar.",
         "El **anexo de módulos firmado**: su referencia y su versión.",
         "Que se cumplan las **cuatro condiciones** de la ficha de privacidad (anexo firmado, retención cero del proveedor, evaluación de impacto del centro, información al personal y a los residentes). Hacen falta todas.",
         "Que el centro esté **activo**: en un centro inactivo se puede apagar un módulo, pero no activarlo."
@@ -312,8 +312,8 @@
         { "texto": "Abre **Activar** (o **Activar de nuevo o renovar**, si ya estuvo activo). Rellena «Vigente desde» y «Vigente hasta (incluido)»: el último día cuenta entero, con el día de Madrid. Una renovación empieza hoy o antes, nunca en el futuro.", "botones": ["Activar de nuevo o renovar"], "campos": ["Vigente desde", "Vigente hasta (incluido)"] },
         { "texto": "Escribe la «Referencia del anexo» y la «Versión del anexo».", "campos": ["Referencia del anexo", "Versión del anexo"] },
         { "texto": "Marca **una a una** las cuatro condiciones de la ficha de privacidad. Si falta alguna, no marques ninguna por cumplir.", "campos": ["Condiciones de la ficha de privacidad"] },
-        { "texto": "En «Petición del centro», indica cuándo la recibiste (hora de Madrid), el «Canal» y la «Referencia de la solicitud». La referencia es distinta en cada petición: no se repite para el mismo módulo y centro.", "campos": ["Recibida el (hora de Madrid)", "Canal", "Referencia de la solicitud"] },
-        { "texto": "Pulsa **Activar el módulo** (o **Registrar la activación o renovación**). Sale un aviso verde: «Módulo activado…».", "botones": ["Activar el módulo", "Registrar la activación o renovación"] }
+        { "texto": "En «Petición del centro», indica cuándo la recibiste (hora de Madrid) y el «Canal». La «Referencia de la solicitud» no se escribe: la asigna ResidApp al guardar.", "campos": ["Recibida el (hora de Madrid)", "Canal"] },
+        { "texto": "Pulsa **Activar el módulo** (o **Registrar la activación o renovación**). Sale un aviso verde: «Módulo activado (referencia …)». **Anota esa referencia en tu respuesta al centro**.", "botones": ["Activar el módulo", "Registrar la activación o renovación"] }
       ],
       "despues": [
         { "para": "Plataforma", "texto": "**Avisa por escrito a la persona autorizada del centro**: la app no envía ese aviso. El cambio queda en el Historial del módulo (sin tu cuenta) y en la auditoría del centro." },
@@ -321,16 +321,15 @@
         { "para": "Administración", "texto": "Ve el cambio en la Auditoría del centro, con el nombre del módulo." }
       ],
       "dudas": [
-        { "p": "«Revisa los datos del módulo: referencias sin nombres de personas, fechas de vigencia, canal y condiciones comprobadas.»", "r": "Algo del formulario no vale: una referencia con espacios o nombres, una vigencia que ya venció o que empieza en el futuro, una petición de hace más de un año o alguna de las cuatro condiciones sin marcar." },
-        { "p": "«Esa referencia de solicitud ya se usó para este centro y módulo…»", "r": "Esa petición ya está registrada (mira el Historial). Si es otra petición, necesita su propia referencia." },
+        { "p": "«Revisa los datos del módulo: referencias sin nombres de personas, fechas de vigencia, canal y condiciones comprobadas.»", "r": "Algo del formulario no vale: una referencia o versión del anexo con espacios o nombres, una vigencia que ya venció o que empieza en el futuro, una petición de hace más de un año o alguna de las cuatro condiciones sin marcar." },
         { "p": "«El centro no existe o no está activo…»", "r": "No se puede activar un módulo en un centro inactivo. Apagarlo sí." },
         { "p": "Sale el aviso «Falta la clave global del proveedor de este módulo».", "r": "El módulo no funciona en ningún centro aunque figure activo: es el corte global. Hay que pedir a quien administra el servidor que la ponga." },
         { "p": "Vence el módulo y nadie lo renueva.", "r": "Deja de funcionar en ese centro, sin que nadie tenga que apagarlo: el bloque «Dictar el cambio» desaparece del Auxiliar. Mira el panel «Módulos que vencen» de la lista de centros para renovar a tiempo." }
       ],
       "rutas": ["Plataforma/Centro", "Plataforma/ActivarModulo", "Plataforma/Index"],
       "mensajes": [
-        "Módulo activado. Queda en la auditoría del centro; avisa por escrito a su persona autorizada.",
-        "Esa referencia de solicitud ya se usó para este centro y módulo",
+        "Módulo activado",
+        "Anota esa referencia en tu respuesta al centro",
         "El centro no existe o no está activo",
         "Falta la clave global del proveedor de este módulo"
       ],
@@ -342,14 +341,14 @@
       "palabras": ["apagar módulo", "baja", "desactivar", "módulo", "dictado", "motivo de baja"],
       "permisos": [],
       "antes": [
-        "Que el **centro te lo haya pedido**, con la fecha y hora de la petición, el canal y su referencia. Se apaga **a petición del centro**, en el plazo que fije el anexo; no por tu cuenta.",
+        "Que el **centro te lo haya pedido**, con la fecha y hora de la petición y el canal. Se apaga **a petición del centro**, en el plazo que fije el anexo; no por tu cuenta.",
         "Que el módulo esté activo: si ya está apagado o vencido, no sale «Apagar»."
       ],
       "pasos": [
         { "texto": "Abre **Centros** y, en el centro, pulsa **Administraciones y unidades**. Baja a **Módulos opcionales**.", "botones": ["Centros", "Administraciones y unidades"], "campos": ["Módulos opcionales"] },
         { "texto": "Abre **Apagar** y elige el «Motivo» de la lista.", "botones": ["Apagar"], "campos": ["Motivo"] },
-        { "texto": "En «Petición del centro», indica cuándo la recibiste (hora de Madrid), el «Canal» y la «Referencia de la solicitud».", "campos": ["Recibida el (hora de Madrid)", "Canal", "Referencia de la solicitud"] },
-        { "texto": "Pulsa **Apagar el módulo ahora**. Sale un aviso verde: «Módulo apagado…».", "botones": ["Apagar el módulo ahora"] }
+        { "texto": "En «Petición del centro», indica cuándo la recibiste (hora de Madrid) y el «Canal». La referencia la asigna ResidApp al guardar.", "campos": ["Recibida el (hora de Madrid)", "Canal"] },
+        { "texto": "Pulsa **Apagar el módulo ahora**. Sale un aviso verde: «Módulo apagado (referencia …)». **Anota esa referencia en tu respuesta al centro**.", "botones": ["Apagar el módulo ahora"] }
       ],
       "despues": [
         { "para": "Plataforma", "texto": "**Avisa por escrito a la persona autorizada del centro**: la app no lo hace. El apagado es inmediato y queda en el Historial y en la auditoría del centro. Apagar es siempre posible, también en un centro inactivo." },
@@ -362,7 +361,8 @@
       ],
       "rutas": ["Plataforma/Centro", "Plataforma/ApagarModulo"],
       "mensajes": [
-        "Módulo apagado. Queda en la auditoría del centro; avisa por escrito a su persona autorizada.",
+        "Módulo apagado",
+        "Anota esa referencia en tu respuesta al centro",
         "El módulo ya estaba así en ese centro, o alguien lo ha cambiado mientras tanto"
       ],
       "manual": { "id": "plataforma-modulos", "titulo": "Módulos opcionales de un centro" }

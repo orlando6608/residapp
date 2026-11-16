@@ -22,7 +22,7 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
         return await FindLastAsync(connection, null, centerId, moduleCode, ct);
     }
 
-    public async Task AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default)
+    public async Task<string> AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default)
     {
         var module = CenterModules.Find(change.ModuleCode) ?? throw new DomainValidationException(NewCenterModuleChangeRules.Invalid);
         using var connection = await connections.OpenAsync(ct);
@@ -39,14 +39,6 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
         }
 
         var last = await FindLastAsync(connection, transaction, change.CenterId, module.Code, ct);
-        var repeated = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
-            "SELECT COUNT(*) FROM dbo.modulos_centro WHERE centro_id = @CenterId AND modulo_codigo = @ModuleCode AND referencia_solicitud = @Reference",
-            new { CenterId = change.CenterId.Value, ModuleCode = module.Code, Reference = change.RequestReference }, transaction, cancellationToken: ct));
-        if (repeated > 0)
-        {
-            throw new DomainStateException("MODULE_REFERENCE_REPEATED");
-        }
-
         if (!change.Enable && (last is null || !last.Enabled))
         {
             throw new DomainStateException("MODULE_CHANGE_CONFLICT");
@@ -66,6 +58,8 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
             }
         }
 
+        var number = (last?.Number ?? 0) + 1;
+        var requestReference = NewCenterModuleChangeRules.RequestReferenceFor(module.Code, number);
         var id = Guid.NewGuid();
         var occurredAt = DateTime.UtcNow;
         await connection.ExecuteAsync(new CommandDefinition("""
@@ -79,14 +73,15 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
             VALUES (NEWID(), @ActorId, 'PLATAFORMA', @CenterId, 'CENTER_MODULE', @Id, @Action, @OccurredAt);
             """, new
         {
-            Id = id, CenterId = change.CenterId.Value, ModuleCode = module.Code, Number = (last?.Number ?? 0) + 1, State = change.Enable ? "ACTIVE" : "DISABLED",
+            Id = id, CenterId = change.CenterId.Value, ModuleCode = module.Code, Number = number, State = change.Enable ? "ACTIVE" : "DISABLED",
             ValidFrom = change.ValidFrom?.ToDateTime(TimeOnly.MinValue), ValidUntil = change.ValidUntil?.ToDateTime(TimeOnly.MinValue),
             change.AnnexReference, change.AnnexVersion, SheetVersion = change.PrivacySheetVersion, Conditions = change.ConditionCodes,
             DisableReason = change.DisableReason is { } reason ? reason.ToCode() : null, RequestReceivedAt = change.RequestReceivedAt.UtcDateTime,
-            Channel = change.Channel.ToCode(), RequestReference = change.RequestReference, ActorId = access.AccountId.Value,
+            Channel = change.Channel.ToCode(), RequestReference = requestReference, ActorId = access.AccountId.Value,
             Action = change.Enable ? "CENTER_MODULE_ENABLE" : "CENTER_MODULE_DISABLE", OccurredAt = occurredAt,
         }, transaction, cancellationToken: ct));
         transaction.Commit();
+        return requestReference;
     }
 
     public async Task<IReadOnlyList<PlatformModuleChange>> ListChangesAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default)

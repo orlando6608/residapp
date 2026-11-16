@@ -16,7 +16,7 @@ El Auxiliar dicta de viva voz un cambio de un residente asignado. El servidor en
 
 ## Cómo se enciende y se apaga
 - **Enciende y apaga solo Plataforma**, a petición de la persona autorizada del centro y en el plazo que fije el anexo del contrato. El centro no apaga por sí solo y no hay apagado de emergencia global dentro de la aplicación (decisión de Orlando, 2026-11-16).
-- Cada cambio guarda cuándo llegó la petición, por qué canal y con qué referencia opaca (sin nombres), la referencia y versión del anexo, la vigencia (obligatoria: el contrato fija la duración del tratamiento), esta versión de la ficha y los códigos de las condiciones comprobadas.
+- Cada cambio guarda cuándo llegó la petición, por qué canal y con una referencia que asigna ResidApp (módulo y número del cambio; nadie la teclea, así que no puede llevar nombres), la referencia y versión del anexo, la vigencia (obligatoria: el contrato fija la duración del tratamiento), esta versión de la ficha y los códigos de las condiciones comprobadas.
 - **Al vencer la vigencia, el módulo deja de funcionar solo**, sin tarea programada.
 - Existe un historial de activaciones, con la cuenta y el perfil de la persona operadora (dato seudonimizado del operador de Plataforma). El plazo de conservación está **sin decidir** (`antes-de-datos-reales.md`).
 
