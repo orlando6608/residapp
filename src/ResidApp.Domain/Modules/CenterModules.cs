@@ -104,6 +104,9 @@ public static partial class NewCenterModuleChangeRules
 {
     public const string Invalid = "MODULE_INVALID";
 
+    /// <summary>La hora de la solicitud prueba el plazo de apagado en un registro inmutable: una fecha absurda (año 0001) no se admite. Una petición más antigua que esto no es una petición vigente.</summary>
+    public const int MaxRequestAgeDays = 366;
+
     public static NewCenterModuleChange Validate(
         CenterId centerId, Guid platformCenterId, string? moduleCode, bool enable, DateOnly? validFrom, DateOnly? validUntil, string? annexReference, string? annexVersion,
         bool conditionsChecked, ModuleDisableReason? disableReason, DateTimeOffset? requestReceivedAt, ModuleRequestChannel? channel, string? requestReference,
@@ -112,7 +115,7 @@ public static partial class NewCenterModuleChangeRules
         var module = CenterModules.Find(moduleCode);
         var reference = requestReference?.Trim();
         if (module is null || centerId.Value == Guid.Empty || centerId.Value == platformCenterId || channel is null || requestReceivedAt is null
-            || requestReceivedAt > now || !IsOpaque(reference))
+            || requestReceivedAt > now || requestReceivedAt < now.AddDays(-MaxRequestAgeDays) || !IsOpaque(reference))
         {
             throw new DomainValidationException(Invalid);
         }
@@ -127,7 +130,9 @@ public static partial class NewCenterModuleChangeRules
         var annex = annexReference?.Trim();
         var version = annexVersion?.Trim();
         // El último cambio manda: una alta con vigencia futura apagaría hoy el módulo que aún está vigente. Una renovación se registra el día en que empieza (o antes).
-        if (validFrom is null || validUntil is null || validUntil < validFrom || validFrom > DateOnly.FromDateTime(now.UtcDateTime)
+        // La tabla es inmutable: una alta que ya nace vencida (un año mal tecleado) dejaría el módulo apagado con la auditoría diciendo «activado», y no se podría corregir.
+        if (validFrom is null || validUntil is null || validUntil < validFrom || validUntil < DateOnly.FromDateTime(now.UtcDateTime)
+            || validFrom > DateOnly.FromDateTime(now.UtcDateTime)
             || !conditionsChecked || !IsOpaque(annex) || !IsOpaque(version, 16))
         {
             throw new DomainValidationException(Invalid);

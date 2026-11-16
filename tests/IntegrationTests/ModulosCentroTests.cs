@@ -116,7 +116,19 @@ public class ModulosCentroTests
         var service = BuildPlatform(op.ExternalSubject);
         var access = BuildAccess(admin.ExternalSubject);
 
-        Assert.True((await service.ChangeCenterModuleAsync(Enable(op, admin.CenterId, Today.AddDays(-30), Today.AddDays(-1), reference: "SOL-OLD"))).Ok);
+        // La aplicación ya no admite una alta que nace vencida (la tabla es inmutable); un módulo vencido es uno cuya vigencia acabó con el tiempo, así que se inserta como db_owner.
+        var born = await service.ChangeCenterModuleAsync(Enable(op, admin.CenterId, Today.AddDays(-30), Today.AddDays(-1), reference: "SOL-OLD"));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, born.Error?.Code);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.modulos_centro
+                    (id, centro_id, modulo_codigo, numero, estado_codigo, vigente_desde, vigente_hasta, referencia_anexo, version_anexo, version_ficha, condiciones_codigos,
+                     solicitud_recibida_en, canal_codigo, referencia_solicitud, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+                VALUES (NEWID(), @center, 'DICTADO_VOZ', 1, 'ACTIVE', @from, @until, 'ANX-OLD', '1', '1', 'A', SYSUTCDATETIME(), 'CORREO', 'SOL-OLD', @actor, 'PLATAFORMA', SYSUTCDATETIME())
+                """, new { center = admin.CenterId.Value, from = Today.AddDays(-30).ToDateTime(TimeOnly.MinValue), until = Today.AddDays(-1).ToDateTime(TimeOnly.MinValue), actor = op.AccountId.Value });
+        }
+
         Assert.Equal(ModuleState.NotAvailable, await access.StateAsync(admin.CenterId, CenterModules.DictadoVoz));
 
         Assert.True((await service.ChangeCenterModuleAsync(Enable(op, admin.CenterId, Today, Today, reference: "SOL-RENEW"))).Ok);

@@ -89,6 +89,10 @@ public class CenterModulesTests
         Assert.Throws<DomainValidationException>(() => Enable(center: CenterId.From(PlatformId)));
         Assert.Throws<DomainValidationException>(() => Enable(version: "12345678901234567"));
         Assert.Throws<DomainValidationException>(() => Enable(from: Today.AddDays(1), until: Today.AddDays(30)));
+        Assert.Throws<DomainValidationException>(() => Enable(from: Today.AddDays(-30), until: Today.AddDays(-1)));
+        Assert.Throws<DomainValidationException>(() => Enable(received: new DateTimeOffset(1900, 1, 1, 0, 0, 0, TimeSpan.Zero)));
+        Assert.Throws<DomainValidationException>(() => Enable(received: Now.AddDays(-367)));
+        Assert.Equal(Today, Enable(from: Today.AddDays(-30), until: Today).ValidUntil);
         Assert.Equal("1234567890123456", Enable(version: "1234567890123456").AnnexVersion);
     }
 
