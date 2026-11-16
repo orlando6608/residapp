@@ -151,12 +151,72 @@ public sealed record ConditionRecordContent
     }
 }
 
+/// <summary>Un medicamento de la lista de medicación habitual (script 0097): nombre, dosis y pauta, en texto corto de una sola línea (ejemplo inventado: «Fármaco Alfa», «1 g», «cada 8 h»).
+/// La dosis y la pauta son obligatorias; cuando no se saben se escribe «no consta». No hay vía, fechas, prescriptor, motivo ni adherencia: la lista no es administración de medicación.</summary>
+public sealed record MedicationItem
+{
+    public const int MaxNameLength = 100;
+    public const int MaxDoseLength = 50;
+    public const int MaxScheduleLength = 100;
+
+    public string Name { get; }
+    public string Dose { get; }
+    public string Schedule { get; }
+
+    public MedicationItem(string? name, string? dose, string? schedule)
+    {
+        name = VitalSigns.Normalize(name);
+        dose = VitalSigns.Normalize(dose);
+        schedule = VitalSigns.Normalize(schedule);
+        if (name is null || dose is null || schedule is null || !name.Any(char.IsLetterOrDigit)
+            || name.Length > MaxNameLength || dose.Length > MaxDoseLength || schedule.Length > MaxScheduleLength
+            || name.Any(HealthBackground.IsLineBreakOrControl) || dose.Any(HealthBackground.IsLineBreakOrControl) || schedule.Any(HealthBackground.IsLineBreakOrControl)
+            // La dosis y la pauta llevan al menos una letra o un número: «-» o «?» taparían el hueco que «no consta» debe declarar.
+            || !dose.Any(char.IsLetterOrDigit) || !schedule.Any(char.IsLetterOrDigit))
+        {
+            throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+
+        Name = name;
+        Dose = dose;
+        Schedule = schedule;
+    }
+}
+
+/// <summary>El contenido de cada versión del apartado de medicación habitual: el estado, la lista y la fuente opcional. «Con entradas» exige al menos un medicamento; «No toma medicación
+/// habitual» y «No consta» no admiten ninguno.</summary>
+public sealed record MedicationRecordContent
+{
+    public const int MaxItems = 60;
+
+    public HealthBackgroundState State { get; }
+    public IReadOnlyList<MedicationItem> Items { get; }
+    public HealthBackgroundSource? Source { get; }
+
+    public MedicationRecordContent(HealthBackgroundState state, IReadOnlyList<MedicationItem>? items, HealthBackgroundSource? source)
+    {
+        items ??= [];
+        if (!Enum.IsDefined(state) || items.Count > MaxItems || (source is { } s && !Enum.IsDefined(s))
+            || (state == HealthBackgroundState.ConEntradas ? items.Count == 0 : items.Count > 0)
+            || items.GroupBy(i => (Name: i.Name.ToUpperInvariant(), Dose: i.Dose.ToUpperInvariant(), Schedule: i.Schedule.ToUpperInvariant())).Any(g => g.Count() > 1))
+        {
+            throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+
+        State = state;
+        Items = items;
+        Source = source;
+    }
+}
+
 public static class HealthBackground
 {
     public const string InvalidCode = "HEALTH_BACKGROUND_INVALID";
     public const string RevisionConflictCode = "HEALTH_BACKGROUND_REVISION_CONFLICT";
     public const string AllergiesSection = "ALERGIAS";
     public const string ConditionsSection = "ENFERMEDADES";
+    public const string MedicationSection = "MEDICACION";
+    public const string MedicationItemCode = "MEDICAMENTO";
 
     /// <summary>Un carácter de control o un separador de línea o de párrafo Unicode (U+2028, U+2029), que char.IsControl no cubre: el texto es de una sola línea.</summary>
     internal static bool IsLineBreakOrControl(char c) =>

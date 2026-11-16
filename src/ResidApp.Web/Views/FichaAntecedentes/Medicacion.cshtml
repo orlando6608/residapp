@@ -1,0 +1,152 @@
+@using ResidApp.Domain.Residents
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model MedicationEditViewModel
+@* Ficha de antecedentes de salud, fase 3: medicación habitual (script 0097). Sin ningún valor preseleccionado, sin autocompletado del navegador, con la persona a la vista antes
+   de guardar y con la ayuda visible junto a los campos (revisión del DPO, 2026-11-16): es una copia de la receta o de la hoja de tratamiento, no administración de medicación; nada
+   de adherencia, observaciones ni datos de terceros. Cada medicamento es una fila de un solo renglón por campo, nunca un cuadro de texto largo. Las filas se añaden con site.js
+   (data-anadir-fila). *@
+@{
+    ViewData["Title"] = "Medicación habitual";
+    var form = Model.Form;
+    var isNew = form.VersionVista == 0;
+    var rows = form.Filas.Count + 2 < 4 ? 4 : form.Filas.Count + 2;
+    if (rows > MedicationRecordContent.MaxItems)
+    {
+        rows = MedicationRecordContent.MaxItems;
+    }
+    var states = new[] { HealthBackgroundState.ConEntradas, HealthBackgroundState.NoRefiere, HealthBackgroundState.NoConsta };
+    var stateLabels = new Dictionary<HealthBackgroundState, (string Label, string Hint)>
+    {
+        [HealthBackgroundState.ConEntradas] = ("Toma medicación habitual", "Escribe cada medicamento en la lista de abajo."),
+        [HealthBackgroundState.NoRefiere] = ("No refiere medicación habitual", "Lo dice el residente o su familia, o consta en la receta o la hoja de tratamiento."),
+        [HealthBackgroundState.NoConsta] = ("No se sabe o no consta", "Su información no es fiable (por ejemplo, por demencia), no hay familiar que lo confirme y no consta en ninguna receta ni informe médico."),
+    };
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-controller="@Model.RecordController" asp-action="Residente" asp-route-residenteId="@Model.Resident.ResidentId.Value">@Model.Resident.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Medicación habitual</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Medicación habitual</h1>
+
+<div class="card mb-3" role="group" aria-label="Residente al que pertenece esta ficha">
+    <div class="card-body d-flex align-items-center gap-3">
+        <partial name="_FotoResidente" model="new ResidentPhotoViewModel(Model.Resident.ResidentId.Value, Model.Resident.DisplayName, Model.Resident.PhotoUpdatedAt, Large: true)" />
+        <div>
+            <p class="h5 mb-1">@Model.Resident.DisplayName</p>
+            <p class="text-muted mb-0">@Model.Resident.LocationLabel</p>
+        </div>
+    </div>
+</div>
+<p><strong>Revisa que sea la persona correcta.</strong> Lo que guardes no se puede borrar: si te equivocas, se guarda una versión nueva que lo corrige y la anterior se conserva.</p>
+<p class="text-muted">Lo que guardes se imprime en el informe de derivación a Urgencias.@(Model.LastModified is null ? "" : " " + Model.LastModified)</p>
+<div class="alert alert-warning" role="note" id="ayuda-medicacion">
+    <strong>@HealthBackgroundDisplay.MedicationCopyNotice</strong> No las sustituye.
+    No sirve para dar la medicación ni avisa de nada: si la receta cambia, hay que cambiar también esta lista. Escribe solo el nombre, la dosis y la pauta
+    (por ejemplo, «Paracetamol», «1 g», «cada 8 h»); si no sabes la dosis o la pauta, escribe «no consta». Incluye también lo «si precisa», los parches, los inhaladores,
+    las insulinas y los suplementos. No anotes si la toma o no, para qué es, quién la receta, desde cuándo, observaciones ni nombres de otras personas.
+</div>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+
+<form asp-controller="FichaAntecedentes" asp-action="Medicacion" method="post" autocomplete="off">
+    <input type="hidden" name="Form.ResidenteId" value="@form.ResidenteId" />
+    <input type="hidden" name="Form.VersionVista" value="@form.VersionVista" />
+
+    <fieldset class="mb-4">
+        <legend class="h5">¿Toma medicación habitual?</legend>
+        @foreach (var state in states)
+        {
+            var code = state.ToCode();
+            var (label, hint) = stateLabels[state];
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="Form.Estado" id="estado-@code" value="@code" required checked="@(form.Estado == code)" />
+                <label class="form-check-label" for="estado-@code">@label</label>
+                <div class="form-text">@hint</div>
+            </div>
+        }
+    </fieldset>
+
+    <fieldset class="mb-4">
+        <legend class="h5">Lista de medicación habitual</legend>
+        <p class="form-text">
+            Una línea por medicamento, con su dosis y su pauta, cada uno en un solo renglón. Si eliges «No refiere medicación habitual» o «No se sabe o no consta», deja la lista vacía.
+        </p>
+        <div id="medicacion-filas">
+            @for (var i = 0; i < rows; i++)
+            {
+                var row = i < form.Filas.Count ? form.Filas[i] : new MedicationRowModel();
+                <div class="row g-2 border rounded p-2 mb-2" data-fila>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label" for="fila-@i-nombre">Medicamento</label>
+                        <input class="form-control" id="fila-@i-nombre" name="Form.Filas[@i].Nombre" maxlength="@MedicationItem.MaxNameLength" value="@row.Nombre" autocomplete="off" aria-describedby="ayuda-medicacion" />
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label" for="fila-@i-dosis">Dosis</label>
+                        <input class="form-control" id="fila-@i-dosis" name="Form.Filas[@i].Dosis" maxlength="@MedicationItem.MaxDoseLength" value="@row.Dosis" autocomplete="off" aria-describedby="ayuda-medicacion" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="fila-@i-pauta">Pauta (cuándo se toma)</label>
+                        <input class="form-control" id="fila-@i-pauta" name="Form.Filas[@i].Pauta" maxlength="@MedicationItem.MaxScheduleLength" value="@row.Pauta" autocomplete="off" aria-describedby="ayuda-medicacion" />
+                    </div>
+                </div>
+            }
+        </div>
+        <button type="button" class="btn btn-outline-secondary" data-anadir-fila="medicacion-filas" data-plantilla="medicacion-fila-plantilla" data-maximo="@MedicationRecordContent.MaxItems">Añadir otra fila</button>
+        <template id="medicacion-fila-plantilla">
+            <div class="row g-2 border rounded p-2 mb-2" data-fila>
+                <div class="col-12 col-md-5">
+                    <label class="form-label" for="fila-__i__-nombre">Medicamento</label>
+                    <input class="form-control" id="fila-__i__-nombre" name="Form.Filas[__i__].Nombre" maxlength="@MedicationItem.MaxNameLength" autocomplete="off" aria-describedby="ayuda-medicacion" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="fila-__i__-dosis">Dosis</label>
+                    <input class="form-control" id="fila-__i__-dosis" name="Form.Filas[__i__].Dosis" maxlength="@MedicationItem.MaxDoseLength" autocomplete="off" aria-describedby="ayuda-medicacion" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="fila-__i__-pauta">Pauta (cuándo se toma)</label>
+                    <input class="form-control" id="fila-__i__-pauta" name="Form.Filas[__i__].Pauta" maxlength="@MedicationItem.MaxScheduleLength" autocomplete="off" aria-describedby="ayuda-medicacion" />
+                </div>
+            </div>
+        </template>
+    </fieldset>
+
+    <div class="mb-4">
+        <label class="form-label h5" for="fuente">¿De dónde sale el dato? (opcional)</label>
+        <select class="form-select" id="fuente" name="Form.Fuente">
+            <option value="">Sin indicar</option>
+            @foreach (var source in Enum.GetValues<HealthBackgroundSource>())
+            {
+                <option value="@source.ToCode()" selected="@(form.Fuente == source.ToCode())">@EnumDisplay.Label(source)</option>
+            }
+        </select>
+        <div class="form-text">No hace falta un método concreto. No escribas el nombre de quien te lo ha dicho.</div>
+    </div>
+
+    @if (!isNew)
+    {
+        <fieldset class="mb-4">
+            <legend class="h5">¿Por qué guardas una versión nueva?</legend>
+            @foreach (var reason in new[] { HealthBackgroundReason.Actualizacion, HealthBackgroundReason.Correccion })
+            {
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="Form.Motivo" id="motivo-@reason.ToCode()" value="@reason.ToCode()" required checked="@(form.Motivo == reason.ToCode())" />
+                    <label class="form-check-label" for="motivo-@reason.ToCode()">@EnumDisplay.Label(reason)</label>
+                </div>
+            }
+        </fieldset>
+    }
+
+    <div class="d-grid d-sm-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">Guardar la medicación habitual</button>
+        <a asp-controller="@Model.RecordController" asp-action="Residente" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-secondary btn-lg">Cancelar</a>
+    </div>
+</form>

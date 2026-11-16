@@ -152,6 +152,7 @@ public static class ReferralReportBuilder
         ]),
         Section(HealthBackgroundDisplay.AllergiesTitle, HealthBackgroundDisplay.ReportLines(health)),
         Section(HealthBackgroundDisplay.ConditionsTitle, HealthBackgroundDisplay.ConditionsReportLines(health)),
+        Section(HealthBackgroundDisplay.MedicationTitle, HealthBackgroundDisplay.MedicationReportLines(health)),
         Section("Basal vigente", BaselineLines(baseline)),
         Section("Observación de origen", ObservationLines(detail)),
         Section("Valoraciones", AssessmentLines(detail)),

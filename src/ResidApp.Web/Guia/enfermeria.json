@@ -10,7 +10,7 @@
   "dependeDe": ["Auxiliar", "Medicina", "Administración"],
   "entregaA": ["Medicina", "Familia"],
   "siempre": [
-    "Ver los residentes de tu ámbito, con su foto, su ubicación, el basal vigente, su contacto urgente, sus alergias e intolerancias y sus enfermedades e intervenciones (ficha de antecedentes de salud).",
+    "Ver los residentes de tu ámbito, con su foto, su ubicación, el basal vigente, su contacto urgente, sus alergias e intolerancias, sus enfermedades e intervenciones y su medicación habitual (ficha de antecedentes de salud).",
     "Registrar un evento que observas directamente y valorar los que llegan en las bandejas.",
     "Decidir sobre cada evento: cerrar, hacer seguimiento, escalar a Medicina o activar el protocolo urgente.",
     "Leer y registrar el resultado de las indicaciones de Medicina, y cerrar el episodio cuando están cumplidas.",
@@ -22,7 +22,7 @@
     "**Dar de alta residentes** (ver ENF-17).",
     "Crear, completar y firmar el **estado basal**: **Basal inicial (al alta)** para el basal del alta y **Reevaluar el basal** para cualquier otro motivo (ver ENF-18).",
     "**Poner, cambiar y quitar la foto del residente** (ver ENF-19).",
-    "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos, ver ENF-20; enfermedades e intervenciones, ver ENF-21).",
+    "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos, ver ENF-20; enfermedades e intervenciones, ver ENF-21; medicación habitual, ver ENF-22).",
     "Los cuatro permisos los concede Administración."
   ],
   "nunca": [
@@ -712,6 +712,44 @@
       "rutas": ["Enfermeria/Residente", "FichaAntecedentes/Enfermedades"],
       "mensajes": [
         "Ficha de enfermedades e intervenciones guardada.",
+        "Revisa la ficha: elige una opción",
+        "Otra persona ha guardado esta ficha mientras la editabas"
+      ],
+      "manual": { "id": "ficha-antecedentes", "titulo": "Ficha de antecedentes de salud" },
+      "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "ENF-22",
+      "pregunta": "¿Cómo relleno o cambio la medicación habitual de un residente?",
+      "palabras": ["medicación", "medicación habitual", "medicamentos", "dosis", "pauta", "receta", "antecedentes", "ficha de antecedentes", "permiso"],
+      "permisos": ["HEALTH_BACKGROUND_EDIT"],
+      "concede": "Administración",
+      "antes": [
+        "Tener el permiso **Rellenar y cambiar la ficha de antecedentes de salud** (el mismo que para las alergias, ver ENF-20). Sin él, ves la ficha pero no puedes cambiarla: te dice que se lo pidas a Administración.",
+        "Tener a mano la receta electrónica o la hoja de tratamiento oficial del centro, o lo que dicen el residente o su familia. Si no sabes la dosis o la pauta, escribe «no consta».",
+        "Saber que es una copia informativa que no sustituye a la receta ni a la hoja de tratamiento: si la receta cambia, hay que cambiar también esta lista. Lo que guardes no se puede borrar (se guarda una versión nueva) y se imprime en el informe de derivación a Urgencias."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, busca el bloque «Antecedentes de salud» y pulsa **Rellenar la medicación habitual** (o **Cambiar la medicación habitual** si ya hay datos).", "botones": ["Rellenar la medicación habitual", "Cambiar la medicación habitual"], "campos": ["Antecedentes de salud"] },
+        { "texto": "Comprueba el nombre y la foto del residente y elige una opción (ninguna viene marcada): «Toma medicación habitual», «No refiere medicación habitual» o «No se sabe o no consta».", "campos": ["Toma medicación habitual", "No refiere medicación habitual", "No se sabe o no consta"] },
+        { "texto": "Si toma, rellena en cada fila el «Medicamento», la «Dosis» y la «Pauta (cuándo se toma)»: los tres son obligatorios (vale «no consta»; un guion no), en un solo renglón. Pulsa **Añadir otra fila** si necesitas más (hasta 60). Con las otras dos opciones, la lista va vacía.", "botones": ["Añadir otra fila"], "campos": ["Medicamento", "Dosis", "Pauta (cuándo se toma)"] },
+        { "texto": "Si quieres, indica «¿De dónde sale el dato? (opcional)». Si ya había ficha, indica «¿Por qué guardas una versión nueva?»: «Ha cambiado algo» o «Corrijo un error».", "campos": ["¿De dónde sale el dato? (opcional)", "¿Por qué guardas una versión nueva?"] },
+        { "texto": "Pulsa **Guardar la medicación habitual**.", "botones": ["Guardar la medicación habitual"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Ficha de medicación habitual guardada.» y, en el bloque, el estado, la lista y la «Última modificación» (fecha y perfil), con el aviso de que es una copia informativa." },
+        { "para": "Medicina", "texto": "Ve el mismo bloque y, con el permiso, también puede cambiarlo. El informe de derivación a Urgencias lleva la lista solo, en la sección «Medicación habitual»; si está pendiente, lo dice." }
+      ],
+      "dudas": [
+        { "p": "El bloque dice «Pendiente».", "r": "Nadie ha rellenado la medicación de este residente. No equivale a «no toma medicación»: rellénala con lo que conste." },
+        { "p": "«Revisa la ficha: elige una opción…»", "r": "Falta elegir una de las tres opciones, o una fila sin dosis o sin pauta (o con un guion), o hay filas con «No refiere medicación habitual» o «No se sabe o no consta», o un texto con saltos de línea o repetido." },
+        { "p": "«Otra persona ha guardado esta ficha mientras la editabas…»", "r": "Alguien guardó antes que tú. Te enseñamos la versión actual: revísala y, si hace falta, repite tu cambio." },
+        { "p": "Me equivoqué al guardar.", "r": "No se borra: vuelve a pulsar «Cambiar la medicación habitual», corrige y elige «Corrijo un error». La versión anterior se conserva." },
+        { "p": "El bloque dice «Ficha con error: este dato no es fiable».", "r": "La última versión guardada está incompleta: no se enseña ni se imprime. Contrasta con la receta o la hoja de tratamiento y vuelve a rellenarla: se guarda como una versión nueva que la corrige." }
+      ],
+      "rutas": ["Enfermeria/Residente", "FichaAntecedentes/Medicacion"],
+      "mensajes": [
+        "Ficha de medicación habitual guardada.",
         "Revisa la ficha: elige una opción",
         "Otra persona ha guardado esta ficha mientras la editabas"
       ],

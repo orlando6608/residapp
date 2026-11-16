@@ -10,14 +10,18 @@ namespace ResidApp.Application.UseCases;
 public sealed record SaveAllergiesCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, HealthBackgroundReason? Motivo, AllergyRecordContent Contenido);
 
+public sealed record SaveMedicationCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, HealthBackgroundReason? Motivo, MedicationRecordContent Contenido);
+
 public sealed record SaveConditionsCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, HealthBackgroundReason? Motivo, ConditionRecordContent Contenido);
 
 /// <summary>Lo que necesita el bloque de antecedentes de una ficha: cada apartado vigente (null si está pendiente) y si quien mira puede cambiarlos. UnreliableVersion es el
 /// número de la versión vigente de las alergias cuando no se puede dar por fiable (Allergies es entonces null): la pantalla lo avisa y el informe lo dice, y se puede guardar otra
-/// que la corrija. UnreliableConditionsVersion es lo mismo para enfermedades e intervenciones; un apartado ilegible no oculta al otro.</summary>
+/// que la corrija. UnreliableConditionsVersion y UnreliableMedicationVersion son lo mismo para enfermedades e intervenciones y para la medicación habitual; un apartado ilegible no oculta a los otros.</summary>
 public sealed record HealthBackgroundView(
-    AllergyRecord? Allergies, bool CanEdit, int? UnreliableVersion = null, ConditionRecord? Conditions = null, int? UnreliableConditionsVersion = null);
+    AllergyRecord? Allergies, bool CanEdit, int? UnreliableVersion = null, ConditionRecord? Conditions = null, int? UnreliableConditionsVersion = null,
+    MedicationRecord? Medication = null, int? UnreliableMedicationVersion = null);
 
 /// <summary>
 /// Ficha de antecedentes de salud, fase 1 (docs/producto/ficha-antecedentes-salud-diseno.md, decisiones 9 y 10): la ven Enfermería y Medicina en su ámbito y
@@ -55,7 +59,17 @@ public sealed class HealthBackgroundApplicationService(
             {
                 unreliableConditions = inconsistent.Version;
             }
-            return new HealthBackgroundView(allergies, canEdit, unreliableAllergies, conditions, unreliableConditions);
+            MedicationRecord? medication = null;
+            int? unreliableMedication = null;
+            try
+            {
+                medication = await repository.ReadMedicationAsync(target.CenterId, target.ResidentId, ct);
+            }
+            catch (HealthBackgroundInconsistentException inconsistent)
+            {
+                unreliableMedication = inconsistent.Version;
+            }
+            return new HealthBackgroundView(allergies, canEdit, unreliableAllergies, conditions, unreliableConditions, medication, unreliableMedication);
         });
 
     /// <summary>Guarda una versión nueva y devuelve su número. Sin versión vista (0) es el registro inicial; con ella, el motivo es obligatorio y distinto.</summary>
@@ -67,6 +81,11 @@ public sealed class HealthBackgroundApplicationService(
     public Task<ApplicationResult<int>> SaveConditionsAsync(SaveConditionsCommand command, CancellationToken ct = default) =>
         SaveAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, command.VersionVista, command.Motivo,
             (target, reason, token) => repository.SaveConditionsAsync(target, command.VersionVista, reason, command.Contenido, token), ct);
+
+    /// <summary>Lo mismo para el apartado de medicación habitual.</summary>
+    public Task<ApplicationResult<int>> SaveMedicationAsync(SaveMedicationCommand command, CancellationToken ct = default) =>
+        SaveAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, command.VersionVista, command.Motivo,
+            (target, reason, token) => repository.SaveMedicationAsync(target, command.VersionVista, reason, command.Contenido, token), ct);
 
     private Task<ApplicationResult<int>> SaveAsync(
         Guid profileScopeId, CenterId centerId, ResidentId residentId, int seenVersion, HealthBackgroundReason? chosenReason,

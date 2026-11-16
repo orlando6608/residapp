@@ -60,7 +60,7 @@ public class ReferralReportBuilderTests
 
         Assert.All(sections, s => Assert.True(s.Automatic));
         Assert.Equal(
-            new[] { "Identificación del residente y del centro", "Alergias e intolerancias a medicamentos", "Enfermedades e intervenciones", "Basal vigente", "Observación de origen", "Valoraciones",
+            new[] { "Identificación del residente y del centro", "Alergias e intolerancias a medicamentos", "Enfermedades e intervenciones", "Medicación habitual", "Basal vigente", "Observación de origen", "Valoraciones",
                 "Constantes y oxigenoterapia", "Actuaciones", "Evolución" },
             sections.Select(s => s.Title));
         foreach (var expected in new[]
@@ -180,6 +180,82 @@ public class ReferralReportBuilderTests
         Assert.Equal(before.Hash(), same.Hash());
     }
 
+    private static HealthBackgroundView MedicationHealth(MedicationRecordContent content, int version = 1) =>
+        new(null, true, Medication: new MedicationRecord(version, content, SystemProfile.Enfermeria, At));
+
+    [Fact]
+    public void MedicacionDelInforme_ListaNoRefiereNoConstaPendienteEIlegibleSalenDistintos_ConLaCautelaDeQueEsUnaCopia_YNingunoDiceRevisado()
+    {
+        var conEntradas = HealthBackgroundDisplay.MedicationReportLines(MedicationHealth(new MedicationRecordContent(HealthBackgroundState.ConEntradas,
+            [new MedicationItem("Fármaco Alfa", "1 g", "cada 8 h"), new MedicationItem("Fármaco Beta", "no consta", "si precisa")], HealthBackgroundSource.RecetaElectronica), version: 4));
+        var noRefiere = HealthBackgroundDisplay.MedicationReportLines(MedicationHealth(new MedicationRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+        var noConsta = HealthBackgroundDisplay.MedicationReportLines(MedicationHealth(new MedicationRecordContent(HealthBackgroundState.NoConsta, null, null)));
+        var pendiente = HealthBackgroundDisplay.MedicationReportLines(new HealthBackgroundView(null, true));
+        var ilegible = HealthBackgroundDisplay.MedicationReportLines(new HealthBackgroundView(null, true, UnreliableMedicationVersion: 3));
+        var sinLeer = HealthBackgroundDisplay.MedicationReportLines(null);
+
+        Assert.Equal("Medicación habitual:", conEntradas[0]);
+        Assert.Equal(HealthBackgroundDisplay.MedicationCopyNotice, conEntradas[1]);
+        Assert.Contains("Fármaco Alfa, 1 g, cada 8 h", conEntradas);
+        Assert.Contains("Fármaco Beta, no consta, si precisa", conEntradas);
+        Assert.Contains("Fuente: receta electrónica.", conEntradas);
+        Assert.Contains(conEntradas, line => line.Contains("(versión 4)") && line.Contains("última modificación el 29/09/2026") && line.Contains("por Enfermería")
+            && line.Contains("Esta ficha no se revisa de forma periódica.") && line.Contains("Contrastar con la receta electrónica o la hoja de tratamiento oficial del centro y con el residente o su familia."));
+        Assert.Equal("No refiere medicación habitual.", noRefiere[0]);
+        Assert.StartsWith("No se sabe o no consta", noConsta[0]);
+        Assert.Contains("No equivale a que no tome medicación", noConsta[0]);
+        Assert.Equal(HealthBackgroundDisplay.MedicationPending, Assert.Single(pendiente));
+        Assert.Contains("No equivale a «no toma medicación»", pendiente[0]);
+        Assert.Equal(sinLeer, ilegible);
+        Assert.Contains("no es fiable", Assert.Single(ilegible));
+        foreach (var lines in new[] { conEntradas, noRefiere, noConsta, pendiente, ilegible })
+        {
+            Assert.DoesNotContain(lines, line => line.Contains("revisad", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    [Fact]
+    public void ElInformeConLasTresFichasRellenas_LasImprimeLasTresEnSuOrden_ConLaCopiaInformativaDeLaMedicacion()
+    {
+        var detail = new PendingChangeDetail(
+            Guid.NewGuid(), ClinicalEventOrigin.EventoEnfermeria, ResidentId.New(), "Residente", UnitId.New(), null,
+            DailyChangeClassification.Ordinario, [], null, "Caída.", null, SystemProfile.Enfermeria, null, null, At,
+            ClinicalEventStatus.ProtocoloUrgente, 3, true, At, null, [], null, null, null,
+            new MedicalDetail(null, null, null, [], null), null, null);
+        var health = new HealthBackgroundView(
+            new AllergyRecord(1, new AllergyRecordContent(HealthBackgroundState.NoRefiere, null, null), SystemProfile.Enfermeria, At), true,
+            Conditions: new ConditionRecord(2, new ConditionRecordContent(HealthBackgroundState.ConEntradas,
+                [new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", 2010)], null), SystemProfile.Medicina, At),
+            Medication: new MedicationRecord(3, new MedicationRecordContent(HealthBackgroundState.ConEntradas,
+                Enumerable.Range(1, MedicationRecordContent.MaxItems).Select(i => new MedicationItem($"Fármaco {i}", "1 g", "cada 8 h")).ToList(), HealthBackgroundSource.RecetaElectronica),
+                SystemProfile.Enfermeria, At));
+
+        var sections = ReferralReportBuilder.Build(detail, null, new ResidentIdentification("Residente", new DateOnly(1940, 1, 1), DocumentedSexCode.NoConsta, "Centro", null), health);
+
+        var titles = sections.Select(s => s.Title).ToList();
+        Assert.True(titles.IndexOf("Alergias e intolerancias a medicamentos") < titles.IndexOf("Enfermedades e intervenciones"));
+        Assert.True(titles.IndexOf("Enfermedades e intervenciones") < titles.IndexOf("Medicación habitual"));
+        var medication = sections.Single(s => s.Title == "Medicación habitual").Lines;
+        Assert.Equal(HealthBackgroundDisplay.MedicationCopyNotice, medication[1]);
+        Assert.Equal(MedicationRecordContent.MaxItems, medication.Count(line => line.StartsWith("Fármaco ")));
+        Assert.Contains("Enfermedad: Enfermedad Alfa (2010)", sections.Single(s => s.Title == "Enfermedades e intervenciones").Lines);
+        Assert.Equal("No refiere alergias a medicamentos.", sections.Single(s => s.Title == "Alergias e intolerancias a medicamentos").Lines[0]);
+    }
+
+    [Fact]
+    public void MedicacionDelInforme_SiLaFichaCambia_LaHuellaDelInformeCambia_ParaQueNoSeFirmeLoQueNoSeVio()
+    {
+        ReferralReportContent Compose(HealthBackgroundView health) => ReferralReportContent.Compose(
+            [new ReferralReportSection(HealthBackgroundDisplay.MedicationTitle, true, HealthBackgroundDisplay.MedicationReportLines(health))], new ReferralReportInput("Motivo.", null));
+        var before = Compose(MedicationHealth(new MedicationRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+        var after = Compose(MedicationHealth(new MedicationRecordContent(
+            HealthBackgroundState.ConEntradas, [new MedicationItem("Fármaco Alfa", "1 g", "cada 8 h")], null), version: 2));
+        var same = Compose(MedicationHealth(new MedicationRecordContent(HealthBackgroundState.NoRefiere, null, null)));
+
+        Assert.NotEqual(before.Hash(), after.Hash());
+        Assert.Equal(before.Hash(), same.Hash());
+    }
+
     [Fact]
     public void Build_SinBasalNiEvolucion_LoDiceEnVezDeDejarLaSeccionVacia()
     {
@@ -201,6 +277,8 @@ public class ReferralReportBuilderTests
         Assert.Contains("No equivale a «sin alergias»", HealthBackgroundDisplay.Pending);
         Assert.Contains("no es fiable", sections.Single(s => s.Title == "Enfermedades e intervenciones").Lines.Single());
         Assert.Equal(HealthBackgroundDisplay.ConditionsPending, pending.Single(s => s.Title == "Enfermedades e intervenciones").Lines.Single());
+        Assert.Contains("no es fiable", sections.Single(s => s.Title == "Medicación habitual").Lines.Single());
+        Assert.Equal(HealthBackgroundDisplay.MedicationPending, pending.Single(s => s.Title == "Medicación habitual").Lines.Single());
         Assert.Equal("Sin datos registrados.", sections.Single(s => s.Title == "Evolución").Lines.Single());
         Assert.All(sections, s => Assert.NotEmpty(s.Lines));
     }

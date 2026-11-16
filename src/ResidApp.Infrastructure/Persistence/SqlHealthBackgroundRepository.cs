@@ -10,7 +10,7 @@ using ResidApp.Shared;
 namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
-/// Ficha de antecedentes de salud, fases 1 y 2: alergias (script 0094) y enfermedades e intervenciones (script 0096), en las mismas dos tablas. Cada guardado va en
+/// Ficha de antecedentes de salud, fases 1 a 3: alergias (script 0094), enfermedades e intervenciones (script 0096) y medicación habitual (script 0097), en las mismas dos tablas. Cada guardado va en
 /// una transacción que bloquea al residente (UPDLOCK), como la foto y la corrección de identidad: comprueba que la versión vigente del apartado es la que vio quien edita
 /// (si no, HEALTH_BACKGROUND_REVISION_CONFLICT), vuelve a comprobar el permiso HEALTH_BACKGROUND_EDIT del ámbito, inserta la versión y sus elementos y deja su evento en
 /// dbo.eventos_auditoria, sin el texto de la ficha.
@@ -61,15 +61,43 @@ public sealed class SqlHealthBackgroundRepository(SqlConnectionFactory connectio
         }
     }
 
+    public async Task<MedicationRecord?> ReadMedicationAsync(CenterId centerId, ResidentId residentId, CancellationToken ct = default)
+    {
+        var raw = await ReadRawAsync(centerId, residentId, HealthBackground.MedicationSection, ct);
+        if (raw is not var (version, rows))
+        {
+            return null;
+        }
+        try
+        {
+            var content = new MedicationRecordContent(
+                EnumCode.ParseCode<HealthBackgroundState>(version.State),
+                rows.Select(row => row.Type == HealthBackground.MedicationItemCode
+                    ? new MedicationItem(row.Name, row.Dose, row.Schedule)
+                    : throw new DomainValidationException(HealthBackground.InvalidCode)).ToList(),
+                version.Source is { } source ? EnumCode.ParseCode<HealthBackgroundSource>(source) : null);
+            return new MedicationRecord(version.Version, content, EnumCode.ParseCode<SystemProfile>(version.Profile), ModifiedAt(version));
+        }
+        catch (DomainValidationException)
+        {
+            throw new HealthBackgroundInconsistentException(version.Version);
+        }
+    }
+
     public Task<int> SaveAllergiesAsync(
         HealthBackgroundTarget target, int expectedVersion, HealthBackgroundReason reason, AllergyRecordContent content, CancellationToken ct = default) =>
         SaveAsync(target, HealthBackground.AllergiesSection, expectedVersion, reason, content.State, content.Source,
-            content.Items.Select(i => new ItemRow(i.Type.ToCode(), i.Name, i.Reaction, null)).ToList(), ct);
+            content.Items.Select(i => new ItemRow(i.Type.ToCode(), i.Name, i.Reaction, null, null, null)).ToList(), ct);
 
     public Task<int> SaveConditionsAsync(
         HealthBackgroundTarget target, int expectedVersion, HealthBackgroundReason reason, ConditionRecordContent content, CancellationToken ct = default) =>
         SaveAsync(target, HealthBackground.ConditionsSection, expectedVersion, reason, content.State, content.Source,
-            content.Items.Select(i => new ItemRow(i.Type.ToCode(), i.Name, null, (short?)i.Year)).ToList(), ct);
+            content.Items.Select(i => new ItemRow(i.Type.ToCode(), i.Name, null, (short?)i.Year, null, null)).ToList(), ct);
+
+    public Task<int> SaveMedicationAsync(
+        HealthBackgroundTarget target, int expectedVersion, HealthBackgroundReason reason, MedicationRecordContent content, CancellationToken ct = default) =>
+        SaveAsync(target, HealthBackground.MedicationSection, expectedVersion, reason, content.State, content.Source,
+            content.Items.Select(i => new ItemRow(HealthBackground.MedicationItemCode, i.Name, null, null, i.Dose, i.Schedule)).ToList(), ct);
 
     private static DateTimeOffset ModifiedAt(VersionRow version) => new(DateTime.SpecifyKind(version.CreatedAt, DateTimeKind.Utc));
 
@@ -89,7 +117,7 @@ public sealed class SqlHealthBackgroundRepository(SqlConnectionFactory connectio
         }
 
         var rows = (await connection.QueryAsync<ItemRow>(new CommandDefinition("""
-            SELECT tipo_codigo AS Type, nombre AS Name, reaccion AS Reaction, anio AS Year
+            SELECT tipo_codigo AS Type, nombre AS Name, reaccion AS Reaction, anio AS Year, dosis AS Dose, pauta AS Schedule
               FROM dbo.fichas_antecedentes_elementos
              WHERE version_id = @VersionId AND centro_id = @CenterId
              ORDER BY posicion
@@ -110,7 +138,7 @@ public sealed class SqlHealthBackgroundRepository(SqlConnectionFactory connectio
         await LockResidentAsync(connection, transaction, target, ct);
 
         var current = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
-            SELECT ISNULL(MAX(numero_version), 0) FROM dbo.fichas_antecedentes_versiones
+            SELECT ISNULL(MAX(numero_version), 0) FROM dbo.fichas_antecedentes_versiones WITH (FORCESEEK)
              WHERE residente_id = @ResidentId AND centro_id = @CenterId AND apartado_codigo = @Section
             """, new { ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value, Section = section }, transaction, cancellationToken: ct));
         if (current != expectedVersion)
@@ -136,12 +164,12 @@ public sealed class SqlHealthBackgroundRepository(SqlConnectionFactory connectio
         {
             var item = items[index];
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.fichas_antecedentes_elementos (id, version_id, residente_id, centro_id, posicion, tipo_codigo, nombre, reaccion, anio)
-                VALUES (NEWID(), @VersionId, @ResidentId, @CenterId, @Position, @Type, @Name, @Reaction, @Year);
+                INSERT INTO dbo.fichas_antecedentes_elementos (id, version_id, residente_id, centro_id, posicion, tipo_codigo, nombre, reaccion, anio, dosis, pauta)
+                VALUES (NEWID(), @VersionId, @ResidentId, @CenterId, @Position, @Type, @Name, @Reaction, @Year, @Dose, @Schedule);
                 """, new
             {
                 VersionId = versionId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value, Position = index + 1,
-                item.Type, item.Name, item.Reaction, item.Year,
+                item.Type, item.Name, item.Reaction, item.Year, item.Dose, item.Schedule,
             }, transaction, cancellationToken: ct));
         }
 
@@ -188,5 +216,5 @@ public sealed class SqlHealthBackgroundRepository(SqlConnectionFactory connectio
 
     private sealed record VersionRow(Guid Id, int Version, string State, short Count, string? Source, string Profile, DateTime CreatedAt);
 
-    private sealed record ItemRow(string Type, string Name, string? Reaction, short? Year);
+    private sealed record ItemRow(string Type, string Name, string? Reaction, short? Year, string? Dose, string? Schedule);
 }

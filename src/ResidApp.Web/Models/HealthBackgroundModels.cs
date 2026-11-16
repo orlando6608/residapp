@@ -121,6 +121,60 @@ public sealed class ConditionFormModel
 
 public sealed record ConditionEditViewModel(ScopeResidentSummary Resident, ConditionFormModel Form, string? Error, string RecordController);
 
+/// <summary>Una fila del formulario de medicación habitual. Una fila con el nombre, la dosis y la pauta en blanco se ignora.</summary>
+public sealed class MedicationRowModel
+{
+    public string? Nombre { get; set; }
+    public string? Dosis { get; set; }
+    public string? Pauta { get; set; }
+}
+
+/// <summary>El formulario de medicación habitual (ficha de antecedentes de salud, fase 3; script 0097). Igual que los otros: VersionVista es la versión vigente cuando se abrió la
+/// pantalla (0 si estaba pendiente); Estado, Fuente y Motivo son códigos de lista cerrada.</summary>
+public sealed class MedicationFormModel
+{
+    public Guid ResidenteId { get; set; }
+    public int VersionVista { get; set; }
+    public string? Estado { get; set; }
+    public string? Fuente { get; set; }
+    public string? Motivo { get; set; }
+    public List<MedicationRowModel> Filas { get; set; } = [];
+
+    /// <summary>Convierte lo escrito en el contenido de la versión, o lanza DomainValidationException si no es válido (incluida una fila sin dosis o sin pauta).</summary>
+    public MedicationRecordContent ToContent()
+    {
+        if (!EnumCode.TryParseCode<HealthBackgroundState>(Estado ?? "", out var state))
+        {
+            throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+        HealthBackgroundSource? source = null;
+        if (!string.IsNullOrWhiteSpace(Fuente))
+        {
+            source = EnumCode.TryParseCode<HealthBackgroundSource>(Fuente, out var parsed) ? parsed : throw new DomainValidationException(HealthBackground.InvalidCode);
+        }
+        var items = Filas
+            .Where(row => !string.IsNullOrWhiteSpace(row.Nombre) || !string.IsNullOrWhiteSpace(row.Dosis) || !string.IsNullOrWhiteSpace(row.Pauta))
+            .Select(row => new MedicationItem(row.Nombre, row.Dosis, row.Pauta))
+            .ToList();
+        return new MedicationRecordContent(state, items, source);
+    }
+
+    public HealthBackgroundReason? ReasonOrNull() =>
+        EnumCode.TryParseCode<HealthBackgroundReason>(Motivo ?? "", out var reason) ? reason : null;
+
+    public static MedicationFormModel From(Guid residentId, MedicationRecord? record) => new()
+    {
+        ResidenteId = residentId,
+        VersionVista = record?.Version ?? 0,
+        Estado = record?.Content.State.ToCode(),
+        Fuente = record?.Content.Source?.ToCode(),
+        Filas = record?.Content.Items.Select(i => new MedicationRowModel { Nombre = i.Name, Dosis = i.Dose, Pauta = i.Schedule }).ToList() ?? [],
+    };
+}
+
+/// <summary>LastModified es la fecha y el perfil de la versión vigente, visibles antes de editar (revisión del DPO: la edad del dato no se esconde); null si está pendiente.</summary>
+public sealed record MedicationEditViewModel(ScopeResidentSummary Resident, MedicationFormModel Form, string? Error, string RecordController, string? LastModified = null);
+
 /// <summary>El bloque «Antecedentes de salud» de la ficha del residente. View es null si no se pudo leer (el bloque entonces no se enseña).</summary>
 public sealed record HealthBackgroundCardModel(Guid ResidentId, HealthBackgroundView View);
 
@@ -223,6 +277,52 @@ public static class HealthBackgroundDisplay
         }
         lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
             "Esta ficha no se revisa de forma periódica. Contrastar con la documentación clínica del centro y con el residente o su familia.");
+        return lines;
+    }
+
+    public const string MedicationTitle = "Medicación habitual";
+
+    public const string MedicationPending =
+        "Ficha pendiente de rellenar en este centro: no hay datos registrados. No equivale a «no toma medicación».";
+
+    /// <summary>Texto fijo de la medicación, en pantalla y en el informe (revisión del DPO, 2026-11-16): es una copia y no sustituye a la fuente oficial.</summary>
+    public const string MedicationCopyNotice =
+        "Copia informativa: la fuente es la receta electrónica o la hoja de tratamiento oficial del centro; si no coinciden, manda la oficial.";
+
+    public static string MedicationState(HealthBackgroundState state) => state switch
+    {
+        HealthBackgroundState.NoRefiere => "No refiere medicación habitual.",
+        HealthBackgroundState.NoConsta => "No se sabe o no consta: información no fiable o sin confirmar. No equivale a que no tome medicación.",
+        _ => "Medicación habitual:",
+    };
+
+    public static string MedicationLine(MedicationItem item) => $"{item.Name}, {item.Dose}, {item.Schedule}";
+
+    public static string MedicationLastModified(MedicationRecord record) =>
+        $"Última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        "Esta ficha no se revisa de forma periódica: se actualiza cuando ocurre algo. No sustituye a la receta electrónica ni a la hoja de tratamiento oficial del centro.";
+
+    /// <summary>Lo que dice el informe de derivación sobre la medicación habitual: la lista completa (nombre, dosis y pauta), con la cautela de que es una copia y no sustituye a la
+    /// receta electrónica ni a la hoja de tratamiento oficial; no dice «revisado», dice cuándo y quién la modificó por última vez, y una ficha ilegible se dice, no se imprime como válida.</summary>
+    public static IReadOnlyList<string> MedicationReportLines(HealthBackgroundView? view)
+    {
+        if (view is null || view.UnreliableMedicationVersion is not null)
+        {
+            return ["No se ha podido leer la ficha de medicación habitual: este dato no es fiable. Contrasta con la receta electrónica o la hoja de tratamiento oficial del centro y con el residente o su familia."];
+        }
+        if (view.Medication is not { } record)
+        {
+            return [MedicationPending];
+        }
+
+        var lines = new List<string> { MedicationState(record.Content.State), MedicationCopyNotice };
+        lines.AddRange(record.Content.Items.Select(MedicationLine));
+        if (Source(record.Content.Source) is { } source)
+        {
+            lines.Add(source);
+        }
+        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+            "Esta ficha no se revisa de forma periódica. Contrastar con la receta electrónica o la hoja de tratamiento oficial del centro y con el residente o su familia.");
         return lines;
     }
 }
