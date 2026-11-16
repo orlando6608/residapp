@@ -1,6 +1,6 @@
 {
   "perfil": "Medicina",
-  "proposito": "Medicina valora lo que Enfermería le escala y los eventos que observa directamente. Da indicaciones a Enfermería, hace seguimiento médico, activa el protocolo urgente, deriva a Urgencias y cierra el episodio; con permiso, también firma el estado basal. ResidApp no diagnostica ni propone ninguna conducta: registra lo que decides tú.",
+  "proposito": "Medicina valora lo que Enfermería le escala y los eventos que observa directamente. Da indicaciones a Enfermería, hace seguimiento médico, activa el protocolo urgente, deriva a Urgencias y cierra el episodio; con permiso, también firma el estado basal y rellena la ficha de antecedentes de salud. ResidApp no diagnostica ni propone ninguna conducta: registra lo que decides tú.",
   "rutina": [
     "Entras en el **Inicio de Medicina**: las tarjetas te dicen cuántos escalados o eventos propios esperan valoración, cuántos protocolos urgentes y seguimientos hay abiertos y cuántas indicaciones siguen sin leer.",
     "Abres cada escalado, inicias la valoración médica y la guardas.",
@@ -29,8 +29,8 @@
     "Corregir lo que no sea tu valoración médica: ni la observación original, ni el basal, las indicaciones, el protocolo o el informe de derivación firmado.",
     "Dar de alta residentes: es un permiso aparte, que Medicina no tiene."
   ],
-  "revisadoPara": "0.3.0",
-  "revisado": "2026-11-15",
+  "revisadoPara": "0.4.0",
+  "revisado": "2026-11-16",
   "fichas": [
     {
       "codigo": "MED-01",
