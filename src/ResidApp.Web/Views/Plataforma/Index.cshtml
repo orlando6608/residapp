@@ -21,6 +21,11 @@
 }
 <div asp-validation-summary="All" class="text-danger"></div>
 
+@if (ViewData["Vencimientos"] is ResidApp.Web.Models.PlatformExpiringModulesViewModel vencimientos)
+{
+    <partial name="_VencimientosModulos" model="vencimientos" />
+}
+
 @if (ViewData.ModelState.IsValid)
 {
     <div class="d-flex flex-wrap gap-2 mb-3">

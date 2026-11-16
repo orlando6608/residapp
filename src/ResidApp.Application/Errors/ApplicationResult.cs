@@ -105,7 +105,11 @@ public static class ApplicationResultRunner
             "Este módulo está en solo lectura: puedes consultar lo registrado, pero no crear ni cambiar nada."),
         ["MODULE_INVALID"] = (ApplicationFailureCode.InvalidInput,
             "Revisa los datos del módulo: referencias sin nombres de personas, fechas de vigencia, canal y condiciones comprobadas."),
+        ["MODULE_CENTER_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "El centro no existe o no está activo: en un centro inactivo se puede apagar un módulo, pero no activarlo."),
         ["MODULE_CHANGE_CONFLICT"] = (ApplicationFailureCode.Conflict, "El módulo ya estaba así en ese centro, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla."),
+        ["MODULE_REFERENCE_REPEATED"] = (ApplicationFailureCode.Conflict,
+            "Esa referencia de solicitud ya se usó para este centro y módulo: ya está registrado (o es otra petición y necesita su propia referencia)."),
         ["MODULE_DEPENDENCY_MISSING"] = (ApplicationFailureCode.Conflict, "Falta activar antes un módulo del que este depende."),
     };
 

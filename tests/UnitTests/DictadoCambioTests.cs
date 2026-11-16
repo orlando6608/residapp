@@ -158,7 +158,7 @@ public class DictadoCambioTests
     [Fact]
     public async Task Sugerir_ConElModuloApagadoSinFilaOVencido_OSinLaClaveGlobal_NoAuditaNiLlamaAlProveedor()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
         var cases = new (bool ModuleOn, bool Key, ResidApp.Domain.Modules.CenterModuleChange? Last)[]
         {
             (false, true, null),
@@ -182,7 +182,7 @@ public class DictadoCambioTests
     [Fact]
     public async Task Sugerir_ConElModuloActivoPorFilaYLaClave_Funciona()
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
         var (useCase, fakes) = Build(moduleOn: false, lastChange: new ResidApp.Domain.Modules.CenterModuleChange(1, true, today.AddDays(-1), today.AddDays(30)));
         fakes.Output = Output(new VoiceModelArea(Area(DailyChangeAreaCode.AlimentacionHidratacion), null, [Option(DailyChangeAreaOptionCode.NulaIngesta)]));
 
@@ -284,6 +284,12 @@ public class DictadoCambioTests
     private sealed class FakeModules(ResidApp.Domain.Modules.CenterModuleChange? last) : ICenterModuleRepository
     {
         public Task<ResidApp.Domain.Modules.CenterModuleChange?> FindLastAsync(CenterId centerId, string moduleCode, CancellationToken ct = default) => Task.FromResult(last);
+
+        public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformModuleChange>> ListChangesAsync(ResidApp.Application.Ports.PlatformAccess access, CenterId centerId, CancellationToken ct = default) => throw new NotSupportedException();
+
+
+        public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformExpiringModule>> ListExpiringAsync(ResidApp.Application.Ports.PlatformAccess access, DateOnly from, DateOnly until, CancellationToken ct = default) => throw new NotSupportedException();
+
 
         public Task AppendAsync(PlatformAccess access, ResidApp.Domain.Modules.NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) => throw new NotSupportedException();
     }

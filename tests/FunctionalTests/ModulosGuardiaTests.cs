@@ -73,6 +73,12 @@ public class ModulosGuardiaTests
     {
         public Task<CenterModuleChange?> FindLastAsync(CenterId centerId, string moduleCode, CancellationToken ct = default) => Task.FromResult(last);
 
+        public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformModuleChange>> ListChangesAsync(ResidApp.Application.Ports.PlatformAccess access, CenterId centerId, CancellationToken ct = default) => throw new NotSupportedException();
+
+
+        public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformExpiringModule>> ListExpiringAsync(ResidApp.Application.Ports.PlatformAccess access, DateOnly from, DateOnly until, CancellationToken ct = default) => throw new NotSupportedException();
+
+
         public Task AppendAsync(PlatformAccess access, NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) => throw new NotSupportedException();
     }
 
@@ -126,7 +132,7 @@ public class ModulosGuardiaTests
 
     private static CenterModuleChange Enabled(DateOnly from, DateOnly until) => new(1, true, from, until);
 
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
 
     [Fact]
     public async Task El_atributo_deja_pasar_con_el_modulo_activo()

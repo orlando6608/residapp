@@ -52,9 +52,14 @@ public static class CenterModules
 /// <summary>Vencimiento y estado: el estado se calcula al consultar, sin tarea programada ni caché.</summary>
 public static class CenterModuleRules
 {
+    private static readonly TimeZoneInfo Madrid = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+
+    /// <summary>El día de Madrid de un instante (decidido por Orlando, 2026-11-16): la vigencia de un contrato empieza y acaba a medianoche en España, no en UTC.</summary>
+    public static DateOnly TodayInMadrid(DateTimeOffset now) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Madrid).DateTime);
+
     /// <summary>
     /// El cambio vigente (el último) y el día de hoy dan el estado. Una baja, una vigencia vencida o una que aún no ha empezado dejan el módulo apagado: solo lectura si guarda
-    /// datos propios, no disponible si no. <paramref name="today"/> es el día en UTC y <c>vigente_hasta</c> vale hasta el final de ese día.
+    /// datos propios, no disponible si no. <paramref name="today"/> es el día de Madrid (<see cref="TodayInMadrid"/>) y <c>vigente_hasta</c> vale hasta el final de ese día.
     /// </summary>
     public static ModuleState Resolve(CenterModule module, CenterModuleChange? last, DateOnly today)
     {
@@ -131,8 +136,8 @@ public static partial class NewCenterModuleChangeRules
         var version = annexVersion?.Trim();
         // El último cambio manda: una alta con vigencia futura apagaría hoy el módulo que aún está vigente. Una renovación se registra el día en que empieza (o antes).
         // La tabla es inmutable: una alta que ya nace vencida (un año mal tecleado) dejaría el módulo apagado con la auditoría diciendo «activado», y no se podría corregir.
-        if (validFrom is null || validUntil is null || validUntil < validFrom || validUntil < DateOnly.FromDateTime(now.UtcDateTime)
-            || validFrom > DateOnly.FromDateTime(now.UtcDateTime)
+        if (validFrom is null || validUntil is null || validUntil < validFrom || validUntil < CenterModuleRules.TodayInMadrid(now)
+            || validFrom > CenterModuleRules.TodayInMadrid(now)
             || !conditionsChecked || !IsOpaque(annex) || !IsOpaque(version, 16))
         {
             throw new DomainValidationException(Invalid);

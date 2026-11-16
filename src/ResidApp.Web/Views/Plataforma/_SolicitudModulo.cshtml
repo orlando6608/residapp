@@ -1,0 +1,28 @@
+@using ResidApp.Domain.Modules
+@using ResidApp.Web.Models
+@model string
+@* La solicitud del centro: lo que prueba cuándo se pidió el cambio y, en una baja, el plazo de apagado del anexo. El modelo es un sufijo para que los ids no se repitan en la página. *@
+<fieldset class="mt-3">
+    <legend class="h6">Petición del centro</legend>
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="recibida-@Model">Recibida el (hora de Madrid)</label>
+            <input class="form-control form-control-lg" type="datetime-local" id="recibida-@Model" name="SolicitudRecibidaEn" required />
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="canal-@Model">Canal</label>
+            <select class="form-select form-select-lg" id="canal-@Model" name="Canal" required>
+                <option value="">Elige…</option>
+                @foreach (var channel in Enum.GetValues<ModuleRequestChannel>())
+                {
+                    <option value="@channel">@ModuleDisplay.Channel(channel)</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="ref-@Model">Referencia de la solicitud</label>
+            <input class="form-control form-control-lg" id="ref-@Model" name="ReferenciaSolicitud" maxlength="40" required autocomplete="off" />
+            <div class="form-text">Distinta en cada petición del centro: no se repite para el mismo módulo y centro.</div>
+        </div>
+    </div>
+</fieldset>

@@ -450,7 +450,7 @@ public sealed class RlsCentroTests
             VALUES (NEWID(), @centerId, 'DICTADO_VOZ', @number, @state,
                     CASE WHEN @enable = 1 THEN '2026-01-01' END, CASE WHEN @enable = 1 THEN '2026-12-31' END, CASE WHEN @enable = 1 THEN 'ANX-1' END,
                     CASE WHEN @enable = 1 THEN '1' END, CASE WHEN @enable = 1 THEN '1' END, CASE WHEN @enable = 1 THEN 'A,B' END,
-                    CASE WHEN @enable = 0 THEN 'PETICION_CENTRO' END, SYSUTCDATETIME(), 'CORREO', 'REQ-1', @changedBy, @profile, SYSUTCDATETIME())
+                    CASE WHEN @enable = 0 THEN 'PETICION_CENTRO' END, SYSUTCDATETIME(), 'CORREO', 'REQ-' + CONVERT(NVARCHAR(36), NEWID()), @changedBy, @profile, SYSUTCDATETIME())
             """, new { centerId, number, enable, state = enable ? "ACTIVE" : "DISABLED", changedBy, profile });
 
     [Fact]

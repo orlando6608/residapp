@@ -34,7 +34,7 @@ public sealed class CenterModuleAccess(
         }
 
         var last = await modules.FindLastAsync(verifiedCenterId, module.Code, ct);
-        return CenterModuleRules.Resolve(module, last, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime));
+        return CenterModuleRules.Resolve(module, last, CenterModuleRules.TodayInMadrid(clock.GetUtcNow()));
     }
 
     /// <summary>El estado en el centro del ámbito activo que declara la cookie, comprobado contra la cuenta de la sesión (el centro sale del ámbito, no de la cookie). Sin sesión o con un ámbito ajeno: no disponible.</summary>

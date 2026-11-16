@@ -130,7 +130,7 @@ public class CenterModulesTests
 /// <summary>Los casos de uso que exigen el módulo, con un módulo que sí guarda datos propios (el único real, el dictado, no los guarda y nunca llega a solo lectura).</summary>
 public class CenterModuleAccessTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+    private static readonly DateOnly Today = CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
 
     private static readonly ResidApp.Domain.Modules.CenterModule WithData = new(
         "CON_DATOS", "Módulo con datos propios", [], "1", "docs/privacidad/x.md", ["C"], HasOwnData: true, UsesThirdParty: false, GlobalCut: "n/a");
@@ -138,6 +138,12 @@ public class CenterModuleAccessTests
     private sealed class Repository(ResidApp.Domain.Modules.CenterModuleChange? last) : ResidApp.Application.Ports.ICenterModuleRepository
     {
         public Task<ResidApp.Domain.Modules.CenterModuleChange?> FindLastAsync(CenterId centerId, string moduleCode, CancellationToken ct = default) => Task.FromResult(last);
+
+        public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformModuleChange>> ListChangesAsync(ResidApp.Application.Ports.PlatformAccess access, CenterId centerId, CancellationToken ct = default) => throw new NotSupportedException();
+
+
+        public Task<IReadOnlyList<ResidApp.Application.Ports.PlatformExpiringModule>> ListExpiringAsync(ResidApp.Application.Ports.PlatformAccess access, DateOnly from, DateOnly until, CancellationToken ct = default) => throw new NotSupportedException();
+
 
         public Task AppendAsync(ResidApp.Application.Ports.PlatformAccess access, ResidApp.Domain.Modules.NewCenterModuleChange change, DateOnly today, CancellationToken ct = default) =>
             throw new NotSupportedException();
@@ -176,5 +182,63 @@ public class CenterModuleAccessTests
 
         Assert.Equal(ResidApp.Application.UseCases.CenterModuleAccess.NotAvailable, read.Message);
         Assert.Equal(ResidApp.Application.UseCases.CenterModuleAccess.NotAvailable, write.Message);
+    }
+}
+
+/// <summary>El día de Madrid (decidido por Orlando, 2026-11-16): la vigencia cambia a medianoche en España, no en UTC.</summary>
+public class MadridDayTests
+{
+    [Theory]
+    [InlineData("2026-07-15T21:59:59Z", "2026-07-15")]
+    [InlineData("2026-07-15T22:00:00Z", "2026-07-16")]
+    [InlineData("2026-01-15T22:59:59Z", "2026-01-15")]
+    [InlineData("2026-01-15T23:00:00Z", "2026-01-16")]
+    [InlineData("2026-03-29T00:30:00Z", "2026-03-29")]
+    [InlineData("2026-10-25T22:59:59Z", "2026-10-25")]
+    [InlineData("2026-10-25T23:00:00Z", "2026-10-26")]
+    public void ElDiaDeMadrid_CambiaALaMedianocheDeEspana_EnVeranoEInvierno(string utc, string madrid) =>
+        Assert.Equal(DateOnly.Parse(madrid), ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.Parse(utc)));
+
+    [Fact]
+    public void ElUltimoDiaDeVigenciaSigueActivoHastaLasCeroHorasDeMadrid()
+    {
+        var module = new ResidApp.Domain.Modules.CenterModule("X", "X", [], "1", "docs/privacidad/x.md", ["C"], HasOwnData: false, UsesThirdParty: false, GlobalCut: "n/a");
+        var change = new ResidApp.Domain.Modules.CenterModuleChange(1, true, new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 15));
+
+        // 23:59 en Madrid del 15 = 21:59 UTC; las 00:00 del 16 = 22:00 UTC.
+        var beforeMidnight = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.Parse("2026-07-15T21:59:59Z"));
+        var afterMidnight = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.Parse("2026-07-15T22:00:00Z"));
+
+        Assert.Equal(ResidApp.Domain.Modules.ModuleState.Active, ResidApp.Domain.Modules.CenterModuleRules.Resolve(module, change, beforeMidnight));
+        Assert.Equal(ResidApp.Domain.Modules.ModuleState.NotAvailable, ResidApp.Domain.Modules.CenterModuleRules.Resolve(module, change, afterMidnight));
+    }
+
+    [Fact]
+    public void ActivarConVigenciaDeHoyEnMadrid_SeAcepta_AunqueEnUtcSeaElDiaAnterior()
+    {
+        // 00:30 del 16 en Madrid (verano) = 22:30 UTC del 15.
+        var now = DateTimeOffset.Parse("2026-07-15T22:30:00Z");
+        var change = ResidApp.Domain.Modules.NewCenterModuleChangeRules.Validate(
+            CenterId.From(Guid.NewGuid()), Guid.NewGuid(), ResidApp.Domain.Modules.CenterModules.DictadoVoz, true, new DateOnly(2026, 7, 16), new DateOnly(2026, 8, 16), "ANX", "1", true, null,
+            now.AddHours(-1), ResidApp.Domain.Modules.ModuleRequestChannel.Correo, "SOL-1", now);
+
+        Assert.Equal(new DateOnly(2026, 7, 16), change.ValidFrom);
+        Assert.Throws<DomainValidationException>(() => ResidApp.Domain.Modules.NewCenterModuleChangeRules.Validate(
+            CenterId.From(Guid.NewGuid()), Guid.NewGuid(), ResidApp.Domain.Modules.CenterModules.DictadoVoz, true, new DateOnly(2026, 7, 10), new DateOnly(2026, 7, 15), "ANX", "1", true, null,
+            now.AddHours(-1), ResidApp.Domain.Modules.ModuleRequestChannel.Correo, "SOL-2", now));
+    }
+
+    [Fact]
+    public void LaHoraDeLaSolicitud_Admite366DiasYAhoraMismo_PeroNoMas()
+    {
+        var now = DateTimeOffset.Parse("2026-11-16T10:00:00Z");
+        ResidApp.Domain.Modules.NewCenterModuleChange Build(DateTimeOffset received) => ResidApp.Domain.Modules.NewCenterModuleChangeRules.Validate(
+            CenterId.From(Guid.NewGuid()), Guid.NewGuid(), ResidApp.Domain.Modules.CenterModules.DictadoVoz, false, null, null, null, null, false,
+            ResidApp.Domain.Modules.ModuleDisableReason.Otro, received, ResidApp.Domain.Modules.ModuleRequestChannel.Ticket, "SOL-1", now);
+
+        Assert.Equal(now, Build(now).RequestReceivedAt);
+        Assert.Equal(now.AddDays(-366), Build(now.AddDays(-366)).RequestReceivedAt);
+        Assert.Throws<DomainValidationException>(() => Build(now.AddDays(-366).AddSeconds(-1)));
+        Assert.Throws<DomainValidationException>(() => Build(now.AddSeconds(1)));
     }
 }
