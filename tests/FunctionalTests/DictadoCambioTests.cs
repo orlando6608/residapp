@@ -8,6 +8,7 @@ using Dapper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ResidApp.Application.Ports;
@@ -47,7 +48,7 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
         return client;
     }
 
-    private sealed record Seed(string Auxiliar, string OtroAuxiliar, string Enfermeria, Guid Resident, Guid AuxiliarAccount);
+    private sealed record Seed(string Auxiliar, string OtroAuxiliar, string Enfermeria, Guid Resident, Guid AuxiliarAccount, Guid Center);
 
     private static async Task<Seed> SeedAsync()
     {
@@ -97,12 +98,14 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
                 VALUES (NEWID(), @auxScope, @centerId, @residentId, SYSUTCDATETIME(), @adminId)
                 """, new { auxScope, centerId, residentId = resident.ResidentId.Value, adminId });
         }
-        return new Seed($"dictado-aux-{suffix}", $"dictado-aux2-{suffix}", $"dictado-enf-{suffix}", resident.ResidentId.Value, auxId);
+        return new Seed($"dictado-aux-{suffix}", $"dictado-aux2-{suffix}", $"dictado-enf-{suffix}", resident.ResidentId.Value, auxId, centerId);
     }
 
     /// <summary>La aplicación con la clave puesta (el dictado activo) y el proveedor falso en lugar de Mistral.</summary>
-    private WebApplicationFactory<Program> AppWith(FakeVoice voice, int requestsPerMinute = 100) => factory.WithWebHostBuilder(builder =>
+    private WebApplicationFactory<Program> AppWith(FakeVoice voice, int requestsPerMinute = 100, bool allModules = true) => factory.WithWebHostBuilder(builder =>
     {
+        // allModules = false: como un centro real, el módulo solo lo tiene quien tiene filas en modulos_centro (en desarrollo, appsettings.Development.json los activa todos).
+        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Modulos:ActivarTodos"] = allModules ? "true" : "false" }));
         builder.UseSetting("IA:Mistral:ApiKey", "clave-de-prueba");
         builder.UseSetting("IA:PeticionesPorMinuto", requestsPerMinute.ToString());
         builder.ConfigureTestServices(services =>
@@ -198,7 +201,7 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
     }
 
     [Fact]
-    public async Task LaPantallaDeRegistrarCambio_OfreceElDictadoSoloConClave_ConElAvisoDeNoDecirNombres()
+    public async Task LaPantallaDeRegistrarCambio_OfreceElDictadoSoloConElModuloYLaClave_ConElAvisoDeNoDecirNombres()
     {
         var seed = await SeedAsync();
         using var app = AppWith(Voice());
@@ -234,6 +237,80 @@ public class DictadoCambioTests(WebAppFactory factory) : IClassFixture<WebAppFac
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(0, await AuditRowsAsync(seed.AuxiliarAccount));
+    }
+
+    /// <summary>Un cambio de módulo escrito como lo dejaría Plataforma (aquí como db_owner, que salta la política): alta con vigencia o baja.</summary>
+    private static async Task InsertModuleAsync(Seed seed, int number, bool enable, int fromDays = -1, int untilDays = 30)
+    {
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var today = DateTime.UtcNow.Date;
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.modulos_centro
+                (id, centro_id, modulo_codigo, numero, estado_codigo, vigente_desde, vigente_hasta, referencia_anexo, version_anexo, version_ficha, condiciones_codigos,
+                 motivo_baja_codigo, solicitud_recibida_en, canal_codigo, referencia_solicitud, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @center, 'DICTADO_VOZ', @number, @state, @from, @until, CASE WHEN @enable = 1 THEN 'ANX-1' END, CASE WHEN @enable = 1 THEN '1' END,
+                    CASE WHEN @enable = 1 THEN '1' END, CASE WHEN @enable = 1 THEN 'A' END, CASE WHEN @enable = 0 THEN 'PETICION_CENTRO' END,
+                    SYSUTCDATETIME(), 'CORREO', 'SOL-1', @actor, 'PLATAFORMA', SYSUTCDATETIME())
+            """, new
+        {
+            center = seed.Center, number, enable, state = enable ? "ACTIVE" : "DISABLED", actor = seed.AuxiliarAccount,
+            from = enable ? today.AddDays(fromDays) : (DateTime?)null, until = enable ? today.AddDays(untilDays) : (DateTime?)null,
+        });
+    }
+
+    /// <summary>ADR 0015: sin el módulo en el centro (nunca activado, apagado o vencido) el servidor responde 404 con la clave puesta, sin auditar y sin una sola llamada al proveedor, y la pantalla no lo ofrece.</summary>
+    [Fact]
+    public async Task ConLaClaveYSinElModuloEnElCentro_NiNuncaActivado_NiApagado_NiVencido_Responde404_SinAuditarNiLlamarAlProveedor()
+    {
+        var seed = await SeedAsync();
+        var voice = Voice();
+        using var app = AppWith(voice, allModules: false);
+        var auxiliar = await LoginAsync(app, seed.Auxiliar);
+        var token = await TokenAsync(auxiliar, $"/Auxiliar/RegistrarCambio?residenteId={seed.Resident}");
+
+        // 1. Nunca activado.
+        Assert.Equal(HttpStatusCode.NotFound, (await DictarAsync(auxiliar, seed.Resident, token)).StatusCode);
+        Assert.DoesNotContain("id=\"dictado\"", await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={seed.Resident}"));
+
+        // 2. Vencido (alta cuya vigencia acabó ayer).
+        await InsertModuleAsync(seed, 1, true, fromDays: -30, untilDays: -1);
+        Assert.Equal(HttpStatusCode.NotFound, (await DictarAsync(auxiliar, seed.Resident, token)).StatusCode);
+
+        // 3. Activado y después apagado: el efecto es inmediato, en la petición siguiente.
+        await InsertModuleAsync(seed, 2, true);
+        Assert.Equal(HttpStatusCode.OK, (await DictarAsync(auxiliar, seed.Resident, token)).StatusCode);
+        var callsWhileOn = voice.Calls.Count;
+        await InsertModuleAsync(seed, 3, false);
+        Assert.Equal(HttpStatusCode.NotFound, (await DictarAsync(auxiliar, seed.Resident, token)).StatusCode);
+        Assert.DoesNotContain("id=\"dictado\"", await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={seed.Resident}"));
+
+        Assert.Equal(2, callsWhileOn);
+        Assert.Equal(callsWhileOn, voice.Calls.Count);
+        Assert.Equal(1, await AuditRowsAsync(seed.AuxiliarAccount));
+    }
+
+    [Fact]
+    public async Task ConElModuloActivoEnElCentro_LaPantallaLoOfreceYElDictadoFunciona_PeroOtroCentroSinModuloNo()
+    {
+        var seed = await SeedAsync();
+        var other = await SeedAsync();
+        await InsertModuleAsync(seed, 1, true);
+        var voice = Voice();
+        using var app = AppWith(voice, allModules: false);
+        var auxiliar = await LoginAsync(app, seed.Auxiliar);
+        var otherAuxiliar = await LoginAsync(app, other.Auxiliar);
+
+        var screen = await auxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={seed.Resident}");
+        var otherScreen = await otherAuxiliar.GetStringAsync($"/Auxiliar/RegistrarCambio?residenteId={other.Resident}");
+        var token = ExtractValue(screen, Token);
+        var otherToken = ExtractValue(otherScreen, Token);
+
+        Assert.Contains("id=\"dictado\"", screen);
+        Assert.DoesNotContain("id=\"dictado\"", otherScreen);
+        Assert.Equal(HttpStatusCode.OK, (await DictarAsync(auxiliar, seed.Resident, token)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await DictarAsync(otherAuxiliar, other.Resident, otherToken)).StatusCode);
+        Assert.Equal(1, await AuditRowsAsync(seed.AuxiliarAccount));
+        Assert.Equal(0, await AuditRowsAsync(other.AuxiliarAccount));
     }
 
     [Fact]

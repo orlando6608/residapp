@@ -37,7 +37,7 @@ public class AuxiliarApplicationServiceTests
 
     private static SuggestDailyChangeFromVoice BuildDictation(
         SqlProfileScopeDirectoryProvider scopes, SqlAssignedResidentDirectory directory, ISessionIdentityProvider session, FakeVoiceProvider provider) =>
-        new(scopes, directory, session, new SqlVoiceDictationAudit(TestDatabase.ConnectionFactory), provider, provider);
+        new(scopes, directory, session, new SqlVoiceDictationAudit(TestDatabase.ConnectionFactory), provider, provider, ModulosActivos.Acceso());
 
     [Fact]
     public async Task ListAssignedResidentsAsync_WithNonAuxiliarProfile_ReturnsAccessDenied()

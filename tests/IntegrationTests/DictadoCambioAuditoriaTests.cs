@@ -17,7 +17,7 @@ public class DictadoCambioAuditoriaTests
 {
     private static SuggestDailyChangeFromVoice Build(string externalSubject, FakeVoiceProvider provider) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new SqlAssignedResidentDirectory(TestDatabase.ConnectionFactory),
-        new FixedSession(externalSubject), new SqlVoiceDictationAudit(TestDatabase.ConnectionFactory), provider, provider);
+        new FixedSession(externalSubject), new SqlVoiceDictationAudit(TestDatabase.ConnectionFactory), provider, provider, ModulosActivos.Acceso());
 
     private static SuggestDailyChangeFromVoiceCommand Command(SeededProfile auxiliar, ResidentId resident, Guid operationId) =>
         new(auxiliar.ProfileScopeId, auxiliar.CenterId, resident, new MemoryStream([1, 2, 3]), 3, "audio/webm", operationId);

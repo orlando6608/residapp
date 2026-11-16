@@ -243,6 +243,18 @@ jobs:
             az webapp config appsettings set --name app-residapp-dev --resource-group rg-residapp-dev --settings Privacidad__AnonimizarFamiliarActivo=true > /dev/null
           fi
 
+      # Módulos opcionales por centro (ADR 0015): en dev, con datos ficticios, todos los módulos están activos sin filas (Modulos__ActivarTodos). Solo vale si el entorno declara ser de
+      # desarrollo (Entorno__Tipo=Desarrollo); la aplicación no arranca en un entorno desconocido con el ajuste puesto. El dictado además necesita la clave global de Mistral.
+      # Solo se escribe si difiere: cambiar un ajuste reinicia la app.
+      - name: Activar todos los módulos opcionales en dev
+        run: |
+          # Los dos van en una sola llamada: con solo el primero la aplicación reiniciaría sin declarar su entorno y no arrancaría.
+          todos="$(az webapp config appsettings list --name app-residapp-dev --resource-group rg-residapp-dev --query "[?name=='Modulos__ActivarTodos'].value | [0]" -o tsv)"
+          tipo="$(az webapp config appsettings list --name app-residapp-dev --resource-group rg-residapp-dev --query "[?name=='Entorno__Tipo'].value | [0]" -o tsv)"
+          if [ "$todos" != "true" ] || [ "$tipo" != "Desarrollo" ]; then
+            az webapp config appsettings set --name app-residapp-dev --resource-group rg-residapp-dev --settings Modulos__ActivarTodos=true Entorno__Tipo=Desarrollo > /dev/null
+          fi
+
       # Hallazgo A2: App Service redirige HTTP a HTTPS (la app no lo hace, para no entrar en bucle detrás del balanceador; sí manda HSTS).
       # Solo se escribe si hace falta, como la zona horaria.
       - name: Exigir HTTPS en la Web App

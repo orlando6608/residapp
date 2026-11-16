@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ResidApp.Application.Errors;
 using ResidApp.Application.UseCases;
+using ResidApp.Domain.Modules;
 using ResidApp.Infrastructure.IA;
 using ResidApp.Shared;
 using ResidApp.Web.Security;
@@ -11,8 +12,9 @@ namespace ResidApp.Web.Controllers;
 /// <summary>
 /// Dictado por voz de «Registrar cambio» (ADR 0009 y 0011), solo el servidor: recibe un audio de un residente asignado al Auxiliar y devuelve una
 /// <b>sugerencia</b> de áreas y opciones para el formulario, que la persona revisa antes de confirmar nada. No guarda ni el audio ni el texto.
-/// Sin <c>IA:Mistral:ApiKey</c> el dictado está desactivado y esta acción responde 404. La pantalla (botón, micrófono y marca «Sugerido por voz»)
-/// llega en el siguiente tramo.
+/// Es el módulo opcional <c>DICTADO_VOZ</c> (ADR 0015): sin el módulo en el centro del ámbito, o sin <c>IA:Mistral:ApiKey</c> (el interruptor global), responde 404 (<c>[RequiereModulo]</c>);
+/// el caso de uso lo vuelve a comprobar con el centro verificado. La pantalla (botón, micrófono y marca «Sugerido por voz») está en
+/// <c>Views/Auxiliar/RegistrarCambio.cshtml</c> y <c>dictado.js</c>.
 /// </summary>
 public sealed partial class AuxiliarController
 {
@@ -22,15 +24,11 @@ public sealed partial class AuxiliarController
     [HttpPost]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting(IaOptions.RateLimitPolicy)]
+    [RequiereModulo(CenterModules.DictadoVoz)]
     [RequestSizeLimit(MaxDictationRequestBytes)]
     [RequestFormLimits(MultipartBodyLengthLimit = MaxDictationRequestBytes)]
     public async Task<IActionResult> DictarCambio(Guid residenteId, IFormFile? audio, Guid operacionId, CancellationToken ct)
     {
-        if (!ia.Value.Activa)
-        {
-            return NotFound();
-        }
-
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null || residenteId == Guid.Empty || operacionId == Guid.Empty || audio is null)
         {
