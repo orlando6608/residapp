@@ -96,7 +96,7 @@ La ficha es del residente, no de la unidad ni del evento (como el basal): al tra
 |---|---|---|---|
 | Auxiliar | **No, por defecto** | No | Minimización. Hoy lee un resumen del basal (`src/ResidApp.Application/Authorization/ResidentBaselinePolicy.cs:140-148`) y la ficha **no debe heredar esa regla sin decidirlo**: sus tareas no dependen de la medicación (la administración está fuera de alcance). Si CJ ve una necesidad concreta, se concede como permiso, no como regla |
 | Enfermería | Sí, en su ámbito | Sí, **con permiso propio**; CJ la quiere como quien la rellena en el alta | Mismo patrón que `BASELINE_INITIAL_COMPLETE` (`src/ResidApp.Domain/Accounts/ProfilePermissions.cs:14, 28`). Enfermería ya puede dar de alta residentes (`RESIDENT_IDENTITY_CREATE`, línea 13) |
-| Medicina | Sí, en su ámbito | **Pendiente de CJ** (aclaración 1.2, enviada hoy en `docs/pendientes-cj/medicina-ficha-aclaraciones-cj.html`). Si edita, también con permiso propio | Edita quien tiene la responsabilidad clínica; CJ describe la validación de Medicina como consulta ante una duda |
+| Medicina | Sí, en su ámbito | **Sí, con permiso propio** (aclaración 1.2, contestada por CJ el 2026-11-15: Enfermería la rellena y la cambia, y Medicina también puede, por ejemplo para corregir una duda; el permiso es el mismo, `HEALTH_BACKGROUND_EDIT`). *Al redactar este borrador estaba pendiente.* | Edita quien tiene la responsabilidad clínica; CJ describe la validación de Medicina como consulta ante una duda |
 | Dirección Clínica | **Solo con permiso de lectura clínica, finalidad declarada y auditoría previa** | No | Ver abajo |
 | Administración | **No** | No | Solo accede a lo que su función requiere (Llei 21/2000 art. 11.4, `llei-21-2000.txt:117`; `alcance.md:28`). El alta administrativa deja el basal pendiente y no lo completa (`docs/historias-usuarios/administracion.md:17`); la ficha igual |
 | Plataforma | No | No | No ve contenido clínico (`alcance.md:30`) |
@@ -287,8 +287,8 @@ No entra ahora. **Anoto lo que abre** para que no se descubra tarde:
 
 ### Para CJ (clínicas; no las decide el DPO)
 
-1. **Aclaración 1.1 (ya enviada):** qué imprime el informe en «No refiere» frente a «No consta». Mi posición: distintos.
-2. **Aclaración 1.2 (ya enviada):** si Medicina también puede cambiar la ficha. Si sí, con permiso propio y sin estado «validado».
+1. **Aclaración 1.1 (contestada por CJ el 2026-11-15):** qué imprime el informe en «No refiere» frente a «No consta». Mi posición: distintos. CJ eligió distintos.
+2. **Aclaración 1.2 (contestada por CJ el 2026-11-15):** si Medicina también puede cambiar la ficha. Si sí, con permiso propio y sin estado «validado». CJ dijo que sí, también Medicina.
 3. **¿Una alergia y una intolerancia pueden convivir?** («No refiere alergias, pero sí intolerancia a X»). Afecta al modelo de datos.
 4. **¿Cómo se anota «ninguna enfermedad conocida» y «no toma medicación habitual»?** (lista, «refiere que no hay», «no consta»).
 5. **¿Solo alergias a medicamentos, o también látex, alimentos o contrastes?** Si solo medicamentos, la etiqueta lo dice siempre.

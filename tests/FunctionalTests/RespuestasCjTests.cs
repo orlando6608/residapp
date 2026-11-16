@@ -143,8 +143,6 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
 
     [Theory]
     [InlineData("confirmaciones-tercera-tanda-cj")]
-    [InlineData("direccion-comunicados-flujo-cj")]
-    [InlineData("iconos-pantallas-cj")]
     [InlineData("modulos-base-y-opcionales-cj")]
     [InlineData("portal-familiar-confirmaciones-cj")]
     [InlineData("portal-familiar-dos-idiomas-cj")]
@@ -177,7 +175,7 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
     [InlineData("pruebas-2-medicina-indicaciones")]
     [InlineData("pruebas-8-aislamiento")]
     [InlineData("modulos-base-y-opcionales-cj")]
-    [InlineData("iconos-pantallas-cj")]
+    [InlineData("medicina-alergias-y-plazos-cj")]
     public async Task LasPaginasDeCj_YaNoMandanGuardarNiEnviarUnFichero(string page)
     {
         var html = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/{page}.html");
@@ -233,7 +231,7 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
     public async Task VariosGuardadosAlMismoTiempo_DejanUnJsonValido_SinTemporales_Y_ElAvisoCompleto()
     {
         var client = await LoggedInAsync();
-        var documents = new[] { "pruebas-1-auxiliar-enfermeria", "pruebas-2-medicina-indicaciones", "pruebas-3-basal-barthel", "iconos-pantallas-cj" };
+        var documents = new[] { "pruebas-1-auxiliar-enfermeria", "pruebas-2-medicina-indicaciones", "pruebas-3-basal-barthel", "modulos-base-y-opcionales-cj" };
 
         var responses = await Task.WhenAll(Enumerable.Range(0, 40).Select(i =>
         {
