@@ -276,7 +276,7 @@
   .nota-ing p { margin: 0; white-space: pre-line; }
 </style>
 </head>
-<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-10-31">
+<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-11-16">
 
 <div class="page">
   <header>
@@ -288,14 +288,14 @@
     </nav>
     <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 1 de 8</p>
     <h1>Guía 1 · Auxiliar y Enfermería</h1>
-    <p class="meta">Revisado para ResidApp v0.4.0 · Estado a 31/10/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Revisado para ResidApp v0.4.0 · Estado a 16/11/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       El circuito diario: el Auxiliar cierra el turno de sus residentes y Enfermería recibe lo que registra, lo valora y lo cierra, hace un seguimiento, activa el protocolo urgente y deriva a Urgencias. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no.
     </p>
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué es</span><span>13 pruebas. 4 son imprescindibles.</span></div>
+    <div role="listitem"><span class="k">Qué es</span><span>14 pruebas. 5 son imprescindibles.</span></div>
     <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
     <div role="listitem"><span class="k">Cuánto</span><span>Unos 30 minutos; las imprescindibles, menos. Puedes dejarlo y seguir otro día.</span></div>
   </div>
@@ -338,7 +338,7 @@
       <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
       <tbody>
         <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Los residentes que Administración le asigna (5).</td></tr>
-        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación (tiene el permiso de la foto que da Administración).</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Todos los residentes de la unidad. Puede crear y firmar basales (alta y reevaluación) y poner la foto de identificación y rellenar la ficha de antecedentes de salud (tiene los permisos de la foto y de la ficha que da Administración).</td></tr>
         <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Solo en la prueba 13: ve la foto, pero no la cambia.</td></tr>
         <tr><td><code>almendros-elena</code></td><td>Familia</td><td>Solo en la prueba 13: el Portal Familiar de «Rosa Sánchez».</td></tr>
       </tbody>
@@ -348,7 +348,7 @@
     <div class="tabla-wrap"><table class="datos">
       <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
       <tbody>
-        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal y para los eventos.</td></tr>
+        <tr><td>Antonio García (ficticio)</td><td>Con basal firmado y asignado al Auxiliar. Úsalo para reevaluar el basal, para los eventos y, en la prueba 14, para rellenar su ficha de antecedentes de salud.</td></tr>
         <tr><td>Carmen López (ficticia)</td><td>Asignada al Auxiliar; al empezar no tiene basal (lo crea la guía 3). Úsala para los cierres del Auxiliar y para crear un basal desde cero.</td></tr>
         <tr><td>Lucía Fernández (ficticia)</td><td>NO LA TOQUES. Está sin basal a propósito, para el recorrido guiado del Manual (/Home/Manual).</td></tr>
         <tr><td>Manuel Ruiz (ficticio)</td><td>Se puede usar si te falta un residente. Ya tiene foto y cama (Planta 1 · 102 · A).</td></tr>
@@ -370,7 +370,7 @@
       <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
       <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
     </ul>
-    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (4 de 13).</p>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (5 de 14).</p>
 
     <h3>Antes de esta guía</h3>
     <p class="prose">No necesitas ninguna otra guía. Es la primera: deja datos (eventos y un comunicado) que usan otras.</p>
@@ -381,6 +381,7 @@
       <li>Las pruebas 7, 8 y 9 son el mismo evento: lo registras, lo valoras y lo cierras. La 11 y la 12 también: activas el protocolo urgente y derivas a Urgencias.</li>
       <li>El centro de prueba ya trae los rangos de referencia sugeridos, así que el aviso de rango de la prueba 8 sale desde el primer día; Dirección puede cambiarlos (<a href="pruebas-4-direccion.html">guía 4</a>, prueba 7).</li>
       <li>La prueba 12 deja un comunicado a la familia preparado, que puedes usar en la <a href="pruebas-6-comunicados-portal.html">guía 6</a> (la familia que entra al portal es la de Rosa Sánchez, no la de Antonio).</li>
+      <li>La prueba 14 (ficha de antecedentes de salud) no depende de ninguna otra: puedes hacerla cuando quieras. Si la haces antes de la 12, el informe de derivación de esa prueba llevará la ficha rellena; si la haces después, saldrá pendiente.</li>
       <li>La prueba 13 (foto y ubicación) no depende de ninguna otra: puedes hacerla cuando quieras. La que pone y quita la foto como Administración es la <a href="pruebas-5-administracion.html">guía 5</a>, prueba 16.</li>
     </ul>
     <p class="why">Si te saltas una prueba, marca D en la que dependa de ella.</p>
@@ -605,7 +606,7 @@
           <li>Intenta cerrar el evento ahora: no debe dejarte sin un intento de llamada. Registra un intento de llamada a la familia (a quién, hora, resultado).</li>
           <li>Cierra el evento: la comunicación a la familia es obligatoria, así que no hay nada que elegir: la pantalla dice «Sí: Preparar comunicación» y solo falta escribir el texto para la familia.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El PDF lleva el icono y el nombre de ResidApp, la identificación, el basal, las valoraciones y la evolución, pero no los contactos con servicios: solo lo que escribiste en «Comunicaciones». Cada evento admite un solo informe. Tras cerrar, la comunicación queda aprobada y programada para publicarse (1 hora de margen y a las 19:00); la verás en «Comunicaciones» (<a href="pruebas-6-comunicados-portal.html">guía 6</a>, pruebas 1 y 2).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El PDF lleva el icono y el nombre de ResidApp, la identificación, las tres secciones de la ficha de antecedentes de salud («Alergias e intolerancias a medicamentos», «Enfermedades e intervenciones» y «Medicación habitual»; si Antonio no tiene la ficha rellena, cada una dice «Ficha pendiente de rellenar en este centro: no hay datos registrados…»), el basal, las valoraciones y la evolución, pero no los contactos con servicios: solo lo que escribiste en «Comunicaciones». Cada evento admite un solo informe. Tras cerrar, la comunicación queda aprobada y programada para publicarse (1 hora de margen y a las 19:00); la verás en «Comunicaciones» (<a href="pruebas-6-comunicados-portal.html">guía 6</a>, pruebas 1 y 2).</div>
         <fieldset class="choices" aria-labelledby="t-12">
           <label class="choice"><input type="radio" name="r-12" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-12" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -638,6 +639,35 @@
           <label class="choice"><input type="radio" name="r-13" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
           <label class="choice"><input type="radio" name="r-13" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
           <label class="choice"><input type="radio" name="r-13" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Ficha de antecedentes de salud</h2>
+    <div class="stack prose">
+      <p>La ficha guarda las alergias e intolerancias a medicamentos, las enfermedades e intervenciones y la medicación habitual de cada residente. La rellena el personal sanitario con el permiso que da Administración y se imprime en el informe de derivación a Urgencias (prueba 12). No se revisa de forma periódica: se actualiza cuando ocurre algo, y nada se borra (cada cambio crea una versión nueva).</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="14">
+        <div class="q-head"><span class="n">14</span><h3 class="q-title" id="t-14">Rellenar la ficha de antecedentes de salud</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span><span>Residente: <strong>Antonio García</strong></span></div>
+        <ol class="pasos">
+          <li>Con <code>almendros-enfermeria</code>, abre «Residentes» y la ficha de «Antonio García». Busca el bloque «Antecedentes de salud»: tiene tres apartados (alergias, enfermedades e intervenciones y medicación habitual). Si nadie los ha rellenado, cada uno dice «Pendiente» y avisa de que eso no equivale a «sin alergias», «sin enfermedades» ni «no toma medicación».</li>
+          <li>Pulsa «Rellenar las alergias» (o «Cambiar las alergias»). Pulsa «Guardar la ficha de alergias» sin elegir ninguna opción. Después elige «Tiene alergias a medicamentos»; en la primera fila pon «Alergia», «Penicilina» y la reacción «Erupción». Pulsa «Añadir otra fila» y pon «Intolerancia o efecto adverso», «Metformina» y «Molestias de estómago». Pulsa «Guardar la ficha de alergias».</li>
+          <li>Pulsa «Rellenar las enfermedades e intervenciones». Elige «Tiene enfermedades o intervenciones»: en la primera fila, tipo «Enfermedad», nombre «Hipertensión» y año 2015; añade otra fila con tipo «Intervención quirúrgica», nombre «Prótesis de cadera» y el año en blanco. Pulsa «Guardar enfermedades e intervenciones».</li>
+          <li>Pulsa «Rellenar la medicación habitual». Elige «Toma medicación habitual» y escribe el medicamento «Paracetamol» dejando en blanco la dosis; pulsa «Guardar la medicación habitual». Rellena la dosis «1 g» y la pauta «cada 8 horas», pulsa «Añadir otra fila» y escribe «Omeprazol», «20 mg» y «si precisa». Pulsa «Guardar la medicación habitual».</li>
+          <li>Pulsa «Cambiar la medicación habitual», cambia la dosis del paracetamol a «500 mg», elige «Corrijo un error» como motivo de la versión nueva y guarda.</li>
+          <li>Mira los tres estados de la medicación («Toma medicación habitual», «No refiere medicación habitual» y «No se sabe o no consta») y la pauta «si precisa». ¿Te sirven o prefieres otras palabras (por ejemplo, «No toma medicación»)? Cuéntalo en el comentario.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Al guardar sin elegir opción, la pantalla avisa con «Revisa la ficha: elige una opción…» y no guarda nada. Con datos correctos salen «Ficha de alergias guardada.», «Ficha de enfermedades e intervenciones guardada.» y «Ficha de medicación habitual guardada.». La medicación sin dosis no se guarda: avisa de que hace falta la dosis y la pauta (vale «no consta»). En el bloque de la ficha de Antonio cada apartado muestra su estado, su lista y la «Última modificación» con la fecha y el perfil («Enfermería»); la ficha no dice «revisado». La medicación lleva el aviso fijo «Copia informativa: la fuente es la receta electrónica o la hoja de tratamiento oficial del centro; si no coinciden, manda la oficial.» La corrección no borra nada: guarda una versión nueva (las anteriores no se ven en pantalla). Si ahora registras y derivas un evento nuevo de Antonio (como en las pruebas 7, 11 y 12), las tres secciones del informe salen con estos datos.</div>
+        <fieldset class="choices" aria-labelledby="t-14">
+          <label class="choice"><input type="radio" name="r-14" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-14" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-14" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-14" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
