@@ -410,7 +410,7 @@ Estos puntos **no se resuelven leyendo esta guía ni este repositorio**. Cada un
 
 - Sí a las cuatro decisiones de Orlando: empezar ya a buscar a la persona experta (1.1), no firmar con ningún centro real hasta que exista la sociedad (1.2), avisar de una brecha al centro en 24 horas como máximo (1.3) y ofrecer la plantilla de información al ingreso (1.4).
 - **Acepta ser el suplente** de la persona de contacto de privacidad (2.1), dice tener disponibilidad completa para cubrir un aviso con un margen de 24 horas (2.2) y **acepta firmar el compromiso de confidencialidad** (2.3). Ojo: el suplente solo avisa y registra, no contiene (decidido el 2026-11-13; ver `protocolo-brechas-borrador.md`); y el compromiso de confidencialidad sigue sin redactar ni firmar.
-- Centro piloto (3.1): sigue sin decidirse; CJ lo ve ideal como un centro privado pequeño o concertado.
+- Centro piloto (3.1): sigue sin decidirse.
 - Persona experta (3.2): CJ no conoce a ningún abogado o DPO por ahora. No echa nada en falta en la guía (3.3).
 
 **Decide una persona (vosotros o la persona experta):**
