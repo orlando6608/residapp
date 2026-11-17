@@ -139,6 +139,7 @@ public static class SupervisionDisplay
         "RESIDENT_PHOTO_MANAGE" => "Poner, cambiar y quitar la foto del residente",
         "QUALITY_REVIEW" => "Ver los indicadores y la calidad de proceso",
         "HEALTH_BACKGROUND_EDIT" => "Rellenar y cambiar la ficha de antecedentes de salud",
+        "EXTERNAL_APPOINTMENT_MANAGE" => "Registrar y cambiar las citas externas de los residentes",
         _ => code,
     };
 }

@@ -111,6 +111,18 @@ public static class ApplicationResultRunner
         ["MODULE_DEPENDENCY_MISSING"] = (ApplicationFailureCode.Conflict, "Falta activar antes un módulo del que este depende."),
     };
 
+    /// <summary>Citas externas de los residentes (script 0101): cada fallo dice qué pasa. Los triggers de la base de datos lanzan los mismos códigos. Una cita que no existe o que
+    /// no está en el ámbito de quien la pide dan el mismo error (acceso denegado), sin distinguirlas.</summary>
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> ExternalAppointmentFailures = new()
+    {
+        ["EXTERNAL_APPOINTMENT_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Revisa los datos de la cita: el día no puede ser anterior a hoy, el lugar y «qué preparar» son una sola línea corta y la reprogramación y la cancelación llevan un motivo."),
+        ["EXTERNAL_APPOINTMENT_NOT_FOUND"] = (ApplicationFailureCode.AccessDenied, "No tienes acceso a esta cita."),
+        ["EXTERNAL_APPOINTMENT_REVISION_CONFLICT"] = (ApplicationFailureCode.Conflict, "Otra persona ha cambiado esta cita: vuelve a cargarla y revisa los cambios."),
+        ["EXTERNAL_APPOINTMENT_VERSION_INVALID"] = (ApplicationFailureCode.Conflict, "Otra persona ha cambiado esta cita: vuelve a cargarla y revisa los cambios."),
+        ["EXTERNAL_APPOINTMENT_CLOSED"] = (ApplicationFailureCode.Conflict, "La cita ya está cerrada (realizada, no se acudió o cancelada) y no se puede cambiar."),
+    };
+
     /// <summary>Anonimizar a un familiar (script 0087): cada fallo dice qué pasa y qué hacer. Los triggers de la base de datos lanzan los mismos códigos.</summary>
     private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> FamilyAnonymizationFailures = new()
     {
@@ -178,6 +190,11 @@ public static class ApplicationResultRunner
         if (FamilyAnonymizationFailures.TryGetValue(message, out var anonymization))
         {
             return new ApplicationFailure(anonymization.Code, anonymization.Text);
+        }
+
+        if (ExternalAppointmentFailures.TryGetValue(message, out var externalAppointment))
+        {
+            return new ApplicationFailure(externalAppointment.Code, externalAppointment.Text);
         }
 
         if (ModuleFailures.TryGetValue(message, out var module))

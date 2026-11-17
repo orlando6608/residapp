@@ -1,6 +1,6 @@
 # Citas externas de los residentes: traspaso para construirlas
 
-**Estado a 2026-11-17: diseño aprobado por Orlando, lectura del DPO hecha, nada de código ni SQL.** Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
+**Estado a 2026-11-17 (noche): PR 1 construido en la rama `feat-citas-externas-esquema` (script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas), pendiente de que Orlando lo revise y lo suba. Los apartados 5 a 8 siguen como estaban; lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 2.** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
 
 ## 1. Qué hay que construir
 
@@ -34,7 +34,7 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consulta, 
 5. **Familia, solo ver** (interruptores por centro y por residente, nivel de visibilidad por cita, calendario).
 6. **Familia, actuar, y correos** («Me encargo yo», «No puedo», «Ya no puedo», plantillas).
 
-## 5. PR 1: qué hacer exactamente (propuesta de ingeniería; ajústala al implementar)
+## 5. PR 1: qué hacer exactamente (HECHO el 2026-11-17 en la rama `feat-citas-externas-esquema`; se conserva como referencia de lo construido)
 
 **Rama** desde `origin/main` (haz `git fetch` antes). **Script `0101`** (el siguiente libre; `0100` es la marca de entorno). Plantillas a copiar: `0094_ficha_antecedentes_alergias.sql` (tablas de solo inserción, seguridad por filas, permiso nuevo con `CK_pp_code` y `TR_pp_profile_catalog`), `0054_citas_reserva_directa.sql` y `0078_baja_cancela_citas.sql` (citas con historial y causa de baja) y `0091_permisos_aplicacion.sql` (permisos mínimos del usuario de la aplicación).
 

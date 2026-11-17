@@ -26,6 +26,11 @@ public static class ProfilePermissions
     /// <summary>Enfermería y Medicina cambian la ficha de antecedentes de salud (alergias; script 0094) solo con este permiso; verla no lo necesita.</summary>
     public const string HealthBackgroundEdit = "HEALTH_BACKGROUND_EDIT";
 
+    /// <summary>Enfermería registra y cambia las citas externas de los residentes solo con este permiso (CJ, 3.1 C; script 0101); Administración siempre puede y Medicina solo las ve.
+    /// Todavía NO está en <see cref="For"/>: la base y el repositorio ya lo admiten, pero Administración no lo puede conceder desde la pantalla de permisos hasta que existan las pantallas de las
+    /// citas externas (PR 2), donde se añade a <see cref="For"/> junto con su ficha de la Guía por perfil (<c>GuiaDerivaTests</c> lo exige: todo permiso concedible lleva una ficha con rutas que existan).</summary>
+    public const string ExternalAppointmentManage = "EXTERNAL_APPOINTMENT_MANAGE";
+
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
         SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage, HealthBackgroundEdit],

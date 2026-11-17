@@ -20,6 +20,7 @@ o Calidad de proceso, **recuérdale esta lista antes** de seguir. No la des por 
 | Anonimizar a un familiar que pide la supresión de sus datos | `0087` | Más abajo, apartado 8 |
 | Respuestas de CJ a Dirección y traslados: finalidad del motivo, lista de peticiones, constancia de consulta, Calidad sin nombres | `0079` | Más abajo, apartado 5 |
 | Landings en castellano y catalán, dominios propios y Portal Familiar en dos idiomas (aún sin construir) | — | Más abajo, apartado 6 |
+| Citas externas de los residentes (pruebas, consultas y tratamientos fuera del centro): esquema y reglas, sin pantallas | `0101` | Más abajo, apartado 14 |
 
 ## 1. Que una persona valide los borradores
 
@@ -203,6 +204,32 @@ Plataforma enciende y apaga los módulos, solo ella y a petición del centro (si
 - **Operativos:** suplente de Plataforma (con permiso mínimo en Azure; sin él el corte depende solo de Orlando) y el procedimiento escrito del corte por clave, **redactado en borrador el 2026-11-17** (`procedimiento-corte-global-dictado.md`: Orlando, menos de 4 horas en horario laborable; falta que lo valide una persona experta); aviso escrito a la persona autorizada del centro en cada alta, baja y vencimiento próximo (compensa que no haya pantalla de módulos para la Administración, incremento 5 descartado); procedimiento de cuentas de personal que cubra al operador que se va (la cuenta se desactiva, no se borra, para que el historial siga atribuible).
 - **Pregunta abierta del DPO:** ámbito de la APDCAT frente a la AEPD para el centro piloto (depende de si es público, concertado o privado y de si todas sus plazas lo están; Llei 32/2010, art. 3). Afecta al contrato y al ENS, no al diseño.
 - **A verificar:** la pantalla de auditoría del centro muestra hoy al actor de las acciones de Plataforma con el nombre visible de su cuenta (como ya ocurre con `CENTER_CREATE` y `ADMIN_PRINCIPAL_SET`), no con la palabra «Plataforma»; decidir si se quiere ocultar el nombre del operador (afecta a todos los eventos de Plataforma, no solo a los de módulos).
+
+## 14. Citas externas de los residentes (`0101`, PR 1 de 6; diseño aprobado por Orlando el 2026-11-17 y lectura de `dpo-residapp` del mismo día, borrador)
+
+Un registro de las citas del residente **fuera del centro** (pruebas, consultas, tratamientos), con un calendario para el personal y, más adelante, para la familia. Hoy solo existe la base de datos, las reglas y las pruebas: **ninguna pantalla** (llegan en los PR 2 a 6) y **nada se envía a la familia**. Con datos inventados no hay nada que validar todavía. **Toda la ficha de la cita es dato de salud** (RGPD, art. 4.15): saber que alguien tiene «cardiología, hospital X, el día 25» lo es, aunque cada campo suelto parezca inocente.
+
+**Qué hace ya el PR 1 para proteger los datos** (lo prueba `CitasExternasTests`): listas cerradas y límites cortos que la propia base impone (lugar de 80 caracteres y «qué preparar» de 100, ambos de una línea, sin saltos; sin texto libre largo); cada cambio deja una fila de historial que nadie puede modificar ni borrar; la auditoría lleva solo identificadores, nunca el contenido; un centro no ve las citas de otro ni con el ámbito manipulado, y Enfermería y Medicina solo ven las de sus unidades; Plataforma no las ve; el permiso para que Enfermería registre (`EXTERNAL_APPOINTMENT_MANAGE`) nace apagado y solo lo concede Administración; y la baja del residente cancela solas sus citas de hoy en adelante, con causa y texto fijos (art. 25 y 32).
+
+**Dos apartamientos de la recomendación del DPO, decididos por Orlando y que el centro debe aceptar por escrito en su EIPD** (la evaluación de impacto, el análisis de riesgos que el centro hace antes de empezar un tratamiento delicado):
+- **La familia verá siempre la especialidad** de una cita visible (como contestó CJ, 4.2 A): el DPO recomendaba ocultar por defecto salud mental, oncología, infecciosas, adicciones, paliativos y genética. El personal puede elegir en una cita concreta «sin especialidad» u «oculta», y cada residente tendrá un interruptor «la familia no ve sus citas externas». Riesgo: que un familiar sepa algo que el residente no quería contarle (Ley 41/2002, art. 5.1).
+- **El correo de 7 días saldrá en toda cita visible**, no solo en las que tienen algo que cubrir (4.5 B de CJ). Riesgo: más correos a más familiares autorizados, con más direcciones tratadas (RGPD, art. 5.1.c).
+
+**Lo que valida una persona experta (DPO real o abogado) antes de usar la parte de la familia con familias reales** (las diez condiciones de la lectura del DPO, apartado 9.2):
+1. La voluntad del residente: un procedimiento escrito de la residencia sobre qué puede ver cada familia y dónde se anota.
+2. La base jurídica de la cita (art. 6 y 9.2.h) y de los datos del familiar que se ofrece a ayudar (6.1.f u otra).
+3. El contrato de encargado con la agenda de citas externas en su objeto, el registro de actividades y la EIPD con el anexo de riesgos de este módulo.
+4. La información al residente o su representante y a cada familiar (castellano y, si se pide, catalán).
+5. La conservación del dato del familiar y de la ficha, y la política de borrar o bloquear (LOPDGDD, art. 32), que sigue sin decidir (apartado 8).
+6. La lista de especialidades de la ficha, que es una propuesta del DPO a la espera de que CJ la revise.
+7. FAM-10 y el alcance del producto actualizados por escrito.
+8. La autoridad de control (AEPD o APDCAT) y, si el centro es público o concertado, el Esquema Nacional de Seguridad: **falta saber la titularidad del centro piloto y si tiene plazas concertadas**.
+9. El contrato de Azure Communication Services, el paso B10 y DMARC en `quarantine` antes de enviar correos con direcciones reales (apartado 7).
+10. Si algún día el módulo pasa a ser opcional (hoy es base), la exportación de sus datos y las condiciones de su ficha.
+
+**A verificar** (no confirmado en texto literal): que `sw.js` no guarde respuestas del calendario en el dispositivo (PR 3); la terminología de `es_tutor_legal` frente a la Ley 8/2021; la regla 11 del Reglamento (UE) 2017/745 (un calendario no ayuda a decidir tratamientos, pero lo confirma una persona experta); y la Llei 12/2007.
+
+**Límites conocidos del PR 1:** (1) la cita no guarda la unidad: se calcula con la ubicación vigente del residente, así que un traslado de unidad mueve su visibilidad, y un residente dado de baja deja de ser visible para Enfermería y Medicina (Administración sigue viéndolo); (2) el resumen previo de la baja que ve Administración todavía no cuenta las citas externas que se cancelarán (se añade con las pantallas del PR 2); (3) el texto de «qué preparar» y del motivo es de una línea, pero ninguna regla de la base impide escribir en él un dato clínico: lo único que lo frena es la ayuda visible junto al campo, que llega con las pantallas.
 
 ## Cómo se marca como hecho
 
