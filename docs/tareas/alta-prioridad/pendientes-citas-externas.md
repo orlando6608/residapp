@@ -1,6 +1,6 @@
 # Citas externas de los residentes: traspaso para construirlas
 
-**Estado a 2026-11-17 (noche): PR 1 construido en la rama `feat-citas-externas-esquema` (script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas), pendiente de que Orlando lo revise y lo suba. Los apartados 5 a 8 siguen como estaban; lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 2.** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
+**Estado a 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 2: plan y prompt para empezar en el apartado 9 (los apartados 5 a 8 siguen como estaban).** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
 
 ## 1. Qué hay que construir
 
@@ -34,7 +34,7 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consulta, 
 5. **Familia, solo ver** (interruptores por centro y por residente, nivel de visibilidad por cita, calendario).
 6. **Familia, actuar, y correos** («Me encargo yo», «No puedo», «Ya no puedo», plantillas).
 
-## 5. PR 1: qué hacer exactamente (HECHO el 2026-11-17 en la rama `feat-citas-externas-esquema`; se conserva como referencia de lo construido)
+## 5. PR 1: qué hacer exactamente (HECHO y fusionado el 2026-11-17, PR #325; se conserva como referencia de lo construido)
 
 **Rama** desde `origin/main` (haz `git fetch` antes). **Script `0101`** (el siguiente libre; `0100` es la marca de entorno). Plantillas a copiar: `0094_ficha_antecedentes_alergias.sql` (tablas de solo inserción, seguridad por filas, permiso nuevo con `CK_pp_code` y `TR_pp_profile_catalog`), `0054_citas_reserva_directa.sql` y `0078_baja_cancela_citas.sql` (citas con historial y causa de baja) y `0091_permisos_aplicacion.sql` (permisos mínimos del usuario de la aplicación).
 
@@ -77,3 +77,27 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consulta, 
 ## 8. Prompt para empezar la sesión nueva
 
 > Retomamos las citas externas de ResidApp. Lee `CLAUDE.md`, `docs/tareas/alta-prioridad/pendientes-citas-externas.md` (entero), `docs/producto/citas-externas-diseno.md` y `docs/privacidad/citas-externas-lectura-dpo.md`. Haz `git fetch` y comprueba el estado de `origin/main` y los PR abiertos. Después, propón el plan del PR 1 (script `0101`: esquema, seguridad por filas, permiso `EXTERNAL_APPOINTMENT_MANAGE`, baja de residente y pruebas de aislamiento) antes de escribir código, y pregúntame de una en una cualquier decisión que no esté ya en el diseño.
+
+## 9. PR 2: pantallas del personal (propuesta de ingeniería; ajústala al implementar)
+
+**Qué hay ya (PR 1, en `main`):** `ExternalAppointmentsApplicationService` (registrar, cambiar, cambiar de estado, cancelar, buscar, listar por rango de fechas; devuelve `CanManage`), `SqlExternalAppointmentRepository`, el dominio `Domain/Appointments/ExternalAppointments.cs` (enums con `[Display]` en español, `Covered`, `TimeToConfirm`) y los errores traducidos en `ApplicationResult.cs` (`ExternalAppointmentFailures`). Ninguna pantalla lo usa todavía.
+
+**Qué hacer:**
+1. **Permiso concedible:** añadir `ExternalAppointmentManage` a `ProfilePermissions.For(Enfermeria)` (y restaurar `"EXTERNAL_APPOINTMENT_MANAGE"` en `ProfessionalAccountTests`) **y a la vez** crear su ficha en `src/ResidApp.Web/Guia/enfermeria.json` con rutas que existan: `GuiaDerivaTests` falla si no (cada permiso de `For` necesita una ficha; cada ruta, una acción de controlador). La etiqueta del permiso ya está en `DireccionModels.PermissionLabel`.
+2. **Controlador y vistas Razor** (Administración, Enfermería con permiso, Medicina solo ver): lista «Próximas» con filtro por fechas, ficha para registrar y cambiar, cancelar (motivo de la lista cerrada más línea de 100) y dar por realizada o «no se acudió». Muestra la marca «residente suspendido» (`ResidentSuspended`) y «Por confirmar» si no hay hora. Los selectores de enums deben salir **en español** (usa `[Display]`; regla de memoria «UI en español»). Sigue la guía de diseño (`docs/bocetos-pantallas/guia-diseno-sistema-visual.md`: Bootstrap 5, WCAG 2.2 AA, norma de iconos 2.E reutilizando los ya creados).
+3. **Ayudas visibles junto a los campos** (condición del DPO, apartado 3): lugar «Solo el nombre del hospital o centro. No escribas el servicio, la unidad ni el motivo.» (`maxlength` 80, un `<input>` de una línea); «qué preparar» «Solo lo que hay que llevar o hacer para salir. Las indicaciones clínicas van por Medicina, no aquí.» (100); motivo «No escribas diagnósticos ni nombres.» (100). Nunca `textarea`.
+4. **Aviso en el inicio de Administración** (solo Administración): citas que empiezan dentro de 7 días con transporte o acompañante sin cubrir (a 2 días o menos, más destacado), con residente, fecha y «falta transporte / acompañante», **sin especialidad ni lugar**; calculado al abrir, sin tabla ni tarea programada. Necesita una consulta nueva en el repositorio (aún no existe).
+5. **La baja:** que `PreviewDischargeAsync` (resumen previo que ve Administración) cuente también las citas externas que se cancelarán, y que el mensaje de `AdministracionController.Estado.cs` use `DischargeOutcome.ExternalAppointmentsCancelled`.
+6. **Módulo base:** las acciones **no** llevan `[RequiereModulo]` (decisión de Orlando: módulo base). Los interruptores por centro y por residente son del PR 5.
+7. **Pruebas:** funcionales por HTTP de cada pantalla y permiso (modelo: `ResidentsFlowTests` y las de la ficha de antecedentes; un permiso se concede por el endpoint de permisos como en `HEALTH_BACKGROUND_EDIT`); una de traslado de unidad en integración (el residente cambia de unidad y la cita cambia de visibilidad: **sin probar en el PR 1**).
+8. **Cierre del PR 2:** al cambiar texto visible, rutas y botones, consulta a `doc-usuario-residapp` antes de darlo por cerrado (Manual, Guía por perfil y flujo de trabajo; el sello «Revisado para ResidApp vX.Y»); comprueba la parte con JavaScript con la skill `probar-en-navegador`; **lanza `qa-revisor-residapp`** (es un bloque funcional). Actualiza el relevo.
+
+**Para ver pantallas en local:** la base `ResidApp` (la de la aplicación) aún no tiene `0101`; ejecuta `database/aplicar-scripts.sh` con `APLICAR_SEED=1` (`SQL_SERVER=ACER-ORLANDO`, `SQL_DATABASE=ResidApp`). `ResidAppPruebas` (la de las pruebas) ya lo tiene.
+
+**Referencias de pruebas a 2026-11-17 (tras el PR 1, en local):** unitarias 677, integración 847, funcionales 516.
+
+**Pendientes que no bloquean el PR 2:** documento breve para CJ (que Administración no lea la nota «al terminar»; que el Auxiliar vea solo «Familiar»; y que revise la lista de especialidades); titularidad del centro piloto (AEPD o APDCAT); siete ramas locales viejas ya fusionadas, sin borrar, y `main` local por detrás de `origin/main`.
+
+**Prompt para empezar el PR 2:**
+
+> Retomamos las citas externas de ResidApp, PR 2 (pantallas del personal). Lee `CLAUDE.md`, `docs/tareas/alta-prioridad/pendientes-citas-externas.md` (entero, sobre todo el apartado 9) y `docs/producto/citas-externas-diseno.md`. Haz `git fetch` y comprueba `origin/main` y los PR abiertos (el PR 1 fue el #325). Propón el plan del PR 2 antes de escribir código y pregúntame de una en una cualquier decisión que no esté ya en el diseño.
