@@ -88,6 +88,7 @@ builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepositor
 builder.Services.Configure<ModuleOptions>(builder.Configuration.GetSection(ModuleOptions.Section));
 builder.Services.AddScoped<ICenterModuleRepository, SqlCenterModuleRepository>();
 builder.Services.AddScoped<IModuleSettings, ModuleSettings>();
+builder.Services.AddScoped<IEnvironmentMarker, SqlEnvironmentMarker>();
 builder.Services.AddScoped<CenterModuleAccess>();
 builder.Services.AddScoped<IAdministrativeAuditDirectory, SqlAdministrativeAuditDirectory>();
 builder.Services.AddScoped<ISchedulingDirectory, SqlSchedulingDirectory>();

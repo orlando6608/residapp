@@ -47,7 +47,7 @@ public class ModulosCentroTests
         new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
 
     private static CenterModuleAccess BuildAccess(string subject, IModuleSettings? settings = null) => new(
-        new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), settings ?? new Settings(), new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
+        new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), settings ?? new Settings(), new FakeEnvironmentMarker(development: true), new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),
         new FixedSessionIdentityProvider(subject), TimeProvider.System);
 
     private static ChangeCenterModuleCommand Enable(

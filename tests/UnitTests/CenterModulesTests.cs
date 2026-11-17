@@ -163,7 +163,7 @@ public class CenterModuleAccessTests
     }
 
     private static ResidApp.Application.UseCases.CenterModuleAccess Access(ResidApp.Domain.Modules.CenterModuleChange? last) =>
-        new(new Repository(last), new Settings(), null!, null!, TimeProvider.System, [WithData]);
+        new(new Repository(last), new Settings(), new FakeEnvironmentMarker(), null!, null!, TimeProvider.System, [WithData]);
 
     [Fact]
     public async Task EnSoloLectura_ConsultarPasa_YCrearOEditarLanzaMODULE_READ_ONLY()
@@ -188,6 +188,25 @@ public class CenterModuleAccessTests
 
         Assert.Equal(ResidApp.Application.UseCases.CenterModuleAccess.NotAvailable, read.Message);
         Assert.Equal(ResidApp.Application.UseCases.CenterModuleAccess.NotAvailable, write.Message);
+    }
+
+    private sealed class ActivateAllSettings : ResidApp.Application.Ports.IModuleSettings
+    {
+        public bool ActivateAll => true;
+
+        public bool IsThirdPartyConfigured(string moduleCode) => true;
+    }
+
+    [Theory]
+    [InlineData(true, ResidApp.Domain.Modules.ModuleState.Active)]
+    [InlineData(false, ResidApp.Domain.Modules.ModuleState.NotAvailable)]
+    public async Task ActivarTodos_SoloVale_SiLaBaseDeDatosDeclaraSerDeDesarrollo(bool developmentDatabase, ResidApp.Domain.Modules.ModuleState expected)
+    {
+        // Sin filas del centro: con la marca, el ajuste activa el módulo; sin ella (base de producción), se ignora y el módulo no está disponible.
+        var access = new ResidApp.Application.UseCases.CenterModuleAccess(
+            new Repository(null), new ActivateAllSettings(), new FakeEnvironmentMarker(developmentDatabase), null!, null!, TimeProvider.System, [WithData]);
+
+        Assert.Equal(expected, await access.StateAsync(CenterId.From(Guid.NewGuid()), "CON_DATOS"));
     }
 }
 

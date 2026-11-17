@@ -10,10 +10,10 @@ namespace ResidApp.Application.UseCases;
 /// La comprobación real va en el caso de uso, con el centro VERIFICADO (el del ámbito de la cuenta de la sesión, no el que dice la cookie), antes de auditar y antes de llamar a un
 /// tercero; el atributo <c>[RequiereModulo]</c> del controlador solo oculta y orienta.
 /// Orden: sin el interruptor global del proveedor (la clave de Mistral), un módulo con tercero no funciona para nadie aunque la fila diga ACTIVO; después, el ajuste de desarrollo con
-/// todo activo; después, el último cambio del centro y su vigencia.
+/// todo activo (solo si la base de datos declara ser de desarrollo, <see cref="IEnvironmentMarker"/>; si no, se ignora y manda la fila del centro); después, el último cambio del centro y su vigencia.
 /// </summary>
 public sealed class CenterModuleAccess(
-    ICenterModuleRepository modules, IModuleSettings settings, IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, TimeProvider clock,
+    ICenterModuleRepository modules, IModuleSettings settings, IEnvironmentMarker environment, IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, TimeProvider clock,
     IReadOnlyList<CenterModule>? catalog = null)
 {
     public const string NotAvailable = "MODULE_NOT_AVAILABLE";
@@ -28,7 +28,7 @@ public sealed class CenterModuleAccess(
             return ModuleState.NotAvailable;
         }
 
-        if (settings.ActivateAll)
+        if (settings.ActivateAll && await environment.IsDevelopmentDatabaseAsync(ct))
         {
             return ModuleState.Active;
         }
