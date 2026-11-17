@@ -6,7 +6,7 @@
 
 Las citas legales salen de `normativa-local/` (índice del 2026-11-12): RGPD consolidado a 2016-05-04; LOPDGDD, BOE act. 2026-10-08; Llei 32/2010, BOE act. 2026-07-13; ENS (RD 311/2022), BOE act. 2026-10-30; guía de brechas de la AEPD (PDF de junio de 2021, «guía AEPD»; las páginas son las del PDF); directrices 9/2022 del CEPD sobre notificación de brechas (v2.0, en inglés, «directrices 9/2022»; citadas por apartado) y 01/2021 del CEPD con ejemplos (v2.0, en inglés). Las páginas web de la APDCAT sobre brechas (actualizadas el 6 y el 12 de junio de 2025, consultadas el 14-11-2026) no están en la base, que solo admite PDF: se citan como «web APDCAT». Son textos consolidados: sirven para consultar, no son la versión oficial.
 
-**Decisiones ya tomadas que este protocolo aplica (Orlando, 2026-11-13):** ResidApp avisa al centro **en un máximo de 24 horas desde que tenga constancia**; la persona de contacto de privacidad de ResidApp es **Orlando, con CJ de suplente** (CJ aún no lo ha aceptado por escrito). **Además, en esta revisión (Orlando, 2026-11-13):** las 24 horas cuentan **seguidas**, incluidas noches, fines de semana y festivos; **no se cargan datos reales hasta tener una cobertura definida** para noches y vacaciones (opción E del apartado 5.2); y el suplente **solo avisa al centro, anota y registra**, sin contener (la contención técnica es de Orlando).
+**Decisiones ya tomadas que este protocolo aplica (Orlando, 2026-11-13):** ResidApp avisa al centro **en un máximo de 24 horas desde que tenga constancia**; la persona de contacto de privacidad de ResidApp es **Orlando, con CJ de suplente** (CJ lo aceptó en el formulario el 2026-11-15). **Además, en esta revisión (Orlando, 2026-11-13):** las 24 horas cuentan **seguidas**, incluidas noches, fines de semana y festivos; **no se cargan datos reales hasta tener una cobertura definida** para noches y vacaciones (opción E del apartado 5.2); y el suplente **solo avisa al centro, anota y registra**, sin contener (la contención técnica es de Orlando).
 
 ---
 
@@ -315,7 +315,7 @@ El repositorio es público: **aquí solo van los huecos.** La lista real vive en
 - **Alertas propuestas y no hechas:** cambios de roles, de administrador de SQL, reglas de firewall, uso de la cuenta de emergencia, consulta de secretos (`entorno-produccion-lectura-dpo.md`, línea 144, propuesta).
 - **Nada detecta un correo mal dirigido** salvo la queja de la familia y, cuando exista, el rebote (`direccion-confirmada-familia.md`, línea 172).
 - **Falta una alerta sobre accesos anómalos en la auditoría** (un profesional abriendo muchas fichas fuera de su unidad). No consta que exista.
-- **Falta** el contrato de encargado con el plazo de 24 h, la lista de contactos real, la aceptación escrita de CJ y la persona experta.
+- **Falta** el contrato de encargado con el plazo de 24 h, la lista de contactos real y la persona experta (CJ aceptó ser suplente el 2026-11-15).
 
 ---
 
