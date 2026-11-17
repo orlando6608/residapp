@@ -1,0 +1,137 @@
+using ResidApp.Application.Errors;
+using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Appointments;
+using ResidApp.Domain.Modules;
+using ResidApp.Shared;
+
+namespace ResidApp.Application.UseCases;
+
+public sealed record RegisterExternalAppointmentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita);
+
+public sealed record UpdateExternalAppointmentCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointment Cita, ExternalAppointmentReasonCode? Motivo, string? LineaMotivo);
+
+public sealed record ChangeExternalAppointmentStatusCommand(Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointmentStatus? Estado);
+
+public sealed record CancelExternalAppointmentCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointmentReasonCode? Motivo, string? LineaMotivo);
+
+/// <summary>Las citas externas que ve quien mira y si puede registrarlas y cambiarlas.</summary>
+public sealed record ExternalAppointmentList(IReadOnlyList<ExternalAppointmentRecord> Appointments, bool CanManage);
+
+/// <summary>
+/// Citas externas de los residentes, PR 1 (docs/producto/citas-externas-diseno.md; script 0101). Administración del centro registra y cambia siempre; Enfermería solo con el permiso
+/// EXTERNAL_APPOINTMENT_MANAGE que Administración da a su perfil; Medicina las ve y no las cambia. Auxiliar, Dirección Clínica, Plataforma y Familia no tienen acceso en esta fase. Enfermería
+/// y Medicina ven las citas de los residentes de sus unidades (lo aplica el repositorio); Administración, las de todo el centro. El permiso y el ámbito se vuelven a comprobar en cada
+/// transacción del repositorio.
+/// </summary>
+public sealed class ExternalAppointmentsApplicationService(
+    IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IExternalAppointmentRepository repository, TimeProvider clock)
+{
+    private static readonly SystemProfile[] Profiles = [SystemProfile.Administracion, SystemProfile.Enfermeria, SystemProfile.Medicina];
+
+    public Task<ApplicationResult<Guid>> RegisterAsync(RegisterExternalAppointmentCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            RequireManage(canManage);
+            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), ct);
+        });
+
+    /// <summary>Devuelve la versión nueva. Cambiar la fecha o la hora es reprogramar y exige un motivo; el día nuevo no puede ser anterior a hoy. Cambiar otra cosa no lleva motivo.</summary>
+    public Task<ApplicationResult<int>> UpdateAsync(UpdateExternalAppointmentCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            RequireManage(canManage);
+            var current = await repository.FindAsync(actor, command.CitaId, ct) ?? throw new DomainValidationException(ExternalAppointment.NotFoundCode);
+            var reschedules = current.Appointment.Date != command.Cita.Date || current.Appointment.Time != command.Cita.Time;
+            if (reschedules)
+            {
+                command.Cita.RequireNotInPast(Today());
+            }
+            ExternalAppointmentReasonCode? code = null;
+            string? line = null;
+            if (reschedules)
+            {
+                var reason = ExternalAppointmentRules.Reason(command.Motivo, command.LineaMotivo);
+                code = reason.Code;
+                line = reason.Line;
+            }
+            return await repository.UpdateAsync(actor, command.CitaId, command.VersionVista, command.Cita, code, line, ct);
+        });
+
+    /// <summary>Devuelve la versión nueva. Cancelar tiene su propia operación (exige motivo); el resto de estados no.</summary>
+    public Task<ApplicationResult<int>> ChangeStatusAsync(ChangeExternalAppointmentStatusCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (command.Estado is not { } status || !Enum.IsDefined(status) || status == ExternalAppointmentStatus.Cancelada)
+            {
+                throw new DomainValidationException(ExternalAppointment.InvalidCode);
+            }
+
+            var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            RequireManage(canManage);
+            return await repository.ChangeStatusAsync(actor, command.CitaId, command.VersionVista, status, ct);
+        });
+
+    public Task<ApplicationResult<int>> CancelAsync(CancelExternalAppointmentCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (code, line) = ExternalAppointmentRules.Reason(command.Motivo, command.LineaMotivo);
+            var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            RequireManage(canManage);
+            return await repository.CancelAsync(actor, command.CitaId, command.VersionVista, code, line, ct);
+        });
+
+    public Task<ApplicationResult<ExternalAppointmentRecord>> FindAsync(Guid profileScopeId, CenterId centerId, Guid appointmentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            return await repository.FindAsync(actor, appointmentId, ct) ?? throw new DomainValidationException(ExternalAppointment.NotFoundCode);
+        });
+
+    public Task<ApplicationResult<ExternalAppointmentList>> ListAsync(Guid profileScopeId, CenterId centerId, DateOnly from, DateOnly to, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (to < from)
+            {
+                throw new DomainValidationException(ExternalAppointment.InvalidCode);
+            }
+
+            var (actor, canManage) = await ResolveAsync(profileScopeId, centerId, ct);
+            return new ExternalAppointmentList(await repository.ListAsync(actor, from, to, ct), canManage);
+        });
+
+    private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
+
+    private static void RequireManage(bool canManage)
+    {
+        if (!canManage)
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
+    /// <summary>El ámbito activo de la cuenta de la sesión: Administración, Enfermería o Medicina (si no, acceso denegado) y si puede registrar y cambiar citas.</summary>
+    private async Task<(ExternalAppointmentActor Actor, bool CanManage)> ResolveAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
+    {
+        var identity = await session.GetVerifiedIdentityAsync(ct);
+        if (identity is null || string.IsNullOrWhiteSpace(identity.ExternalSubject))
+        {
+            throw new AccessDeniedException();
+        }
+
+        var scope = (await scopes.ListActiveAsync(identity.ExternalSubject, ct)).FirstOrDefault(s => s.ProfileScopeId == profileScopeId && s.CenterId == centerId);
+        if (scope is null || !Profiles.Contains(scope.Profile))
+        {
+            throw new AccessDeniedException();
+        }
+
+        var canManage = scope.Profile == SystemProfile.Administracion
+            || (scope.Profile == SystemProfile.Enfermeria
+                && (await scopes.ListPermissionsAsync(identity.ExternalSubject, profileScopeId, centerId, ct)).Contains(ProfilePermissions.ExternalAppointmentManage));
+        return (new ExternalAppointmentActor(scope.AccountId, scope.ProfileScopeId, scope.Profile, scope.CenterId), canManage);
+    }
+}

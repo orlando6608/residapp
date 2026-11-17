@@ -12,8 +12,8 @@ public sealed record DischargedResident(
 public sealed record ResidentSuspension(Guid Id, DateTimeOffset Since, string? Note);
 
 /// <summary>Lo que hizo una baja además de darla (CJ, portal 1.1 B; scripts 0042 y 0078): eventos abiertos cerrados por fallecimiento, citas futuras canceladas
-/// y solicitudes de cita abiertas cerradas.</summary>
-public sealed record DischargeOutcome(int EventsClosed, int AppointmentsCancelled, int AppointmentRequestsClosed);
+/// y solicitudes de cita abiertas cerradas, más las citas externas abiertas de hoy en adelante canceladas (script 0101).</summary>
+public sealed record DischargeOutcome(int EventsClosed, int AppointmentsCancelled, int AppointmentRequestsClosed, int ExternalAppointmentsCancelled = 0);
 
 /// <summary>Las citas futuras y las solicitudes de cita abiertas del residente: lo que una baja cancelaría y cerraría ahora mismo.</summary>
 public sealed record ResidentAppointmentLoad(int FutureAppointments, int OpenRequests);

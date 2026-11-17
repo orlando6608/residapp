@@ -140,8 +140,39 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                 p.ResidentId, p.CenterId, AccountId = target.AccountId.Value, OccurredAt = occurredAt,
                 AppointmentReason = AppointmentCancelledReason, RequestReason = AppointmentRequestClosedReason,
             }, transaction, cancellationToken: ct));
+
+            // Citas externas (script 0101, DPO 6.3): las abiertas de hoy en adelante (día de Madrid) se cancelan solas con la causa BAJA_RESIDENTE y el texto fijo, en esta misma
+            // transacción (TR_cext_cambios_causa lo admite solo con esta baja). Las pasadas y las ya cerradas no se tocan. La suspensión tampoco las toca.
+            var externalCancelled = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                DECLARE @Cancelled TABLE (id UNIQUEIDENTIFIER NOT NULL, fecha DATE NOT NULL, hora TIME(0) NULL, estado_anterior NVARCHAR(24) NOT NULL);
+
+                UPDATE appointment SET estado_codigo = 'CANCELADA', version = appointment.version + 1, modificada_en = @OccurredAt
+                OUTPUT inserted.id, deleted.fecha, deleted.hora, deleted.estado_codigo INTO @Cancelled
+                  FROM dbo.citas_externas appointment WITH (FORCESEEK)
+                 WHERE appointment.centro_id = @CenterId AND appointment.residente_id = @ResidentId
+                   AND appointment.estado_codigo IN ('PROGRAMADA', 'CONFIRMADA_HOSPITAL') AND appointment.fecha >= @Today;
+
+                INSERT INTO dbo.citas_externas_cambios
+                    (id, centro_id, cita_id, numero, accion_codigo, actor_cuenta_id, actor_perfil_codigo, fecha_anterior, hora_anterior,
+                     estado_anterior_codigo, estado_nuevo_codigo, motivo, ocurrido_en, causa_codigo)
+                SELECT NEWID(), @CenterId, done.id,
+                       (SELECT ISNULL(MAX(change.numero), 0) + 1 FROM dbo.citas_externas_cambios change WITH (FORCESEEK) WHERE change.cita_id = done.id),
+                       'CANCELADA', @AccountId, 'ADMINISTRACION', done.fecha, done.hora, done.estado_anterior, 'CANCELADA', @AppointmentReason, @OccurredAt, 'BAJA_RESIDENTE'
+                  FROM @Cancelled done;
+
+                INSERT INTO dbo.eventos_auditoria
+                    (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+                SELECT NEWID(), @AccountId, 'ADMINISTRACION', @CenterId, NULL, @ResidentId, 'EXTERNAL_APPOINTMENT', done.id, 'EXT_APPOINTMENT_CANCEL_DISCHARGE', @OccurredAt
+                  FROM @Cancelled done;
+
+                SELECT COUNT(*) FROM @Cancelled;
+                """, new
+            {
+                p.ResidentId, p.CenterId, AccountId = target.AccountId.Value, OccurredAt = occurredAt, AppointmentReason = AppointmentCancelledReason,
+                Today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(occurredAt),
+            }, transaction, cancellationToken: ct));
             transaction.Commit();
-            return new DischargeOutcome(closed, appointments.Cancelled, appointments.Closed);
+            return new DischargeOutcome(closed, appointments.Cancelled, appointments.Closed, externalCancelled);
         }
         catch (SqlException error) when (error.Number is 2601 or 2627)
         {
