@@ -32,7 +32,7 @@ Son propuestas mías, elegidas por ser lo más prudente y lo más fácil de camb
 
 ## 2 bis. Decisiones de Orlando (2026-11-17, una a una, todas con la opción recomendada)
 
-1. **Permiso:** Administración siempre; Enfermería solo con , apagado por defecto (valor 2).
+1. **Permiso:** Administración siempre; Enfermería solo con el permiso `EXTERNAL_APPOINTMENT_MANAGE`, apagado por defecto (valor 2).
 2. **Estados:** cinco, sin «reprogramada»; reprogramar es cambiar la fecha y queda en el historial (valor 10).
 3. **Suspensión:** las citas siguen vivas, con la marca «residente suspendido» y sin avisos a la familia (valor 13).
 4. **Especialidades:** las seis del DPO **y** ginecología, urología y proctología, ocultas a la familia por defecto hasta que decida CJ (valor 5).
