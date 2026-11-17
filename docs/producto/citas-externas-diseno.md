@@ -1,6 +1,6 @@
 # Citas externas de los residentes: diseño y valores por defecto
 
-**Estado: PROPUESTA de ingeniería (2026-11-17), pendiente del visto bueno de Orlando. Sin SQL ni código todavía.** Parte de las respuestas de CJ del 2026-11-17 (`citas-externas-modulo-cj`, 14 de 14; viven en el servidor), de la lectura del DPO (`docs/privacidad/citas-externas-lectura-dpo.md`, borrador) y de las decisiones de Orlando del mismo día: **módulo base** con interruptores por centro para la familia y los correos (apagados por defecto), interruptor por residente y acción «Ya no puedo».
+**Estado: diseño APROBADO por Orlando el 2026-11-17 (los 17 valores por defecto y las nueve decisiones del apartado 2 bis). Sin SQL ni código todavía.** Parte de las respuestas de CJ del 2026-11-17 (`citas-externas-modulo-cj`, 14 de 14; viven en el servidor), de la lectura del DPO (`docs/privacidad/citas-externas-lectura-dpo.md`, borrador) y de las decisiones de Orlando del mismo día: **módulo base** con interruptores por centro para la familia y los correos (apagados por defecto), interruptor por residente y acción «Ya no puedo».
 
 ## 1. Qué es
 
@@ -30,6 +30,20 @@ Son propuestas mías, elegidas por ser lo más prudente y lo más fácil de camb
 | 16 | **Aviso a Administración en su inicio** | Lista «Citas externas con algo sin cubrir» para las que empiezan **dentro de 7 días** (a **2 días o menos**, más destacado), con residente, fecha y «falta transporte/acompañante», **sin especialidad ni lugar**. Se calcula al abrir el inicio, sin tabla ni tarea programada. **Solo Administración** (no Enfermería, salvo que un centro lo pida) | CJ 3.3 con su comentario; DPO 5.1 |
 | 17 | **Nota «al terminar»** | PR siguiente: lista cerrada («sin cambios», «nueva cita», «pendiente de informe», «cambio de pauta», «traslado», «otra») más 150 caracteres, con versiones y autoría; la escribe Enfermería (y Medicina no, por ahora) y la leen **Enfermería y Medicina, no Administración** | Lectura del DPO, apartado 7; CJ 2.2 B. **La lectura solo por personal clínico la confirma CJ** |
 
+## 2 bis. Decisiones de Orlando (2026-11-17, una a una, todas con la opción recomendada)
+
+1. **Permiso:** Administración siempre; Enfermería solo con , apagado por defecto (valor 2).
+2. **Estados:** cinco, sin «reprogramada»; reprogramar es cambiar la fecha y queda en el historial (valor 10).
+3. **Suspensión:** las citas siguen vivas, con la marca «residente suspendido» y sin avisos a la familia (valor 13).
+4. **Especialidades:** las seis del DPO **y** ginecología, urología y proctología, ocultas a la familia por defecto hasta que decida CJ (valor 5).
+5. **Aviso de «falta transporte o acompañante»:** solo a Administración (valor 16); si un centro pide que avise también a Enfermería, se añade después como opción del centro.
+6. **Nota «al terminar»:** la escribe Enfermería; la leen Enfermería y Medicina; Administración no la lee (valor 17).
+7. **Visibilidad para la familia: tres niveles por cita** (completa, solo general, oculta). Con la cita oculta no hay «Me encargo yo» ni avisos.
+8. **Correo de 7 días a la familia:** solo si queda un transporte o acompañante que le toca a la familia; la víspera, siempre que la cita sea visible; a los 2 días, solo si sigue sin cubrir.
+9. **Auxiliar:** ve solo «Familiar», sin nombre, cuando lo lleva un familiar.
+
+Las decisiones 6, 7 y 8 se apartan de la letra de lo que contestó CJ (4.1 B, 4.2 A y 4.5 B) y las 5 y 9 la completan; se le piden confirmadas en su documento (apartado 4).
+
 ## 3. Cómo se construye
 
 Seis PR pequeños, cada uno con su revisión de calidad y su documentación de usuario:
@@ -45,4 +59,4 @@ Seis PR pequeños, cada uno con su revisión de calidad y su documentación de u
 
 ## 4. Lo que queda por cerrar con CJ
 
-Un documento breve para CJ (después de aprobar este diseño): los **tres niveles de visibilidad** por cita (completa, solo general, oculta), la **lista de especialidades ocultas por defecto** (incluidas las tres que dejo ocultas), que la **nota «al terminar»** la lean solo Enfermería y Medicina, si el **aviso de 7 días** se limita a citas en las que la familia tiene algo que cubrir y si el **Auxiliar** necesita saber quién recoge al residente. Y, para Orlando y el DPO, la titularidad del centro piloto (AEPD o APDCAT).
+Un documento breve para CJ, que **confirme** lo que Orlando decidió por defecto: los **tres niveles de visibilidad** (decisión 7), la **lista de especialidades ocultas** (4), que la **nota «al terminar»** no la lea Administración (6), que el **correo de 7 días** se limite a citas con algo que cubrir (8) y que el **Auxiliar** vea solo «Familiar» (9). Ninguna bloquea el PR 1. Queda, para Orlando y el DPO, la titularidad del centro piloto (AEPD o APDCAT).
