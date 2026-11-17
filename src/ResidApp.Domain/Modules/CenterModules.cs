@@ -43,7 +43,7 @@ public static class CenterModules
             PrivacySheetPath: "docs/privacidad/ficha-modulo-dictado-voz.md",
             PrivacyConditions: [ConditionAnnexSigned, ConditionZeroRetention, ConditionImpactAssessment, ConditionStaffInformed],
             HasOwnData: false, UsesThirdParty: true,
-            GlobalCut: "Quitar el ajuste IA__Mistral__ApiKey de la Web App (lo hace Plataforma; procedimiento escrito pendiente)."),
+            GlobalCut: "Quitar el ajuste IA__Mistral__ApiKey de la Web App (lo hace Plataforma; procedimiento en docs/privacidad/procedimiento-corte-global-dictado.md)."),
     ];
 
     public static CenterModule? Find(string? code) => All.FirstOrDefault(m => m.Code == code);

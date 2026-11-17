@@ -125,7 +125,7 @@ Usa la tabla del apartado 2. Para el caso A, apunta **qué centros** (la tabla d
 | Una cuenta de personal comprometida | **Suspender** la cuenta desde su ficha (Administración del centro). Si trabaja en varios centros, lo hace Plataforma (`Manual.cshtml`, líneas 636 a 639) | Suspender no borra el historial de lo que hizo: déjalo así |
 | Una autorización de familia | **Suspender** o revocar (`Manual.cshtml`, línea 513) | Revocar es definitivo |
 | El aviso de cita por correo | Apagar `Correo__Activo` en los ajustes de la Web App (`0012-envio-correos.md`, línea 81) | Comprueba que el ajuste ha quedado aplicado |
-| El dictado por voz | Quitar `IA:Mistral:ApiKey`: sin ella el dictado queda desactivado (`0011-arquitectura-ia.md`, línea 6) | Anota la hora y si hubo audios enviados |
+| El dictado por voz | Quitar `IA__Mistral__ApiKey`: sin ella el dictado queda desactivado (`0011-arquitectura-ia.md`, línea 6); pasos en `procedimiento-corte-global-dictado.md` | Anota la hora y si hubo audios enviados |
 | Un módulo para todos los centros | «Parada de emergencia» de Plataforma (`anexo-modulos-contrato-borrador.md`, línea 296) | **Propuesta: depende del ADR 0015, sin construir** |
 | Una clave o secreto filtrado | Crear uno nuevo y anular el antiguo `[procedimiento por clave: a escribir]` | Anota qué clave y a qué daba acceso, **no su valor** |
 | Las sesiones abiertas | Cerrar todas las sesiones (`entorno-produccion-lectura-dpo.md`, línea 109) | **A verificar** cómo se hace hoy: no consta una pantalla |
