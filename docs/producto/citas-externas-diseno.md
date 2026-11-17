@@ -16,7 +16,7 @@ Son propuestas mías, elegidas por ser lo más prudente y lo más fácil de camb
 | 2 | **Quién registra y cambia** | **Administración siempre** (como las citas de ahora). **Enfermería solo con un permiso nuevo `EXTERNAL_APPOINTMENT_MANAGE`**, apagado por defecto, que concede Administración por perfil (como el del basal). **Medicina solo ve** | Es lo que dijo CJ (3.1 C) con el permiso por perfil; apagado por defecto lo pide el DPO (art. 25.2). En el centro piloto lo dejaremos concedido |
 | 3 | **Quién ve** | Administración, todo el centro. Enfermería y Medicina, **las citas de los residentes de sus unidades** (hoy). Auxiliar, solo hoy y mañana (PR 2). Dirección Clínica y Plataforma, no | CJ 3.2 y lectura del DPO (tabla del apartado 2). El filtro por unidad lo hace la aplicación; la base filtra por centro |
 | 4 | **Tipo** | Lista cerrada de CJ: **prueba**, **consulta**, **tratamiento** y **otra** | CJ 1.2 |
-| 5 | **Especialidad** | Lista cerrada, sin texto libre, con una marca «visible a la familia por defecto». Ocultas por defecto las del DPO (salud mental, oncología, infecciosas, adicciones, paliativos, genética) **y, hasta que CJ decida, ginecología, urología y proctología** | Lo prudente: mostrar una especialidad luego es fácil; ocultarla cuando ya se vio, no. En este PR solo la ve el personal |
+| 5 | **Especialidad** | Lista cerrada, sin texto libre. **Sin especialidades ocultas por defecto: la familia ve siempre la especialidad de una cita visible**, como contestó CJ (4.2 A); para ocultar algo, el personal oculta esa cita entera o el residente tiene activado el interruptor «la familia no ve sus citas externas» | CJ lo eligió porque, si no se ve, la familia llamará al centro a preguntar de qué es la cita. El DPO recomendaba ocultar por defecto salud mental, oncología, infecciosas, adicciones, paliativos y genética (y decidir ginecología, urología y proctología): **se aparta de su recomendación y el riesgo se acepta por escrito en la EIPD del centro** |
 | 6 | **Lugar** | Una línea de **80 caracteres**, solo el nombre del centro sanitario; la base rechaza saltos de línea. Ayuda visible junto al campo | Condición del DPO: «unidad de oncología» sería la especialidad |
 | 7 | **Qué preparar** | Casillas (ayuno, último informe, tarjeta sanitaria, medicación, silla de ruedas, otra) **más una línea de 100 caracteres** con ayuda | Condición del DPO: «suspender el anticoagulante» revela medicación |
 | 8 | **Transporte y acompañante** | Cada uno con un **modo** (transporte: familia, centro, ambulancia, sin determinar; acompañante: familiar, personal del centro, lo lleva el transporte, no necesita, sin determinar) y un **estado** (pendiente o confirmado). «No necesita» queda confirmado solo; «sin determinar» siempre pendiente | Es la ficha 2.1 que CJ validó |
@@ -35,14 +35,14 @@ Son propuestas mías, elegidas por ser lo más prudente y lo más fácil de camb
 1. **Permiso:** Administración siempre; Enfermería solo con el permiso `EXTERNAL_APPOINTMENT_MANAGE`, apagado por defecto (valor 2).
 2. **Estados:** cinco, sin «reprogramada»; reprogramar es cambiar la fecha y queda en el historial (valor 10).
 3. **Suspensión:** las citas siguen vivas, con la marca «residente suspendido» y sin avisos a la familia (valor 13).
-4. **Especialidades:** las seis del DPO **y** ginecología, urología y proctología, ocultas a la familia por defecto hasta que decida CJ (valor 5).
+4. **Especialidades:** **como contestó CJ (4.2 A)**, la familia ve siempre la especialidad; no hay especialidades ocultas por defecto (cambiado el 2026-11-17: Orlando prefirió seguir la letra de CJ y no la recomendación del DPO). El riesgo se acepta por escrito en la EIPD del centro (valor 5).
 5. **Aviso de «falta transporte o acompañante»:** solo a Administración (valor 16); si un centro pide que avise también a Enfermería, se añade después como opción del centro.
 6. **Nota «al terminar»:** la escribe Enfermería; la leen Enfermería y Medicina; Administración no la lee (valor 17).
-7. **Visibilidad para la familia: tres niveles por cita** (completa, solo general, oculta). Con la cita oculta no hay «Me encargo yo» ni avisos.
-8. **Correo de 7 días a la familia:** solo si queda un transporte o acompañante que le toca a la familia; la víspera, siempre que la cita sea visible; a los 2 días, solo si sigue sin cubrir.
+7. **Visibilidad para la familia: dos niveles por cita, como contestó CJ (4.1 B y 4.2 A)**: **visible** (tipo, especialidad y lugar) u **oculta** (la familia no la ve ni recibe avisos, y no hay «Me encargo yo»). No hay un nivel «solo general» (cambiado el 2026-11-17 por decisión de Orlando; el DPO recomendaba tres niveles). El interruptor por residente se mantiene.
+8. **Correo a la familia, como contestó CJ (4.5 B):** 7 días antes y la víspera, en toda cita visible, y a los 2 días solo si sigue sin cubrir (cambiado el 2026-11-17: Orlando prefirió la letra de CJ y no limitar el de 7 días a citas con algo que cubrir).
 9. **Auxiliar:** ve solo «Familiar», sin nombre, cuando lo lleva un familiar.
 
-Las decisiones 6, 7 y 8 se apartan de la letra de lo que contestó CJ (4.1 B, 4.2 A y 4.5 B) y las 5 y 9 la completan; se le piden confirmadas en su documento (apartado 4).
+Solo la decisión 6 (quién lee la nota) añade algo que CJ no dijo y la 9 completa lo que no preguntamos; las demás siguen la letra de CJ. Las decisiones 4, 7 y 8 se apartan de la recomendación del DPO (tres niveles, especialidades ocultas por defecto y limitar el correo de 7 días), y eso lo recogerá la EIPD del centro.
 
 ## 3. Cómo se construye
 
@@ -59,4 +59,4 @@ Seis PR pequeños, cada uno con su revisión de calidad y su documentación de u
 
 ## 4. Lo que queda por cerrar con CJ
 
-Un documento breve para CJ, que **confirme** lo que Orlando decidió por defecto: los **tres niveles de visibilidad** (decisión 7), la **lista de especialidades ocultas** (4), que la **nota «al terminar»** no la lea Administración (6), que el **correo de 7 días** se limite a citas con algo que cubrir (8) y que el **Auxiliar** vea solo «Familiar» (9). Ninguna bloquea el PR 1. Queda, para Orlando y el DPO, la titularidad del centro piloto (AEPD o APDCAT).
+Un documento breve para CJ, que **confirme** lo que Orlando decidió por defecto y que CJ no contestó: que la **nota «al terminar»** no la lea Administración (decisión 6) y que el **Auxiliar** vea solo «Familiar» (9). Ninguna bloquea el PR 1. Queda, para Orlando y el DPO, la titularidad del centro piloto (AEPD o APDCAT).
