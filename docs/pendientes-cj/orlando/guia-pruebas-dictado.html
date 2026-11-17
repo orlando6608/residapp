@@ -1,0 +1,246 @@
+<!doctype html>
+<!--
+  Hoja de acceso para CJ. Es una PLANTILLA EN BLANCO: la rellena Orlando en su navegador (panel de arriba) y la guarda como PDF con
+  «Imprimir». Los datos solo existen en esa ventana: no se guardan ni se envían a ningún sitio. NUNCA escribas aquí la contraseña, la clave
+  del móvil ni un enlace de invitación, y no guardes en el repositorio el PDF ya relleno.
+  Aplicación de autenticación: Microsoft Authenticator (decisión de Orlando, 2026-11-03). Textos de pantalla: Views/Acceso/Entrar.cshtml y
+  Views/Acceso/SegundoFactor.cshtml. Bloqueo: AccesoOptions (5 intentos, 15 minutos). Las cuentas de cada guía: su tabla «Cuentas de prueba».
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probar el dictado por voz · Para Orlando</title>
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-soft: #e3eff0;
+    --warn-bg: #fff3bf;
+    --warn-ink: #5c4400;
+    --warn-rule: #e0b800;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-soft: #1b2e32;
+      --warn-bg: #3a3000;
+      --warn-ink: #ffe27a;
+      --warn-rule: #8a7000;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 780px; margin: 0 auto; padding-block: 40px 64px; display: flex; flex-direction: column; gap: 28px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.4rem; }
+  h3 { font-size: 1.1rem; }
+  p, ol, ul { margin: 0; }
+  a { color: var(--accent); }
+  code, .dato { font-family: var(--mono); }
+  code { background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; overflow-wrap: anywhere; }
+  .marca { display: flex; align-items: center; gap: 12px; }
+  .marca img { width: 48px; height: 48px; border-radius: 10px; }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 16px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin: 0; }
+  .lead { font-size: 1.08rem; }
+
+  .panel { background: var(--surface); border: 2px dashed var(--accent); border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  .panel h2 { font-size: 1.15rem; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .campo { display: flex; flex-direction: column; gap: 4px; }
+  .campo label { font-weight: 600; }
+  .campo input[type="text"], .campo input[type="password"] { font: inherit; padding: 10px 12px; min-height: 44px; border: 1px solid var(--muted);
+    border-radius: 6px; background: var(--bg); color: var(--ink); }
+  .campo input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .campo .ayuda { font-size: 0.88rem; color: var(--muted); }
+  .mostrar { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; min-height: 28px; }
+  .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  button { font: inherit; font-weight: 600; min-height: 44px; padding: 8px 18px; border-radius: 6px; border: 1px solid var(--accent);
+    background: var(--accent); color: var(--bg); cursor: pointer; }
+  #faltan { font-size: 0.95rem; }
+
+  .paso { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px;
+    break-inside: avoid; }
+  .paso > h2 { display: flex; align-items: baseline; gap: 12px; }
+  .num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--accent); color: var(--bg); font-family: var(--sans); font-size: 1rem; }
+  .pasos { padding-left: 1.4em; display: flex; flex-direction: column; gap: 8px; }
+  .nota { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 4px; padding: 10px 14px; }
+  .dato { display: inline-block; background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 10px; font-weight: 700;
+    font-size: 1.05rem; overflow-wrap: anywhere; }
+  .dato.clave { letter-spacing: 0.08em; }
+  .hueco { background: var(--warn-bg); color: var(--warn-ink); border: 1px dashed var(--warn-rule); font-family: var(--sans); font-weight: 600;
+    letter-spacing: normal; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+  th { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .aviso { color: var(--muted); font-size: 0.95rem; }
+
+  @media print {
+    :root { --bg: #fff; --surface: #fff; --ink: #000; --muted: #333; --rule: #bbb; --accent: #1b5f6b; --accent-soft: #e3eff0;
+      --warn-bg: #fff3bf; --warn-ink: #5c4400; --warn-rule: #e0b800; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { padding-inline: 0; }
+    .no-print { display: none !important; }
+    .page { padding-block: 0; gap: 16px; }
+    .paso { padding: 14px 16px; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="page">
+  <header>
+    <nav class="back no-print" aria-label="Navegación">
+      <a href="../orlando.html">← Para Orlando</a>
+      <a href="../index.html">Documentos de CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Guía para Orlando · Pruebas</p>
+    <h1>Probar el dictado por voz</h1>
+    <p class="lead">Paso a paso, para que lo pruebes tú con el móvil y con frases inventadas. Va de lo más sencillo a lo que más puede fallar. Si algo no sale como dice la guía, no es culpa tuya: anótalo (al final) y me lo cuentas.</p>
+  </header>
+
+  <section class="paso" aria-labelledby="p0">
+    <h2 id="p0">Antes de empezar</h2>
+    <p><strong>Qué es el dictado.</strong> Es un botón de la pantalla «Registrar cambio» del Auxiliar. La auxiliar cuenta con la voz lo que ha pasado y la aplicación rellena el formulario como <strong>sugerencia</strong>. La auxiliar la revisa una a una antes de continuar. La aplicación no guarda el audio ni el texto.</p>
+    <p><strong>Qué necesitas.</strong></p>
+    <ul class="pasos">
+      <li>Tu <strong>móvil o tablet con micrófono</strong>. En Android, con Chrome; en iPhone, con Safari. Si falla en uno, prueba el otro y anótalo.</li>
+      <li>Una zona sin mucho ruido. Si el ruido es mucho, la prueba 5 de abajo lo demuestra.</li>
+      <li>Tu cuenta <span class="dato">almendros-orlando-auxiliar</span>, su contraseña y la clave del móvil (el código de 6 cifras que sale en tu aplicación de autenticación). Están en tu fichero de credenciales, <strong>fuera del repositorio</strong>. Nunca las pegues en un chat.</li>
+    </ul>
+    <p class="nota"><strong>Dos reglas.</strong> (1) Solo datos <strong>inventados</strong>: los residentes de Los Almendros son ficticios y tú vas a decir frases inventadas. (2) <strong>No digas nombres de personas</strong>: la propia pantalla te lo recuerda. El audio sale hacia Mistral, el proveedor de inteligencia artificial que lo convierte en texto, así que ni voces ni datos de personas reales.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p1">
+    <h2 id="p1"><span class="num" aria-hidden="true">1</span> Entra y abre un residente</h2>
+    <ol class="pasos">
+      <li>En el navegador del móvil abre <span class="dato">https://app-residapp-dev.azurewebsites.net</span>.</li>
+      <li>Entra con <span class="dato">almendros-orlando-auxiliar</span>, tu contraseña y el código de 6 cifras.</li>
+      <li>Pulsa <strong>Mis residentes</strong> y elige <strong>Rosa Sánchez (ficticia)</strong>.</li>
+      <li>Pulsa <strong>Registrar cambio</strong>.</li>
+    </ol>
+    <p class="nota"><strong>Si tras un despliegue sale un error 500 o 502:</strong> espera unos 40 segundos y recarga. Es el reinicio del servidor.</p>
+    <p><strong>Qué debes ver.</strong> Arriba, un recuadro con el título <strong>«Dictar el cambio»</strong>, la frase «No digas nombres de personas.» y un botón <strong>Grabar</strong>. Si el recuadro no está, mira la sección «Si no aparece el recuadro» más abajo.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p2">
+    <h2 id="p2"><span class="num" aria-hidden="true">2</span> Primera grabación, con el micrófono</h2>
+    <ol class="pasos">
+      <li>Pulsa <strong>Grabar</strong>. El navegador te pide permiso para usar el micrófono: pulsa <strong>Permitir</strong>.</li>
+      <li>El botón cambia a <strong>Parar</strong> y debajo pone «Grabando. Cuenta lo que ha pasado y pulsa Parar. No digas nombres.», con un contador de segundos.</li>
+      <li>Di, despacio y claro, la frase 1 de la tabla de abajo. Pulsa <strong>Parar</strong>.</li>
+      <li>Verás «Procesando el dictado…» unos segundos.</li>
+    </ol>
+    <p><strong>Qué debes ver.</strong></p>
+    <ul class="pasos">
+      <li>Un bloque <strong>«Lo que se ha entendido»</strong> con lo que la aplicación ha oído, en cursiva. Compáralo con lo que dijiste.</li>
+      <li>Un bloque <strong>«Revisa cada sugerencia»</strong>, con una fila por cada cosa propuesta. Cada fila lleva la etiqueta <strong>«Sugerido por voz»</strong> y dos botones: <strong>Está bien</strong> y <strong>Quitar</strong>.</li>
+      <li>En el formulario de abajo, las opciones y la temperatura sugeridas ya marcadas.</li>
+    </ul>
+  </section>
+
+  <section class="paso" aria-labelledby="p3">
+    <h2 id="p3"><span class="num" aria-hidden="true">3</span> Revisa una a una y continúa</h2>
+    <ol class="pasos">
+      <li>Pulsa <strong>Continuar</strong> sin haber revisado nada: <strong>no debe avanzar</strong>. Mientras haya alguna sugerencia sin revisar, la aplicación te lo impide.</li>
+      <li>En cada fila de «Revisa cada sugerencia», pulsa <strong>Está bien</strong> si es correcta o <strong>Quitar</strong> si no lo es. Quitar la desmarca del formulario.</li>
+      <li>Cuando no quede ninguna, pulsa <strong>Continuar</strong>. Sale la pantalla de confirmación.</li>
+      <li>Si quieres revisar algo, pulsa <strong>Volver a editar</strong>; si no, pulsa <strong>Confirmar y enviar</strong>.</li>
+    </ol>
+    <p class="nota">Si pulsas <strong>Confirmar y enviar</strong>, se guarda un registro de cambio de Rosa. Son datos ficticios, pero se quedan en el servidor de desarrollo.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p4">
+    <h2 id="p4"><span class="num" aria-hidden="true">4</span> Frases para probar</h2>
+    <p>Vuelve a «Registrar cambio» y repite con estas frases inventadas. <strong>Lo que sale puede variar</strong>: el dictado está pensado para <strong>proponer de menos</strong>. Si duda, deja la frase como nota y no marca nada. Eso es correcto. Lo grave sería que marcara algo que no dijiste.</p>
+    <table>
+      <thead><tr><th>#</th><th>Qué dices</th><th>Qué debería proponer, más o menos</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>«Ha comido muy poco hoy y ha rechazado el agua. Tiene treinta y siete con ocho de temperatura.»</td><td>Alimentación e hidratación: baja la ingesta de líquidos. Temperatura 37,8 °C.</td></tr>
+        <tr><td>2</td><td>«Se queja de dolor en la pierna izquierda y por la noche no ha dormido nada.»</td><td>Dolor o malestar: en la pierna. Sueño: insomnio.</td></tr>
+        <tr><td>3</td><td>«Ha amanecido con el pañal absorbente empapado, orina muy oscura, y treinta y siete con ocho de temperatura.»</td><td>Algo de eliminación (orina) y temperatura 37,8 °C.</td></tr>
+        <tr><td>4</td><td>«Se ha atragantado con el puré en la comida, tosía mucho, ya se le ha pasado.»</td><td>Algo de alimentación o deglución. Si no marca nada, debe dejar la frase como nota.</td></tr>
+        <tr><td>5</td><td>«Tres días sin hacer deposición, está estreñida, le hemos puesto el supositorio.»</td><td>Algo de eliminación (intestino).</td></tr>
+      </tbody>
+    </table>
+    <p class="aviso">Estas frases salen de los casos con los que se midió la precisión del dictado (<code>tools/PruebaDictado/casos</code>), así que se puede comparar tu resultado con el de la prueba.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p5">
+    <h2 id="p5"><span class="num" aria-hidden="true">5</span> Cuando algo sale mal (también hay que probarlo)</h2>
+    <p>Estas pruebas comprueban que la aplicación no inventa nada y que siempre te deja rellenar a mano.</p>
+    <table>
+      <thead><tr><th>Qué haces</th><th>Qué debe pasar</th></tr></thead>
+      <tbody>
+        <tr><td>Grabas y paras sin decir nada.</td><td>«No se ha grabado nada. Vuelve a intentarlo.» o, si se entiende poco, «No se ha entendido nada que se pueda anotar. Puedes volver a grabar o rellenar el formulario a mano.»</td></tr>
+        <tr><td>Dices algo que no es clínico («hoy hace buen día y he ido al mercado»).</td><td>El mismo aviso de «No se ha entendido nada que se pueda anotar…». No debe marcar nada.</td></tr>
+        <tr><td>Dices una temperatura rara («cuarenta y cinco grados»).</td><td>No debe proponer una temperatura fuera de 34,0 a 42,0 °C.</td></tr>
+        <tr><td>Grabas con ruido de fondo (la tele alta).</td><td>Puede entender mal; lo importante es que no marque cosas que no dijiste.</td></tr>
+        <tr><td>Rechazas el permiso del micrófono.</td><td>«No hay permiso para usar el micrófono. Puedes rellenarlo a mano o dar el permiso en el navegador.»</td></tr>
+        <tr><td>Grabas sin parar durante 2 minutos.</td><td>Se para sola y avisa «Se ha parado solo a los 2 minutos.».</td></tr>
+        <tr><td>Dictas muchas veces seguidas (más de 6 en un minuto).</td><td>«Has usado el dictado muchas veces seguidas. Espera un minuto o rellena el formulario a mano.»</td></tr>
+        <tr><td>Activas el modo avión antes de pulsar Parar.</td><td>«No se ha podido enviar el dictado. Comprueba la conexión o rellena el formulario a mano.»</td></tr>
+      </tbody>
+    </table>
+    <p class="nota">En todos los casos, el formulario de abajo tiene que seguir funcionando a mano.</p>
+  </section>
+
+  <section class="paso" aria-labelledby="p6">
+    <h2 id="p6">Si no aparece el recuadro «Dictar el cambio»</h2>
+    <ul class="pasos">
+      <li><strong>Sin micrófono o sin permiso:</strong> el recuadro se oculta. Mira los ajustes del navegador del móvil.</li>
+      <li><strong>Sin la clave de Mistral:</strong> en Azure dev, el ajuste <code>IA__Mistral__ApiKey</code> de la Web App <code>app-residapp-dev</code> tiene que estar puesto (Azure → Variables de entorno). Sin él, no hay dictado en ningún centro. Está puesto desde el 17/11/2026.</li>
+      <li><strong>Otro centro u otra cuenta:</strong> usa la de Los Almendros. En desarrollo, todos los módulos están activos en todos los centros de prueba (ajuste <code>Modulos__ActivarTodos</code>, que cada despliegue vuelve a poner).</li>
+      <li><strong>Reinicio reciente:</strong> espera 40 segundos y recarga.</li>
+    </ul>
+  </section>
+
+  <section class="paso" aria-labelledby="p7">
+    <h2 id="p7">Opcional: probar el apagado y la caducidad desde Plataforma</h2>
+    <p>Con <code>Modulos__ActivarTodos</code> puesto, el módulo está encendido en todos los centros de prueba y <strong>apagarlo desde Plataforma no tiene efecto visible</strong>. Para probar el flujo real hay que quitar ese ajuste a propósito:</p>
+    <ol class="pasos">
+      <li>En Azure → <code>app-residapp-dev</code> → Variables de entorno, <strong>elimina</strong> <code>Modulos__ActivarTodos</code> y aplica. La app se reinicia y tarda unos 40 segundos. El siguiente despliegue lo vuelve a poner solo.</li>
+      <li>Entra con <span class="dato">plataforma-orlando</span> (con passkey). Abre <strong>Centros</strong>, el centro y <strong>Administraciones y unidades</strong>, y baja a <strong>Módulos opcionales</strong>.</li>
+      <li>Antes de activar, comprueba con la cuenta de Auxiliar que <strong>no</strong> aparece «Dictar el cambio».</li>
+      <li>Abre <strong>Activar</strong>. Rellena la vigencia, la referencia y versión del anexo (inventadas), marca las cuatro condiciones, indica cuándo llegó la petición y el canal, y pulsa <strong>Activar el módulo</strong>. Sale «Módulo activado (referencia …)». Ahora el recuadro <strong>sí</strong> aparece.</li>
+      <li>Abre <strong>Apagar</strong>, elige un motivo y pulsa <strong>Apagar el módulo ahora</strong>. Sale «Módulo apagado (referencia …)». El recuadro <strong>desaparece</strong> en cuanto recargas.</li>
+      <li>Para ver la caducidad, activa con «Vigente hasta» igual a hoy y comprueba al día siguiente que ha dejado de aparecer sin que nadie lo apague. Más detalle en la guía de Plataforma (<code>/Guia</code>, fichas PLA-09 y PLA-10).</li>
+      <li>Al terminar, <strong>vuelve a poner</strong> <code>Modulos__ActivarTodos</code> con valor <code>true</code>, o lanza un despliegue.</li>
+    </ol>
+  </section>
+
+  <section class="paso" aria-labelledby="p8">
+    <h2 id="p8">Qué apuntar y qué contarme</h2>
+    <ul class="pasos">
+      <li>La frase que dijiste y lo que apareció en «Lo que se ha entendido».</li>
+      <li>Qué marcó la aplicación y qué habrías marcado tú.</li>
+      <li>Cuánto tardó entre «Parar» y el resultado.</li>
+      <li>Cualquier mensaje de error, copiado tal cual. Una captura sirve si no sale ningún nombre real.</li>
+      <li>Si algo te pareció confuso aunque funcionara.</li>
+    </ul>
+    <p class="aviso">Esto no se guarda en ningún sitio: cuéntamelo por el chat y yo lo anoto.</p>
+  </section>
+
+  <p class="back no-print"><a href="../orlando.html">← Para Orlando</a> <a href="../index.html">Documentos de CJ</a> <a href="/">Volver a ResidApp</a></p>
+</div>
+
+</body>
+</html>
