@@ -144,6 +144,7 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
     [Theory]
     [InlineData("confirmaciones-tercera-tanda-cj")]
     [InlineData("modulos-base-y-opcionales-cj")]
+    [InlineData("modulos-por-centro-aviso-cj")]
     [InlineData("portal-familiar-confirmaciones-cj")]
     [InlineData("portal-familiar-dos-idiomas-cj")]
     [InlineData("pruebas-1-auxiliar-enfermeria")]
