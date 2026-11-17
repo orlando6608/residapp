@@ -21,7 +21,7 @@ El Auxiliar dicta de viva voz un cambio de un residente asignado. El servidor en
 - Existe un historial de activaciones, con la cuenta y el perfil de la persona operadora (dato seudonimizado del operador de Plataforma). El plazo de conservación está **sin decidir** (`antes-de-datos-reales.md`).
 
 ## Cómo se corta para todos los centros
-Quitar el ajuste `IA__Mistral__ApiKey` de la Web App. Lo hace Plataforma. **Falta el procedimiento escrito:** quién lo hace, cuánto tarda, cómo se vuelve a poner y quién lo hace si Orlando no está.
+Quitar el ajuste `IA__Mistral__ApiKey` de la Web App. Lo hace Plataforma. Procedimiento escrito (borrador, 2026-11-17): `procedimiento-corte-global-dictado.md`. Lo hace Orlando en menos de 4 horas en horario laborable; **falta un suplente** con permiso mínimo en Azure.
 
 ## Qué queda en Mistral al apagar
 Con **retención cero por escrito**, nada. Sin ella, no se borra nada hasta que acabe el contrato con Mistral (anexo, cláusula 4.1.i).
