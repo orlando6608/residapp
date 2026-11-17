@@ -37,7 +37,7 @@ public sealed class PermisosAplicacionTests
     private static readonly HashSet<string> ColumnaTerminada = Names("declaraciones_acceso_clinico declaraciones_historial_traslado");
 
     // Solo la toca el administrador (aplicar-scripts.sh), no la aplicación.
-    private static readonly HashSet<string> SinPermisos = Names("scripts_aplicados");
+    private static readonly HashSet<string> SinPermisos = Names("scripts_aplicados entorno_bd");
 
     private static HashSet<string> Names(string list) => new(list.Split(Separators, StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
 

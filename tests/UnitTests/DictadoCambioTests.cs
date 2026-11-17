@@ -132,7 +132,7 @@ public class DictadoCambioTests
         bool moduleOn = true, bool providerKey = true, ResidApp.Domain.Modules.CenterModuleChange? lastChange = null)
     {
         var fakes = new Fakes { AuditFails = auditFails };
-        var modules = new CenterModuleAccess(new FakeModules(lastChange), new FakeModuleSettings(moduleOn, providerKey), null!, null!, TimeProvider.System);
+        var modules = new CenterModuleAccess(new FakeModules(lastChange), new FakeModuleSettings(moduleOn, providerKey), new FakeEnvironmentMarker(development: true), null!, null!, TimeProvider.System);
         var scopes = new FakeScopes(signedIn ? [new ActiveProfileScope(ScopeId, AccountId.New(), Center, "Centro", profile)] : []);
         var residents = new FakeResidents(assigned ? [new AssignedResidentSummary(Resident, "Residente", UnitId.New(), "Unidad", false, false)] : []);
         return (new SuggestDailyChangeFromVoice(scopes, residents, new FakeSession(signedIn), fakes, fakes, fakes, modules), fakes);

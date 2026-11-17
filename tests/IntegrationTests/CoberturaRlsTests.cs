@@ -24,6 +24,7 @@ public sealed class CoberturaRlsTests
         ["vinculaciones_cuenta_unidades"] = Diseno,
         ["ambitos_perfil"] = Diseno,
         ["scripts_aplicados"] = Diseno,
+        ["entorno_bd"] = Diseno,
         ["sysdiagrams"] = Diseno,
     };
 

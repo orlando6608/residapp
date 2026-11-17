@@ -15,5 +15,5 @@ internal static class ModulosActivos
     }
 
     public static CenterModuleAccess Acceso() => new(
-        new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), new Settings(), null!, null!, TimeProvider.System);
+        new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), new Settings(), new FakeEnvironmentMarker(development: true), null!, null!, TimeProvider.System);
 }

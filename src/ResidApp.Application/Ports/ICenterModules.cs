@@ -35,6 +35,13 @@ public interface IModuleSettings
     bool IsThirdPartyConfigured(string moduleCode);
 }
 
+/// <summary>La marca de entorno de la base de datos (script 0100, ADR 0015 punto 7): segunda barrera del ajuste de desarrollo con todo activo.</summary>
+public interface IEnvironmentMarker
+{
+    /// <summary>La base de datos declara ser de desarrollo. Sin marca, sin la tabla o con un fallo al leerla: false (cuenta como producción).</summary>
+    Task<bool> IsDevelopmentDatabaseAsync(CancellationToken ct = default);
+}
+
 /// <summary>Un cambio de módulo ya guardado, tal como lo ve Plataforma: sin la cuenta de quien lo hizo ni ningún nombre; solo lo que prueba la instrucción del centro y el plazo.</summary>
 public sealed record PlatformModuleChange(
     string ModuleCode, int Number, bool Enabled, DateOnly? ValidFrom, DateOnly? ValidUntil, string? AnnexReference, string? AnnexVersion, string? SheetVersion,

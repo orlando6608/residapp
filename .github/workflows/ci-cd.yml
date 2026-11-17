@@ -59,6 +59,8 @@ jobs:
           sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -Q "CREATE DATABASE ResidAppTest"
           SQL_SERVER=localhost SQL_DATABASE=ResidAppTest SQL_USER=sa SQL_PASSWORD="$SA_PASSWORD" SQLCMD_EXTRA=-C \
             bash database/aplicar-scripts.sh
+          # La base de pruebas es de desarrollo: sin la marca de entorno (script 0100), los tests con Modulos__ActivarTodos no activan los módulos.
+          sqlcmd -C -S localhost -d ResidAppTest -U sa -P "$SA_PASSWORD" -b -I -i database/seed/entorno_desarrollo.sql
 
       # La seguridad por filas (0030, ADR 0008) deja pasar a db_owner: para probarla de verdad, la aplicación de los tests
       # funcionales se conecta con un usuario sin db_owner; el sembrado y las comprobaciones siguen con sa.

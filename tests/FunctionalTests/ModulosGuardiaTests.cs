@@ -98,6 +98,11 @@ public class ModulosGuardiaTests
             Task.FromResult(signedIn ? new VerifiedIdentity("test-sujeto") : null);
     }
 
+    private sealed class EnvironmentMarker : IEnvironmentMarker
+    {
+        public Task<bool> IsDevelopmentDatabaseAsync(CancellationToken ct = default) => Task.FromResult(false);
+    }
+
     private sealed class Settings(bool thirdParty = true) : IModuleSettings
     {
         public bool ActivateAll => false;
@@ -110,7 +115,7 @@ public class ModulosGuardiaTests
     {
         var scopeId = Guid.NewGuid();
         var access = new CenterModuleAccess(
-            new Repository(last), new Settings(), new Scopes(scopeId, CenterId.From(Guid.NewGuid())), new Session(signedIn), TimeProvider.System, [WithData]);
+            new Repository(last), new Settings(), new EnvironmentMarker(), new Scopes(scopeId, CenterId.From(Guid.NewGuid())), new Session(signedIn), TimeProvider.System, [WithData]);
         var http = new DefaultHttpContext { RequestServices = new ServiceCollection().AddSingleton(access).BuildServiceProvider() };
         if (withCookie)
         {
