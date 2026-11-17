@@ -1,6 +1,6 @@
 # Borrador: nota para CJ sobre los módulos opcionales
 
-Borrador del agente `dpo-residapp` (2026-11-16), para que Orlando lo revise, lo firme y lo envíe. No es un documento de la web de CJ (no pide respuesta) ni se despliega. Sobre el dictado, **vencer o apagar equivale a «no disponible»** (el dictado no guarda datos propios; ADR 0015), no a «solo lectura».
+Borrador del agente `dpo-residapp` (2026-11-16), para que Orlando lo revise, lo firme y lo envíe. Se publicó el 2026-11-17 como documento de la web de CJ (`docs/pendientes-cj/modulos-por-centro-aviso-cj.html`, con dos preguntas opcionales), para que CJ reciba el aviso automático por correo; este borrador queda como texto de origen. Sobre el dictado, **vencer o apagar equivale a «no disponible»** (el dictado no guarda datos propios; ADR 0015), no a «solo lectura».
 
 ```text
 Asunto: Qué cambia con los «módulos» (nada para tus pruebas)
