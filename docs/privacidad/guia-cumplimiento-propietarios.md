@@ -197,10 +197,10 @@ Cada una indica dónde está el contexto. Las 1 a 8 bloquean datos reales; las s
 |---|---|---|---|
 | **DPO del centro** | **Sí, si el centro es** autoridad u organismo público (RGPD art. 37.1.a), si su actividad principal es tratamiento a gran escala de categorías especiales (37.1.c), **o** si es un «centro sanitario legalmente obligado al mantenimiento de las historias clínicas» (LOPDGDD art. 34.1.l). Si no, es voluntaria (art. 34.2) | «En el plazo de diez días» a la AEPD o, en su caso, a la autoridad autonómica, tanto la designación como el cese (LOPDGDD art. 34.3). Además hay que **publicar** sus datos de contacto y comunicarlos a la autoridad (RGPD art. 37.7) | **La residencia.** ResidApp le facilita información; no lo elige por ella. Que el centro sea «sanitario» es la pregunta 1 |
 | **DPO de ResidApp** | Posible: el art. 37.1.c alcanza al encargado. Si no se exige, voluntario | Igual: 10 días a la AEPD o autoridad que corresponda | Persona externa con independencia (apartado 4.2). **Decide la persona experta** |
-| **Persona de contacto de privacidad de ResidApp** (no es un DPO) | No como figura legal, pero el art. 33.3.b del RGPD pide en una brecha «el nombre y los datos de contacto del delegado de protección de datos **o de otro punto de contacto**» | Se publica en el aviso legal y en la política | **Decidido (Orlando, 2026-11-13): Orlando, con CJ de suplente.** Falta que CJ lo acepte por escrito (un mensaje basta) y que conste en el aviso legal |
+| **Persona de contacto de privacidad de ResidApp** (no es un DPO) | No como figura legal, pero el art. 33.3.b del RGPD pide en una brecha «el nombre y los datos de contacto del delegado de protección de datos **o de otro punto de contacto**» | Se publica en el aviso legal y en la política | **Decidido (Orlando, 2026-11-13): Orlando, con CJ de suplente.** **CJ lo aceptó en el formulario el 2026-11-15** (pregunta 2.1; la respuesta queda guardada en el servidor, fuera del repositorio; si la persona experta pide algo más formal, se hace entonces). Falta que conste en el aviso legal (que aún no existe) |
 | **Responsable de seguridad (ENS)** | **Solo si aplica el ENS.** La política de seguridad debe identificar a los responsables de la información, del servicio, de la seguridad y del sistema (RD 311/2022, arts. 11 y 13) | Lo designa la organización en su política. Si ResidApp es proveedora de un centro público, el art. 13.5 pide un «POC (Punto o Persona de Contacto) para la seguridad» | **El responsable de seguridad ha de ser distinto del responsable del sistema y sin dependencia jerárquica** (art. 13.3), salvo ausencia justificada de recursos con medidas compensatorias. Hoy una sola persona opera ResidApp: no se cumple sin esas medidas. El ADR 0007 ya dice que Orlando «hace de responsable de Seguridad», pero **no es un nombramiento ENS** |
 | **Personas de contacto y suplente por centro para avisos de brecha** | Contractual, no legal | Se fija en el contrato de encargado | Una persona y su suplente por centro, y una de ResidApp con suplente |
-| **Compromiso de confidencialidad de quien opere ResidApp** | Sí (art. 28.3.b) | Por escrito, antes de dar acceso | Orlando, CJ y cualquier persona futura con acceso; hoy **no consta** |
+| **Compromiso de confidencialidad de quien opere ResidApp** | Sí (art. 28.3.b) | Por escrito, antes de dar acceso | Orlando, CJ y cualquier persona futura con acceso; hoy **no consta** (CJ aceptó firmarlo el 2026-11-15, pregunta 2.3; falta redactar y firmar el documento) |
 | **Persona de referencia y suplente para el aviso de correo a familias** | Condición del proyecto | Procedimiento escrito del centro | Administración del centro (`direccion-confirmada-familia.md`, apartado 6) |
 | **Persona autorizada y suplente para pedir cambios de módulos** | Contractual | En el anexo de módulos | La residencia (`anexo-modulos-contrato-borrador.md`, apartado 2) |
 | **Dirección médica que decide el expurgo** | Depende de la pregunta 1 | — | La residencia |
@@ -288,7 +288,7 @@ Orden pensado para dos personas que no son juristas. Cuando una casilla dice «p
 - [ ] **Pendiente** — **Rellenar los datos que faltan en la política** (identidad y contacto del prestador, datos del centro y su DPO, autoridad, plazos, regiones de Azure y Mistral) y decidir si cada centro la adopta como plantilla o con un bloque «Datos de tu centro» (`antes-de-datos-reales.md`, apartado 6, última viñeta de landings).
 - [ ] **Pendiente** — **Registro de actividades mínimo** (centro y ResidApp) y **EIPD del piloto** con el anexo de ResidApp.
 - [ ] **Pendiente** — **Hoja de primera capa** (plantilla de información al ingreso que ofrece ResidApp, decidido el 2026-11-13) para residentes y representantes, familias y personal (apartado 3, fila 3), entregada por el centro.
-- [ ] **Pendiente** — **Protocolo de brechas** con persona de contacto y suplente por centro y plazo propio de aviso de 24 horas (apartado 6.3). Falta que CJ acepte por escrito ser suplente de contacto de ResidApp.
+- [ ] **Pendiente** — **Protocolo de brechas** con persona de contacto y suplente por centro y plazo propio de aviso de 24 horas (apartado 6.3). CJ aceptó ser suplente de contacto de ResidApp el 2026-11-15 (formulario, pregunta 2.1); falta el protocolo validado y la lista de contactos real.
 - [ ] **Pendiente** — **Procedimiento de derechos** (apartado 6.1).
 - [ ] **Decide una persona** — **Plazos de conservación** de `eventos_acceso` (guarda IP), `sesiones`, auditoría y registros de seguridad (`antes-de-datos-reales.md`, apartado 8).
 - [ ] **Pendiente** — **Compromiso de confidencialidad por escrito** de quien opere ResidApp (RGPD art. 28.3.b).
@@ -401,15 +401,22 @@ Estos puntos **no se resuelven leyendo esta guía ni este repositorio**. Cada un
 - La búsqueda de la persona experta empieza ya.
 - Un solo despacho o dos figuras (abogado y DPO): lo decide la persona experta; es su primera recomendación.
 - Sin titular provisional: no se firma con ningún centro real hasta que exista la sociedad.
-- Persona de contacto de privacidad de ResidApp: Orlando, con CJ de suplente (falta la aceptación escrita de CJ).
+- Persona de contacto de privacidad de ResidApp: Orlando, con CJ de suplente (CJ lo aceptó el 2026-11-15).
 - Plazo propio de aviso de brecha al centro: 24 horas (la persona experta revisa la redacción).
 - ResidApp ofrece a los centros una plantilla de información al ingreso (hoja de primera capa).
-- Esta guía se publica además en «Para Orlando» (`docs/pendientes-cj/orlando/`) con formulario para que CJ la lea y responda. Pendiente de construir y registrar (donde corresponda, README incluido).
+- Esta guía se publicó además para CJ como `docs/pendientes-cj/guia-cumplimiento-datos-cj.html` (en «Preguntas», no en `orlando/`, para que sus respuestas se guarden en el servidor y no en el repositorio público). **CJ respondió las 10 preguntas el 2026-11-15** (ver más abajo).
+
+**Confirmado por CJ el 2026-11-15** (formulario `guia-cumplimiento-datos-cj`, 10 de 10; el detalle de sus respuestas queda en el servidor):
+
+- Sí a las cuatro decisiones de Orlando: empezar ya a buscar a la persona experta (1.1), no firmar con ningún centro real hasta que exista la sociedad (1.2), avisar de una brecha al centro en 24 horas como máximo (1.3) y ofrecer la plantilla de información al ingreso (1.4).
+- **Acepta ser el suplente** de la persona de contacto de privacidad (2.1), dice tener disponibilidad completa para cubrir un aviso con un margen de 24 horas (2.2) y **acepta firmar el compromiso de confidencialidad** (2.3). Ojo: el suplente solo avisa y registra, no contiene (decidido el 2026-11-13; ver `protocolo-brechas-borrador.md`); y el compromiso de confidencialidad sigue sin redactar ni firmar.
+- Centro piloto (3.1): sigue sin decidirse; CJ lo ve ideal como un centro privado pequeño o concertado.
+- Persona experta (3.2): CJ no conoce a ningún abogado o DPO por ahora. No echa nada en falta en la guía (3.3).
 
 **Decide una persona (vosotros o la persona experta):**
 - Tipo de centro del piloto (público, concertado o privado): **aún no se sabe**. Lo necesito para cerrar las preguntas 1 a 3.
 - Fecha prevista de la sociedad titular.
-- Quién cubre noches y vacaciones para brechas, mientras opere una sola persona.
+- Quién cubre noches y vacaciones para brechas, mientras opere una sola persona. **Parcialmente respondido (CJ, 2026-11-15):** CJ tiene disponibilidad completa para cubrir un aviso con un margen de 24 horas, pero como suplente solo avisa y registra; contener un incidente sigue dependiendo de Orlando (acceso al almacén de registros).
 
 **Citas que no he podido verificar en `normativa-local/`** (no están en la base o no las he releído para esta guía; tratadlas como «a verificar»):
 - **Codi de consum, art. 128-1** (información legal en catalán en una web B2B): no está en la base. Solo se cita de pasada a través de [`portal-familiar-dos-idiomas.md`](portal-familiar-dos-idiomas.md).

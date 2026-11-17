@@ -73,7 +73,7 @@ Quitar el ajuste detiene a ResidApp, pero **no anula la clave**: quien la tenga 
 **Lo hace Orlando.** Cuando haya centros reales con el dictado activo:
 
 - **Aviso al centro**, a la persona autorizada que figure en el anexo (y a su suplente), por el canal acordado en el anexo, **en un máximo de 24 horas desde el corte** (igual que el aviso de incidentes del protocolo de brechas). Sin nombres de residentes ni datos personales: solo que el dictado queda **no disponible** en su centro desde la hora X, el motivo en una frase y cuándo se informará de novedades. La plantilla del apartado 4.1 del protocolo de brechas sirve de base si hay incidente.
-- **A CJ**: aviso corto, como suplente del contacto de privacidad (CJ aún no lo ha aceptado por escrito).
+- **A CJ**: aviso corto, como suplente del contacto de privacidad (CJ lo aceptó en el formulario el 2026-11-15).
 - **A las auxiliares**: no hace falta aviso aparte; el bloque desaparece. Si un centro lo pide, se lo comunica su Dirección o Administración.
 - **A la persona experta**, cuando exista, si el motivo es un incidente (protocolo de brechas, apartado 3.7).
 
