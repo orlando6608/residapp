@@ -6,6 +6,12 @@
 
 Antes de un centro real, **este es el único bloqueante operativo del dictado**, ficha de privacidad (`ficha-modulo-dictado-voz.md`, «Cómo se corta para todos los centros»). Hoy no hay centro real con el dictado activado: el procedimiento rige en Azure dev y, cuando exista, en producción (ADR 0014, aplazado).
 
+## 0. Dónde rige este procedimiento y dónde no
+
+- **Rige en producción y en cualquier entorno con datos reales** (hoy ninguno). Allí quitar la clave es un acto con consecuencias para los centros y se hace como dice este papel.
+- **No rige en desarrollo.** En Azure dev y en la base local todos los datos son ficticios (decisión de Orlando, 2026-11-17): la clave de Mistral se **pone y se quita cuando haga falta para probar**, sin avisar a nadie, sin registrar horas y sin pedir permiso. Los módulos, el dictado incluido, tienen que poder activarse y probarse en un centro de pruebas con datos inventados. Dónde se pone la clave en desarrollo: ajuste `IA__Mistral__ApiKey` de la Web App `app-residapp-dev` (Azure, Variables de entorno), o, en local, `dotnet user-secrets set "IA:Mistral:ApiKey" "<clave>" --project src/ResidApp.Web`. Nunca en un fichero del repositorio ni en el chat.
+- **Una sola condición:** nada de datos reales en un entorno de desarrollo (ni un audio con la voz de una persona real hablando de un residente real). Si alguna vez hubiera datos reales en un entorno, deja de ser desarrollo y este procedimiento rige allí.
+
 ## 1. Qué es y qué consigue
 
 - **Qué se hace:** quitar un único ajuste de la Web App, `IA__Mistral__ApiKey`. Es la clave con la que ResidApp se identifica ante Mistral, el proveedor de IA que transcribe el audio. (Un «ajuste» es un valor de configuración del servidor que no está en el código.)
