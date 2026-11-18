@@ -1,0 +1,89 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentDetailViewModel
+@* Citas externas, PR 4 (script 0103). Lo que se ve tras una cita realizada o a la que no se acudió. «Siguiente cita»: lo ven los tres perfiles (Administración solo ve esto de la nota: la fecha o el plazo
+   previstos, nunca el resultado ni la línea). El botón sale siempre que se pueda registrar, haya o no siguiente cita prevista, para que no delate nada de la nota (DPO). «Al terminar»: solo Enfermería y Medicina. *@
+@{
+    var record = Model.Record;
+    var appointment = record.Appointment;
+    var closedForNext = record.Status is ExternalAppointmentStatus.Realizada or ExternalAppointmentStatus.NoAcudida;
+    var isClinical = Model.Profile is SystemProfile.Enfermeria or SystemProfile.Medicina;
+}
+
+@if (closedForNext && Model.FollowUp is { } followUp)
+{
+    <section class="card mb-3" aria-labelledby="siguiente-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="siguiente-titulo">Siguiente cita</h2>
+            @if (followUp.RegisteredId is { } nextId)
+            {
+                <p class="mb-0">Siguiente cita registrada: <a asp-action="Ver" asp-route-id="@nextId">@(followUp.RegisteredDate is { } registeredDate ? ExternalAppointmentDisplay.Date(registeredDate) : "ver la cita")</a>.</p>
+            }
+            else
+            {
+                if (followUp.Planned.IsSet)
+                {
+                    <p>Siguiente cita prevista: <strong>@ExternalNoteDisplay.Next(followUp.Planned, appointment.Date)</strong>.</p>
+                }
+                else
+                {
+                    <p class="text-muted">Todavía no hay una siguiente cita registrada ni prevista.</p>
+                }
+
+                if (Model.CanManage)
+                {
+                    <form asp-action="SiguienteCita" method="post">
+                        <input type="hidden" name="id" value="@record.Id" />
+                        <button type="submit" class="btn btn-outline-primary btn-lg">Registrar la siguiente cita</button>
+                        <span class="form-text d-block">Se abre el formulario con el tipo, la especialidad, el lugar y qué ve la familia ya puestos. No se guarda nada hasta que lo confirmes.</span>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">La registran Administración y las Enfermerías con permiso.</p>
+                }
+            }
+        </div>
+    </section>
+}
+
+@if (record.Status == ExternalAppointmentStatus.Realizada && isClinical)
+{
+    <section class="card mb-3" aria-labelledby="nota-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="nota-titulo">Al terminar</h2>
+            @if (Model.Note is { Retracted: false } note)
+            {
+                <dl class="row mb-2">
+                    <dt class="col-sm-4">Qué cambia para el centro</dt>
+                    <dd class="col-sm-8">@EnumDisplay.Label(note.Result!.Value)</dd>
+                    @if (note.Text is not null)
+                    {
+                        <dt class="col-sm-4">Nota</dt>
+                        <dd class="col-sm-8">@note.Text</dd>
+                    }
+                    @if (note.NextDate is not null || note.NextMonths is not null)
+                    {
+                        <dt class="col-sm-4">Siguiente cita prevista</dt>
+                        <dd class="col-sm-8">@ExternalNoteDisplay.Next(note, appointment.Date)</dd>
+                    }
+                    <dt class="col-sm-4">Anotada por</dt>
+                    <dd class="col-sm-8">@note.AuthorName, el @ExternalNoteDisplay.When(note.At)</dd>
+                </dl>
+            }
+            else
+            {
+                <p class="text-muted">Todavía no hay nota.</p>
+            }
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                @if (Model.Profile == SystemProfile.Enfermeria)
+                {
+                    <a asp-action="Anotar" asp-route-id="@record.Id" class="btn btn-outline-primary btn-lg">@(Model.Note is { Retracted: false } ? "Cambiar la nota" : "Anotar al terminar")</a>
+                }
+                <a asp-action="Versiones" asp-route-id="@record.Id" class="btn btn-link">Ver versiones anteriores</a>
+            </div>
+            <p class="small text-muted mt-2 mb-0">Esta nota la ven Enfermería y Medicina, y no la ven Administración, el personal auxiliar ni la familia.</p>
+        </div>
+    </section>
+}

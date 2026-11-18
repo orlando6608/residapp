@@ -29,9 +29,15 @@
     <div class="alert alert-danger" role="alert">@Model.Error</div>
 }
 
+@if (Model.OriginDate is { } originDate)
+{
+    <div class="alert alert-info" role="status">Es la siguiente cita de la del @ExternalAppointmentDisplay.Date(originDate). Se han puesto el tipo, la especialidad, el lugar y qué ve la familia de aquella; revísalo todo. No se copian qué preparar, el transporte ni el acompañante, que son de cada salida.</div>
+}
+
 <form asp-action="@(Model.IsNew ? "Nueva" : "Editar")" method="post" autocomplete="off">
     <input type="hidden" name="Form.CitaId" value="@form.CitaId" />
     <input type="hidden" name="Form.OperacionId" value="@form.OperacionId" />
+    <input type="hidden" name="Form.CitaOrigenId" value="@form.CitaOrigenId" />
     <input type="hidden" name="Form.VersionVista" value="@form.VersionVista" />
 
     @if (Model.Residents is not null)

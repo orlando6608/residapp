@@ -1,0 +1,106 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentNoteFormViewModel
+@* Citas externas, PR 4 (script 0103): la nota «al terminar» de una cita realizada. Solo la escribe Enfermería y solo la leen Enfermería y Medicina. Es contenido clínico: una lista cerrada y una línea
+   corta (nunca un cuadro de texto grande), con la ayuda a la vista (DPO, apartado 7). Cada cambio es una versión nueva; retirar no borra. Sin autocompletado del navegador. *@
+@{
+    var form = Model.Form;
+    var record = Model.Record;
+    var next = form.Siguiente ?? "ninguna";
+    ViewData["Title"] = "Nota al terminar";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        <li class="breadcrumb-item"><a asp-action="Ver" asp-route-id="@record.Id">@record.ResidentName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Al terminar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Al terminar: @record.ResidentName</h1>
+<p class="text-muted">Cita del @ExternalAppointmentDisplay.Date(record.Appointment.Date).</p>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+
+<form asp-action="Anotar" method="post" autocomplete="off">
+    <input type="hidden" name="Form.CitaId" value="@form.CitaId" />
+    <input type="hidden" name="Form.VersionVista" value="@form.VersionVista" />
+    <input type="hidden" name="Form.OperacionId" value="@form.OperacionId" />
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="resultado">Qué cambia para el centro</label>
+            <select class="form-select" id="resultado" name="Form.Resultado" required>
+                <option value="">Elige una opción</option>
+                @foreach (var result in Enum.GetValues<ExternalNoteResult>())
+                {
+                    <option value="@result.ToCode()" selected="@(form.Resultado == result.ToCode())">@EnumDisplay.Label(result)</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="texto">Una línea para el centro (opcional)</label>
+            <input class="form-control" id="texto" name="Form.Texto" maxlength="@ExternalAppointmentNote.MaxTextLength" value="@form.Texto" autocomplete="off" aria-describedby="texto-ayuda" />
+            <div class="form-text" id="texto-ayuda">Anota solo qué debe hacer o saber el centro (por ejemplo: «recoger el informe en el hospital el viernes»). No escribas diagnósticos, resultados de pruebas, dosis ni nombres de personas. Las indicaciones clínicas las registra Medicina.</div>
+        </div>
+    </div>
+
+    <fieldset class="mb-3" aria-describedby="siguiente-ayuda">
+        <legend class="form-label fs-6">Siguiente cita prevista (opcional)</legend>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="Form.Siguiente" id="siguiente-ninguna" value="ninguna" checked="@(next == "ninguna")" />
+            <label class="form-check-label" for="siguiente-ninguna">Sin siguiente cita</label>
+        </div>
+        <div class="form-check d-flex align-items-center gap-2">
+            <input class="form-check-input mt-0" type="radio" name="Form.Siguiente" id="siguiente-meses" value="meses" checked="@(next == "meses")" />
+            <label class="form-check-label" for="siguiente-meses">En</label>
+            <input class="form-control form-control-sm w-auto" type="number" min="1" max="@ExternalAppointmentNote.MaxNextMonths" id="siguiente-meses-numero" name="Form.SiguienteMeses" value="@form.SiguienteMeses" aria-label="Número de meses" />
+            <span>meses</span>
+        </div>
+        <div class="form-check d-flex align-items-center gap-2">
+            <input class="form-check-input mt-0" type="radio" name="Form.Siguiente" id="siguiente-fecha" value="fecha" checked="@(next == "fecha")" />
+            <label class="form-check-label" for="siguiente-fecha">El día</label>
+            <input class="form-control form-control-sm w-auto" type="date" id="siguiente-fecha-dia" name="Form.SiguienteFecha" value="@form.SiguienteFecha?.ToString("yyyy-MM-dd")" aria-label="Día de la siguiente cita" />
+        </div>
+        <div class="form-text" id="siguiente-ayuda">Solo la fecha prevista o el plazo («en 6 meses»). Administración verá este dato, y solo este, para programar la cita. No verá el resto de la nota.</div>
+    </fieldset>
+
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">Guardar la nota</button>
+        <a asp-action="Ver" asp-route-id="@record.Id" class="btn btn-link btn-lg">Volver a la cita</a>
+    </div>
+    <p class="small text-muted mt-3">Esta nota la ven Enfermería y Medicina, y no la ven Administración, el personal auxiliar ni la familia. Cada cambio queda guardado con tu nombre y la hora, y retirar la nota no borra lo que ya se escribió.</p>
+</form>
+
+@if (Model.Current is { Retracted: false })
+{
+    <section class="card border-danger mt-4" aria-labelledby="retirar-titulo">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="retirar-titulo">Retirar la nota</h2>
+            <p>Si la nota es un error o no debía escribirse, retírala: deja de verse como la nota de la cita. Las versiones anteriores se conservan.</p>
+            <form asp-action="RetirarNota" method="post" class="row g-2 align-items-end">
+                <input type="hidden" name="Form.CitaId" value="@form.CitaId" />
+                <input type="hidden" name="Form.VersionVista" value="@Model.Current.Number" />
+                <div class="col-12 col-md-5">
+                    <label class="form-label" for="motivo-retirada">Motivo</label>
+                    <select class="form-select" id="motivo-retirada" name="Form.MotivoRetirada" required>
+                        <option value="">Elige el motivo</option>
+                        @foreach (var reason in Enum.GetValues<ExternalNoteRetractionReason>())
+                        {
+                            <option value="@reason.ToCode()">@EnumDisplay.Label(reason)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-outline-danger">Retirar la nota</button>
+                </div>
+            </form>
+        </div>
+    </section>
+}

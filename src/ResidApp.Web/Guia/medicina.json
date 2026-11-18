@@ -16,7 +16,7 @@
     "Activar el protocolo urgente, derivar a Urgencias y firmar el informe de derivación.",
     "Cerrar el episodio y decidir si se comunica a la familia.",
     "Corregir o rectificar tu valoración, y corregir un comunicado a la familia antes de que se publique.",
-    "Ver las citas externas de los residentes de tus unidades (ver MED-17).",
+    "Ver las citas externas de los residentes de tus unidades (ver MED-17) y leer la nota «Al terminar» de las realizadas (ver MED-18).",
     "Consultar el historial y la línea temporal de los eventos que ves."
   ],
   "conPermiso": [
@@ -596,7 +596,7 @@
         { "texto": "Pulsa el nombre del residente para abrir la cita: día, hora (o «Por confirmar»), tipo, especialidad, lugar, transporte, acompañante y qué preparar." }
       ],
       "despues": [
-        { "para": "Tú", "texto": "Ves la cita y si le falta algo («Falta algo») o está «Cubierta». No hay botones de cambio: te dice que las registra Administración." },
+        { "para": "Tú", "texto": "Ves la cita y si le falta algo («Falta algo») o está «Cubierta». No hay botones de cambio: te dice que las registra Administración. Si la cita está realizada, ves además el bloque «Al terminar», con la nota de Enfermería (ver MED-18)." },
         { "para": "Enfermería", "texto": "Si tiene el permiso, la cambia, la da por realizada o la cancela; si no, solo la ve como tú." }
       ],
       "dudas": [
@@ -608,6 +608,36 @@
       "rutas": ["Medicina/Index", "Medicina/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Ver"],
       "mensajes": [
         "Aquí solo puedes ver las citas. Las registra Administración."
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "MED-18",
+      "pregunta": "¿Cómo leo la nota «al terminar» de una cita externa?",
+      "palabras": ["citas externas", "cita externa", "al terminar", "nota", "siguiente cita", "informe", "versiones"],
+      "permisos": [],
+      "antes": [
+        "Que la cita esté **Realizada**: solo entonces hay bloque «Al terminar».",
+        "Saber que Medicina solo lee la nota: la escribe Enfermería. Las indicaciones clínicas las registras tú en las indicaciones, no aquí."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas** y entra en la cita realizada del residente.", "botones": ["Citas externas"] },
+        { "texto": "En el bloque «Al terminar» lees qué cambia para el centro, la línea que dejó Enfermería, la siguiente cita prevista y quién la anotó y cuándo." },
+        { "texto": "Para ver cómo ha cambiado, pulsa **Ver versiones anteriores**: sale cada versión con su autoría. Una nota retirada sale como «Nota retirada».", "botones": ["Ver versiones anteriores"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Abrir las versiones anteriores deja constancia en la auditoría, sin el contenido. No cambias ni retiras la nota." },
+        { "para": "Enfermería", "texto": "La escribe, la corrige y la retira (ver ENF-24)." },
+        { "para": "Administración", "texto": "No lee la nota. Solo ve la fecha o el plazo de la siguiente cita prevista, para registrarla." }
+      ],
+      "dudas": [
+        { "p": "Pone «Todavía no hay nota».", "r": "Enfermería aún no la ha anotado, o la retiró. Las versiones retiradas se ven en «Ver versiones anteriores»." },
+        { "p": "«La nota «al terminar» la escribe Enfermería…»", "r": "Es lo normal en Medicina: lee la nota, no la escribe." },
+        { "p": "Quiero anotar yo una indicación tras la cita.", "r": "Las indicaciones clínicas las registra Medicina en sus indicaciones, no en esta nota." }
+      ],
+      "rutas": ["Medicina/Index", "CitasExternas/Ver", "CitasExternas/Versiones"],
+      "mensajes": [
+        "La nota «al terminar» la escribe Enfermería"
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }

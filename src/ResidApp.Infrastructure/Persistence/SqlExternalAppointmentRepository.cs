@@ -60,7 +60,8 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
           LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = e.centro_id
         """;
 
-    public async Task<Guid> CreateAsync(ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, Guid? operationId = null, CancellationToken ct = default)
+    public async Task<Guid> CreateAsync(
+        ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, Guid? operationId = null, Guid? originAppointmentId = null, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -93,6 +94,31 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             }
         }
 
+        // «La siguiente cita» (script 0103): la de origen es de este residente, está en el ámbito del actor y está realizada o no acudida. Si no, error genérico: no se dice si existe.
+        if (originAppointmentId is { } origin)
+        {
+            var originStatus = await connection.ExecuteScalarAsync<string?>(new CommandDefinition($"""
+                SELECT e.estado_codigo FROM dbo.citas_externas e
+                 WHERE e.id = @OriginId AND e.centro_id = @CenterId AND e.residente_id = @ResidentId AND {AppointmentScopeSql}
+                """, Params(actor, new { OriginId = origin, ResidentId = residentId.Value }), transaction, cancellationToken: ct));
+            if (originStatus is null)
+            {
+                throw new AccessDeniedException();
+            }
+            if (originStatus is not ("REALIZADA" or "NO_ACUDIDA"))
+            {
+                throw new DomainValidationException(ExternalAppointment.InvalidCode);
+            }
+            // Una cita de origen solo tiene una siguiente viva (UX_cext_origen_viva): si otra persona ya la registró, no se crea otra y se le dice que la cita cambió.
+            var alreadyHasNext = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                SELECT COUNT(*) FROM dbo.citas_externas WHERE cita_origen_id = @OriginId AND centro_id = @CenterId AND estado_codigo <> 'CANCELADA'
+                """, Params(actor, new { OriginId = origin }), transaction, cancellationToken: ct));
+            if (alreadyHasNext > 0)
+            {
+                throw new DomainValidationException(ExternalAppointment.RevisionConflictCode);
+            }
+        }
+
         var id = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
         try
@@ -101,12 +127,12 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             INSERT INTO dbo.citas_externas
                 (id, centro_id, residente_id, fecha, hora, tipo_codigo, especialidad_codigo, lugar, transporte_modo_codigo, transporte_estado_codigo,
                  acompanante_modo_codigo, acompanante_estado_codigo, preparar_ayuno, preparar_informe, preparar_tarjeta, preparar_medicacion, preparar_silla_ruedas,
-                 preparar_otra, preparar_texto, estado_codigo, visibilidad_familia_codigo, version, creada_por_cuenta_id, creada_por_perfil, creada_en, modificada_en, operacion_id)
+                 preparar_otra, preparar_texto, estado_codigo, visibilidad_familia_codigo, version, creada_por_cuenta_id, creada_por_perfil, creada_en, modificada_en, operacion_id, cita_origen_id)
             VALUES
                 (@Id, @CenterId, @ResidentId, @Date, @Time, @Type, @Specialty, @Place, @TransportMode, @TransportState,
                  @CompanionMode, @CompanionState, @Fasting, @LastReport, @HealthCard, @Medication, @Wheelchair,
-                 @PrepOther, @PrepText, 'PROGRAMADA', @Visibility, 1, @AccountId, @Profile, @Now, @Now, @OperationId);
-            """, Params(actor, Fields(appointment, new { Id = id, ResidentId = residentId.Value, Now = now.UtcDateTime, OperationId = operationId })), transaction, cancellationToken: ct));
+                 @PrepOther, @PrepText, 'PROGRAMADA', @Visibility, 1, @AccountId, @Profile, @Now, @Now, @OperationId, @OriginId);
+            """, Params(actor, Fields(appointment, new { Id = id, ResidentId = residentId.Value, Now = now.UtcDateTime, OperationId = operationId, OriginId = originAppointmentId })), transaction, cancellationToken: ct));
         }
         catch (SqlException error) when (error.Number is 2601 or 2627)
         {
@@ -264,6 +290,190 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             EnumCode.ParseCode<ExternalTransportMode>(row.TransportMode), EnumCode.ParseCode<ExternalCompanionMode>(row.CompanionMode))).ToList();
     }
 
+    public async Task<ExternalAppointmentFollowUp?> FindFollowUpAsync(ExternalAppointmentActor actor, Guid appointmentId, CancellationToken ct = default)
+    {
+        // Solo dos datos de la nota: la siguiente cita prevista de la versión vigente (si no está retirada) y la siguiente cita ya registrada. Ni el resultado, ni la línea, ni el autor, ni el número.
+        using var connection = await connections.OpenAsync(ct);
+        var row = await connection.QuerySingleOrDefaultAsync<FollowUpRow>(new CommandDefinition($"""
+            SELECT
+                   (SELECT TOP (1) CASE WHEN n.retirada = 0 THEN n.siguiente_fecha END FROM dbo.citas_externas_notas n WHERE n.cita_id = e.id AND n.centro_id = e.centro_id ORDER BY n.numero DESC) AS PlannedDate,
+                   (SELECT TOP (1) CASE WHEN n.retirada = 0 THEN n.siguiente_meses END FROM dbo.citas_externas_notas n WHERE n.cita_id = e.id AND n.centro_id = e.centro_id ORDER BY n.numero DESC) AS PlannedMonths,
+                   (SELECT TOP (1) following.id FROM dbo.citas_externas following WHERE following.cita_origen_id = e.id AND following.centro_id = e.centro_id AND following.estado_codigo <> 'CANCELADA' ORDER BY following.creada_en) AS RegisteredId,
+                   (SELECT TOP (1) following.fecha FROM dbo.citas_externas following WHERE following.cita_origen_id = e.id AND following.centro_id = e.centro_id AND following.estado_codigo <> 'CANCELADA' ORDER BY following.creada_en) AS RegisteredDate
+              FROM dbo.citas_externas e
+             WHERE e.id = @Id AND e.centro_id = @CenterId AND {AppointmentScopeSql}
+            """, Params(actor, new { Id = appointmentId }), cancellationToken: ct));
+        return row is null ? null : new ExternalAppointmentFollowUp(new ExternalNextVisit(ToDate(row.PlannedDate), row.PlannedMonths), row.RegisteredId, ToDate(row.RegisteredDate));
+    }
+
+    public async Task<ExternalNoteVersion?> FindCurrentNoteAsync(ExternalAppointmentActor actor, Guid appointmentId, CancellationToken ct = default)
+    {
+        RequireClinicalReader(actor);
+        using var connection = await connections.OpenAsync(ct);
+        // Una cita fuera del ámbito del actor (otra unidad, otro centro, residente dado de baja) no existe para él: acceso denegado, no «sin nota».
+        var visible = await connection.ExecuteScalarAsync<int?>(new CommandDefinition($"""
+            SELECT 1 FROM dbo.citas_externas e WHERE e.id = @Id AND e.centro_id = @CenterId AND {AppointmentScopeSql}
+            """, Params(actor, new { Id = appointmentId }), cancellationToken: ct));
+        if (visible is null)
+        {
+            throw new AccessDeniedException();
+        }
+
+        var rows = await connection.QueryAsync<NoteRow>(new CommandDefinition($"""
+            {NoteSelectSql}
+             WHERE n.cita_id = @Id AND n.centro_id = @CenterId
+             ORDER BY n.numero DESC
+            """, Params(actor, new { Id = appointmentId }), cancellationToken: ct));
+        return rows.Select(ToNote).FirstOrDefault();
+    }
+
+    public async Task<IReadOnlyList<ExternalNoteVersion>> ListNoteVersionsAsync(ExternalAppointmentActor actor, Guid appointmentId, CancellationToken ct = default)
+    {
+        RequireClinicalReader(actor);
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var appointment = await connection.QuerySingleOrDefaultAsync<NoteAppointmentRow>(new CommandDefinition($"""
+            SELECT e.residente_id AS ResidentId, e.fecha AS Date, e.estado_codigo AS Status,
+                   (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
+                     WHERE location.residente_id = e.residente_id AND location.centro_id = e.centro_id AND location.vigente_hasta IS NULL) AS UnitId
+              FROM dbo.citas_externas e
+             WHERE e.id = @Id AND e.centro_id = @CenterId AND {AppointmentScopeSql}
+            """, Params(actor, new { Id = appointmentId }), transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
+
+        // Abrir las versiones anteriores deja un evento por apertura, sin contenido (DPO, segunda lectura, apartado c).
+        await AuditAsync(connection, transaction, actor, appointment.ResidentId, appointment.UnitId, appointmentId, "EXT_APPOINTMENT_NOTE_HIST_READ", DateTimeOffset.UtcNow, ct);
+        var rows = await connection.QueryAsync<NoteRow>(new CommandDefinition($"""
+            {NoteSelectSql}
+             WHERE n.cita_id = @Id AND n.centro_id = @CenterId
+             ORDER BY n.numero DESC
+            """, Params(actor, new { Id = appointmentId }), transaction, cancellationToken: ct));
+        var versions = rows.Select(ToNote).ToList();
+        transaction.Commit();
+        return versions;
+    }
+
+    public Task<int> SaveNoteAsync(
+        ExternalAppointmentActor actor, Guid appointmentId, int expectedNumber, ExternalAppointmentNote note, Guid? operationId = null, CancellationToken ct = default) =>
+        WriteNoteAsync(actor, appointmentId, expectedNumber, note, null, operationId, ct);
+
+    public Task<int> RetractNoteAsync(
+        ExternalAppointmentActor actor, Guid appointmentId, int expectedNumber, ExternalNoteRetractionReason reason, Guid? operationId = null, CancellationToken ct = default) =>
+        WriteNoteAsync(actor, appointmentId, expectedNumber, null, reason, operationId, ct);
+
+    /// <summary>Escribe una versión de la nota (nueva o de retirada) en una transacción que bloquea la cita, comprueba el ámbito (la unidad actual del residente), que el residente sigue activo y que la
+    /// cita está realizada, comprueba la versión vista y deja el evento de auditoría con solo identificadores (acción, cita y versión; ni el resultado, ni la línea, ni el motivo).</summary>
+    private async Task<int> WriteNoteAsync(
+        ExternalAppointmentActor actor, Guid appointmentId, int expectedNumber, ExternalAppointmentNote? note, ExternalNoteRetractionReason? retraction, Guid? operationId, CancellationToken ct)
+    {
+        if (actor.Profile != SystemProfile.Enfermeria)
+        {
+            throw new AccessDeniedException();
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        var appointment = await connection.QuerySingleOrDefaultAsync<NoteAppointmentRow>(new CommandDefinition($"""
+            SELECT e.residente_id AS ResidentId, e.fecha AS Date, e.estado_codigo AS Status,
+                   (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
+                     WHERE location.residente_id = e.residente_id AND location.centro_id = e.centro_id AND location.vigente_hasta IS NULL) AS UnitId
+              FROM dbo.citas_externas e WITH (UPDLOCK, ROWLOCK)
+              JOIN dbo.residentes resident ON resident.id = e.residente_id AND resident.centro_id = e.centro_id AND resident.estado = 'ACTIVE'
+             WHERE e.id = @Id AND e.centro_id = @CenterId AND {AppointmentScopeSql}
+            """, Params(actor, new { Id = appointmentId }), transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
+        if (appointment.Status != "REALIZADA")
+        {
+            throw new DomainValidationException(ExternalAppointment.InvalidCode);
+        }
+        note?.RequireNextAfter(appointment.Date);
+
+        // Reenvío del mismo formulario: si esta cuenta ya guardó esta operación, se devuelve su número sin repetir versión ni auditoría.
+        if (operationId is { } operation)
+        {
+            var existing = await connection.QuerySingleOrDefaultAsync<ExistingNoteRow?>(new CommandDefinition("""
+                SELECT cita_id AS AppointmentId, numero AS Number FROM dbo.citas_externas_notas
+                 WHERE centro_id = @CenterId AND actor_cuenta_id = @AccountId AND operacion_id = @OperationId
+                """, Params(actor, new { OperationId = operation }), transaction, cancellationToken: ct));
+            if (existing is not null)
+            {
+                return existing.AppointmentId == appointmentId ? existing.Number : throw new AccessDeniedException();
+            }
+        }
+
+        var latest = await connection.QuerySingleOrDefaultAsync<LatestNoteRow?>(new CommandDefinition("""
+            SELECT TOP (1) numero AS Number, retirada AS Retracted FROM dbo.citas_externas_notas
+             WHERE cita_id = @Id AND centro_id = @CenterId ORDER BY numero DESC
+            """, Params(actor, new { Id = appointmentId }), transaction, cancellationToken: ct));
+        if ((latest?.Number ?? 0) != expectedNumber)
+        {
+            throw new DomainValidationException(ExternalAppointment.RevisionConflictCode);
+        }
+        if (retraction is not null && (latest is null || latest.Retracted))
+        {
+            throw new DomainValidationException(ExternalAppointment.InvalidCode); // No hay nota vigente que retirar.
+        }
+
+        var versionId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        try
+        {
+            await connection.ExecuteAsync(new CommandDefinition("""
+                INSERT INTO dbo.citas_externas_notas
+                    (id, centro_id, cita_id, residente_id, numero, retirada, resultado_codigo, texto, siguiente_fecha, siguiente_meses, motivo_retirada_codigo,
+                     actor_cuenta_id, actor_perfil_codigo, operacion_id, ocurrido_en)
+                VALUES
+                    (@VersionId, @CenterId, @Id, @ResidentId, @Number, @Retracted, @Result, @Text, @NextDate, @NextMonths, @Reason,
+                     @AccountId, @Profile, @OperationId, @Now);
+                """, Params(actor, new
+            {
+                VersionId = versionId, Id = appointmentId, appointment.ResidentId, Number = expectedNumber + 1, Retracted = retraction is not null,
+                Result = note?.Result.ToCode(), Text = note?.Text, NextDate = note?.NextDate, NextMonths = note?.NextMonths, Reason = retraction?.ToCode(),
+                OperationId = operationId, Now = now.UtcDateTime,
+            }), transaction, cancellationToken: ct));
+        }
+        catch (SqlException error) when (error.Number is 2601 or 2627)
+        {
+            throw new AccessDeniedException();
+        }
+
+        await AuditAsync(connection, transaction, actor, appointment.ResidentId, appointment.UnitId, versionId,
+            retraction is null ? "EXT_APPOINTMENT_NOTE" : "EXT_APPOINTMENT_NOTE_RETRACT", now, ct, "EXTERNAL_APPOINTMENT_NOTE");
+        transaction.Commit();
+        return expectedNumber + 1;
+    }
+
+    /// <summary>La nota la leen Enfermería y Medicina; Administración, el Auxiliar y el resto, no (Llei 21/2000, art. 11.4).</summary>
+    private static void RequireClinicalReader(ExternalAppointmentActor actor)
+    {
+        if (actor.Profile is not (SystemProfile.Enfermeria or SystemProfile.Medicina))
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
+    private const string NoteSelectSql = """
+        SELECT n.id AS Id, n.numero AS Number, n.retirada AS Retracted, n.resultado_codigo AS Result, n.texto AS Text, n.siguiente_fecha AS NextDate, n.siguiente_meses AS NextMonths,
+               n.motivo_retirada_codigo AS Reason, n.ocurrido_en AS At, ISNULL(author.nombre_visible, N'Enfermería') AS AuthorName
+          FROM dbo.citas_externas_notas n
+          LEFT JOIN dbo.cuentas author ON author.id = n.actor_cuenta_id
+        """;
+
+    private static ExternalNoteVersion ToNote(NoteRow row) => new(
+        row.Id, row.Number, row.Retracted, row.Result is { } result ? EnumCode.ParseCode<ExternalNoteResult>(result) : null, row.Text, ToDate(row.NextDate), row.NextMonths,
+        row.Reason is { } reason ? EnumCode.ParseCode<ExternalNoteRetractionReason>(reason) : null, new DateTimeOffset(DateTime.SpecifyKind(row.At, DateTimeKind.Utc)), row.AuthorName);
+
+    private static DateOnly? ToDate(DateTime? value) => value is { } date ? DateOnly.FromDateTime(date) : null;
+
+    private sealed record FollowUpRow(DateTime? PlannedDate, byte? PlannedMonths, Guid? RegisteredId, DateTime? RegisteredDate);
+
+    private sealed record NoteRow(
+        Guid Id, int Number, bool Retracted, string? Result, string? Text, DateTime? NextDate, byte? NextMonths, string? Reason, DateTime At, string AuthorName);
+
+    private sealed record NoteAppointmentRow(Guid ResidentId, DateOnly Date, string Status, Guid? UnitId);
+
+    private sealed record ExistingNoteRow(Guid AppointmentId, int Number);
+
+    private sealed record LatestNoteRow(int Number, bool Retracted);
+
     /// <summary>Quien escribe: Administración (su ámbito se comprueba en cada consulta) o Enfermería con el permiso EXTERNAL_APPOINTMENT_MANAGE vigente, vuelto a mirar dentro de la
     /// transacción por si Administración se lo retiró después de la comprobación del caso de uso. Medicina y el resto, no.</summary>
     private static async Task RequireWriterAsync(SqlConnection connection, SqlTransaction transaction, ExternalAppointmentActor actor, CancellationToken ct)
@@ -355,7 +565,7 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
     /// <summary>La auditoría lleva solo identificadores: cuenta, perfil, centro, unidad, residente, tipo y número de recurso, acción y hora. Nada del contenido de la cita.</summary>
     private static Task AuditAsync(
         SqlConnection connection, SqlTransaction transaction, ExternalAppointmentActor actor, Guid residentId, Guid? unitId, Guid appointmentId, string action,
-        DateTimeOffset now, CancellationToken ct) =>
+        DateTimeOffset now, CancellationToken ct, string? resourceType = null) =>
         connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.eventos_auditoria
                 (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
@@ -363,7 +573,7 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             """, new
         {
             AccountId = actor.AccountId.Value, Profile = actor.Profile.ToCode(), CenterId = actor.CenterId.Value, UnitId = unitId, ResidentId = residentId,
-            ResourceType, AppointmentId = appointmentId, Action = action, Now = now.UtcDateTime,
+            ResourceType = resourceType ?? ResourceType, AppointmentId = appointmentId, Action = action, Now = now.UtcDateTime,
         }, transaction, cancellationToken: ct));
 
     private static DynamicParameters Params(ExternalAppointmentActor actor, object extra)

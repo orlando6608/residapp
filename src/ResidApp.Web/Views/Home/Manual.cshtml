@@ -623,8 +623,8 @@
     </p>
     <p>
         <strong>Quién puede qué.</strong> Administración registra y cambia las citas de todo el centro. Enfermería las registra y las cambia solo si Administración le ha concedido el
-        permiso <strong>Registrar y cambiar las citas externas de los residentes</strong> (viene apagado); sin él, las ve. Medicina solo las ve. Enfermería y Medicina ven las de los
-        residentes de sus unidades. Dirección Clínica y Plataforma no tienen acceso. El Auxiliar solo tiene una vista reducida, «Citas externas de hoy y mañana», desde «Mis residentes»: sus residentes asignados, solo las citas abiertas, con la hora, «Qué preparar», quién acompaña y cómo va; no ve el tipo, la especialidad, el lugar, la nota ni el nombre de ningún familiar, y no se imprime.
+        permiso <strong>Registrar y cambiar las citas externas de los residentes</strong> (viene apagado); sin él, las ve (pero sí puede anotar la nota «Al terminar» de una cita realizada, que no necesita ese permiso). Medicina solo las ve y lee la nota. Enfermería y Medicina ven las de los
+        residentes de sus unidades. Dirección Clínica y Plataforma no tienen acceso. El Auxiliar solo tiene una vista reducida, «Citas externas de hoy y mañana», desde «Mis residentes»: sus residentes asignados, solo las citas abiertas, con la hora, «Qué preparar», quién acompaña y cómo va; no ve el tipo, la especialidad, el lugar, la nota «Al terminar» ni el nombre de ningún familiar, y no se imprime.
     </p>
     <p>
         <strong>Dónde está.</strong> En el Inicio de Administración, de Enfermería y de Medicina, la tarjeta <strong>Citas externas</strong> abre la lista, con las citas de los próximos 60 días
@@ -644,6 +644,24 @@
         <strong>Cancelada</strong> (con un motivo de una lista y, si quieres, una línea de 100 caracteres sin diagnósticos ni nombres). Realizada, no acudida y cancelada son finales: la cita no se
         reabre ni se cambia. «Realizada» y «No se acudió» solo se pueden marcar desde el día de la cita (el día de hoy cuenta): una cita futura equivocada se cambia o se cancela; y una cita confirmada por el hospital no vuelve a «Programada». «Reprogramada» no es un estado: cambiar el día, o una hora que ya estaba puesta, es reprogramar y pide un motivo (poner la hora por primera vez no), y queda en el historial. Si otra persona guardó antes que tú, la pantalla lo
         dice («Otra persona ha cambiado esta cita») en vez de pisar su cambio. Cada cambio queda en el historial y en la auditoría, que lleva solo identificadores, nunca el contenido de la cita.
+    </p>
+    <p>
+        <strong>Siguiente cita.</strong> En la ficha de una cita <strong>Realizada</strong> o a la que <strong>No se acudió</strong>, Administración, Enfermería y Medicina ven el bloque
+        <strong>Siguiente cita</strong>. Dice «Siguiente cita prevista» (una fecha, o «en N meses» con la fecha aproximada) si Enfermería la dejó anotada, o «Siguiente cita registrada» con un enlace
+        si ya se registró. A quien puede registrar (Administración, o Enfermería con permiso) le sale el botón <strong>Registrar la siguiente cita</strong>, siempre, haya o no una siguiente cita
+        prevista. Abre el formulario de registrar con el tipo, la especialidad, el lugar y «qué ve la familia» de la cita anterior ya puestos, y la fecha prevista si la hay; no copia «qué
+        preparar», el transporte ni el acompañante, porque son de cada salida. No se guarda nada hasta que lo confirmas, y una cita solo tiene una siguiente viva (si la primera se cancela, se puede
+        registrar otra).
+    </p>
+    <p>
+        <strong>Nota «al terminar».</strong> Cuando una cita está <strong>Realizada</strong>, <strong>cualquier Enfermería</strong> con acceso al residente puede anotar qué cambia para el centro,
+        <strong>sin necesitar el permiso de registrar y cambiar citas</strong>. En la ficha, el bloque <strong>Al terminar</strong> trae el botón <strong>Anotar al terminar</strong> (después, <strong>Cambiar la
+        nota</strong>). Se elige «Qué cambia para el centro» de una lista (sin cambios, hay que pedir una nueva cita, pendiente de informe, cambio de pauta, traslado u otra), se puede añadir una
+        línea de hasta 150 caracteres con solo lo que debe hacer o saber el centro (nada de diagnósticos, resultados, dosis ni nombres), y la «Siguiente cita prevista»: ninguna, en 1 a 36 meses o un
+        día. La nota la ven <strong>Enfermería y Medicina</strong>; <strong>Administración, el Auxiliar y la familia no la ven</strong> (Administración solo ve la fecha o el plazo de la siguiente cita). Cada
+        cambio guarda una <strong>versión</strong> nueva (una copia de la nota con quién y cuándo la escribió): las anteriores no se pierden y se leen en <strong>Ver versiones anteriores</strong>, que
+        deja constancia en la auditoría sin contenido. <strong>Retirar la nota</strong> (con un motivo: error de registro, datos de otra persona u otro) la deja de mostrar como la nota de la cita, pero
+        tampoco borra nada; después se puede anotar otra. Si otra persona anotó antes que tú, la pantalla lo dice («Otra persona ha cambiado la nota») en vez de pisar su cambio.
     </p>
     <p>
         <strong>Aviso en el Inicio de Administración.</strong> Aparte de «Requiere atención», el Inicio de Administración muestra <strong>Citas externas con algo sin cubrir</strong>: las citas abiertas que
@@ -717,7 +735,7 @@
         <strong>Revocar</strong>. Cada perfil tiene sus permisos:
     </p>
     <ul>
-        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente, rellenar y cambiar la ficha de antecedentes de salud y registrar y cambiar las citas externas de los residentes.</li>
+        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente, rellenar y cambiar la ficha de antecedentes de salud y registrar y cambiar las citas externas de los residentes (anotar la nota «Al terminar» de una cita realizada no lo necesita).</li>
         <li><strong>Medicina:</strong> basal inicial, reevaluar el basal y rellenar y cambiar la ficha de antecedentes de salud.</li>
         <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia, gestionar los plazos de los hitos del proceso y ver los indicadores y la calidad de proceso (las Direcciones que ya existían no lo tienen hasta que se lo concedas).</li>
         <li>Auxiliar y Administración no tienen permisos configurables.</li>
@@ -1972,7 +1990,7 @@
         <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
-        <li>Citas externas: una nota al terminar la cita y que la familia las vea y pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve y las gestiona el personal).</li>
+        <li>Citas externas: que la familia las vea y pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve y las gestiona el personal).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
     </ul>
 </section>
