@@ -4,7 +4,7 @@
 **Fecha:** 2026-09-12
 **Estado:** Borrador
 **Fuente canónica:** Markdown
-**Deriva de:** `docs/legado-cloudflare/docs/product/wireframes/2026-09-06-wireframe-funcional-enfermeria-v0.3.md`
+**Deriva de:** `legado-cloudflare-final:docs/legado-cloudflare/docs/product/wireframes/2026-09-06-wireframe-funcional-enfermeria-v0.3.md`
 **Referencias:** `docs/historias-usuarios/enfermeria.md`, `docs/flujos-clinicos/valoracion-escalado-enfermeria.md`, `docs/flujos-clinicos/derivacion-urgencias.md`, `docs/flujos-clinicos/gestion-basal-barthel.md` y `docs/producto/alcance.md`.
 
 ## 1. Alcance

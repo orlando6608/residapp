@@ -32,7 +32,7 @@ Si empiezas por el código heredas las suposiciones del implementador y no aport
 5. `docs/privacidad/`: los borradores del DPO traen listas de condiciones numeradas (por ejemplo N1…N14, D1…D10) que son, de hecho, la lista de comprobación de un bloque. Úsalas como requisitos, recordando que son borradores que valida una persona.
 6. `docs/producto/` para alcance y estado.
 
-Lo de `docs/legado-cloudflare/` y `docs/bocetos-pantallas/` **no** es fuente de requisitos.
+Lo del legado de Cloudflare (ya no está en el árbol; solo en la etiqueta de git `legado-cloudflare-final`) y `docs/bocetos-pantallas/` **no** es fuente de requisitos.
 
 **Si las historias de usuario no tienen criterios de aceptación para el bloque** (la fuente de primer nivel está vacía y los requisitos solo viven en un ADR o en un borrador), dilo como un hallazgo propio: es un hueco de trazabilidad.
 

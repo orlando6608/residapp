@@ -3,7 +3,7 @@ using ResidApp.Shared;
 namespace ResidApp.Domain.Auxiliar;
 
 /// <summary>Catálogo cerrado de opciones rápidas predefinidas por área (AUX-07,
-/// docs/legado-cloudflare/docs/2026-09-02_Wireframe_funcional_Auxiliar_v0.2_cerrado.pdf). Cada código solo
+/// legado-cloudflare-final:docs/legado-cloudflare/docs/2026-09-02_Wireframe_funcional_Auxiliar_v0.2_cerrado.pdf). Cada código solo
 /// es válido para el área que lo define — ver <see cref="DailyChangeAreaOptionsCatalog"/> — aunque viva en
 /// un único enum plano, mismo criterio que DailyChangePriorityReason.</summary>
 public enum DailyChangeAreaOptionCode

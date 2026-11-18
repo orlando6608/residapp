@@ -155,7 +155,7 @@ Repite estos pasos antes de dar un bloque por cerrado:
   conexión.
 - **Quién puede leer o hacer algo:** antes de proponer una decisión de autorización, consulta la matriz de
   permisos del prototipo
-  (`docs/legado-cloudflare/docs/product/permissions/2026-09-06-matriz-permisos-seis-perfiles-v0.2.1.md`). En el
+  (`legado-cloudflare-final:docs/legado-cloudflare/docs/product/permissions/2026-09-06-matriz-permisos-seis-perfiles-v0.2.1.md`). En el
   bloque 1 del Historial se decidió un permiso nuevo para la línea temporal sin mirarla, y hubo que cambiar
   la decisión en el bloque 2, porque la matriz la da por ámbito.
 - **`NULL` sin tipo en una consulta de Dapper:** un `NULL AS Columna` suelto llega como `int`, y Dapper no

@@ -52,4 +52,9 @@ Una cuenta puede tener uno o varios perfiles autorizados, pero debe seleccionar 
 
 ## Nota de vigencia
 
-Este alcance funcional y estos límites de rol son independientes de la plataforma tecnológica y siguen siendo la referencia vigente para la implementación en .NET. Para saber qué módulos y bloques verticales ya están migrados, ver [roadmap.md](roadmap.md). El detalle histórico de la matriz de permisos de seis perfiles se conserva en `docs/legado-cloudflare/docs/product/`, sin que ello implique que ya exista un equivalente decidido para la nueva pila.
+Este alcance funcional y estos límites de rol son independientes de la plataforma tecnológica y siguen siendo la referencia vigente para la implementación en .NET. Para saber qué módulos y bloques verticales ya están migrados, ver [roadmap.md](roadmap.md).
+
+El prototipo legado, con la matriz de permisos de seis perfiles, ya no está en el árbol de trabajo: se conserva en la etiqueta de git `legado-cloudflare-final` y se lee con `git show legado-cloudflare-final:docs/legado-cloudflare/docs/product/permissions/2026-09-06-matriz-permisos-seis-perfiles-v0.2.1.md`. **No existe una tabla equivalente de seis columnas para la nueva pila.** El contrato vigente son la tabla «Roles y responsabilidades» de arriba, las historias de usuario de cada perfil (`docs/historias-usuarios/`), los permisos configurables (`ProfilePermissions.cs`) y las pruebas de autorización (`ResidentBaselinePolicyTests` y las funcionales de cada perfil).
+
+**Decisiones de esa matriz que siguen abiertas (a 2026-11-18):** `D1-P05` (cancelar un borrador de basal cuando su creador no está) y `D1-P06` (quién inicia la rectificación de un basal firmado), ambas en `docs/flujos-clinicos/gestion-basal-barthel.md` y denegadas por defecto; la granularidad de `BASELINE_DRAFT_CONTRIBUTE` (aportar a un borrador ajeno; hoy no se ofrece); y el acceso excepcional del equipo técnico a datos de un centro (`docs/privacidad/antes-de-datos-reales.md`, apartado 15).
+

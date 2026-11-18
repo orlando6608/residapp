@@ -10,7 +10,7 @@ El acceso a datos actual (`README.md:138-142`) se declara como hecho consumado, 
 
 > "Traduce esas restricciones transaccionales a procedimientos almacenados y consultas SQL nativas ejecutadas mediante Dapper dentro de transacciones ACID (`IDbTransaction`)."
 
-Ninguno de los dos documentos justifica por qué Dapper y no Entity Framework Core. La única comparación de ORM que existe en todo el repositorio es `docs\legado-cloudflare\docs\architecture\0003-aprobacion-d1-drizzle.md`, y es sobre Drizzle en el prototipo TypeScript/Cloudflare — ese razonamiento nunca se trasladó a la decisión .NET. En la práctica, Dapper se adoptó por continuidad con el patrón "SQL explícito" del legado, no por una decisión comparada y documentada. Este documento cubre ese vacío.
+Ninguno de los dos documentos justifica por qué Dapper y no Entity Framework Core. La única comparación de ORM que existe en todo el repositorio es `legado-cloudflare-final:docs/legado-cloudflare/docs/architecture/0003-aprobacion-d1-drizzle.md`, y es sobre Drizzle en el prototipo TypeScript/Cloudflare — ese razonamiento nunca se trasladó a la decisión .NET. En la práctica, Dapper se adoptó por continuidad con el patrón "SQL explícito" del legado, no por una decisión comparada y documentada. Este documento cubre ese vacío.
 
 La razón real del diseño actual está en `docs\decisiones-arquitectura\integridad-sql-basal-legado.md`: 56 reglas de negocio (inmutabilidad append-only, revoke-only, guardas de transición de estado, concurrencia optimista, "auditoría o nada") viven como triggers y `CHECK` de SQL Server, descritas explícitamente como
 

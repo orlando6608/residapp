@@ -2,11 +2,11 @@
 
 ## Alcance
 
-Este documento inventaria la capa de **integridad a nivel de motor de datos** que el prototipo Cloudflare/D1 implementa en `docs/legado-cloudflare/db/migrations/0001_resident_baseline_foundation.sql` (1622 líneas; 29 tablas, 56 índices, 56 triggers; única migración existente, inmutable — cualquier evolución del esquema debe hacerse en `0002` o posterior).
+Este documento inventaria la capa de **integridad a nivel de motor de datos** que el prototipo Cloudflare/D1 implementa en `legado-cloudflare-final:docs/legado-cloudflare/db/migrations/0001_resident_baseline_foundation.sql` (1622 líneas; 29 tablas, 56 índices, 56 triggers; única migración existente, inmutable — cualquier evolución del esquema debe hacerse en `0002` o posterior).
 
-No repite el catálogo clínico. Para el contenido de Barthel, las nueve áreas basales y sus reglas de campo, la fuente es `docs/legado-cloudflare/docs/architecture/0002-contrato-datos-residente-basal.md` ("el contrato de datos"), que ya lo documenta exhaustivamente. Este documento cubre lo que ese contrato no cubre: **cómo el propio SQL fuerza esas reglas y las de autorización/workflow**, con independencia de lo que haga la capa de aplicación — es decir, la red de seguridad que actúa aunque el código TypeScript tenga un error o se salte una validación.
+No repite el catálogo clínico. Para el contenido de Barthel, las nueve áreas basales y sus reglas de campo, la fuente es `legado-cloudflare-final:docs/legado-cloudflare/docs/architecture/0002-contrato-datos-residente-basal.md` ("el contrato de datos"), que ya lo documenta exhaustivamente. Este documento cubre lo que ese contrato no cubre: **cómo el propio SQL fuerza esas reglas y las de autorización/workflow**, con independencia de lo que haga la capa de aplicación — es decir, la red de seguridad que actúa aunque el código TypeScript tenga un error o se salte una validación.
 
-Para el resto del contexto arquitectónico (por qué D1/Drizzle, por qué SQLite, gates `DB-T01`–`DB-T16`), ver `docs/legado-cloudflare/docs/architecture/0001-modelo-minimo-residente-basal.md` y `0003-aprobacion-d1-drizzle.md`. Para el enfoque de traducción a .NET 10, ver `instrucciones-migracion-net10.md` en esta misma carpeta.
+Para el resto del contexto arquitectónico (por qué D1/Drizzle, por qué SQLite, gates `DB-T01`–`DB-T16`), ver `legado-cloudflare-final:docs/legado-cloudflare/docs/architecture/0001-modelo-minimo-residente-basal.md` y `0003-aprobacion-d1-drizzle.md`. Para el enfoque de traducción a .NET 10, ver `instrucciones-migracion-net10.md` en esta misma carpeta.
 
 ## Patrón general de claves foráneas
 

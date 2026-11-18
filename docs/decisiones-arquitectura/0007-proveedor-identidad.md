@@ -23,7 +23,7 @@ Lo que fija la aplicación:
   autenticación reforzada (ADR 0006).
 - Datos de salud bajo el RGPD, preferencia por tratarlos en la UE, un solo desarrollador sin equipo de operación, y un piloto de 100 a
   2.500 usuarios activos al mes.
-- Se conservan los requisitos del ADR legado (`docs/legado-cloudflare/docs/architecture/0005-seleccion-proveedor-autenticacion.md`,
+- Se conservan los requisitos del ADR legado (`legado-cloudflare-final:docs/legado-cloudflare/docs/architecture/0005-seleccion-proveedor-autenticacion.md`,
   apartado 3), entre ellos: TOTP y passkeys evaluables, y el correo o el SMS no se consideran equivalentes a un factor resistente al phishing.
 
 ## Lo que cambió al revisarlo (2026-10-21, fuentes oficiales)

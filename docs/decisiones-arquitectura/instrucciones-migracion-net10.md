@@ -1,7 +1,7 @@
 # Directrices de Migración de Arquitectura: ResidApp (.NET 10 LTS)
 
 ## 1. Contexto General
-Vamos a migrar el esqueleto de ingeniería sociosanitaria ubicado en `docs/legado-cloudflare/` hacia un monolito robusto en ASP.NET Core MVC (.NET 10), C# 14 y SQL Server. El objetivo es preservar la lógica defensiva y las validaciones clínicas inalteradas, elevando la estructura a patrones empresariales.
+Vamos a migrar el esqueleto de ingeniería sociosanitaria ubicado en `legado-cloudflare-final:docs/legado-cloudflare/` hacia un monolito robusto en ASP.NET Core MVC (.NET 10), C# 14 y SQL Server. El objetivo es preservar la lógica defensiva y las validaciones clínicas inalteradas, elevando la estructura a patrones empresariales.
 
 ## 2. Reglas de Diseño de Ingeniería (C# 14 / .NET 10)
 
@@ -41,7 +41,7 @@ ocurre enteramente dentro de `RequestAuthorizationContextResolver.ResolveAsync`.
 * Implementar la obligación de auditoría médica (`ClinicalDetailAuditObligation`): si el perfil es `DIRECCION_CLINICA` y lee un historial, la operación se aprueba pero exige escribir de forma atómica e inmutable un registro en la tabla `audit_events`.
 
 ## 3. Mapeo de Archivos para la Migración
-* `docs/legado-cloudflare/lib/domain/shared/identifiers.ts` ──> `src/ResidApp.Shared/Identifiers.cs`
-* `docs/legado-cloudflare/lib/authorization/policy.ts` ──> `src/ResidApp.Application/Authorization/ResidentBaselinePolicy.cs`
-* `docs/legado-cloudflare/lib/application/resident-baseline-service.ts` ──> `src/ResidApp.Application/UseCases/ResidentBaselineApplicationService.cs`
+* `legado-cloudflare-final:docs/legado-cloudflare/lib/domain/shared/identifiers.ts` ──> `src/ResidApp.Shared/Identifiers.cs`
+* `legado-cloudflare-final:docs/legado-cloudflare/lib/authorization/policy.ts` ──> `src/ResidApp.Application/Authorization/ResidentBaselinePolicy.cs`
+* `legado-cloudflare-final:docs/legado-cloudflare/lib/application/resident-baseline-service.ts` ──> `src/ResidApp.Application/UseCases/ResidentBaselineApplicationService.cs`
 * `database/migrations/0001_resident_baseline_foundation.sql` ──> Portar estructura relacional adaptada a tipos SQL Server en `database/scripts/0001_init_sqlserver.sql`

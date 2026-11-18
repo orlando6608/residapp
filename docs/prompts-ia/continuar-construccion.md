@@ -24,7 +24,8 @@ Este fichero es **lo único que se lee al arrancar una sesión** (con Claude, Ch
 
 ## Estado actual (2026-11-18)
 
-- **`main` está en `0fb6ca9`** (PR #330 fusionado). El único PR abierto es el de release 0.5.0 (#302), que Orlando fusiona cuando quiera cerrar el hito (comprobado con `gh pr list` el 2026-11-18). El último script SQL es `0103`; el siguiente libre es `0104`.
+- **`main` incluye el PR #330 (citas externas, PR 4), y la partición del relevo (#331).** El único otro PR abierto es el de release 0.5.0 (#302), que Orlando fusiona cuando quiera cerrar el hito (comprobado con `gh pr list` el 2026-11-18). El último script SQL es `0103`; el siguiente libre es `0104`.
+- **El prototipo legado ya no está en el árbol de trabajo** (PR «quitar el legado», 2026-11-18): se conserva en la etiqueta de git `legado-cloudflare-final` y se lee con `git show legado-cloudflare-final:docs/legado-cloudflare/<ruta>`. Las decisiones de su matriz de permisos que siguen abiertas están en «Nota de vigencia» de `docs/producto/alcance.md`; la del acceso excepcional del equipo técnico es el apartado 15 de `docs/privacidad/antes-de-datos-reales.md` (a validar por una persona experta; recuérdaselo a Orlando junto con el resto de esa lista).
 - **Citas externas (módulo base): PR 1 a 4 de 6 fusionados** (#325, #327, #328, #330): esquema y reglas, pantallas del personal, calendario y vista del Auxiliar, y nota «al terminar» con siguiente cita. Plan, decisiones y lecciones: `docs/tareas/alta-prioridad/pendientes-citas-externas.md`.
 - **El script `0103` (la nota) estaba aplicado solo en la base local; en Azure dev se aplica al fusionar. No he comprobado que ya se haya aplicado:** míralo antes de dar la nota por buena en dev.
 - **Siguiente: PR 5, la familia solo ve, sin plan escrito todavía** (interruptores por centro y por residente, nivel de visibilidad por cita, calendario). Después, PR 6 (la familia actúa, y correos).
