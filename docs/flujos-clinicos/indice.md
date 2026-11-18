@@ -52,4 +52,4 @@ Los ficheros de esta carpeta cubren los tramos asistenciales de ese circuito (de
 
 ## Nota de procedencia
 
-El contenido de esta carpeta adapta el PRD del prototipo legado (`docs\legado-cloudflare\docs\product\2026-09-06-PRD-plataforma-contacto-familias-v0.5-consolidado.md`) y los wireframes funcionales vigentes de cada perfil, elaborados durante la fase de diseño previa a la migración hacia el monolito ASP.NET Core / SQL Server (ver `docs\decisiones-arquitectura\instrucciones-migracion-net10.md`).
+El contenido de esta carpeta adapta el PRD del prototipo legado (`legado-cloudflare-final:docs/legado-cloudflare/docs/product/2026-09-06-PRD-plataforma-contacto-familias-v0.5-consolidado.md`) y los wireframes funcionales vigentes de cada perfil, elaborados durante la fase de diseño previa a la migración hacia el monolito ASP.NET Core / SQL Server (ver `docs\decisiones-arquitectura\instrucciones-migracion-net10.md`).

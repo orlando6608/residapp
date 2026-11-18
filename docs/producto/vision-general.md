@@ -40,4 +40,4 @@ En este circuito participan seis perfiles funcionales: **Auxiliar**, **Enfermer�
 
 ## Nota de procedencia
 
-El contenido de este documento adapta el PRD del prototipo legado (`docs/legado-cloudflare/docs/product/2026-09-06-PRD-plataforma-contacto-familias-v0.5-consolidado.md`) y permanece vigente sin cambios pese al cambio de plataforma tecnológica hacia el monolito ASP.NET Core / SQL Server. Para el enfoque técnico de esa migración, ver `docs/decisiones-arquitectura/instrucciones-migracion-net10.md`; para el estado de avance, ver [roadmap.md](roadmap.md).
+El contenido de este documento adapta el PRD del prototipo legado (`legado-cloudflare-final:docs/legado-cloudflare/docs/product/2026-09-06-PRD-plataforma-contacto-familias-v0.5-consolidado.md`) y permanece vigente sin cambios pese al cambio de plataforma tecnológica hacia el monolito ASP.NET Core / SQL Server. Para el enfoque técnico de esa migración, ver `docs/decisiones-arquitectura/instrucciones-migracion-net10.md`; para el estado de avance, ver [roadmap.md](roadmap.md).

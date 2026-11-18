@@ -30,7 +30,7 @@ Si el cambio añade una pantalla o función que **ningún documento registrado d
 2. **`docs/flujos-clinicos/`**. Si `src/` y un flujo clínico se contradicen, **no des por buena ninguna de las dos**: señálalo como contradicción para que lo decida una persona. No «arregles» la documentación para que coincida con un código que quizá esté mal.
 3. **`database/seed/centros_prueba.sql`** para los centros, cuentas y residentes de ejemplo que usan las guías (`almendros-*`, «Residencia Los Almendros», «Residencia Los Olmos»).
 
-Lo del legado de Cloudflare (`docs/legado-cloudflare/`) y los bocetos HTML (`docs/bocetos-pantallas/`) **no** son fuente de verdad de lo que hace la app.
+Lo del legado de Cloudflare (ya no está en el árbol; solo en la etiqueta de git `legado-cloudflare-final`) y los bocetos HTML (`docs/bocetos-pantallas/`) **no** son fuente de verdad de lo que hace la app.
 
 ## Qué compruebas
 

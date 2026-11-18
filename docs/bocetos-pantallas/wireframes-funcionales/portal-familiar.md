@@ -6,7 +6,7 @@
 **Fecha:** 2026-09-12
 **Estado:** Borrador
 **Fuente canónica:** Markdown
-**Deriva de:** `docs/legado-cloudflare/docs/product/wireframes/2026-09-05-wireframe-funcional-portal-familiar-v0.2.md`
+**Deriva de:** `legado-cloudflare-final:docs/legado-cloudflare/docs/product/wireframes/2026-09-05-wireframe-funcional-portal-familiar-v0.2.md`
 **Referencias:** `docs/historias-usuarios/portal-familiar.md` y `docs/producto/alcance.md`.
 
 ## 1. Alcance

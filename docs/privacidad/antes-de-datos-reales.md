@@ -231,6 +231,19 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consultas,
 
 **Límites conocidos del PR 1:** (1) la cita no guarda la unidad: se calcula con la ubicación vigente del residente, así que un traslado de unidad mueve su visibilidad, y un residente dado de baja deja de ser visible para Enfermería y Medicina (Administración sigue viéndolo); (2) el resumen previo de la baja que ve Administración todavía no cuenta las citas externas que se cancelarán (se añade con las pantallas del PR 2); (3) el texto de «qué preparar» y del motivo es de una línea, pero ninguna regla de la base impide escribir en él un dato clínico: lo único que lo frena es la ayuda visible junto al campo, que llega con las pantallas.
 
+## 15. Acceso excepcional del equipo técnico a datos de un centro (pendiente heredado de la matriz de permisos del prototipo, sección 14, que está en la etiqueta `legado-cloudflare-final`; borrador de `dpo-residapp` del 2026-11-18)
+
+Quien opera ResidApp (hoy Orlando) podría necesitar ver datos reales de un centro: una avería, restaurar una copia de seguridad, un incidente. Puede hacerlo desde Azure o entrando en la base de datos (donde se guarda todo), sin pasar por la aplicación ni por sus permisos. El ADR 0014 (apartado 5, propuesta aplazada) fija los principios; antes de datos reales hay que cerrarlos:
+
+- **No es un séptimo perfil.** Plataforma sigue sin ver nada clínico (apartado 9). Es un procedimiento, no una cuenta ni un permiso permanente.
+- **Temporal, mínimo y auditado:** solo con motivo escrito (instrucción del centro o incidente), acceso que caduca, solo lo imprescindible y registro de cada intervención (quién, cuándo, para qué; sin copiar contenido).
+- **Base legal ya verificada:** el encargado trata datos solo con instrucciones documentadas (RGPD 28.3.a y 29), con compromiso de confidencialidad de cada persona autorizada (28.3.b; LOPDGDD 5) y avisa «sin dilación indebida» de una brecha (33.2).
+- **Decide una persona (DPO real o abogado, con Orlando):** quién autoriza (¿siempre el centro, o ResidApp sola en una urgencia?); cómo y en cuánto tiempo se avisa al centro de un acceso que no es brecha (**a verificar**; no hay plazo fijado en la norma local); caducidad máxima; dónde se registra y cuánto se conserva; quién revisa el registro si solo hay una persona técnica; cláusula en el contrato.
+- **A verificar:** si el art. 16.4 y 16.6 de la Ley 41/2002 y el art. 11.4 y 11.6 de la Llei 21/2000 (acceso del personal solo a lo relacionado con sus funciones, deber de secreto) alcanzan a un encargado externo.
+- **Efecto en los otros papeles (solo anotado; no redactado):** el contrato de encargado necesita una cláusula (28.3.a, 28.3.b y 28.3.h), la EIPD el riesgo de acceso privilegiado y el registro de actividades del encargado (30.2.d) las medidas de seguridad.
+
+Textos del BOE consolidados, no oficiales (`normativa-local\INDICE.md`, comprobación del 2026-11-12). Las citas del RGPD y de la LOPDGDD de este apartado se cotejaron con `normativa-local\` el 2026-11-18.
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)

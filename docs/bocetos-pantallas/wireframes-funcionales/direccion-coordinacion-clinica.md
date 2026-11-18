@@ -4,7 +4,7 @@
 **Fecha:** 2026-09-12
 **Estado:** Borrador
 **Fuente canónica:** Markdown
-**Deriva de:** `docs/legado-cloudflare/docs/product/wireframes/2026-09-05-wireframe-funcional-direccion-coordinacion-clinica-v0.1.md`
+**Deriva de:** `legado-cloudflare-final:docs/legado-cloudflare/docs/product/wireframes/2026-09-05-wireframe-funcional-direccion-coordinacion-clinica-v0.1.md`
 **Referencias:** `docs/historias-usuarios/direccion-coordinacion-clinica.md`, `docs/flujos-clinicos/supervision-clinica-direccion.md` y `docs/producto/alcance.md`.
 
 ## 1. Alcance

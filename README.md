@@ -7,7 +7,7 @@ Plataforma web para residencias geriátricas que estructura el registro cotidian
 ## Estado del proyecto
 
 - **Fecha de referencia:** 28 de septiembre de 2026.
-- **Arquitectura:** monolito **ASP.NET Core MVC (.NET 10) / SQL Server**, en migración activa desde un prototipo previo sobre Cloudflare Workers/D1, conservado íntegro en [`docs/legado-cloudflare/`](docs/legado-cloudflare/) como evidencia histórica.
+- **Arquitectura:** monolito **ASP.NET Core MVC (.NET 10) / SQL Server**, en migración activa desde un prototipo previo sobre Cloudflare Workers/D1, conservado íntegro, como evidencia histórica, en la etiqueta `legado-cloudflare-final` de git (una marca fija del historial; ya no está en el árbol de trabajo, ver «Prototipo legado» más abajo).
 - **Estado funcional:** **Residente/Basal** completado; **Auxiliar** completado y pendiente de validación por CJ; **Enfermería** en curso; **Medicina** en curso (escalados, evento propio, valoración médica, indicaciones, seguimiento médico, protocolo urgente, derivación a Urgencias, cierre médico y basal con permiso). Familia/Portal Familiar, Administración y Dirección/Coordinación Clínica no se han iniciado. Ver el detalle en [Hoja de ruta](#hoja-de-ruta).
 - **Entorno de pruebas:** cada push a `main` compila, prueba, aplica los scripts pendientes y el seed ficticio en Azure SQL y despliega la web (`.github/workflows/ci-cd.yml`).
 - **Ámbito inicial:** residencias geriátricas.
@@ -163,7 +163,6 @@ docs/
   producto/                 Documentación funcional viva (propósito, alcance, objetivos, roadmap)
   decisiones-arquitectura/  Decisiones técnicas de la migración a .NET
   tareas/                   Backlog priorizado
-  legado-cloudflare/        Prototipo histórico (Next.js/Cloudflare), solo como referencia
 ```
 
 El detalle de las decisiones de diseño de esta migración (mapeo de identificadores, reglas de dominio, persistencia, autorización) está en [`docs/decisiones-arquitectura/instrucciones-migracion-net10.md`](docs/decisiones-arquitectura/instrucciones-migracion-net10.md).
@@ -278,7 +277,7 @@ La documentación funcional viva está en [`docs/producto/`](docs/producto/):
 
 Las decisiones técnicas de la migración a .NET están en [`docs/decisiones-arquitectura/`](docs/decisiones-arquitectura/), y el backlog priorizado en [`docs/tareas/`](docs/tareas/).
 
-[`docs/legado-cloudflare/`](docs/legado-cloudflare/) conserva íntegro el prototipo original (Next.js/Cloudflare Workers/D1) como evidencia histórica del PRD, la matriz de permisos y los wireframes que dieron origen al alcance actual. **No gobierna ninguna implementación nueva**: ante cualquier contradicción entre el legado y `docs/producto/`, prevalece `docs/producto/`.
+**Prototipo legado.** El prototipo original (Next.js/Cloudflare Workers/D1) ya no está en el árbol de trabajo: se conserva íntegro, como evidencia histórica del PRD, la matriz de permisos y los wireframes que dieron origen al alcance actual, en la etiqueta de git `legado-cloudflare-final` (una marca fija del historial). Para leer un fichero: `git show legado-cloudflare-final:docs/legado-cloudflare/<ruta>`; así se leen también las citas de este repositorio con la forma `legado-cloudflare-final:<ruta>` y los comentarios de código y de scripts SQL que nombran ficheros del legado (`docs/legado-cloudflare/...`, `lib/...ts`). **No gobierna ninguna implementación nueva**: ante cualquier contradicción entre el legado y `docs/producto/`, prevalece `docs/producto/`.
 
 ## Criterio de terminado
 

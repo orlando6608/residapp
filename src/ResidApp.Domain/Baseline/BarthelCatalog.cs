@@ -3,7 +3,7 @@ using ResidApp.Shared;
 namespace ResidApp.Domain.Baseline;
 
 /// <summary>Traduce el catálogo `BARTHEL_COMUN_V0_1` documentado en
-/// docs/legado-cloudflare/docs/architecture/0002-contrato-datos-residente-basal.md (tabla "Catálogo
+/// legado-cloudflare-final:docs/legado-cloudflare/docs/architecture/0002-contrato-datos-residente-basal.md (tabla "Catálogo
 /// BARTHEL_COMUN_V0_1"): las opciones y puntuaciones de cada uno de los diez ítems. La base de datos
 /// deliberadamente no tiene una tabla `barthel_catalog_options` (fuera de alcance, ver comentario en
 /// database/scripts/0001_init_sqlserver.sql); este catálogo es la única fuente de verdad para construir el
