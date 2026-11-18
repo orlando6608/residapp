@@ -239,7 +239,7 @@ si hace falta WAF, uno **regional** (Application Gateway) **[A verificar]** prec
        conservarlos, pero **no está probado** y el comando con el que se creó el ruleset no está documentado: **exportar su JSON antes** de transferir. El revisor del entorno debe ser
        miembro de la organización.
      - **Referencias escritas a mano** al propietario viejo (no hay ninguna en los workflows ni en `.claude/settings.json`): comandos `gh … --repo orlando6608/residapp` y `gh api …/rulesets/…`
-       y el `curl` de la comprobación del 404 en las entradas A1 y «Repositorio: se sigue público por ahora» de `docs/prompts-ia/continuar-construccion.md`; el HTML
+       y el `curl` de la comprobación del 404 en las entradas A1 y «Repositorio: se sigue público por ahora» de `docs/prompts-ia/historial/2026-11-02_a_2026-11-18.md`; el HTML
        `docs/pendientes-cj/archivados/costes-azure-y-nivel-de-la-base.html`; `docs/pendientes-cj/README.md` y `LICENSE` (hablan de repositorio público); `docs/seguridad/hallazgos.md` B7 (fuera
        de git) y la memoria de trabajo. `CHANGELOG.md` conserva 38 enlaces al propietario viejo: GitHub los redirige mientras nadie cree otro repositorio con ese nombre, y los nuevos los
        genera release-please solos. **Esa redirección no vale para OIDC ni para el token.** Cada copia local (la de Orlando, los *worktrees* y la de CJ) necesita `git remote set-url origin`.

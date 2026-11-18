@@ -22,7 +22,7 @@ Un documento guía, **en lenguaje llano y dirigido a los propietarios de la plat
 - Borradores en `docs/privacidad/` (24 archivos), en especial `antes-de-datos-reales.md` (lista de lo que hay que resolver antes de usar la aplicación con residentes o familias reales) y `anexo-modulos-contrato-borrador.md` (quién es quién y qué falta).
 - La base normativa local (`normativa-local/`, ver `docs/privacidad/normativa/README.md`), con el texto literal de las leyes y guías, y el agente `dpo-residapp` para redactar y citar de ahí.
 - Los ADR 0014 a 0016 y sus lecturas del DPO.
-- Los puntos que siguen abiertos y que solo decide una persona experta: si la residencia es «centro sanitario», AEPD o APDCAT y Esquema Nacional de Seguridad según el centro piloto, bloqueo frente a borrado de familiares, exención del art. 22.2 de la LSSI para la clave del aparato, tope de caducidad de la cookie de idioma. Ver la entrada de relevo del 2026-11-12 en `docs/prompts-ia/continuar-construccion.md`.
+- Los puntos que siguen abiertos y que solo decide una persona experta: si la residencia es «centro sanitario», AEPD o APDCAT y Esquema Nacional de Seguridad según el centro piloto, bloqueo frente a borrado de familiares, exención del art. 22.2 de la LSSI para la clave del aparato, tope de caducidad de la cookie de idioma. Ver la entrada de relevo del 2026-11-12 en `docs/prompts-ia/historial/2026-11-02_a_2026-11-18.md`.
 
 ## Condicionantes
 
