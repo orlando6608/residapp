@@ -24,7 +24,7 @@ Este fichero es **lo único que se lee al arrancar una sesión** (con Claude, Ch
 
 ## Estado actual (2026-11-18)
 
-- **`main` incluye el PR #330 (citas externas, PR 4), y la partición del relevo (#331).** El único otro PR abierto es el de release 0.5.0 (#302), que Orlando fusiona cuando quiera cerrar el hito (comprobado con `gh pr list` el 2026-11-18). El último script SQL es `0103`; el siguiente libre es `0104`.
+- **`main` incluye los PR #330 a #334** (citas externas PR 4, relevo partido, legado fuera del árbol, índice de fuentes de verdad y su prueba). El único otro PR abierto es el de release 0.5.0 (#302), que Orlando fusiona cuando quiera cerrar el hito (comprobado con `gh pr list` el 2026-11-18). **Su CI se pone en rojo hasta que se repase `docs/INDICE.md` y se suba su sello a v0.5.0** (regla «Versionado» de `CLAUDE.md`: la prueba `IndiceDeFuentesTests` lo exige); hazlo en un PR a `main` antes de fusionarlo. El último script SQL es `0103`; el siguiente libre es `0104`.
 - **El prototipo legado ya no está en el árbol de trabajo** (PR «quitar el legado», 2026-11-18): se conserva en la etiqueta de git `legado-cloudflare-final` y se lee con `git show legado-cloudflare-final:docs/legado-cloudflare/<ruta>`. Las decisiones de su matriz de permisos que siguen abiertas están en «Nota de vigencia» de `docs/producto/alcance.md`; la del acceso excepcional del equipo técnico es el apartado 15 de `docs/privacidad/antes-de-datos-reales.md` (a validar por una persona experta; recuérdaselo a Orlando junto con el resto de esa lista).
 - **Citas externas (módulo base): PR 1 a 4 de 6 fusionados** (#325, #327, #328, #330): esquema y reglas, pantallas del personal, calendario y vista del Auxiliar, y nota «al terminar» con siguiente cita. Plan, decisiones y lecciones: `docs/tareas/alta-prioridad/pendientes-citas-externas.md`.
 - **El script `0103` (la nota) estaba aplicado solo en la base local; en Azure dev se aplica al fusionar. No he comprobado que ya se haya aplicado:** míralo antes de dar la nota por buena en dev.
@@ -49,31 +49,9 @@ Antes de proponer nada, haz `git fetch` y mira `origin/main` y los PR abiertos: 
 - **Códigos de acción de auditoría: 32 caracteres como máximo** (`eventos_auditoria.accion_codigo` es NVARCHAR(32)); por eso `EXT_APPOINTMENT_*` y no `EXTERNAL_APPOINTMENT_*`.
 - **Pruebas con fechas: usa el día de Madrid**, no el del reloj del servidor. `InDays` de `CitasExternasTests` fallaba unas horas cada noche por eso.
 - **Rutas de MVC:** con la ruta por defecto `{controller}/{action}/{id?}`, una redirección a `Ver` sale como `/CitasExternas/Ver/<guid>` y no como `?id=`; en las pruebas, saca el identificador de la ruta entera.
-- **Un script SQL ya aplicado en Azure no se edita nunca**, y el push a `main` aplica los scripts nuevos en Azure dev (más abajo, «Reglas de trabajo propias»).
+- **Un script SQL ya aplicado en Azure no se edita nunca**, y fusionar en `main` aplica los scripts nuevos en Azure dev (ver «Git y despliegue» en `CLAUDE.md`).
 - **Tras cada despliegue, Azure dev da 500 o 502 durante 30–45 s:** sondea antes de dar un fallo por real. Esta y otras trampas del entorno: [lecciones-tecnicas.md](lecciones-tecnicas.md).
 
-## Reglas de trabajo propias de este repositorio
-
-- **Push:** siempre con confirmación explícita del usuario. El push a `main` aplica los scripts nuevos
-  y el seed en Azure SQL.
-- **Rama y PR (decidido el 2026-10-06):** todo cambio con un script de migración en `database/scripts/` va en una rama y se mergea con PR,
-  para que el CI lo pruebe antes de `main` (los scripts son inmutables una vez aplicados en Azure). Los cambios sin migración
-  (documentación, tests, ajustes de código) pueden ir directos a `main`, salvo que sean grandes o arriesgados. El despliegue ya depende de que
-  pasen los tests, así que un cambio roto no llega a Azure en ningún caso; el PR evita dejar un commit en rojo en `main`.
-- **Esquema:** siempre un script nuevo numerado; nunca se edita uno ya aplicado en Azure.
-- **Documentación de usuario:** la lista de lo que hay que mantener al día vive en `.claude/documentacion-usuario.json`
-  (ver `CLAUDE.md`); al crear documentación nueva, se registra allí.
-- **Manual:** actualiza `Views/Home/Manual.cshtml` cuando cambie una pantalla que describa o se construya
-  un módulo marcado como «Próximamente».
-- **Flujo de trabajo ilustrado:** revisa `wwwroot/flujo-de-trabajo.html` cuando cambie el circuito, un perfil o una pantalla
-  que aparezca en él, o se construya algo de su recuadro «Lo que todavía no está».
-- **Interfaz:** siempre en español, incluidos los enums que aparecen en un `<select>`. Sigue
-  `docs/bocetos-pantallas/guia-diseno-sistema-visual.md` (Bootstrap 5, WCAG AA, `btn-lg`, nada de texto
-  blanco sobre amarillo, ningún color fijo en las vistas) y revisa cada pantalla en claro y en oscuro.
-- **Valores clínicos:** nunca los inventes. Si hace falta uno, se pide a CJ con un documento en
-  `docs/pendientes-cj/`.
-- **Contradicciones:** si el código contradice `docs/flujos-clinicos/`, para y avisa.
-- **Idioma:** responde al usuario siempre en español, también en los mensajes cortos de estado.
 ## Dónde está el resto
 
 | Qué | Dónde |
@@ -82,6 +60,7 @@ Antes de proponer nada, haz `git fetch` y mira `origin/main` y los PR abiertos: 
 | Lecciones técnicas, del entorno y cómo se verifica un bloque | [lecciones-tecnicas.md](lecciones-tecnicas.md) |
 | Avisos abiertos (fuera de alcance, sin corregir) | [avisos-abiertos.md](avisos-abiertos.md) |
 | Qué documento manda sobre cada tema, y qué hacer si dos se contradicen | [INDICE.md](../INDICE.md) |
+| Reglas de trabajo del repositorio (Git y despliegue, esquema, interfaz, valores clínicos, idioma…) | [CLAUDE.md](../../CLAUDE.md) |
 | Tareas de construcción por vertical | `docs/tareas/alta-prioridad/pendientes-*.md` |
 | Respuestas y documentos de CJ | `docs/pendientes-cj/README.md` |
 | Decisiones de arquitectura | `docs/decisiones-arquitectura/` |

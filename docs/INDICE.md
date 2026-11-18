@@ -2,7 +2,9 @@
 
 **Para qué sirve.** Aquí encuentras **qué documento manda** sobre cada tema y cuáles solo lo acompañan. No repite su contenido: apunta a él. Para saber **en qué punto está el trabajo**, mira [continuar-construccion.md](prompts-ia/continuar-construccion.md); para las **reglas de colaboración**, [CLAUDE.md](../CLAUDE.md). Lo que valga para todas las personas y herramientas va al repositorio, no a la memoria privada de una de ellas.
 
-**Cómo se mantiene.** Cuando crees, muevas o retires un documento que sea la fuente de un tema, actualiza su fila en el mismo cambio. Un puntero que ya no apunta a nada se corrige o se quita; no se deja. La prueba [IndiceDeFuentesTests](../tests/UnitTests/IndiceDeFuentesTests.cs) falla si un enlace apunta a algo que ya no existe, si un ADR numerado no tiene su enlace o si una carpeta de `docs/` queda sin ningún enlace; lo que una prueba no puede saber (que la fuente que dice cada fila siga siendo la correcta) se revisa a mano. Las palabras que pueden sonar técnicas se explican al final.
+**Cómo se mantiene.** Cuando crees, muevas o retires un documento que sea la fuente de un tema, actualiza su fila en el mismo cambio. Un puntero que ya no apunta a nada se corrige o se quita; no se deja. La prueba [IndiceDeFuentesTests](../tests/UnitTests/IndiceDeFuentesTests.cs) falla si un enlace apunta a algo que ya no existe, si un ADR numerado no tiene su enlace o si una carpeta de `docs/` queda sin ningún enlace; lo que una prueba no puede saber (que la fuente que dice cada fila siga siendo la correcta) se revisa a mano al cerrar cada versión MENOR, y el sello de abajo lo exige. Las palabras que pueden sonar técnicas se explican al final.
+
+**Revisado para ResidApp v0.4.0.** Es el sello de la última revisión humana: cada fila se contrastó con el repositorio (que la fuente siga existiendo, siga mandando y diga su estado actual) y se comprobó que no faltan documentos nuevos. Al cerrar una versión MENOR se repasa el índice y se sube el sello; la prueba falla si es de una versión MENOR anterior a la de `src/Directory.Build.props`.
 
 ## Mapa por tema
 
@@ -14,8 +16,8 @@
 | Módulos, perfiles y límites de cada perfil | [alcance.md](producto/alcance.md) | Es la referencia vigente. Su «Nota de vigencia» dice dónde está la matriz de permisos original y qué decisiones suyas siguen abiertas. |
 | Qué está construido y qué falta | [roadmap.md](producto/roadmap.md) y, por vertical, los `pendientes-*.md` de [tareas/alta-prioridad/](tareas/alta-prioridad/) | |
 | Lo pospuesto a propósito | [backlog-diferido.md](tareas/futuro/backlog-diferido.md) | Traerlo de vuelta al alcance lo decide el Product Owner. |
-| Una función con diseño aprobado | [citas-externas-diseno.md](producto/citas-externas-diseno.md) y [ficha-antecedentes-salud-diseno.md](producto/ficha-antecedentes-salud-diseno.md) | Cada uno declara su estado en la línea «Estado» de su cabecera. |
-| Propuestas sin decidir | [antecedentes-medicacion-alergias-propuesta.md](producto/antecedentes-medicacion-alergias-propuesta.md) y la [especificación de dashboards](<producto/Especificación de dashboards de ResidApp.md>) | Borrador o propuesta: no deciden nada todavía. |
+| Una función con diseño aprobado | [citas-externas-diseno.md](producto/citas-externas-diseno.md) y [ficha-antecedentes-salud-diseno.md](producto/ficha-antecedentes-salud-diseno.md) | Cada uno declara su estado en la línea «Estado» de su cabecera. La [propuesta de antecedentes](producto/antecedentes-medicacion-alergias-propuesta.md) es el origen de la ficha: ya se decidió y se construyó, aunque su cabecera aún diga «No se ha construido nada»; manda el diseño de la ficha. |
+| Propuestas sin decidir | La [especificación de dashboards](<producto/Especificación de dashboards de ResidApp.md>) | Es una propuesta: no decide nada todavía. |
 | Estudio de mercado y de experiencia de uso | [estudio-mercado-ux-2026-10.md](producto/estudio-mercado-ux-2026-10.md) | Referencia no vinculante. |
 
 ### Requisitos y pantallas
@@ -95,7 +97,7 @@
 **Si dos fuentes se contradicen**, valen estas reglas, que ya estaban escritas (cada una con su origen):
 
 1. **Bocetos de pantalla frente a producto o historias de usuario:** mandan estos dos; los bocetos son una propuesta de interfaz. (Origen: [bocetos-pantallas/README.md](bocetos-pantallas/README.md).)
-2. **El código contradice un flujo clínico:** se para y se avisa; no se resuelve por criterio propio. (Origen: «Reglas de trabajo propias» de [continuar-construccion.md](prompts-ia/continuar-construccion.md).)
+2. **El código contradice un flujo clínico:** se para y se avisa; no se resuelve por criterio propio. (Origen: «Reglas de trabajo» de [CLAUDE.md](../CLAUDE.md).)
 3. **Falta un valor clínico:** no se inventa; se pide a CJ con un documento en `docs/pendientes-cj/`. (Origen: ídem.)
 4. **Un borrador de privacidad:** no se usa con datos reales hasta que lo valida una persona. (Origen: [CLAUDE.md](../CLAUDE.md).)
 5. **El prototipo anterior:** no gobierna nada nuevo; ante una contradicción manda `docs/producto/`. (Origen: [README.md](../README.md).)
