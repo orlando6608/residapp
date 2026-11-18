@@ -2,7 +2,7 @@
 
 **Para qué sirve.** Aquí encuentras **qué documento manda** sobre cada tema y cuáles solo lo acompañan. No repite su contenido: apunta a él. Para saber **en qué punto está el trabajo**, mira [continuar-construccion.md](prompts-ia/continuar-construccion.md); para las **reglas de colaboración**, [CLAUDE.md](../CLAUDE.md). Lo que valga para todas las personas y herramientas va al repositorio, no a la memoria privada de una de ellas.
 
-**Cómo se mantiene.** Cuando crees, muevas o retires un documento que sea la fuente de un tema, actualiza su fila en el mismo cambio. Un puntero que ya no apunta a nada se corrige o se quita; no se deja. Todas las rutas de este índice se comprobaron una a una el 2026-11-18. Las palabras que pueden sonar técnicas se explican al final.
+**Cómo se mantiene.** Cuando crees, muevas o retires un documento que sea la fuente de un tema, actualiza su fila en el mismo cambio. Un puntero que ya no apunta a nada se corrige o se quita; no se deja. La prueba [IndiceDeFuentesTests](../tests/UnitTests/IndiceDeFuentesTests.cs) falla si un enlace apunta a algo que ya no existe, si un ADR numerado no tiene su enlace o si una carpeta de `docs/` queda sin ningún enlace; lo que una prueba no puede saber (que la fuente que dice cada fila siga siendo la correcta) se revisa a mano. Las palabras que pueden sonar técnicas se explican al final.
 
 ## Mapa por tema
 
