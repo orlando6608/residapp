@@ -11,7 +11,7 @@
     entre turnos y perfiles profesionales, y para mantener informadas a las familias. <strong>No diagnostica
     ni sustituye protocolos clínicos.</strong> La app está en desarrollo. Hoy funciona, por perfil:
     <ul class="mt-2 mb-2">
-        <li><strong>Auxiliar:</strong> sus residentes asignados, el registro cotidiano y el registro de cambios ordinarios o prioritarios.</li>
+        <li><strong>Auxiliar:</strong> sus residentes asignados, el registro cotidiano, el registro de cambios ordinarios o prioritarios y las citas externas de hoy y mañana de sus residentes.</li>
         <li><strong>Enfermería:</strong> residentes, estado basal completo (nueve áreas, Barthel y firma), evento propio, bandejas,
             valoración, cierre con la decisión de comunicación familiar, seguimiento, escalado a Medicina, indicaciones médicas,
             protocolo urgente y derivación a Urgencias y, con permiso, las citas externas de los residentes.</li>
@@ -614,7 +614,7 @@
 <section id="citas-externas" class="mb-4">
     <h2 class="h5">
         Citas externas de los residentes
-        <span class="badge text-bg-secondary align-middle">Perfil: Administración, Enfermería y Medicina</span>
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración, Enfermería y Medicina (y una vista reducida del Auxiliar)</span>
     </h2>
     <p>
         Las <strong>citas externas</strong> son las pruebas, consultas y tratamientos del residente <strong>fuera del centro</strong> (en un hospital o centro de salud). No son las
@@ -624,12 +624,12 @@
     <p>
         <strong>Quién puede qué.</strong> Administración registra y cambia las citas de todo el centro. Enfermería las registra y las cambia solo si Administración le ha concedido el
         permiso <strong>Registrar y cambiar las citas externas de los residentes</strong> (viene apagado); sin él, las ve. Medicina solo las ve. Enfermería y Medicina ven las de los
-        residentes de sus unidades. Auxiliar, Dirección Clínica y Plataforma no tienen acceso.
+        residentes de sus unidades. Dirección Clínica y Plataforma no tienen acceso. El Auxiliar solo tiene una vista reducida, «Citas externas de hoy y mañana», desde «Mis residentes»: sus residentes asignados, solo las citas abiertas, con la hora, «Qué preparar», quién acompaña y cómo va; no ve el tipo, la especialidad, el lugar, la nota ni el nombre de ningún familiar, y no se imprime.
     </p>
     <p>
         <strong>Dónde está.</strong> En el Inicio de Administración, de Enfermería y de Medicina, la tarjeta <strong>Citas externas</strong> abre la lista, con las citas de los próximos 60 días
         y un filtro «Desde» y «Hasta». En la ficha de cada residente hay un bloque <strong>Citas externas</strong> con sus próximas citas abiertas, «Ver todas sus citas externas» y, a quien puede
-        registrar, <strong>Registrar cita externa</strong>.
+        registrar, <strong>Registrar cita externa</strong>. Arriba de la lista hay tres pestañas: <strong>Mes</strong>, <strong>Semana</strong> y <strong>Próximas</strong> (la lista). Mes y Semana se mueven con «‹ Mes anterior» y «Mes siguiente ›» o «‹ Semana anterior» y «Semana siguiente ›», y se filtran con «Unidad» (Todas) y «Mostrar solo las que tienen algo sin cubrir», con el botón «Aplicar». En escritorio, Mes es una cuadrícula de lunes a domingo con las iniciales del residente (hasta tres citas por día y «y N más», que lleva a la semana); en el móvil es una lista por días con el nombre. Semana muestra un bloque por día, con «Sin citas» si no hay ninguna. Cada cita lleva la hora o «Por confirmar» y una marca con palabra y color: «Cubierta», «Falta transporte», «Falta acompañante», «Falta transporte y acompañante», «Por confirmar» (todo resuelto, pero aún sin hora), «Por cerrar» (abierta con el día ya pasado) o su estado si está realizada, no acudida o cancelada. Cada perfil ve su ámbito, como en la lista.
     </p>
     <p>
         <strong>Qué se anota.</strong> El día (el del centro) y, si ya se sabe, la hora; sin hora, la cita sale como «Por confirmar». El tipo (prueba, consulta, tratamiento u otra) y, si se quiere,
@@ -1260,6 +1260,10 @@
         la misma etiqueta hasta que las tocas o las editas, pero no impiden continuar. En la duda, el dictado propone de menos: lo que no marque
         queda en la nota y lo marcas tú. Si no se entiende nada, no hay micrófono o falla el servicio, la app
         te lo dice y puedes rellenar el formulario a mano como siempre.
+    </p>
+    <p class="mb-0">
+        Arriba de las tarjetas está el botón <strong>Citas externas de hoy y mañana</strong>: los residentes asignados que salen del centro a una prueba, consulta o tratamiento hoy o mañana, con la hora (o
+        «Por confirmar»), «Qué preparar», «Acompaña: …» y «Transporte: …». Solo salen las citas abiertas; no ves el tipo, la especialidad ni el lugar. Más detalle en «Citas externas de los residentes».
     </p>
 </section>
 
@@ -1968,7 +1972,7 @@
         <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
-        <li>Citas externas: un calendario mensual y semanal, una nota al terminar la cita y que la familia las vea y pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve y las gestiona el personal).</li>
+        <li>Citas externas: una nota al terminar la cita y que la familia las vea y pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve y las gestiona el personal).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
     </ul>
 </section>

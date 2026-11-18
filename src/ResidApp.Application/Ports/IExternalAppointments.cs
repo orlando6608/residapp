@@ -11,7 +11,7 @@ public sealed record ExternalAppointmentActor(AccountId AccountId, Guid ProfileS
 /// ResidentSuspended es la marca «residente suspendido» para el personal (la cita sigue viva, diseño valor 13).</summary>
 public sealed record ExternalAppointmentRecord(
     Guid Id, ResidentId ResidentId, string ResidentName, UnitId? UnitId, ExternalAppointment Appointment, ExternalAppointmentStatus Status,
-    int Version, bool ResidentSuspended);
+    int Version, bool ResidentSuspended, string? UnitName = null);
 
 /// <summary>
 /// Citas externas del residente (script 0101). Cada escritura va en una transacción que bloquea al residente activo, vuelve a comprobar el ámbito y, en Enfermería, el permiso
@@ -44,4 +44,17 @@ public interface IExternalAppointmentRepository
 
     /// <summary>Las citas visibles para el actor con fecha entre from y to (ambas incluidas), por fecha y hora; sin hora, al final del día. Con residentId, solo las de ese residente.</summary>
     Task<IReadOnlyList<ExternalAppointmentRecord>> ListAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, ResidentId? residentId = null, CancellationToken ct = default);
+
+    /// <summary>Las citas abiertas (programadas o confirmadas por el hospital) con fecha entre from y to, de los residentes asignados al Auxiliar actor y con ubicación vigente en una de sus unidades,
+    /// por fecha y hora (sin hora, al final del día). Solo los campos de <see cref="ExternalAppointmentForAuxiliar"/>.</summary>
+    Task<IReadOnlyList<ExternalAppointmentForAuxiliar>> ListForAuxiliarAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, CancellationToken ct = default);
 }
+
+/// <summary>
+/// Una cita externa tal como la ve el Auxiliar (PR 3; DPO, apartados 2 y 6.4): el residente, el día y la hora (o «por confirmar»), qué preparar y quién lo lleva y cómo (el tipo de acompañante y de
+/// transporte, sin nombres ni si están confirmados). <b>No tiene</b> tipo de cita, especialidad, lugar, nota ni nombre de familiar: el servidor no los devuelve, no están «ocultos en pantalla». Una
+/// prueba por reflexión fija este conjunto de propiedades.
+/// </summary>
+public sealed record ExternalAppointmentForAuxiliar(
+    Guid Id, ResidentId ResidentId, string ResidentName, DateOnly Date, TimeOnly? Time, ExternalPreparation Preparation,
+    ExternalTransportMode TransportMode, ExternalCompanionMode CompanionMode);

@@ -2169,6 +2169,128 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas WHERE lugar = @doublePlace", new { doublePlace }));
     }
 
+    [Fact]
+    public async Task CitasExternas_CalendarioDelPersonal_YVistaDelAuxiliar_SinEspecialidadNiLugar_ConLaAppEntera()
+    {
+        // PR 3: calendario mensual y semanal del personal y las citas de hoy y mañana del Auxiliar. El Auxiliar no recibe la especialidad ni el lugar (el servidor no los devuelve). Datos inventados.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Calendario Funcional");
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, residentId));
+        var tomorrow = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(1);
+        var secretPlace = $"Hospital Calendario {Guid.NewGuid():N}"[..40];
+
+        var nueva = $"/CitasExternas/Nueva?residenteId={residentId}";
+        var page = WebUtility.HtmlDecode(await admin.GetStringAsync(nueva));
+        var registered = await admin.PostAsync("/CitasExternas/Nueva", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+            ["Form.Fecha"] = tomorrow.ToString("yyyy-MM-dd"), ["Form.Hora"] = "10:30", ["Form.Tipo"] = "CONSULTA", ["Form.Especialidad"] = "ONCOLOGIA", ["Form.Lugar"] = secretPlace,
+            ["Form.TransporteModo"] = "AMBULANCIA", ["Form.AcompananteModo"] = "PERSONAL_CENTRO", ["Form.PrepAyuno"] = "true", ["Form.PrepTexto"] = "Llevar gafas", ["Form.Visibilidad"] = "VISIBLE",
+        }));
+        Assert.True(registered.IsSuccessStatusCode);
+
+        var month = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Mes?anio={tomorrow.Year}&mes={tomorrow.Month}"));
+        var week = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/CitasExternas/Semana?dia={tomorrow:yyyy-MM-dd}"));
+        var onlyUncovered = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Mes?anio={tomorrow.Year}&mes={tomorrow.Month}&sinCubrir=true"));
+        var otherUnit = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Semana?dia={tomorrow:yyyy-MM-dd}&unidad={Guid.NewGuid()}"));
+        var farMonth = await admin.GetAsync("/CitasExternas/Mes?anio=9999&mes=13");
+        var farWeek = await admin.GetAsync("/CitasExternas/Semana?dia=9999-12-31");
+        var badValues = await admin.GetAsync("/CitasExternas/Mes?anio=abc&mes=xyz&unidad=nope");
+        var auxiliarView = WebUtility.HtmlDecode(await auxiliar.GetStringAsync("/Auxiliar/CitasExternas"));
+        var auxiliarHome = WebUtility.HtmlDecode(await auxiliar.GetStringAsync("/Auxiliar"));
+        var auxiliarCalendar = WebUtility.HtmlDecode(await auxiliar.GetStringAsync("/CitasExternas/Mes"));
+        var staffOnAuxiliarView = WebUtility.HtmlDecode(await admin.GetStringAsync("/Auxiliar/CitasExternas"));
+
+        Assert.Contains(ResidApp.Web.Models.ExternalAppointmentCalendarDisplay.MonthTitle(new DateOnly(tomorrow.Year, tomorrow.Month, 1)), month);
+        Assert.Contains("Calendario de citas externas", month);
+        Assert.Contains("R. C. F.", month);
+        Assert.Contains("Falta transporte y acompañante", month);
+        Assert.Contains("Falta transporte y acompañante", onlyUncovered);
+        Assert.Contains("Residente Calendario Funcional", week);
+        Assert.Contains("Oncología", week);
+        Assert.Contains("Sin citas", week);
+        Assert.DoesNotContain("Residente Calendario Funcional", otherUnit);
+        Assert.Equal(HttpStatusCode.OK, farMonth.StatusCode);
+        Assert.True(farMonth.Headers.CacheControl?.NoStore == true, "El calendario no se guarda en el dispositivo (DPO, 5.1).");
+        Assert.Equal(HttpStatusCode.OK, farWeek.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, badValues.StatusCode);
+        Assert.Contains("Citas externas de hoy y mañana", auxiliarView);
+        Assert.Contains("Residente Calendario Funcional", auxiliarView);
+        Assert.Contains("Mañana", auxiliarView);
+        Assert.Contains("10:30", auxiliarView);
+        Assert.Contains("Qué preparar: ayuno, Llevar gafas", auxiliarView);
+        Assert.Contains("Acompaña: Personal del centro", auxiliarView);
+        Assert.Contains("Transporte: Ambulancia", auxiliarView);
+        Assert.DoesNotContain(secretPlace, auxiliarView);
+        Assert.DoesNotContain("Oncología", auxiliarView);
+        Assert.DoesNotContain(">Consulta<", auxiliarView);
+        Assert.Contains("Citas externas de hoy y mañana", auxiliarHome);
+        Assert.DoesNotContain("Calendario de citas externas", auxiliarCalendar);
+        Assert.DoesNotContain("Residente Calendario Funcional", staffOnAuxiliarView);
+    }
+
+    [Fact]
+    public async Task CitasExternas_Calendario_LimitesDeMes_FiltroDeUnidad_PorCerrar_YPerfilesSinAcceso_ConLaAppEntera()
+    {
+        // PR 3, revisión de calidad: meses de 28 y 31 días con sus semanas completas, el cambio de año, la unidad elegida que se conserva aunque no tenga citas, la marca «Por cerrar» (y su ausencia en
+        // «solo las que tienen algo sin cubrir») y los perfiles que no entran por URL. Datos inventados.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Calendario Limites");
+        var direccion = await LoginAsync(await GrantDirectionAsync(seed));
+        var anonymous = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
+        var nueva = $"/CitasExternas/Nueva?residenteId={residentId}";
+        var page = WebUtility.HtmlDecode(await admin.GetStringAsync(nueva));
+        var registered = await admin.PostAsync("/CitasExternas/Nueva", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["Form.ResidenteId"] = residentId, ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+            ["Form.Fecha"] = today.AddDays(2).ToString("yyyy-MM-dd"), ["Form.Tipo"] = "PRUEBA", ["Form.TransporteModo"] = "SIN_DETERMINAR", ["Form.AcompananteModo"] = "SIN_DETERMINAR",
+            ["Form.Visibilidad"] = "VISIBLE",
+        }));
+        var citaId = Regex.Match(registered.RequestMessage!.RequestUri!.PathAndQuery, "([0-9a-f]{8}-[0-9a-f-]{27})").Groups[1].Value;
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        static int Rows(string html) => Regex.Matches(html, "<tr>").Count - 1; // menos la fila de los días
+        var february = WebUtility.HtmlDecode(await admin.GetStringAsync("/CitasExternas/Mes?anio=2027&mes=2"));
+        var august = WebUtility.HtmlDecode(await admin.GetStringAsync("/CitasExternas/Mes?anio=2027&mes=8"));
+        var december = WebUtility.HtmlDecode(await admin.GetStringAsync("/CitasExternas/Mes?anio=2026&mes=12"));
+        var withUnit = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Mes?anio={today.AddDays(2).Year}&mes={today.AddDays(2).Month}"));
+        var unitId = Regex.Match(withUnit, "<option value=\"([0-9a-f-]{36})\"").Groups[1].Value;
+        var realUnit = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Semana?dia={today.AddDays(2):yyyy-MM-dd}&unidad={unitId}"));
+        var otherUnit = await admin.GetAsync($"/CitasExternas/Semana?dia={today.AddDays(2):yyyy-MM-dd}&unidad={Guid.NewGuid()}");
+        var otherUnitHtml = WebUtility.HtmlDecode(await otherUnit.Content.ReadAsStringAsync());
+        var uncoveredFilter = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Semana?dia={today.AddDays(2):yyyy-MM-dd}&sinCubrir=true"));
+        await connection.ExecuteAsync("UPDATE dbo.citas_externas SET fecha = @date, version = version + 1 WHERE id = @id", new { id = citaId, date = today.AddDays(-1).ToDateTime(TimeOnly.MinValue) });
+        var pastWeek = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Semana?dia={today.AddDays(-1):yyyy-MM-dd}"));
+        var pastUncovered = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Semana?dia={today.AddDays(-1):yyyy-MM-dd}&sinCubrir=true"));
+        var direccionMonth = WebUtility.HtmlDecode(await direccion.GetStringAsync("/CitasExternas/Mes"));
+        var direccionWeek = WebUtility.HtmlDecode(await direccion.GetStringAsync("/CitasExternas/Semana"));
+        var anonymousMonth = await anonymous.GetAsync("/CitasExternas/Mes");
+
+        Assert.Equal(4, Rows(february));
+        Assert.Equal(6, Rows(august));
+        Assert.Contains("anio=2027&mes=1", december);
+        Assert.Contains("anio=2026&mes=11", december);
+        Assert.Contains("Diciembre de 2026", december);
+        Assert.NotEmpty(unitId);
+        Assert.Contains("Residente Calendario Limites", realUnit);
+        Assert.Equal(HttpStatusCode.OK, otherUnit.StatusCode);
+        Assert.DoesNotContain("Residente Calendario Limites", otherUnitHtml);
+        Assert.Contains("La unidad elegida (sin citas en estas fechas)", otherUnitHtml);
+        Assert.Contains("Residente Calendario Limites", uncoveredFilter);
+        Assert.Contains("Falta transporte y acompañante", uncoveredFilter);
+        Assert.Contains("Por cerrar", pastWeek);
+        Assert.DoesNotContain("Falta transporte y acompañante", pastWeek);
+        Assert.DoesNotContain("Residente Calendario Limites", pastUncovered);
+        Assert.DoesNotContain("Calendario de citas externas", direccionMonth);
+        Assert.DoesNotContain("Calendario de citas externas", direccionWeek);
+        Assert.Equal(HttpStatusCode.Redirect, anonymousMonth.StatusCode);
+        Assert.Contains("/Acceso/Entrar", anonymousMonth.Headers.Location?.OriginalString ?? "");
+    }
+
     private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields, string action = "Alergias")
     {
         fields["__RequestVerificationToken"] = token;

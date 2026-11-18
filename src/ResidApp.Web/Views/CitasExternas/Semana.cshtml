@@ -1,0 +1,35 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model ExternalAppointmentCalendarViewModel
+@* Calendario semanal del personal (PR 3; boceto B de CJ): un bloque por día, de lunes a domingo, con «Sin citas» cuando no hay. Una sola columna, así que sirve igual en el móvil. *@
+@{
+    ViewData["Title"] = "Calendario de citas externas: semana del " + ExternalAppointmentCalendarDisplay.WeekTitle(Model.Reference);
+    var byDay = Model.Items.GroupBy(a => a.Appointment.Date).ToDictionary(g => g.Key, g => g.ToList());
+}
+<partial name="_CalendarioCabecera" model="Model" />
+
+@for (var i = 0; i < 7; i++)
+{
+    var day = Model.Reference.AddDays(i);
+    var dayItems = byDay.TryGetValue(day, out var found) ? found : [];
+    <section class="mb-3" aria-labelledby="semana-dia-@day.ToString("yyyyMMdd")">
+        <h3 class="h6 d-flex align-items-center gap-2" id="semana-dia-@day.ToString("yyyyMMdd")">
+            @ExternalAppointmentCalendarDisplay.DayLong(day)
+            @if (day == Model.Today)
+            {
+                <span class="badge text-bg-primary">hoy</span>
+            }
+        </h3>
+        @if (dayItems.Count == 0)
+        {
+            <p class="text-body-secondary mb-0">Sin citas</p>
+        }
+        else
+        {
+            foreach (var item in dayItems)
+            {
+                <partial name="_EntradaCita" model="(item, true, Model.Today)" />
+            }
+        }
+    </section>
+}

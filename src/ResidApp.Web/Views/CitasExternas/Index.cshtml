@@ -18,6 +18,12 @@
 <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas externas@(Model.ResidentName is null ? "" : " de " + Model.ResidentName)</h1>
 <p class="text-muted">Pruebas, consultas y tratamientos de los residentes fuera del centro. Es una agenda y un recordatorio: no organiza turnos ni rutas.</p>
 
+<ul class="nav nav-pills mb-3" aria-label="Vista de las citas externas">
+    <li class="nav-item"><a class="nav-link" asp-action="Mes">Mes</a></li>
+    <li class="nav-item"><a class="nav-link" asp-action="Semana">Semana</a></li>
+    <li class="nav-item"><a class="nav-link active" aria-current="page" asp-action="Index">Próximas</a></li>
+</ul>
+
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje</div>

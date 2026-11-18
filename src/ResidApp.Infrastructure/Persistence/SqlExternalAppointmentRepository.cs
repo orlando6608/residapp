@@ -44,7 +44,7 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
     private static readonly string AppointmentScopeSql = ScopeSql.Replace("{R}", "e.residente_id");
 
     private const string SelectSql = """
-        SELECT e.id AS Id, e.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, location.unidad_id AS UnitId, e.fecha AS Date, e.hora AS Time,
+        SELECT e.id AS Id, e.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, location.unidad_id AS UnitId, unit.nombre_visible AS UnitName, e.fecha AS Date, e.hora AS Time,
                e.tipo_codigo AS Type, e.especialidad_codigo AS Specialty, e.lugar AS Place,
                e.transporte_modo_codigo AS TransportMode, e.transporte_estado_codigo AS TransportState,
                e.acompanante_modo_codigo AS CompanionMode, e.acompanante_estado_codigo AS CompanionState,
@@ -57,6 +57,7 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
           FROM dbo.citas_externas e
           JOIN dbo.residentes resident ON resident.id = e.residente_id AND resident.centro_id = e.centro_id
           LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = e.residente_id AND location.centro_id = e.centro_id AND location.vigente_hasta IS NULL
+          LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = e.centro_id
         """;
 
     public async Task<Guid> CreateAsync(ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, Guid? operationId = null, CancellationToken ct = default)
@@ -232,6 +233,37 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
         return rows.Select(ToRecord).ToList();
     }
 
+    public async Task<IReadOnlyList<ExternalAppointmentForAuxiliar>> ListForAuxiliarAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, CancellationToken ct = default)
+    {
+        // Solo las columnas que el Auxiliar puede ver: no se lee ni el tipo, ni la especialidad, ni el lugar. Mismo criterio de residente asignado, unidad concedida y activa que «Mis residentes»; un residente suspendido por un ingreso hospitalario no sale (decisión de Orlando, 2026-11-18).
+        using var connection = await connections.OpenAsync(ct);
+        var rows = await connection.QueryAsync<AuxiliarRow>(new CommandDefinition("""
+            SELECT e.id AS Id, e.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, e.fecha AS Date, e.hora AS Time,
+                   e.transporte_modo_codigo AS TransportMode, e.acompanante_modo_codigo AS CompanionMode,
+                   e.preparar_ayuno AS Fasting, e.preparar_informe AS LastReport, e.preparar_tarjeta AS HealthCard, e.preparar_medicacion AS Medication,
+                   e.preparar_silla_ruedas AS Wheelchair, e.preparar_otra AS PrepOther, e.preparar_texto AS PrepText
+              FROM dbo.citas_externas e
+              JOIN dbo.residentes resident ON resident.id = e.residente_id AND resident.centro_id = e.centro_id AND resident.estado = 'ACTIVE'
+             WHERE e.centro_id = @CenterId AND e.fecha BETWEEN @From AND @To AND e.estado_codigo IN ('PROGRAMADA', 'CONFIRMADA_HOSPITAL')
+               AND NOT EXISTS (SELECT 1 FROM dbo.suspensiones_residente suspension WHERE suspension.residente_id = e.residente_id AND suspension.centro_id = e.centro_id AND suspension.finalizada_en IS NULL)
+               AND EXISTS (
+                   SELECT 1 FROM dbo.ambitos_perfil scope_profile
+                     JOIN dbo.ambitos_perfil_unidad scope_unit ON scope_unit.ambito_perfil_id = scope_profile.id AND scope_unit.centro_id = scope_profile.centro_id AND scope_unit.revocado_en IS NULL
+                     JOIN dbo.unidades active_unit ON active_unit.id = scope_unit.unidad_id AND active_unit.centro_id = scope_profile.centro_id AND active_unit.estado = 'ACTIVE'
+                     JOIN dbo.ambitos_perfil_residente scope_resident ON scope_resident.ambito_perfil_id = scope_profile.id AND scope_resident.centro_id = scope_profile.centro_id
+                          AND scope_resident.residente_id = e.residente_id AND scope_resident.revocado_en IS NULL
+                     JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = e.residente_id AND location.centro_id = scope_profile.centro_id
+                          AND location.unidad_id = scope_unit.unidad_id AND location.vigente_hasta IS NULL
+                    WHERE scope_profile.id = @ProfileScopeId AND scope_profile.centro_id = @CenterId AND scope_profile.cuenta_id = @AccountId
+                      AND scope_profile.perfil_codigo = 'AUXILIAR' AND scope_profile.estado = 'ACTIVE' AND scope_profile.revocado_en IS NULL)
+             ORDER BY e.fecha, CASE WHEN e.hora IS NULL THEN 1 ELSE 0 END, e.hora, resident.nombre_visible
+            """, Params(actor, new { From = from, To = to }), cancellationToken: ct));
+        return rows.Select(row => new ExternalAppointmentForAuxiliar(
+            row.Id, ResidentId.From(row.ResidentId), row.ResidentName, row.Date, row.Time is { } time ? TimeOnly.FromTimeSpan(time) : null,
+            new ExternalPreparation(row.Fasting, row.LastReport, row.HealthCard, row.Medication, row.Wheelchair, row.PrepOther, row.PrepText),
+            EnumCode.ParseCode<ExternalTransportMode>(row.TransportMode), EnumCode.ParseCode<ExternalCompanionMode>(row.CompanionMode))).ToList();
+    }
+
     /// <summary>Quien escribe: Administración (su ámbito se comprueba en cada consulta) o Enfermería con el permiso EXTERNAL_APPOINTMENT_MANAGE vigente, vuelto a mirar dentro de la
     /// transacción por si Administración se lo retiró después de la comprobación del caso de uso. Medicina y el resto, no.</summary>
     private static async Task RequireWriterAsync(SqlConnection connection, SqlTransaction transaction, ExternalAppointmentActor actor, CancellationToken ct)
@@ -367,14 +399,18 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             EnumCode.ParseCode<ExternalCompanionMode>(row.CompanionMode), EnumCode.ParseCode<ExternalArrangementState>(row.CompanionState),
             new ExternalPreparation(row.Fasting, row.LastReport, row.HealthCard, row.Medication, row.Wheelchair, row.PrepOther, row.PrepText),
             EnumCode.ParseCode<ExternalFamilyVisibility>(row.Visibility)),
-        EnumCode.ParseCode<ExternalAppointmentStatus>(row.Status), row.Version, row.Suspended);
+        EnumCode.ParseCode<ExternalAppointmentStatus>(row.Status), row.Version, row.Suspended, row.UnitName);
 
     private sealed record UnitRow(Guid? UnitId);
+
+    private sealed record AuxiliarRow(
+        Guid Id, Guid ResidentId, string ResidentName, DateOnly Date, TimeSpan? Time, string TransportMode, string CompanionMode,
+        bool Fasting, bool LastReport, bool HealthCard, bool Medication, bool Wheelchair, bool PrepOther, string? PrepText);
 
     private sealed record ExistingRow(Guid Id, Guid ResidentId);
 
     private sealed record Row(
-        Guid Id, Guid ResidentId, string ResidentName, Guid? UnitId, DateOnly Date, TimeSpan? Time, string Type, string? Specialty, string? Place,
+        Guid Id, Guid ResidentId, string ResidentName, Guid? UnitId, string? UnitName, DateOnly Date, TimeSpan? Time, string Type, string? Specialty, string? Place,
         string TransportMode, string TransportState, string CompanionMode, string CompanionState,
         bool Fasting, bool LastReport, bool HealthCard, bool Medication, bool Wheelchair, bool PrepOther, string? PrepText,
         string Status, string Visibility, int Version, bool Suspended);

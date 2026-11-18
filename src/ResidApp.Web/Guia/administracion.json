@@ -1514,7 +1514,9 @@
         { "para": "Tú", "texto": "Verás «Cita externa registrada.» (o «Cita externa guardada.», «Estado de la cita guardado.», «Cita externa cancelada.»). Mientras falte transporte o acompañante en una cita de los próximos 7 días, te sale un aviso en tu Inicio, con el residente, el día y qué falta, sin la especialidad ni el lugar; a 2 días o menos sale más destacado." },
         { "para": "Enfermería", "texto": "Ve la cita en su lista y en la ficha del residente. La cambia solo si le has concedido el permiso (ver ADM-14)." },
         { "para": "Medicina", "texto": "Ve la cita, pero no la cambia." },
-        { "para": "Familia", "texto": "Todavía no ve las citas externas." }
+        { "para": "Auxiliar", "texto": "Ve una vista reducida de las citas de hoy y mañana de sus residentes (hora, qué preparar, quién acompaña y cómo va), sin especialidad ni lugar." },
+        { "para": "Familia", "texto": "Todavía no ve las citas externas." },
+        { "para": "Tú", "texto": "Para ver las citas por días, usa las pestañas **Mes** y **Semana** de la lista. Con «Mostrar solo las que tienen algo sin cubrir» y **Aplicar** ves lo mismo que avisa el Inicio, además de las de más adelante. Una cita abierta con el día pasado sale como «Por cerrar»." }
       ],
       "dudas": [
         { "p": "«Revisa la cita: el día no puede ser anterior a hoy…»", "r": "Falta elegir el tipo, el transporte, el acompañante o qué ve la familia; el día es anterior a hoy; el lugar o «qué preparar» pasan de una línea corta; o has cambiado el día, o una hora ya puesta, sin elegir el motivo." },
@@ -1526,7 +1528,7 @@
         { "p": "El aviso del Inicio no sale.", "r": "Solo sale si hay una cita abierta en los próximos 7 días con el transporte o el acompañante sin confirmar. Si todo está «Cubierta», no hay aviso." },
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó. Ábrelas y pulsa **Dar por realizada** o **No se acudió**, o **Cancelar la cita**. Salen en tu Inicio, arriba en la lista de citas y en la ficha del residente, con la marca «Por cerrar»." }
       ],
-      "rutas": ["Administracion/Index", "Administracion/Residente", "CitasExternas/Index", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
+      "rutas": ["Administracion/Index", "Administracion/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
       "mensajes": [
         "Cita externa registrada.",
         "Cita externa guardada.",

@@ -17,7 +17,7 @@ namespace ResidApp.Web.Controllers;
 /// el control real (ámbito, perfil, permiso y unidad) está en el servicio y el repositorio.
 /// </summary>
 [Authorize]
-public sealed class CitasExternasController(
+public sealed partial class CitasExternasController(
     ExternalAppointmentsApplicationService appointments, AdministracionApplicationService administration,
     EnfermeriaApplicationService nursing, MedicinaApplicationService medicine) : Controller
 {
