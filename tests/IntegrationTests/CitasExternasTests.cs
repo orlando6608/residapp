@@ -354,7 +354,7 @@ public class CitasExternasTests
     public async Task Estados_LaAbiertaPasaAConfirmadaYRealizada_YUnaCerradaYaNoCambia()
     {
         var scene = await SceneAsync("Residente Cita Externa Estados");
-        var id = await RegisterAsync(scene.Nurse, scene.ResidentId);
+        var id = await RegisterAsync(scene.Nurse, scene.ResidentId, Cita(0));
 
         var cancelViaStatus = await StatusAsync(scene.Nurse, id, 1, ExternalAppointmentStatus.Cancelada);
         var same = await StatusAsync(scene.Nurse, id, 1, ExternalAppointmentStatus.Programada);
@@ -373,8 +373,26 @@ public class CitasExternasTests
 
         Assert.Equal(ApplicationFailureCode.Conflict, (await StatusAsync(scene.Admin, id, 3, ExternalAppointmentStatus.NoAcudida)).Error?.Code);
         Assert.Equal(ApplicationFailureCode.Conflict, (await CancelAsync(scene.Admin, id, 3)).Error?.Code);
-        Assert.Equal(ApplicationFailureCode.Conflict, (await UpdateAsync(scene.Admin, id, 3, Cita(place: "Otro"))).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, (await UpdateAsync(scene.Admin, id, 3, Cita(0, place: "Otro"))).Error?.Code);
         Assert.Equal(3, await ChangesAsync(id));
+    }
+
+    [Fact]
+    public async Task Estados_NoSeCierraUnaCitaFutura_YConfirmadaNoVuelveAProgramada()
+    {
+        // Decisión de Orlando (2026-11-18): «Realizada» y «No se acudió» solo desde el día de la cita; una cita confirmada por el hospital no vuelve a programada.
+        var scene = await SceneAsync("Residente Cita Externa Estados Futuros");
+        var future = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(3));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await StatusAsync(scene.Admin, future, 1, ExternalAppointmentStatus.Realizada)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await StatusAsync(scene.Admin, future, 1, ExternalAppointmentStatus.NoAcudida)).Error?.Code);
+        Assert.True((await StatusAsync(scene.Admin, future, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await StatusAsync(scene.Admin, future, 2, ExternalAppointmentStatus.Programada)).Error?.Code);
+        Assert.Equal(2, await ChangesAsync(future));
+        Assert.True((await CancelAsync(scene.Admin, future, 2)).Ok);
+
+        var today = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
+        Assert.True((await StatusAsync(scene.Admin, today, 1, ExternalAppointmentStatus.Realizada)).Ok);
     }
 
     [Fact]
@@ -524,7 +542,7 @@ public class CitasExternasTests
         var future = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(5));
         var confirmed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(9));
         var today = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
-        var alreadyDone = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(7));
+        var alreadyDone = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
         var otherResident = await RegisterAsync(scene.Admin, other, Cita(5));
         Assert.True((await StatusAsync(scene.Admin, confirmed, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
         Assert.True((await StatusAsync(scene.Admin, alreadyDone, 1, ExternalAppointmentStatus.NoAcudida)).Ok);
@@ -658,7 +676,7 @@ public class CitasExternasTests
         await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 20));
         var cancelled = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 2));
         Assert.True((await CancelAsync(scene.Admin, cancelled, 1)).Ok);
-        var done = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 3));
+        var done = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 0));
         Assert.True((await StatusAsync(scene.Admin, done, 1, ExternalAppointmentStatus.Realizada)).Ok);
 
         var uncovered = await Service(scene.Admin).ListUncoveredAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId);

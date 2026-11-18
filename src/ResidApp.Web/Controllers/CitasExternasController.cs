@@ -251,7 +251,12 @@ public sealed class CitasExternasController(
         }
         else
         {
-            TempData["Error"] = result.Error!.Code == ApplicationFailureCode.AccessDenied && !await CanManageAsync(scope, ct) ? NoPermission(scope) : result.Error.Message;
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.InvalidInput => StatusInvalidMessage,
+                ApplicationFailureCode.AccessDenied when !await CanManageAsync(scope, ct) => NoPermission(scope),
+                _ => result.Error.Message,
+            };
         }
 
         return RedirectToAction(nameof(Ver), new { id });
@@ -315,6 +320,9 @@ public sealed class CitasExternasController(
         TempData["Error"] = result.Error.Code == ApplicationFailureCode.AccessDenied && !await CanManageAsync(scope, ct) ? NoPermission(scope) : result.Error.Message;
         return RedirectToAction(nameof(Ver), new { id = form.CitaId });
     }
+
+    private const string StatusInvalidMessage =
+        "Ese cambio de estado no es posible: «Realizada» y «No se acudió» solo desde el día de la cita en adelante (una cita futura equivocada se cambia o se cancela), y una cita confirmada por el hospital no vuelve a programada.";
 
     private const string ClosedMessage = "La cita ya está cerrada (realizada, no se acudió o cancelada) y no se puede cambiar.";
 

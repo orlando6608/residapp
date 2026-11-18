@@ -2074,8 +2074,13 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var rescheduled = await PostAsync(nurse, "/CitasExternas/Editar", editar, Edit(farDay, "2", "FAMILIA", "CAMBIO_DEL_HOSPITAL"));
 
         var ver = $"/CitasExternas/Ver?id={citaId}";
-        var viewPage = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
-        var done = await PostAsync(nurse, "/CitasExternas/Estado", ver, new() { ["id"] = citaId!, ["version"] = "3", ["estado"] = "REALIZADA" });
+        // Una cita futura no se puede dar por realizada; el día de la cita sí (decisión de Orlando, 2026-11-18): se mueve a hoy por SQL.
+        var tooEarly = await PostAsync(nurse, "/CitasExternas/Estado", ver, new() { ["id"] = citaId!, ["version"] = "3", ["estado"] = "REALIZADA" });
+        var futureView = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
+        await connection.ExecuteAsync("UPDATE dbo.citas_externas SET fecha = @date, version = version + 1 WHERE id = @id",
+            new { id = citaId, date = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).ToDateTime(TimeOnly.MinValue) });
+        var todayView = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
+        var done = await PostAsync(nurse, "/CitasExternas/Estado", ver, new() { ["id"] = citaId!, ["version"] = "4", ["estado"] = "REALIZADA" });
         var afterDone = WebUtility.HtmlDecode(await nurse.GetStringAsync(editar));
 
         var second = await PostAsync(admin, "/CitasExternas/Nueva", nueva, Fields(day, "Centro de Salud de Prueba"));
@@ -2124,7 +2129,10 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Revisa la cita:", rescheduleWithoutReason.Html);
         Assert.Contains("Otra persona ha cambiado esta cita", staleEdit.Html);
         Assert.Contains("Cita externa guardada.", rescheduled.Html);
-        Assert.Contains("Dar por realizada", viewPage);
+        Assert.Contains("Ese cambio de estado no es posible", tooEarly.Html);
+        Assert.DoesNotContain(">Dar por realizada</button>", futureView);
+        Assert.Contains("se podrán marcar desde el día de la cita", futureView);
+        Assert.Contains(">Dar por realizada</button>", todayView);
         Assert.Contains("Estado de la cita guardado.", done.Html);
         Assert.Contains("La cita está cerrada y no se puede cambiar.", done.Html);
         Assert.Contains("La cita ya está cerrada", afterDone);

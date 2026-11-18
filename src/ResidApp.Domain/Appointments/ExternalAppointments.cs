@@ -212,9 +212,14 @@ public static class ExternalAppointmentRules
     /// <summary>Programada y confirmada por el hospital están abiertas; realizada, no acudida y cancelada son finales y no vuelven a cambiar.</summary>
     public static bool IsOpen(ExternalAppointmentStatus status) => status is ExternalAppointmentStatus.Programada or ExternalAppointmentStatus.ConfirmadaHospital;
 
-    /// <summary>Una cita abierta pasa a cualquier otro estado; una final, a ninguno.</summary>
-    public static bool CanTransition(ExternalAppointmentStatus from, ExternalAppointmentStatus to) =>
-        Enum.IsDefined(from) && Enum.IsDefined(to) && from != to && IsOpen(from);
+    /// <summary>
+    /// Una cita abierta pasa a otro estado; una final, a ninguno (decisión de Orlando, 2026-11-18). «Realizada» y «No se acudió» solo desde el día de la cita en adelante (el día de hoy cuenta: una
+    /// cita futura equivocada se cancela o se cambia), y «Confirmada por el hospital» no vuelve a «Programada».
+    /// </summary>
+    public static bool CanTransition(ExternalAppointmentStatus from, ExternalAppointmentStatus to, DateOnly appointmentDate, DateOnly todayAtCenter) =>
+        Enum.IsDefined(from) && Enum.IsDefined(to) && from != to && IsOpen(from)
+        && !(from == ExternalAppointmentStatus.ConfirmadaHospital && to == ExternalAppointmentStatus.Programada)
+        && (to is not (ExternalAppointmentStatus.Realizada or ExternalAppointmentStatus.NoAcudida) || appointmentDate <= todayAtCenter);
 
     /// <summary>Motivo de reprogramar o cancelar: el código de la lista cerrada y, opcional, una línea de 100 sin saltos de línea.</summary>
     public static (ExternalAppointmentReasonCode Code, string? Line) Reason(ExternalAppointmentReasonCode? code, string? line) =>

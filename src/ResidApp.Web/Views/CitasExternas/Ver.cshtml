@@ -86,6 +86,8 @@
                 <button type="submit" name="estado" value="@ExternalAppointmentStatus.ConfirmadaHospital.ToCode()" class="btn btn-outline-primary btn-lg">Confirmada por el hospital</button>
             </form>
         }
+        @if (appointment.Date <= Model.Today)
+        {
         <form asp-action="Estado" method="post">
             <input type="hidden" name="id" value="@record.Id" />
             <input type="hidden" name="version" value="@record.Version" />
@@ -96,6 +98,11 @@
             <input type="hidden" name="version" value="@record.Version" />
             <button type="submit" name="estado" value="@ExternalAppointmentStatus.NoAcudida.ToCode()" class="btn btn-outline-warning btn-lg">No se acudió</button>
         </form>
+        }
+        else
+        {
+            <p class="text-muted align-self-center mb-0">«Dar por realizada» y «No se acudió» se podrán marcar desde el día de la cita.</p>
+        }
         <a asp-action="Cancelar" asp-route-id="@record.Id" class="btn btn-outline-danger btn-lg">Cancelar la cita</a>
     </div>
 }
