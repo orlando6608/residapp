@@ -81,6 +81,7 @@ Antes de proponer nada, haz `git fetch` y mira `origin/main` y los PR abiertos: 
 | Entradas «RELEVO» anteriores (el porqué y el cómo de cada bloque) | [historial/](historial/) (se busca por texto; no se lee entero) |
 | Lecciones técnicas, del entorno y cómo se verifica un bloque | [lecciones-tecnicas.md](lecciones-tecnicas.md) |
 | Avisos abiertos (fuera de alcance, sin corregir) | [avisos-abiertos.md](avisos-abiertos.md) |
+| Qué documento manda sobre cada tema, y qué hacer si dos se contradicen | [INDICE.md](../INDICE.md) |
 | Tareas de construcción por vertical | `docs/tareas/alta-prioridad/pendientes-*.md` |
 | Respuestas y documentos de CJ | `docs/pendientes-cj/README.md` |
 | Decisiones de arquitectura | `docs/decisiones-arquitectura/` |
