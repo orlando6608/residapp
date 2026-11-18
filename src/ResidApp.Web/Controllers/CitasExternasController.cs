@@ -23,7 +23,7 @@ public sealed class CitasExternasController(
 
     private const string InvalidMessage =
         "Revisa la cita: el día no puede ser anterior a hoy, elige el tipo, el transporte, el acompañante y qué ve la familia, el lugar y «qué preparar» son una sola línea corta, " +
-        "y si cambias el día o la hora tienes que elegir un motivo.";
+        "y si cambias el día, o una hora que ya estaba puesta, tienes que elegir un motivo.";
 
     private const string NursePermissionMessage = "Para registrar o cambiar citas externas hace falta el permiso «Registrar y cambiar las citas externas de los residentes»: pídeselo a Administración.";
 

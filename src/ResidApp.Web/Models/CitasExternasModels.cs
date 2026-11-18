@@ -10,7 +10,7 @@ public sealed record ExternalAppointmentResidentOption(Guid Id, string Name, str
 /// <summary>
 /// El formulario de una cita externa (script 0101). Los selectores llevan códigos de lista cerrada (los mismos de la base); el día y la hora vienen de <c>input type=date</c> y
 /// <c>type=time</c>. «Confirmado» es una casilla: «sin determinar» siempre queda pendiente y «no necesita» confirmado (lo corrige <see cref="ToAppointment"/>, no es un error).
-/// MotivoCodigo y MotivoLinea solo se usan al reprogramar (cambiar el día o la hora) y al cancelar.
+/// MotivoCodigo y MotivoLinea solo se usan al reprogramar (cambiar el día o una hora ya puesta) y al cancelar.
 /// </summary>
 public sealed class ExternalAppointmentFormModel
 {

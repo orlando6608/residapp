@@ -303,6 +303,31 @@ public class CitasExternasTests
     }
 
     [Fact]
+    public async Task PonerLaHoraPorPrimeraVez_NoEsReprogramar_PeroCambiarUnaHoraPuestaOQuitarlaSi()
+    {
+        // Decisión de Orlando (2026-11-18): de «Por confirmar» a una hora solo completa la ficha (sin motivo, acción MODIFICADA); cambiar una hora ya puesta, o volver a «por confirmar», reprograma.
+        var scene = await SceneAsync("Residente Cita Externa Hora");
+        var id = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(withoutTime: true));
+
+        var firstTime = await UpdateAsync(scene.Admin, id, 1, Cita(time: new TimeOnly(11, 0)));
+        Assert.True(firstTime.Ok, firstTime.Error?.Message);
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.citas_externas_cambios WHERE cita_id = @id AND numero = 2 AND accion_codigo = 'MODIFICADA' AND hora_anterior IS NULL AND hora_nueva = '11:00' AND motivo_codigo IS NULL", new { id }));
+        Assert.Equal(1, await AuditAsync(id, "EXT_APPOINTMENT_UPDATE"));
+        Assert.Equal(0, await AuditAsync(id, "EXT_APPOINTMENT_RESCHEDULE"));
+
+        var changedHourNoReason = await UpdateAsync(scene.Admin, id, 2, Cita(time: new TimeOnly(12, 0)));
+        var cleared = await UpdateAsync(scene.Admin, id, 2, Cita(withoutTime: true));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, changedHourNoReason.Error?.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, cleared.Error?.Code);
+
+        var changedHour = await UpdateAsync(scene.Admin, id, 2, Cita(time: new TimeOnly(12, 0)), ExternalAppointmentReasonCode.CambioDelHospital);
+        Assert.True(changedHour.Ok, changedHour.Error?.Message);
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.citas_externas_cambios WHERE cita_id = @id AND numero = 3 AND accion_codigo = 'REPROGRAMADA' AND hora_anterior = '11:00' AND hora_nueva = '12:00'", new { id }));
+    }
+
+    [Fact]
     public async Task DosPersonasEditanALaVez_LaSegundaRecibeElConflictoYNoPisa()
     {
         var scene = await SceneAsync("Residente Cita Externa Concurrencia");

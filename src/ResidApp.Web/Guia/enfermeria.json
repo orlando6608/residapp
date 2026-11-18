@@ -774,7 +774,7 @@
         { "texto": "Rellena el «Día» y, si ya la saben, la «Hora (opcional)»; si no, déjala vacía y saldrá como «Por confirmar». Elige el «Tipo de cita» y, si quieres, la «Especialidad (opcional)».", "campos": ["Día", "Hora (opcional)", "Tipo de cita", "Especialidad (opcional)"] },
         { "texto": "Escribe el «Lugar» (solo el nombre del hospital o centro), elige el «Transporte» y el «Acompañante» y marca «El transporte está confirmado» o «El acompañante está confirmado» cuando esté resuelto. «Sin determinar» siempre queda pendiente y «No necesita» queda confirmado.", "campos": ["Lugar", "Transporte", "Acompañante", "El transporte está confirmado", "El acompañante está confirmado"] },
         { "texto": "Marca lo que hay que llevar o hacer en «Qué preparar», elige «Qué ve la familia» y pulsa **Registrar la cita**.", "botones": ["Registrar la cita"], "campos": ["Qué preparar", "Qué ve la familia"] },
-        { "texto": "Para cambiarla, ábrela desde la lista y pulsa **Cambiar la cita**, haz el cambio y pulsa **Guardar los cambios**. Si cambias el día o la hora, es una reprogramación: elige el «Motivo de la reprogramación».", "botones": ["Cambiar la cita", "Guardar los cambios"], "campos": ["Motivo de la reprogramación"] },
+        { "texto": "Para cambiarla, ábrela desde la lista y pulsa **Cambiar la cita**, haz el cambio y pulsa **Guardar los cambios**. Si cambias el día, o una hora que ya estaba puesta, es una reprogramación: elige el «Motivo de la reprogramación». Poner la hora por primera vez (si estaba «Por confirmar») no pide motivo.", "botones": ["Cambiar la cita", "Guardar los cambios"], "campos": ["Motivo de la reprogramación"] },
         { "texto": "Cuando pase, abre la cita y pulsa **Confirmada por el hospital**, **Dar por realizada** o **No se acudió**. Para anularla, pulsa **Cancelar la cita** y elige el «Motivo de la cancelación».", "botones": ["Confirmada por el hospital", "Dar por realizada", "No se acudió", "Cancelar la cita"], "campos": ["Motivo de la cancelación"] }
       ],
       "despues": [
@@ -784,11 +784,11 @@
       ],
       "dudas": [
         { "p": "«Para registrar o cambiar citas externas hace falta el permiso…»", "r": "Tu ámbito no tiene el permiso. Pídeselo a Administración, que es quien lo concede." },
-        { "p": "«Revisa la cita: el día no puede ser anterior a hoy…»", "r": "Falta elegir el tipo, el transporte, el acompañante o qué ve la familia; el día es anterior a hoy; el lugar o «qué preparar» pasan de una línea corta; o has cambiado el día o la hora sin elegir el motivo." },
+        { "p": "«Revisa la cita: el día no puede ser anterior a hoy…»", "r": "Falta elegir el tipo, el transporte, el acompañante o qué ve la familia; el día es anterior a hoy; el lugar o «qué preparar» pasan de una línea corta; o has cambiado el día, o una hora ya puesta, sin elegir el motivo." },
         { "p": "«Otra persona ha cambiado esta cita…»", "r": "Alguien la guardó antes que tú. Te llevamos a la cita para que veas cómo está ahora y, si hace falta, repitas tu cambio." },
         { "p": "«La cita ya está cerrada…»", "r": "Una cita realizada, no acudida o cancelada ya no se cambia ni se reabre. Si hay que volver a pedirla, regístrala de nuevo." },
         { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva; la familia no recibe avisos." },
-        { "p": "Me equivoqué al registrarla.", "r": "Cámbiala. Si cambias el día o la hora, elige el motivo «Error de registro»; el historial lo conserva." }
+        { "p": "Me equivoqué al registrarla.", "r": "Cámbiala. Si cambias el día o una hora ya puesta, elige el motivo «Error de registro»; el historial lo conserva." }
       ],
       "rutas": ["Enfermeria/Index", "Enfermeria/Residente", "CitasExternas/Index", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
       "mensajes": [

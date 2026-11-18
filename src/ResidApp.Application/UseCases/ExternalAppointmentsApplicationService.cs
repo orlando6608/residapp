@@ -46,7 +46,7 @@ public sealed class ExternalAppointmentsApplicationService(
             var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             RequireManage(canManage);
             var current = await repository.FindAsync(actor, command.CitaId, ct) ?? throw new DomainValidationException(ExternalAppointment.NotFoundCode);
-            var reschedules = current.Appointment.Date != command.Cita.Date || current.Appointment.Time != command.Cita.Time;
+            var reschedules = ExternalAppointmentRules.IsReschedule(current.Appointment, command.Cita);
             if (reschedules)
             {
                 command.Cita.RequireNotInPast(Today());

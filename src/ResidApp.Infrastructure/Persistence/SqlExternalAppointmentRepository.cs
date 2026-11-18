@@ -112,7 +112,7 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             return expectedVersion; // Nada cambia: ni versión ni historial.
         }
 
-        var reschedules = before.Appointment.Date != appointment.Date || before.Appointment.Time != appointment.Time;
+        var reschedules = ExternalAppointmentRules.IsReschedule(before.Appointment, appointment);
         if (reschedules && reasonCode is null)
         {
             throw new DomainValidationException(ExternalAppointment.InvalidCode);
