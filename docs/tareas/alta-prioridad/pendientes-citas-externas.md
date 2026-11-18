@@ -1,6 +1,6 @@
 # Citas externas de los residentes: traspaso para construirlas
 
-**Estado a 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 2: plan y prompt para empezar en el apartado 9 (los apartados 5 a 8 siguen como estaban).** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
+**Estado a 2026-11-18: PR 2 (pantallas del personal) hecho en la rama `feat-citas-externas-pantallas`, pendiente de PR; siguiente, PR 3. A 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 2: plan y prompt para empezar en el apartado 9 (los apartados 5 a 8 siguen como estaban).** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
 
 ## 1. Qué hay que construir
 

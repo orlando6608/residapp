@@ -16,6 +16,7 @@
     "Activar el protocolo urgente, derivar a Urgencias y firmar el informe de derivación.",
     "Cerrar el episodio y decidir si se comunica a la familia.",
     "Corregir o rectificar tu valoración, y corregir un comunicado a la familia antes de que se publique.",
+    "Ver las citas externas de los residentes de tus unidades (ver MED-17).",
     "Consultar el historial y la línea temporal de los eventos que ves."
   ],
   "conPermiso": [
@@ -30,7 +31,7 @@
     "Dar de alta residentes: es un permiso aparte, que Medicina no tiene."
   ],
   "revisadoPara": "0.4.0",
-  "revisado": "2026-11-16",
+  "revisado": "2026-11-18",
   "fichas": [
     {
       "codigo": "MED-01",
@@ -43,7 +44,7 @@
       "pasos": [
         { "texto": "Pulsa **Mi panel** (arriba): se abre el **Inicio de Medicina**.", "botones": ["Mi panel"], "campos": ["Inicio de Medicina"] },
         { "texto": "Si algún hito de tu perfil está a punto de vencer o ya ha pasado de plazo, arriba, antes de las tarjetas, ves un aviso **Hitos fuera de plazo o a punto de vencer** (o «Hitos a punto de vencer»): cada línea trae el residente, la unidad y el hito, con «Vence a las…» o «Plazo pasado desde las…». Pulsa el nombre del residente para abrir su ficha." },
-        { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Escalados y eventos propios** (por valorar), **Protocolos urgentes**, **Seguimientos** (los vencidos salen como «pendientes»), **Indicaciones** (con las que están «sin leer» o «con incidencia»), **Residentes** y **Comunicaciones** (familiares aún por publicar).", "campos": ["Escalados y eventos propios", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Residentes", "Comunicaciones", "sin leer", "con incidencia"] },
+        { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Escalados y eventos propios** (por valorar), **Protocolos urgentes**, **Seguimientos** (los vencidos salen como «pendientes»), **Indicaciones** (con las que están «sin leer» o «con incidencia»), **Residentes**, **Citas externas** y **Comunicaciones** (familiares aún por publicar).", "campos": ["Escalados y eventos propios", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Residentes", "Citas externas", "Comunicaciones", "sin leer", "con incidencia"] },
         { "texto": "Pulsa una tarjeta para abrir su bandeja." }
       ],
       "despues": [
@@ -578,6 +579,36 @@
       ],
       "manual": { "id": "ficha-antecedentes", "titulo": "Ficha de antecedentes de salud" },
       "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "MED-17",
+      "pregunta": "¿Cómo veo las citas externas de mis residentes?",
+      "palabras": ["citas externas", "cita externa", "hospital", "consulta", "prueba", "transporte", "acompañante", "agenda"],
+      "permisos": [],
+      "antes": [
+        "Saber que Medicina solo ve las citas: las registran y las cambian Administración y las Enfermerías con permiso.",
+        "Verás las citas de los residentes de tus unidades, no las de otras."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas**; o, desde la ficha del residente, pulsa **Ver todas sus citas externas**.", "botones": ["Citas externas", "Ver todas sus citas externas"] },
+        { "texto": "Elige el periodo en «Desde» y «Hasta» y pulsa **Ver esas fechas**. Por defecto salen los próximos 60 días.", "botones": ["Ver esas fechas"], "campos": ["Desde", "Hasta"] },
+        { "texto": "Pulsa el nombre del residente para abrir la cita: día, hora (o «Por confirmar»), tipo, especialidad, lugar, transporte, acompañante y qué preparar." }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Ves la cita y si le falta algo («Falta algo») o está «Cubierta». No hay botones de cambio: te dice que las registra Administración." },
+        { "para": "Enfermería", "texto": "Si tiene el permiso, la cambia, la da por realizada o la cancela; si no, solo la ve como tú." }
+      ],
+      "dudas": [
+        { "p": "«Aquí solo puedes ver las citas. Las registra Administración.»", "r": "Es lo normal en Medicina: no registra ni cambia citas externas." },
+        { "p": "No veo una cita que me han dicho que existe.", "r": "Solo salen las de los residentes de tus unidades y de las fechas elegidas: amplía «Hasta» o comprueba la unidad del residente." },
+        { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó y aún nadie ha marcado si se realizó. Las cierran Administración y las Enfermerías con permiso." },
+        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva." }
+      ],
+      "rutas": ["Medicina/Index", "Medicina/Residente", "CitasExternas/Index", "CitasExternas/Ver"],
+      "mensajes": [
+        "Aquí solo puedes ver las citas. Las registra Administración."
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }
   ]
 }

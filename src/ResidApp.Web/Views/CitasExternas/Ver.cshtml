@@ -1,0 +1,118 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentDetailViewModel
+@* Citas externas de los residentes, PR 2 (script 0101): la ficha de una cita y lo que se puede hacer con ella. Los botones de cambiar solo salen a quien puede (Administración, o
+   Enfermería con permiso) y mientras la cita está abierta; la base y el caso de uso lo vuelven a comprobar. *@
+@{
+    var record = Model.Record;
+    var appointment = record.Appointment;
+    var isOpen = ExternalAppointmentRules.IsOpen(record.Status);
+    var preparation = ExternalAppointmentDisplay.Preparation(appointment.Preparation);
+    ViewData["Title"] = "Cita externa de " + record.ResidentName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@record.ResidentName</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cita externa de @record.ResidentName</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+@if (record.ResidentSuspended)
+{
+    <div class="alert alert-warning" role="status">Residente suspendido por un ingreso hospitalario. La cita sigue viva; la familia no recibe avisos.</div>
+}
+
+<section class="card mb-3" aria-labelledby="cita-titulo">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="cita-titulo">
+            @ExternalAppointmentDisplay.Date(appointment.Date), @ExternalAppointmentDisplay.Time(appointment)
+            <span class="badge @ExternalAppointmentDisplay.StatusBadge(record.Status) ms-2">@EnumDisplay.Label(record.Status)</span>
+        </h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Tipo</dt>
+            <dd class="col-sm-8">@EnumDisplay.Label(appointment.Type)</dd>
+            <dt class="col-sm-4">Especialidad</dt>
+            <dd class="col-sm-8">@(appointment.Specialty is { } specialty ? EnumDisplay.Label(specialty) : "Sin indicar")</dd>
+            <dt class="col-sm-4">Lugar</dt>
+            <dd class="col-sm-8">@(appointment.Place ?? "Sin indicar")</dd>
+            <dt class="col-sm-4">Transporte</dt>
+            <dd class="col-sm-8">@ExternalAppointmentDisplay.Transport(appointment)</dd>
+            <dt class="col-sm-4">Acompañante</dt>
+            <dd class="col-sm-8">@ExternalAppointmentDisplay.Companion(appointment)</dd>
+            <dt class="col-sm-4">Qué preparar</dt>
+            <dd class="col-sm-8">@(preparation ?? "Nada indicado")</dd>
+            <dt class="col-sm-4">Qué ve la familia</dt>
+            <dd class="col-sm-8">@EnumDisplay.Label(appointment.FamilyVisibility)</dd>
+        </dl>
+        @if (isOpen)
+        {
+            var missing = ExternalAppointmentDisplay.Missing(appointment);
+            <p class="mt-3 mb-0">
+                @if (missing is null)
+                {
+                    <span class="badge text-bg-success">Cubierta</span>
+                }
+                else
+                {
+                    <span class="badge text-bg-danger">Falta algo</span> <span>@missing</span>
+                }
+            </p>
+        }
+    </div>
+</section>
+
+@if (Model.CanManage && isOpen)
+{
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a asp-action="Editar" asp-route-id="@record.Id" class="btn btn-primary btn-lg">Cambiar la cita</a>
+        @if (record.Status == ExternalAppointmentStatus.Programada)
+        {
+            <form asp-action="Estado" method="post">
+                <input type="hidden" name="id" value="@record.Id" />
+                <input type="hidden" name="version" value="@record.Version" />
+                <button type="submit" name="estado" value="@ExternalAppointmentStatus.ConfirmadaHospital.ToCode()" class="btn btn-outline-primary btn-lg">Confirmada por el hospital</button>
+            </form>
+        }
+        @if (appointment.Date <= Model.Today)
+        {
+        <form asp-action="Estado" method="post">
+            <input type="hidden" name="id" value="@record.Id" />
+            <input type="hidden" name="version" value="@record.Version" />
+            <button type="submit" name="estado" value="@ExternalAppointmentStatus.Realizada.ToCode()" class="btn btn-outline-success btn-lg">Dar por realizada</button>
+        </form>
+        <form asp-action="Estado" method="post">
+            <input type="hidden" name="id" value="@record.Id" />
+            <input type="hidden" name="version" value="@record.Version" />
+            <button type="submit" name="estado" value="@ExternalAppointmentStatus.NoAcudida.ToCode()" class="btn btn-outline-warning btn-lg">No se acudió</button>
+        </form>
+        }
+        else
+        {
+            <p class="text-muted align-self-center mb-0">«Dar por realizada» y «No se acudió» se podrán marcar desde el día de la cita.</p>
+        }
+        <a asp-action="Cancelar" asp-route-id="@record.Id" class="btn btn-outline-danger btn-lg">Cancelar la cita</a>
+    </div>
+}
+else if (!isOpen)
+{
+    <p class="text-muted">La cita está cerrada y no se puede cambiar.</p>
+}
+else
+{
+    <p class="text-muted">Solo puedes ver esta cita. La cambian Administración y las Enfermerías con permiso.</p>
+}
+
+<p><a asp-action="Index" class="btn btn-link">Volver a la lista</a></p>

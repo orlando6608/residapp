@@ -7,7 +7,7 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record RegisterExternalAppointmentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita);
+public sealed record RegisterExternalAppointmentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita, Guid? OperacionId = null);
 
 public sealed record UpdateExternalAppointmentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointment Cita, ExternalAppointmentReasonCode? Motivo, string? LineaMotivo);
@@ -36,7 +36,7 @@ public sealed class ExternalAppointmentsApplicationService(
         {
             var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             RequireManage(canManage);
-            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), ct);
+            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), command.OperacionId, ct);
         });
 
     /// <summary>Devuelve la versión nueva. Cambiar la fecha o la hora es reprogramar y exige un motivo; el día nuevo no puede ser anterior a hoy. Cambiar otra cosa no lleva motivo.</summary>
@@ -46,7 +46,7 @@ public sealed class ExternalAppointmentsApplicationService(
             var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             RequireManage(canManage);
             var current = await repository.FindAsync(actor, command.CitaId, ct) ?? throw new DomainValidationException(ExternalAppointment.NotFoundCode);
-            var reschedules = current.Appointment.Date != command.Cita.Date || current.Appointment.Time != command.Cita.Time;
+            var reschedules = ExternalAppointmentRules.IsReschedule(current.Appointment, command.Cita);
             if (reschedules)
             {
                 command.Cita.RequireNotInPast(Today());
@@ -92,7 +92,8 @@ public sealed class ExternalAppointmentsApplicationService(
             return await repository.FindAsync(actor, appointmentId, ct) ?? throw new DomainValidationException(ExternalAppointment.NotFoundCode);
         });
 
-    public Task<ApplicationResult<ExternalAppointmentList>> ListAsync(Guid profileScopeId, CenterId centerId, DateOnly from, DateOnly to, CancellationToken ct = default) =>
+    public Task<ApplicationResult<ExternalAppointmentList>> ListAsync(
+        Guid profileScopeId, CenterId centerId, DateOnly from, DateOnly to, ResidentId? residentId = null, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
             if (to < from)
@@ -101,8 +102,50 @@ public sealed class ExternalAppointmentsApplicationService(
             }
 
             var (actor, canManage) = await ResolveAsync(profileScopeId, centerId, ct);
-            return new ExternalAppointmentList(await repository.ListAsync(actor, from, to, ct), canManage);
+            return new ExternalAppointmentList(await repository.ListAsync(actor, from, to, residentId, ct), canManage);
         });
+
+    /// <summary>Si el ámbito activo puede registrar y cambiar citas (Administración, o Enfermería con el permiso). Medicina y el resto de perfiles permitidos, no.</summary>
+    public Task<ApplicationResult<bool>> CanManageAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () => (await ResolveAsync(profileScopeId, centerId, ct)).CanManage);
+
+    /// <summary>Días de antelación del aviso de «falta transporte o acompañante» (diseño, valor 16) y desde cuántos se destaca más.</summary>
+    public const int WarningDays = 7;
+    public const int UrgentWarningDays = 2;
+
+    /// <summary>Hasta cuántos días atrás se buscan las citas «por cerrar».</summary>
+    public const int OverdueLookbackDays = 365;
+
+    /// <summary>Las citas «por cerrar» (decisión de Orlando, 2026-11-18): abiertas (programadas o confirmadas por el hospital) cuyo día ya pasó sin marcarse realizadas ni «no se acudió», de los
+    /// últimos <see cref="OverdueLookbackDays"/> días, por fecha. Cada perfil con acceso ve las de su ámbito; con residentId, solo las de ese residente. Se calcula al abrir, sin tabla.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ExternalAppointmentRecord>>> ListOverdueAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId? residentId = null, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<ExternalAppointmentRecord>>(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            var today = Today();
+            var past = await repository.ListAsync(actor, today.AddDays(-OverdueLookbackDays), today.AddDays(-1), residentId, ct);
+            return past.Where(a => ExternalAppointmentRules.IsOpen(a.Status)).ToList();
+        });
+
+    /// <summary>El aviso del inicio de Administración (diseño, valor 16): citas abiertas que empiezan dentro de <see cref="WarningDays"/> días con el transporte o el acompañante sin
+    /// confirmar, por fecha. Se calcula al abrir, sin tabla. Solo Administración; para el resto, acceso denegado.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ExternalAppointmentRecord>>> ListUncoveredAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<ExternalAppointmentRecord>>(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            if (actor.Profile != SystemProfile.Administracion)
+            {
+                throw new AccessDeniedException();
+            }
+
+            var today = Today();
+            var all = await repository.ListAsync(actor, today, today.AddDays(WarningDays), null, ct);
+            return all.Where(a => ExternalAppointmentRules.IsOpen(a.Status) && !a.Appointment.Covered).ToList();
+        });
+
+    /// <summary>Hoy en el centro (hora de Madrid), para que las pantallas ofrezcan el mismo día que el servicio exige.</summary>
+    public DateOnly TodayAtCenter() => Today();
 
     private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
 

@@ -120,14 +120,26 @@ public class ExternalAppointmentsTests
     [InlineData(ExternalAppointmentStatus.Programada, ExternalAppointmentStatus.ConfirmadaHospital, true)]
     [InlineData(ExternalAppointmentStatus.Programada, ExternalAppointmentStatus.Realizada, true)]
     [InlineData(ExternalAppointmentStatus.Programada, ExternalAppointmentStatus.NoAcudida, true)]
+    [InlineData(ExternalAppointmentStatus.ConfirmadaHospital, ExternalAppointmentStatus.Realizada, true)]
     [InlineData(ExternalAppointmentStatus.Programada, ExternalAppointmentStatus.Cancelada, true)]
-    [InlineData(ExternalAppointmentStatus.ConfirmadaHospital, ExternalAppointmentStatus.Programada, true)]
+    [InlineData(ExternalAppointmentStatus.ConfirmadaHospital, ExternalAppointmentStatus.Programada, false)]
     [InlineData(ExternalAppointmentStatus.Programada, ExternalAppointmentStatus.Programada, false)]
     [InlineData(ExternalAppointmentStatus.Realizada, ExternalAppointmentStatus.Programada, false)]
     [InlineData(ExternalAppointmentStatus.NoAcudida, ExternalAppointmentStatus.Realizada, false)]
     [InlineData(ExternalAppointmentStatus.Cancelada, ExternalAppointmentStatus.Programada, false)]
-    public void Transiciones_LaAbiertaPasaAOtroEstado_LaFinalNoCambia(ExternalAppointmentStatus from, ExternalAppointmentStatus to, bool allowed) =>
-        Assert.Equal(allowed, ExternalAppointmentRules.CanTransition(from, to));
+    public void Transiciones_LaAbiertaPasaAOtroEstado_LaFinalNoCambia_YConfirmadaNoVuelveAProgramada(ExternalAppointmentStatus from, ExternalAppointmentStatus to, bool allowed) =>
+        Assert.Equal(allowed, ExternalAppointmentRules.CanTransition(from, to, Today, Today));
+
+    [Theory]
+    [InlineData(ExternalAppointmentStatus.Realizada, -1, true)]
+    [InlineData(ExternalAppointmentStatus.Realizada, 0, true)]
+    [InlineData(ExternalAppointmentStatus.Realizada, 1, false)]
+    [InlineData(ExternalAppointmentStatus.NoAcudida, 0, true)]
+    [InlineData(ExternalAppointmentStatus.NoAcudida, 1, false)]
+    [InlineData(ExternalAppointmentStatus.ConfirmadaHospital, 5, true)]
+    [InlineData(ExternalAppointmentStatus.Cancelada, 5, true)]
+    public void RealizadaYNoAcudida_SoloDesdeElDiaDeLaCita_ElDeHoyCuenta(ExternalAppointmentStatus to, int daysFromToday, bool allowed) =>
+        Assert.Equal(allowed, ExternalAppointmentRules.CanTransition(ExternalAppointmentStatus.Programada, to, Today.AddDays(daysFromToday), Today));
 
     [Fact]
     public void ElMotivo_EsDeLaListaCerradaMasUnaLineaDe100()

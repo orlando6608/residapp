@@ -1,5 +1,6 @@
 @using ResidApp.Application.Ports
 @using ResidApp.Application.UseCases
+@using ResidApp.Domain.Appointments
 @using ResidApp.Web.Models
 @model AdministracionInicioViewModel
 @{
@@ -92,6 +93,46 @@ else
     <p class="text-body-secondary small">Ahora mismo no se pueden mostrar las cifras de lo que requiere atención. El resto del inicio funciona con normalidad.</p>
 }
 
+@* Citas externas con algo sin cubrir (script 0101, diseño valor 16): las que empiezan dentro de 7 días y aún no tienen transporte o acompañante confirmado; a 2 días o menos, más destacadas.
+   Solo residente, día y qué falta: nunca la especialidad ni el lugar. *@
+@if (Model.ExternalAppointmentsUncovered is { Count: > 0 } uncovered)
+{
+    <section class="mb-4" aria-labelledby="citas-externas-sin-cubrir">
+        <h2 class="h5 d-flex align-items-center gap-2" id="citas-externas-sin-cubrir"><partial name="_Icono" model='"citas"' />Citas externas con algo sin cubrir</h2>
+        <ul class="list-group mb-2">
+            @foreach (var item in uncovered)
+            {
+                var urgent = item.Appointment.Date <= Model.ExternalAppointmentsToday.AddDays(ExternalAppointmentsApplicationService.UrgentWarningDays);
+                <li class="list-group-item @(urgent ? "border-start border-4 border-danger" : "")">
+                    <a asp-controller="CitasExternas" asp-action="Ver" asp-route-id="@item.Id">@item.ResidentName</a>:
+                    @ExternalAppointmentDisplay.Date(item.Appointment.Date), @ExternalAppointmentDisplay.Time(item.Appointment), @ExternalAppointmentDisplay.Missing(item.Appointment)
+                    @if (urgent)
+                    {
+                        <span class="badge text-bg-danger ms-1">En 2 días o menos</span>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@* Citas externas por cerrar (decisión de Orlando, 2026-11-18): abiertas cuyo día ya pasó sin marcarse realizadas ni «no se acudió». Solo residente y día. *@
+@if (Model.ExternalAppointmentsOverdue is { Count: > 0 } overdueExternal)
+{
+    <section class="mb-4" aria-labelledby="citas-externas-por-cerrar">
+        <h2 class="h5 d-flex align-items-center gap-2" id="citas-externas-por-cerrar"><partial name="_Icono" model='"citas"' />Citas externas por cerrar</h2>
+        <p class="mb-2">El día de estas citas ya pasó y siguen abiertas: marca si se realizó, si no se acudió, o cancélalas.</p>
+        <ul class="list-group mb-2">
+            @foreach (var late in overdueExternal)
+            {
+                <li class="list-group-item">
+                    <a asp-controller="CitasExternas" asp-action="Ver" asp-route-id="@late.Id">@late.ResidentName</a>: @ExternalAppointmentDisplay.Date(late.Appointment.Date)
+                </li>
+            }
+        </ul>
+    </section>
+}
+
 <div class="row g-3">
     <div class="col-12 col-md-6">
         <a asp-action="Residentes" class="card text-decoration-none h-100">
@@ -151,6 +192,14 @@ else
             <div class="card-body">
                 <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas con la familia</h2>
                 <p class="card-text mb-0">El servicio de citas del centro, sus franjas y bloqueos, y la agenda de citas reservadas.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <a asp-controller="CitasExternas" asp-action="Index" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas externas</h2>
+                <p class="card-text mb-0">Las pruebas, consultas y tratamientos de los residentes fuera del centro: registrarlas, cambiarlas y ver cuáles les falta transporte o acompañante.</p>
             </div>
         </a>
     </div>

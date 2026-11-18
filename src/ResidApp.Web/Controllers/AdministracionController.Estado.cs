@@ -79,7 +79,8 @@ public sealed partial class AdministracionController
                     + (outcome.EventsClosed > 0 ? $" Se {(outcome.EventsClosed == 1 ? "cerró 1 episodio abierto" : $"cerraron {outcome.EventsClosed} episodios abiertos")} por fallecimiento." : string.Empty)
                     + (outcome.AppointmentsCancelled > 0 ? $" Se {(outcome.AppointmentsCancelled == 1 ? "canceló 1 cita futura" : $"cancelaron {outcome.AppointmentsCancelled} citas futuras")}." : string.Empty)
                     + (outcome.AppointmentRequestsClosed > 0 ? $" Se {(outcome.AppointmentRequestsClosed == 1 ? "cerró 1 solicitud de cita abierta" : $"cerraron {outcome.AppointmentRequestsClosed} solicitudes de cita abiertas")}." : string.Empty)
-                    + (outcome.AppointmentsCancelled + outcome.AppointmentRequestsClosed > 0 ? " La familia no recibe aviso: avísala tú." : string.Empty);
+                    + (outcome.ExternalAppointmentsCancelled > 0 ? $" Se {(outcome.ExternalAppointmentsCancelled == 1 ? "canceló 1 cita externa" : $"cancelaron {outcome.ExternalAppointmentsCancelled} citas externas")}." : string.Empty)
+                    + (outcome.AppointmentsCancelled + outcome.AppointmentRequestsClosed + outcome.ExternalAppointmentsCancelled > 0 ? " La familia no recibe aviso: avísala tú." : string.Empty);
                 return RedirectToAction(nameof(Bajas));
             }
 

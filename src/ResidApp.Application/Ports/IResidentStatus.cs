@@ -15,8 +15,8 @@ public sealed record ResidentSuspension(Guid Id, DateTimeOffset Since, string? N
 /// y solicitudes de cita abiertas cerradas, más las citas externas abiertas de hoy en adelante canceladas (script 0101).</summary>
 public sealed record DischargeOutcome(int EventsClosed, int AppointmentsCancelled, int AppointmentRequestsClosed, int ExternalAppointmentsCancelled = 0);
 
-/// <summary>Las citas futuras y las solicitudes de cita abiertas del residente: lo que una baja cancelaría y cerraría ahora mismo.</summary>
-public sealed record ResidentAppointmentLoad(int FutureAppointments, int OpenRequests);
+/// <summary>Las citas futuras, las solicitudes de cita abiertas y las citas externas abiertas de hoy en adelante del residente: lo que una baja cancelaría y cerraría ahora mismo.</summary>
+public sealed record ResidentAppointmentLoad(int FutureAppointments, int OpenRequests, int ExternalAppointments = 0);
 
 public sealed record DischargeResidentInput(
     AdministrativeResidentTarget Target, Guid OperationId, ResidentDischargeReason Reason, string? ReasonText);

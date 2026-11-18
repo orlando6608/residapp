@@ -1,0 +1,145 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentListViewModel
+@* Citas externas de los residentes, PR 2 (script 0101): lista «Próximas» para Administración, Enfermería y Medicina. Cada perfil ve las de su ámbito; solo registra quien puede (Administración, o
+   Enfermería con permiso). Sin especialidad ni lugar en los avisos; aquí sí, porque es personal clínico y administrativo del centro. *@
+@{
+    ViewData["Title"] = "Citas externas";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Citas externas</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas externas@(Model.ResidentName is null ? "" : " de " + Model.ResidentName)</h1>
+<p class="text-muted">Pruebas, consultas y tratamientos de los residentes fuera del centro. Es una agenda y un recordatorio: no organiza turnos ni rutas.</p>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+@if (Model.CanManage)
+{
+    <p><a asp-action="Nueva" asp-route-residenteId="@Model.ResidentId" class="btn btn-primary btn-lg">Registrar una cita externa</a></p>
+}
+else if (Model.Profile == SystemProfile.Enfermeria)
+{
+    <p class="text-muted">Para registrar o cambiar citas hace falta el permiso «Registrar y cambiar las citas externas de los residentes»: pídeselo a Administración.</p>
+}
+else
+{
+    <p class="text-muted">Aquí solo puedes ver las citas. Las registra Administración.</p>
+}
+
+@if (Model.Overdue.Count > 0)
+{
+    @* Por cerrar (decisión de Orlando, 2026-11-18): citas abiertas cuyo día ya pasó sin marcarse realizadas ni «no se acudió». Salen siempre, con cualquier filtro de fechas. *@
+    <section class="alert alert-warning" aria-labelledby="por-cerrar">
+        <h2 class="h5" id="por-cerrar">Citas externas por cerrar</h2>
+        <p class="mb-2">El día de estas citas ya pasó y siguen abiertas.@(Model.CanManage ? " Ábrelas y marca si se realizó, si no se acudió, o cancélalas." : " Las cierran Administración y las Enfermerías con permiso.")</p>
+        <ul class="mb-0">
+            @foreach (var late in Model.Overdue)
+            {
+                <li>
+                    <a asp-action="Ver" asp-route-id="@late.Id">@late.ResidentName</a>:
+                    @ExternalAppointmentDisplay.Date(late.Appointment.Date), @ExternalAppointmentDisplay.Time(late.Appointment)
+                    <span class="badge text-bg-warning">Por cerrar</span>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+<form method="get" class="row g-2 align-items-end mb-3" aria-label="Filtrar por fechas">
+    @if (Model.ResidentId is { } residentId)
+    {
+        <input type="hidden" name="residenteId" value="@residentId" />
+    }
+    <div class="col-6 col-md-3">
+        <label class="form-label" for="desde">Desde</label>
+        <input class="form-control" type="date" id="desde" name="desde" value="@Model.From.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-6 col-md-3">
+        <label class="form-label" for="hasta">Hasta</label>
+        <input class="form-control" type="date" id="hasta" name="hasta" value="@Model.To.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-12 col-md-auto">
+        <button type="submit" class="btn btn-outline-primary">Ver esas fechas</button>
+        @if (Model.ResidentId is not null)
+        {
+            <a asp-action="Index" class="btn btn-link">Ver todos los residentes</a>
+        }
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <p class="alert alert-info" role="status">No hay citas externas entre el @ExternalAppointmentDisplay.Date(Model.From) y el @ExternalAppointmentDisplay.Date(Model.To).</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Citas externas entre el @ExternalAppointmentDisplay.Date(Model.From) y el @ExternalAppointmentDisplay.Date(Model.To)</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Día</th>
+                    <th scope="col">Hora</th>
+                    <th scope="col">Residente</th>
+                    <th scope="col">Cita</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Transporte y acompañante</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    var appointment = item.Appointment;
+                    var missing = ExternalAppointmentDisplay.Missing(appointment);
+                    <tr class="@(ExternalAppointmentRules.IsOpen(item.Status) ? "" : "text-muted")">
+                        <td>@ExternalAppointmentDisplay.Date(appointment.Date)</td>
+                        <td>@ExternalAppointmentDisplay.Time(appointment)</td>
+                        <td>
+                            <a asp-action="Ver" asp-route-id="@item.Id">@item.ResidentName</a>
+                            @if (item.ResidentSuspended)
+                            {
+                                <span class="badge text-bg-warning">Residente suspendido</span>
+                            }
+                        </td>
+                        <td>
+                            @EnumDisplay.Label(appointment.Type)@(appointment.Specialty is { } specialty ? " · " + EnumDisplay.Label(specialty) : "")
+                            @if (appointment.Place is not null)
+                            {
+                                <br /><span class="small text-muted">@appointment.Place</span>
+                            }
+                        </td>
+                        <td><span class="badge @ExternalAppointmentDisplay.StatusBadge(item.Status)">@EnumDisplay.Label(item.Status)</span></td>
+                        <td>
+                            @if (!ExternalAppointmentRules.IsOpen(item.Status))
+                            {
+                                <span>—</span>
+                            }
+                            else if (missing is null)
+                            {
+                                <span class="badge text-bg-success">Cubierta</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-danger">Falta algo</span> <span class="small">@missing</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -28,7 +28,8 @@ public class CitasExternasTests
         return new(scopes, new FixedExternalSessionIdentityProvider(profile.ExternalSubject), new SqlExternalAppointmentRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
     }
 
-    private static DateOnly InDays(int days) => DateOnly.FromDateTime(DateTime.UtcNow).AddDays(days);
+    // El día del centro (hora de Madrid), el mismo que usa el servicio: con la fecha UTC la prueba fallaba unas horas cada noche.
+    private static DateOnly InDays(int days) => ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(days);
 
     private static ExternalAppointment Cita(
         int days = 5, TimeOnly? time = null, bool withoutTime = false, ExternalAppointmentSpecialty? specialty = ExternalAppointmentSpecialty.Cardiologia, string? place = "Hospital Ficticio Norte",
@@ -302,6 +303,31 @@ public class CitasExternasTests
     }
 
     [Fact]
+    public async Task PonerLaHoraPorPrimeraVez_NoEsReprogramar_PeroCambiarUnaHoraPuestaOQuitarlaSi()
+    {
+        // Decisión de Orlando (2026-11-18): de «Por confirmar» a una hora solo completa la ficha (sin motivo, acción MODIFICADA); cambiar una hora ya puesta, o volver a «por confirmar», reprograma.
+        var scene = await SceneAsync("Residente Cita Externa Hora");
+        var id = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(withoutTime: true));
+
+        var firstTime = await UpdateAsync(scene.Admin, id, 1, Cita(time: new TimeOnly(11, 0)));
+        Assert.True(firstTime.Ok, firstTime.Error?.Message);
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.citas_externas_cambios WHERE cita_id = @id AND numero = 2 AND accion_codigo = 'MODIFICADA' AND hora_anterior IS NULL AND hora_nueva = '11:00' AND motivo_codigo IS NULL", new { id }));
+        Assert.Equal(1, await AuditAsync(id, "EXT_APPOINTMENT_UPDATE"));
+        Assert.Equal(0, await AuditAsync(id, "EXT_APPOINTMENT_RESCHEDULE"));
+
+        var changedHourNoReason = await UpdateAsync(scene.Admin, id, 2, Cita(time: new TimeOnly(12, 0)));
+        var cleared = await UpdateAsync(scene.Admin, id, 2, Cita(withoutTime: true));
+        Assert.Equal(ApplicationFailureCode.InvalidInput, changedHourNoReason.Error?.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, cleared.Error?.Code);
+
+        var changedHour = await UpdateAsync(scene.Admin, id, 2, Cita(time: new TimeOnly(12, 0)), ExternalAppointmentReasonCode.CambioDelHospital);
+        Assert.True(changedHour.Ok, changedHour.Error?.Message);
+        Assert.Equal(1, await CountAsync(
+            "SELECT COUNT(*) FROM dbo.citas_externas_cambios WHERE cita_id = @id AND numero = 3 AND accion_codigo = 'REPROGRAMADA' AND hora_anterior = '11:00' AND hora_nueva = '12:00'", new { id }));
+    }
+
+    [Fact]
     public async Task DosPersonasEditanALaVez_LaSegundaRecibeElConflictoYNoPisa()
     {
         var scene = await SceneAsync("Residente Cita Externa Concurrencia");
@@ -328,7 +354,7 @@ public class CitasExternasTests
     public async Task Estados_LaAbiertaPasaAConfirmadaYRealizada_YUnaCerradaYaNoCambia()
     {
         var scene = await SceneAsync("Residente Cita Externa Estados");
-        var id = await RegisterAsync(scene.Nurse, scene.ResidentId);
+        var id = await RegisterAsync(scene.Nurse, scene.ResidentId, Cita(0));
 
         var cancelViaStatus = await StatusAsync(scene.Nurse, id, 1, ExternalAppointmentStatus.Cancelada);
         var same = await StatusAsync(scene.Nurse, id, 1, ExternalAppointmentStatus.Programada);
@@ -347,8 +373,26 @@ public class CitasExternasTests
 
         Assert.Equal(ApplicationFailureCode.Conflict, (await StatusAsync(scene.Admin, id, 3, ExternalAppointmentStatus.NoAcudida)).Error?.Code);
         Assert.Equal(ApplicationFailureCode.Conflict, (await CancelAsync(scene.Admin, id, 3)).Error?.Code);
-        Assert.Equal(ApplicationFailureCode.Conflict, (await UpdateAsync(scene.Admin, id, 3, Cita(place: "Otro"))).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.Conflict, (await UpdateAsync(scene.Admin, id, 3, Cita(0, place: "Otro"))).Error?.Code);
         Assert.Equal(3, await ChangesAsync(id));
+    }
+
+    [Fact]
+    public async Task Estados_NoSeCierraUnaCitaFutura_YConfirmadaNoVuelveAProgramada()
+    {
+        // Decisión de Orlando (2026-11-18): «Realizada» y «No se acudió» solo desde el día de la cita; una cita confirmada por el hospital no vuelve a programada.
+        var scene = await SceneAsync("Residente Cita Externa Estados Futuros");
+        var future = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(3));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await StatusAsync(scene.Admin, future, 1, ExternalAppointmentStatus.Realizada)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await StatusAsync(scene.Admin, future, 1, ExternalAppointmentStatus.NoAcudida)).Error?.Code);
+        Assert.True((await StatusAsync(scene.Admin, future, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await StatusAsync(scene.Admin, future, 2, ExternalAppointmentStatus.Programada)).Error?.Code);
+        Assert.Equal(2, await ChangesAsync(future));
+        Assert.True((await CancelAsync(scene.Admin, future, 2)).Ok);
+
+        var today = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
+        Assert.True((await StatusAsync(scene.Admin, today, 1, ExternalAppointmentStatus.Realizada)).Ok);
     }
 
     [Fact]
@@ -498,7 +542,7 @@ public class CitasExternasTests
         var future = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(5));
         var confirmed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(9));
         var today = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
-        var alreadyDone = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(7));
+        var alreadyDone = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
         var otherResident = await RegisterAsync(scene.Admin, other, Cita(5));
         Assert.True((await StatusAsync(scene.Admin, confirmed, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
         Assert.True((await StatusAsync(scene.Admin, alreadyDone, 1, ExternalAppointmentStatus.NoAcudida)).Ok);
@@ -581,6 +625,161 @@ public class CitasExternasTests
             Assert.Contains("PROFILE_PERMISSION_NOT_ALLOWED", failure.Message);
         }
         Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.permisos_perfil WHERE ambito_perfil_id = @scope AND permiso_codigo = 'EXTERNAL_APPOINTMENT_MANAGE'", new { scope = scene.Nurse.ProfileScopeId }));
+    }
+
+    [Fact]
+    public async Task UnTrasladoDeUnidad_MueveLaVisibilidadDeLaCita_SinTocarLaCita()
+    {
+        // PR 2: la cita no guarda unidad, así que al trasladar al residente la cita deja de verla quien solo tiene la unidad de origen y pasa a verla quien tiene la de destino;
+        // Administración (todo el centro) la ve siempre. Comprobado a la vez que se rechaza el cambio de quien ya no la ve.
+        var scene = await SceneAsync("Residente Cita Traslado");
+        var id = await RegisterAsync(scene.Admin, scene.ResidentId);
+        var destination = await AdministracionResidentesTests.AddUnitAsync(scene.Admin.CenterId);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @ProfileScopeId, @CenterId, @UnitId, SYSUTCDATETIME(), @AccountId)
+                """, new { scene.Admin.ProfileScopeId, CenterId = scene.Admin.CenterId.Value, UnitId = destination.Value, AccountId = scene.Admin.AccountId.Value });
+        }
+        var nurseDestination = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, scene.Admin.CenterId, destination, [ProfilePermissions.ExternalAppointmentManage]);
+        Assert.Single((await ListAsync(scene.Nurse)).Value!.Appointments);
+        Assert.Single((await ListAsync(scene.Doctor)).Value!.Appointments);
+        Assert.Empty((await ListAsync(nurseDestination)).Value!.Appointments);
+
+        var transfer = new ResidentTransferApplicationService(
+            new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedExternalSessionIdentityProvider(scene.Admin.ExternalSubject),
+            new SqlResidentTransferRepository(TestDatabase.ConnectionFactory));
+        Assert.True((await transfer.TransferAsync(new TransferResidentCommand(
+            scene.Admin.ProfileScopeId, scene.Admin.CenterId, scene.ResidentId, scene.Admin.UnitId, destination, null, null, Guid.NewGuid()))).Ok);
+
+        Assert.Empty((await ListAsync(scene.Nurse)).Value!.Appointments);
+        Assert.Empty((await ListAsync(scene.Doctor)).Value!.Appointments);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Nurse).FindAsync(scene.Nurse.ProfileScopeId, scene.Nurse.CenterId, id)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await UpdateAsync(scene.Nurse, id, 1, Cita(days: 5, place: "Otro hospital"))).Error?.Code);
+        var atDestination = (await ListAsync(nurseDestination)).Value!.Appointments;
+        Assert.Equal(id, Assert.Single(atDestination).Id);
+        var byAdmin = (await Service(scene.Admin).FindAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId, id)).Value!;
+        Assert.Equal(destination, byAdmin.UnitId);
+        Assert.Equal(1, byAdmin.Version);
+    }
+
+    [Fact]
+    public async Task ElAvisoDeCitasSinCubrir_SoloAdministracion_SoloAbiertasDeLosProximosSieteDias_ConAlgoPendiente()
+    {
+        var scene = await SceneAsync("Residente Cita Aviso");
+        var covered = Cita(days: 3, transport: ExternalTransportMode.Familia, transportState: ExternalArrangementState.Confirmado,
+            companion: ExternalCompanionMode.NoNecesita, companionState: ExternalArrangementState.Confirmado);
+        var urgent = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 1));
+        var soon = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 5, transport: ExternalTransportMode.Centro, transportState: ExternalArrangementState.Confirmado));
+        await RegisterAsync(scene.Admin, scene.ResidentId, covered);
+        await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 20));
+        var cancelled = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 2));
+        Assert.True((await CancelAsync(scene.Admin, cancelled, 1)).Ok);
+        var done = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 0));
+        Assert.True((await StatusAsync(scene.Admin, done, 1, ExternalAppointmentStatus.Realizada)).Ok);
+
+        var uncovered = await Service(scene.Admin).ListUncoveredAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId);
+
+        Assert.True(uncovered.Ok, uncovered.Error?.Message);
+        Assert.Equal([urgent, soon], uncovered.Value!.Select(a => a.Id).ToArray());
+        Assert.All(uncovered.Value!, a => Assert.False(a.Appointment.Covered));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Nurse).ListUncoveredAsync(scene.Nurse.ProfileScopeId, scene.Nurse.CenterId)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Doctor).ListUncoveredAsync(scene.Doctor.ProfileScopeId, scene.Doctor.CenterId)).Error?.Code);
+        var otherCenterAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        Assert.Empty((await Service(otherCenterAdmin).ListUncoveredAsync(otherCenterAdmin.ProfileScopeId, otherCenterAdmin.CenterId)).Value!);
+    }
+
+    [Fact]
+    public async Task RegistrarDosVecesConLaMismaOperacion_CreaUnaSolaCita_SinRepetirHistorialNiAuditoria()
+    {
+        // Decisión de Orlando (2026-11-18, script 0102): un doble clic o un reenvío del formulario no crea otra cita.
+        var scene = await SceneAsync("Residente Cita Doble Clic");
+        var other = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Doble Clic Otro");
+        var operation = Guid.NewGuid();
+        Task<ApplicationResult<Guid>> Register(SeededProfile by, ResidentId resident, Guid? op) =>
+            Service(by).RegisterAsync(new RegisterExternalAppointmentCommand(by.ProfileScopeId, by.CenterId, resident, Cita(), op));
+
+        var first = await Register(scene.Admin, scene.ResidentId, operation);
+        var second = await Register(scene.Admin, scene.ResidentId, operation);
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.Equal(first.Value, second.Value);
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.citas_externas WHERE residente_id = @r", new { r = scene.ResidentId.Value }));
+        Assert.Equal(1, await ChangesAsync(first.Value));
+        Assert.Equal(1, await AuditAsync(first.Value, "EXT_APPOINTMENT_CREATE"));
+
+        // El mismo identificador para otro residente: error genérico, y no se crea nada.
+        var forged = await Register(scene.Admin, other, operation);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, forged.Error?.Code);
+        Assert.Equal(0, await CountAsync("SELECT COUNT(*) FROM dbo.citas_externas WHERE residente_id = @r", new { r = other.Value }));
+
+        // Sin identificador (código sin formulario) cada registro es una cita nueva; dos envíos a la vez con el mismo identificador, una sola.
+        Assert.NotEqual((await Register(scene.Admin, scene.ResidentId, null)).Value, (await Register(scene.Admin, scene.ResidentId, null)).Value);
+        var racing = Guid.NewGuid();
+        var both = await Task.WhenAll(Register(scene.Nurse, scene.ResidentId, racing), Register(scene.Nurse, scene.ResidentId, racing));
+        Assert.All(both, r => Assert.True(r.Ok, r.Error?.Message));
+        Assert.Equal(both[0].Value, both[1].Value);
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.citas_externas WHERE operacion_id = @racing", new { racing }));
+
+        // El identificador no se puede cambiar después.
+        var failure = await SqlFailureAsync("UPDATE dbo.citas_externas SET operacion_id = NEWID(), version = version + 1 WHERE id = @id", new { id = first.Value });
+        Assert.Contains("EXTERNAL_APPOINTMENT_IDENTITY_IMMUTABLE", failure.Message);
+    }
+
+    [Fact]
+    public async Task LasCitasPorCerrar_SonLasAbiertasConElDiaPasado_DelAmbitoDeCadaPerfil_YElFiltroPorResidente()
+    {
+        // Decisión de Orlando (2026-11-18): una cita abierta cuyo día pasó sin marcarse realizada ni «no se acudió» sale como «por cerrar» (últimos 365 días); se puede cerrar después de su día.
+        var scene = await SceneAsync("Residente Cita Por Cerrar");
+        var other = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Por Cerrar Otro");
+        var late = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        var lateConfirmed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        Assert.True((await StatusAsync(scene.Admin, lateConfirmed, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
+        var closed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        var tooOld = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        var future = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(10));
+        var lateOther = await RegisterAsync(scene.Admin, other, Cita(1));
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            foreach (var (id, days) in new[] { (late, -3), (lateConfirmed, -1), (closed, -3), (tooOld, -400), (lateOther, -2) })
+            {
+                await connection.ExecuteAsync("UPDATE dbo.citas_externas SET fecha = @date, version = version + 1 WHERE id = @id", new { id, date = InDays(days).ToDateTime(TimeOnly.MinValue) });
+            }
+        }
+
+        Assert.True((await StatusAsync(scene.Admin, closed, 2, ExternalAppointmentStatus.Realizada)).Ok);
+        foreach (var by in new[] { scene.Admin, scene.Nurse, scene.Doctor })
+        {
+            var overdue = await Service(by).ListOverdueAsync(by.ProfileScopeId, by.CenterId);
+            Assert.True(overdue.Ok, overdue.Error?.Message);
+            Assert.Equal(new[] { late, lateOther, lateConfirmed }.OrderBy(i => i).ToArray(), overdue.Value!.Select(a => a.Id).OrderBy(i => i).ToArray());
+            Assert.DoesNotContain(overdue.Value!, a => a.Id == closed || a.Id == tooOld || a.Id == future);
+        }
+        var filtered = await Service(scene.Admin).ListOverdueAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId, scene.ResidentId);
+        Assert.Equal(new[] { late, lateConfirmed }.OrderBy(i => i).ToArray(), filtered.Value!.Select(a => a.Id).OrderBy(i => i).ToArray());
+        var otherCenterAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        Assert.Empty((await Service(otherCenterAdmin).ListOverdueAsync(otherCenterAdmin.ProfileScopeId, otherCenterAdmin.CenterId)).Value!);
+
+        // Después de su día todavía se puede cerrar.
+        var closing = await StatusAsync(scene.Admin, late, 2, ExternalAppointmentStatus.NoAcudida);
+        Assert.True(closing.Ok, closing.Error?.Message);
+        Assert.DoesNotContain((await Service(scene.Admin).ListOverdueAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId)).Value!, a => a.Id == late);
+    }
+
+    [Fact]
+    public async Task ElListadoPorResidente_SoloTraeLasCitasDeEsePersona()
+    {
+        var scene = await SceneAsync("Residente Cita Filtro Uno");
+        var other = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Filtro Dos");
+        var mine = await RegisterAsync(scene.Admin, scene.ResidentId);
+        await RegisterAsync(scene.Admin, other);
+
+        var filtered = await Service(scene.Admin).ListAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId, InDays(-1), InDays(30), scene.ResidentId);
+        var all = await ListAsync(scene.Admin);
+
+        Assert.Equal(mine, Assert.Single(filtered.Value!.Appointments).Id);
+        Assert.Equal(2, all.Value!.Appointments.Count);
     }
 
     [Fact]

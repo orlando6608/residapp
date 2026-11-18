@@ -23,6 +23,15 @@
     en un hospital durante un tiempo, usa <strong>Suspender</strong> en su ficha: no es una baja.
 </p>
 
+@if (Model.Load.ExternalAppointments > 0)
+{
+    <div class="alert alert-warning" role="status" id="aviso-citas-externas">
+        <strong>Al dar de baja se cancelarán solas las citas externas abiertas de @resident.DisplayName:</strong>
+        @Model.Load.ExternalAppointments @(Model.Load.ExternalAppointments == 1 ? "cita externa" : "citas externas") de hoy en adelante.
+        Quedan en el historial como «Sistema, a causa de la baja». <strong>La familia no recibe ningún aviso: avísala tú.</strong>
+        Si más tarde reactivas al residente, esas citas no se restauran: habrá que registrarlas de nuevo.
+    </div>
+}
 @if (Model.Load.FutureAppointments > 0 || Model.Load.OpenRequests > 0)
 {
     <div class="alert alert-warning" role="status" id="aviso-citas">
@@ -33,7 +42,7 @@
         Si más tarde reactivas al residente, esas citas no se restauran: la familia tendrá que pedirlas de nuevo.
     </div>
 }
-else
+else if (Model.Load.ExternalAppointments == 0)
 {
     <p class="text-muted" id="aviso-citas">No tiene citas futuras ni solicitudes de cita abiertas: la baja no cancela ni cierra nada de la agenda.</p>
 }
