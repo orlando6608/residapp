@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Errors;
 using ResidApp.Application.UseCases;
@@ -12,8 +13,10 @@ namespace ResidApp.Web.Controllers;
 /// Citas externas de los residentes, pantallas del personal (script 0101; docs/producto/citas-externas-diseno.md, PR 2). Una sola ruta para Administración, Enfermería y
 /// Medicina: Administración registra y cambia siempre; Enfermería solo con el permiso EXTERNAL_APPOINTMENT_MANAGE; Medicina solo ve. Traduce a
 /// ExternalAppointmentsApplicationService; la autorización (ámbito, perfil, permiso y unidades) no vive aquí: la cookie solo orienta y cada caso de uso vuelve a comprobar. Los mensajes no
-/// repiten nunca lo escrito en la cita (lugar, qué preparar, motivos).
+/// repiten nunca lo escrito en la cita (lugar, qué preparar, motivos). [Authorize] repite a nivel de controlador lo que ya exige la política global (sesión iniciada) para que CodeQL lo vea;
+/// el control real (ámbito, perfil, permiso y unidad) está en el servicio y el repositorio.
 /// </summary>
+[Authorize]
 public sealed class CitasExternasController(
     ExternalAppointmentsApplicationService appointments, AdministracionApplicationService administration,
     EnfermeriaApplicationService nursing, MedicinaApplicationService medicine) : Controller
