@@ -1,0 +1,64 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentNoteVersionsViewModel
+@* Citas externas, PR 4 (script 0103): todas las versiones de la nota «al terminar». Solo Enfermería y Medicina. Cada vez que se abre esta pantalla queda un evento de auditoría sin contenido. *@
+@{
+    var record = Model.Record;
+    ViewData["Title"] = "Versiones de la nota";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        <li class="breadcrumb-item"><a asp-action="Ver" asp-route-id="@record.Id">@record.ResidentName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Versiones de la nota</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Versiones de la nota: @record.ResidentName</h1>
+<p class="text-muted">Cita del @ExternalAppointmentDisplay.Date(record.Appointment.Date). De la más reciente a la más antigua; la primera es la vigente salvo que esté retirada. Las versiones anteriores se conservan siempre.</p>
+
+@if (Model.Versions.Count == 0)
+{
+    <p class="alert alert-info" role="status">Esta cita no tiene nota.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Versiones de la nota al terminar</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Versión</th>
+                    <th scope="col">Cuándo y quién</th>
+                    <th scope="col">Qué cambia para el centro</th>
+                    <th scope="col">Línea</th>
+                    <th scope="col">Siguiente cita prevista</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var version in Model.Versions)
+                {
+                    <tr class="@(version.Retracted ? "text-muted" : "")">
+                        <td>@version.Number</td>
+                        <td>@ExternalNoteDisplay.When(version.At)<br /><span class="small text-muted">@version.AuthorName</span></td>
+                        @if (version.Retracted)
+                        {
+                            <td colspan="3"><span class="badge text-bg-secondary">Nota retirada</span> @(version.RetractionReason is { } reason ? EnumDisplay.Label(reason) : "")</td>
+                        }
+                        else
+                        {
+                            <td>@EnumDisplay.Label(version.Result!.Value)</td>
+                            <td>@(version.Text ?? "—")</td>
+                            <td>@(version.NextDate is not null || version.NextMonths is not null ? ExternalNoteDisplay.Next(version, record.Appointment.Date) : "—")</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<p><a asp-action="Ver" asp-route-id="@record.Id" class="btn btn-link">Volver a la cita</a></p>

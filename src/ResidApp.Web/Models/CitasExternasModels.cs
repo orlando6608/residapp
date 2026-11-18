@@ -18,6 +18,8 @@ public sealed class ExternalAppointmentFormModel
     public Guid CitaId { get; set; }
     /// <summary>Identificador de operación del formulario de registrar (script 0102): un reenvío del mismo formulario no crea otra cita.</summary>
     public Guid OperacionId { get; set; }
+    /// <summary>De qué cita viene esta, si se registra con «Registrar la siguiente cita» (script 0103). Solo viaja el identificador: los valores los lee el servidor.</summary>
+    public Guid? CitaOrigenId { get; set; }
     public int VersionVista { get; set; }
     public DateOnly? Fecha { get; set; }
     public TimeOnly? Hora { get; set; }
@@ -111,9 +113,11 @@ public sealed record ExternalAppointmentListViewModel(
 
 /// <summary>El formulario de registrar o cambiar. Residents solo se rellena al registrar desde la lista (sin residente elegido); ResidentName, al registrar con residente o al cambiar.</summary>
 public sealed record ExternalAppointmentFormViewModel(
-    bool IsNew, ExternalAppointmentFormModel Form, string? ResidentName, IReadOnlyList<ExternalAppointmentResidentOption>? Residents, string? Error);
+    bool IsNew, ExternalAppointmentFormModel Form, string? ResidentName, IReadOnlyList<ExternalAppointmentResidentOption>? Residents, string? Error, DateOnly? OriginDate = null);
 
-public sealed record ExternalAppointmentDetailViewModel(ExternalAppointmentRecord Record, bool CanManage, DateOnly Today);
+/// <summary>La ficha de una cita. FollowUp (la siguiente cita prevista y la ya registrada) y Note (la versión vigente de la nota «al terminar», solo Enfermería y Medicina) salen de consultas aparte: Administración no recibe la nota. Profile es quien mira.</summary>
+public sealed record ExternalAppointmentDetailViewModel(
+    ExternalAppointmentRecord Record, bool CanManage, DateOnly Today, SystemProfile Profile = SystemProfile.Administracion, ExternalAppointmentFollowUp? FollowUp = null, ExternalNoteVersion? Note = null);
 
 public sealed record ExternalAppointmentCancelViewModel(ExternalAppointmentRecord Record, ExternalAppointmentFormModel Form, string? Error);
 
@@ -237,4 +241,78 @@ public static class ExternalAppointmentCalendarDisplay
 
         return record.Appointment.TimeToConfirm ? ("Por confirmar", "warning") : ("Cubierta", "success");
     }
+}
+
+/// <summary>
+/// El formulario de la nota «al terminar» (script 0103). VersionVista es el número de la versión vigente que vio quien escribe (0 si no había); OperacionId evita la versión doble. La siguiente cita
+/// es una de tres cosas: ninguna, una fecha o «en N meses».
+/// </summary>
+public sealed class ExternalAppointmentNoteFormModel
+{
+    public Guid CitaId { get; set; }
+    public int VersionVista { get; set; }
+    public Guid OperacionId { get; set; }
+    public string? Resultado { get; set; }
+    public string? Texto { get; set; }
+    /// <summary>«ninguna», «fecha» o «meses».</summary>
+    public string? Siguiente { get; set; }
+    public DateOnly? SiguienteFecha { get; set; }
+    public int? SiguienteMeses { get; set; }
+    public string? MotivoRetirada { get; set; }
+
+    /// <summary>Convierte lo escrito en la nota, o lanza DomainValidationException si no es válido.</summary>
+    public ExternalAppointmentNote ToNote()
+    {
+        if (!EnumCode.TryParseCode<ExternalNoteResult>(Resultado ?? "", out var result))
+        {
+            throw new DomainValidationException(ExternalAppointment.InvalidCode);
+        }
+
+        return Siguiente switch
+        {
+            "fecha" when SiguienteFecha is { } date => new ExternalAppointmentNote(result, Texto, date, null),
+            "meses" when SiguienteMeses is { } months => new ExternalAppointmentNote(result, Texto, null, months),
+            null or "" or "ninguna" => new ExternalAppointmentNote(result, Texto, null, null),
+            _ => throw new DomainValidationException(ExternalAppointment.InvalidCode),
+        };
+    }
+
+    public ExternalNoteRetractionReason? RetractionReasonOrNull() =>
+        EnumCode.TryParseCode<ExternalNoteRetractionReason>(MotivoRetirada ?? "", out var reason) ? reason : null;
+
+    public static ExternalAppointmentNoteFormModel For(Guid appointmentId, ExternalNoteVersion? latest) => For(appointmentId, latest, latest is { Retracted: false } ? latest : null);
+
+    /// <summary>VersionVista es siempre la última versión (también si está retirada); los campos parten de la vigente, que no existe si la última es una retirada.</summary>
+    private static ExternalAppointmentNoteFormModel For(Guid appointmentId, ExternalNoteVersion? latest, ExternalNoteVersion? current) => new()
+    {
+        CitaId = appointmentId,
+        VersionVista = latest?.Number ?? 0,
+        OperacionId = Guid.NewGuid(),
+        Resultado = current?.Result?.ToCode(),
+        Texto = current?.Text,
+        Siguiente = current?.NextDate is not null ? "fecha" : current?.NextMonths is not null ? "meses" : "ninguna",
+        SiguienteFecha = current?.NextDate,
+        SiguienteMeses = current?.NextMonths,
+    };
+}
+
+/// <summary>El formulario de la nota. Current es la versión vigente (null si no hay); Error, el aviso si lo escrito no vale.</summary>
+public sealed record ExternalAppointmentNoteFormViewModel(ExternalAppointmentRecord Record, ExternalAppointmentNoteFormModel Form, ExternalNoteVersion? Current, string? Error);
+
+/// <summary>Las versiones de la nota, de la más reciente a la más antigua (solo Enfermería y Medicina).</summary>
+public sealed record ExternalAppointmentNoteVersionsViewModel(ExternalAppointmentRecord Record, IReadOnlyList<ExternalNoteVersion> Versions);
+
+/// <summary>Textos de la nota «al terminar» y de la siguiente cita.</summary>
+public static class ExternalNoteDisplay
+{
+    /// <summary>«el 12/03/2027» o «en 6 meses (hacia el 18/05/2027)», según lo anotado.</summary>
+    public static string Next(ExternalNextVisit visit, DateOnly appointmentDate) =>
+        visit.Date is { } date
+            ? "el " + ExternalAppointmentDisplay.Date(date)
+            : visit.Months is { } months ? $"en {months} {(months == 1 ? "mes" : "meses")} (hacia el {ExternalAppointmentDisplay.Date(appointmentDate.AddMonths(months))})" : "";
+
+    public static string Next(ExternalNoteVersion version, DateOnly appointmentDate) => Next(new ExternalNextVisit(version.NextDate, version.NextMonths), appointmentDate);
+
+    /// <summary>Fecha y hora de una versión, en la hora del servidor (la de Madrid).</summary>
+    public static string When(DateTimeOffset at) => at.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
 }

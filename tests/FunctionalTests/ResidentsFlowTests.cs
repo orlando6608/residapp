@@ -2291,6 +2291,150 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("/Acceso/Entrar", anonymousMonth.Headers.Location?.OriginalString ?? "");
     }
 
+    [Fact]
+    public async Task CitasExternas_NotaAlTerminar_LaEscribeEnfermeria_LaLeenEnfermeriaYMedicina_AdministracionSoloVeLaSiguienteCita_ConLaAppEntera()
+    {
+        // Citas externas, PR 4 (script 0103): tras una cita realizada, Enfermería (aunque no tenga el permiso de gestionar citas) anota qué cambia para el centro; la leen Enfermería y Medicina;
+        // Administración no la lee y solo ve la siguiente cita prevista, con el botón de registrarla (que rellena el formulario y guarda de cuál viene). Retirar no borra. Textos inventados.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Nota Funcional");
+        var nurse = await LoginAsync(await GrantNursingAsync(seed));
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow);
+
+        async Task<(string Html, string? Id)> PostAsync(HttpClient client, string path, string formPath, Dictionary<string, string> fields)
+        {
+            var page = await client.GetStringAsync(formPath);
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            var response = await client.PostAsync(path, new FormUrlEncodedContent(fields));
+            var query = response.RequestMessage!.RequestUri!.PathAndQuery;
+            return (WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()), Regex.Match(query, "([0-9a-f]{8}-[0-9a-f-]{27})").Groups[1].Value is { Length: > 0 } id ? id : null);
+        }
+
+        var nueva = $"/CitasExternas/Nueva?residenteId={residentId}";
+        var registered = await PostAsync(admin, "/CitasExternas/Nueva", nueva, new()
+        {
+            ["Form.ResidenteId"] = residentId, ["Form.Fecha"] = today.ToString("yyyy-MM-dd"), ["Form.Tipo"] = "CONSULTA", ["Form.Especialidad"] = "CARDIOLOGIA", ["Form.Lugar"] = "Hospital de Prueba",
+            ["Form.TransporteModo"] = "FAMILIA", ["Form.AcompananteModo"] = "FAMILIAR", ["Form.Visibilidad"] = "SIN_ESPECIALIDAD", ["Form.PrepAyuno"] = "true", ["Form.PrepSilla"] = "true",
+        });
+        var citaId = registered.Id!;
+        var ver = $"/CitasExternas/Ver?id={citaId}";
+        var openView = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
+        Assert.DoesNotContain("Anotar al terminar", openView); // Todavía abierta: nada de nota.
+        var done = await PostAsync(admin, "/CitasExternas/Estado", ver, new() { ["id"] = citaId, ["version"] = "1", ["estado"] = "REALIZADA" });
+        Assert.Contains("Estado de la cita guardado", done.Html);
+
+        var adminBefore = WebUtility.HtmlDecode(await admin.GetStringAsync(ver));
+        var nurseBefore = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
+        var anotar = $"/CitasExternas/Anotar?id={citaId}";
+        var noteForm = WebUtility.HtmlDecode(await nurse.GetStringAsync(anotar));
+        var adminGetAnotar = WebUtility.HtmlDecode(await admin.GetStringAsync(anotar));
+
+        Assert.Contains("Registrar la siguiente cita", adminBefore);
+        Assert.DoesNotContain("Al terminar", adminBefore);
+        Assert.DoesNotContain("Anotar al terminar", adminBefore);
+        Assert.Contains("Todavía no hay nota", nurseBefore);
+        Assert.Contains("Anotar al terminar", nurseBefore);
+        Assert.Contains("No escribas diagnósticos, resultados de pruebas, dosis ni nombres de personas", noteForm);
+        Assert.Contains("maxlength=\"150\"", noteForm);
+        Assert.DoesNotContain("<textarea", noteForm);
+        Assert.Contains("Administración verá este dato, y solo este", noteForm);
+        Assert.DoesNotContain("name=\"Form.Resultado\"", adminGetAnotar); // Administración no recibe el formulario de la nota.
+        Assert.Contains("La nota «al terminar» la escribe Enfermería", adminGetAnotar);
+
+        // Sin el resultado, la nota no vale; con él, se guarda con la siguiente cita en seis meses.
+        var withoutResult = await PostAsync(nurse, "/CitasExternas/Anotar", anotar, new() { ["Form.CitaId"] = citaId, ["Form.VersionVista"] = "0", ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Siguiente"] = "ninguna" });
+        Assert.Contains("Revisa la nota", withoutResult.Html);
+        var operation = Guid.NewGuid().ToString();
+        Dictionary<string, string> Note(string version, string result, string text, string next, string months = "", string day = "") => new()
+        {
+            ["Form.CitaId"] = citaId, ["Form.VersionVista"] = version, ["Form.OperacionId"] = operation, ["Form.Resultado"] = result, ["Form.Texto"] = text,
+            ["Form.Siguiente"] = next, ["Form.SiguienteMeses"] = months, ["Form.SiguienteFecha"] = day,
+        };
+        var saved = await PostAsync(nurse, "/CitasExternas/Anotar", anotar, Note("0", "PENDIENTE_INFORME", "Recoger el informe el viernes", "meses", "6"));
+        var resubmitted = await PostAsync(nurse, "/CitasExternas/Anotar", anotar, Note("0", "PENDIENTE_INFORME", "Recoger el informe el viernes", "meses", "6"));
+
+        Assert.Contains("Nota guardada", saved.Html);
+        Assert.Contains("Recoger el informe el viernes", saved.Html);
+        Assert.Contains("Pendiente de informe", saved.Html);
+        Assert.Contains("en 6 meses", saved.Html);
+        Assert.Contains("Anotada por", saved.Html);
+        Assert.Contains("Nota guardada", resubmitted.Html); // El reenvío del mismo formulario no crea otra versión.
+
+        var doctorView = WebUtility.HtmlDecode(await doctor.GetStringAsync(ver));
+        var adminView = WebUtility.HtmlDecode(await admin.GetStringAsync(ver));
+        var doctorAnotar = WebUtility.HtmlDecode(await doctor.GetStringAsync(anotar));
+        var adminVersions = WebUtility.HtmlDecode(await admin.GetStringAsync($"/CitasExternas/Versiones?id={citaId}"));
+        var nurseVersions = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/CitasExternas/Versiones?id={citaId}"));
+
+        Assert.Contains("Recoger el informe el viernes", doctorView);
+        Assert.DoesNotContain("Anotar al terminar", doctorView);
+        Assert.DoesNotContain("Cambiar la nota", doctorView);
+        Assert.DoesNotContain("name=\"Form.Resultado\"", doctorAnotar);
+        // Administración: ni el resultado, ni la línea, ni quién la escribió; solo la siguiente cita prevista.
+        Assert.Contains("Siguiente cita prevista", adminView);
+        Assert.Contains("en 6 meses", adminView);
+        Assert.DoesNotContain("Recoger el informe", adminView);
+        Assert.DoesNotContain("Pendiente de informe", adminView);
+        Assert.DoesNotContain("Anotada por", adminView);
+        Assert.DoesNotContain("Al terminar", adminView);
+        Assert.DoesNotContain("Recoger el informe", adminVersions);
+        Assert.DoesNotContain("<table", adminVersions);
+        Assert.Contains("Recoger el informe el viernes", nurseVersions);
+
+        // «Registrar la siguiente cita»: por POST, con el tipo, el lugar y la visibilidad de la de origen, y la fecha sugerida a seis meses; al confirmar guarda de cuál viene.
+        var next = await PostAsync(admin, "/CitasExternas/SiguienteCita", ver, new() { ["id"] = citaId });
+        Assert.Contains("Es la siguiente cita de la del", next.Html);
+        // Copia el tipo, la especialidad, el lugar y qué ve la familia; NO qué preparar, el transporte ni el acompañante (son de cada salida).
+        Assert.Contains("value=\"CONSULTA\" selected", next.Html);
+        Assert.Contains("value=\"CARDIOLOGIA\" selected", next.Html);
+        Assert.DoesNotMatch("name=\"Form.PrepAyuno\"[^>]*checked", next.Html);
+        Assert.DoesNotMatch("name=\"Form.PrepSilla\"[^>]*checked", next.Html);
+        Assert.DoesNotContain("value=\"FAMILIA\" selected", next.Html);
+        Assert.DoesNotContain("value=\"FAMILIAR\" selected", next.Html);
+        Assert.Contains("value=\"SIN_DETERMINAR\" selected", next.Html);
+        Assert.Contains($"name=\"Form.CitaOrigenId\" value=\"{citaId}\"", next.Html);
+        Assert.Contains("Hospital de Prueba", next.Html);
+        Assert.Contains(today.AddMonths(6).ToString("yyyy-MM-dd"), next.Html);
+        Assert.Matches("id=\"visibilidad-SIN_ESPECIALIDAD\"[^>]*checked", next.Html);
+        var nextDay = today.AddMonths(6).ToString("yyyy-MM-dd");
+        var created = await PostAsync(admin, "/CitasExternas/Nueva", nueva, new()
+        {
+            ["Form.ResidenteId"] = residentId, ["Form.Fecha"] = nextDay, ["Form.Tipo"] = "CONSULTA", ["Form.Especialidad"] = "CARDIOLOGIA", ["Form.Lugar"] = "Hospital de Prueba",
+            ["Form.TransporteModo"] = "SIN_DETERMINAR", ["Form.AcompananteModo"] = "SIN_DETERMINAR", ["Form.Visibilidad"] = "SIN_ESPECIALIDAD", ["Form.CitaOrigenId"] = citaId,
+        });
+        var adminAfter = WebUtility.HtmlDecode(await admin.GetStringAsync(ver));
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+
+        Assert.Contains("Cita externa registrada", created.Html);
+        Assert.Equal(Guid.Parse(citaId), await connection.ExecuteScalarAsync<Guid>("SELECT cita_origen_id FROM dbo.citas_externas WHERE id = @id", new { id = created.Id }));
+        Assert.Contains("Siguiente cita registrada", adminAfter);
+        Assert.DoesNotContain("Registrar la siguiente cita", adminAfter);
+
+        // Retirar no borra: la nota deja de ser la vigente y las versiones se conservan.
+        var retired = await PostAsync(nurse, "/CitasExternas/RetirarNota", anotar, new() { ["Form.CitaId"] = citaId, ["Form.VersionVista"] = "1", ["Form.MotivoRetirada"] = "ERROR_DE_REGISTRO" });
+        var nurseAfter = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
+        var versionsAfter = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/CitasExternas/Versiones?id={citaId}"));
+
+        Assert.Contains("Nota retirada", retired.Html);
+        Assert.Contains("Todavía no hay nota", nurseAfter);
+        Assert.Contains("Nota retirada", versionsAfter);
+        Assert.Contains("Recoger el informe el viernes", versionsAfter);
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas_notas WHERE cita_id = @id", new { id = citaId }));
+
+        // Tras retirar, la pantalla deja volver a anotar: la versión vista es la de la retirada (2), no 0, y se guarda como tercera versión.
+        var againForm = WebUtility.HtmlDecode(await nurse.GetStringAsync(anotar));
+        Assert.Contains("name=\"Form.VersionVista\" value=\"2\"", againForm);
+        Assert.DoesNotContain("id=\"retirar-titulo\"", againForm); // sin nota vigente no hay nada que retirar
+        var again = await PostAsync(nurse, "/CitasExternas/Anotar", anotar, new()
+        {
+            ["Form.CitaId"] = citaId, ["Form.VersionVista"] = "2", ["Form.OperacionId"] = Guid.NewGuid().ToString(), ["Form.Resultado"] = "SIN_CAMBIOS", ["Form.Siguiente"] = "ninguna",
+        });
+        Assert.Contains("Nota guardada", again.Html);
+        Assert.Equal(3, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas_notas WHERE cita_id = @id", new { id = citaId }));
+    }
+
     private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields, string action = "Alergias")
     {
         fields["__RequestVerificationToken"] = token;

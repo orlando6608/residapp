@@ -7,7 +7,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record RegisterExternalAppointmentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita, Guid? OperacionId = null);
+public sealed record RegisterExternalAppointmentCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita, Guid? OperacionId = null, Guid? CitaOrigenId = null);
 
 public sealed record UpdateExternalAppointmentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointment Cita, ExternalAppointmentReasonCode? Motivo, string? LineaMotivo);
@@ -16,6 +17,13 @@ public sealed record ChangeExternalAppointmentStatusCommand(Guid AmbitoPerfilId,
 
 public sealed record CancelExternalAppointmentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointmentReasonCode? Motivo, string? LineaMotivo);
+
+/// <summary>Anotar la nota «al terminar» (PR 4). VersionVista es el número de la versión vigente que vio quien escribe (0 si no había).</summary>
+public sealed record SaveExternalAppointmentNoteCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointmentNote Nota, Guid? OperacionId = null);
+
+public sealed record RetractExternalAppointmentNoteCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalNoteRetractionReason? Motivo, Guid? OperacionId = null);
 
 /// <summary>Las citas externas que ve quien mira y si puede registrarlas y cambiarlas.</summary>
 public sealed record ExternalAppointmentList(IReadOnlyList<ExternalAppointmentRecord> Appointments, bool CanManage);
@@ -39,7 +47,7 @@ public sealed class ExternalAppointmentsApplicationService(
         {
             var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             RequireManage(canManage);
-            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), command.OperacionId, ct);
+            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), command.OperacionId, command.CitaOrigenId, ct);
         });
 
     /// <summary>Devuelve la versión nueva. Cambiar la fecha o la hora es reprogramar y exige un motivo; el día nuevo no puede ser anterior a hoy. Cambiar otra cosa no lleva motivo.</summary>
@@ -112,6 +120,57 @@ public sealed class ExternalAppointmentsApplicationService(
     public Task<ApplicationResult<bool>> CanManageAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () => (await ResolveAsync(profileScopeId, centerId, ct)).CanManage);
 
+    /// <summary>Anota una versión nueva de la nota de una cita realizada y devuelve su número. La escribe cualquier Enfermería con acceso al residente (no hace falta el permiso de gestionar citas);
+    /// Administración, Medicina y el resto, no (decisión de Orlando, 2026-11-18; DPO, apartado 7).</summary>
+    public Task<ApplicationResult<int>> SaveNoteAsync(SaveExternalAppointmentNoteCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (actor, _) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            RequireNurse(actor);
+            return await repository.SaveNoteAsync(actor, command.CitaId, command.VersionVista, command.Nota, command.OperacionId, ct);
+        });
+
+    /// <summary>Retira la nota vigente (versión nueva marcada como retirada, con motivo de lista cerrada) y devuelve su número. Mismas reglas de quién escribe.</summary>
+    public Task<ApplicationResult<int>> RetractNoteAsync(RetractExternalAppointmentNoteCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            if (command.Motivo is not { } reason || !Enum.IsDefined(reason))
+            {
+                throw new DomainValidationException(ExternalAppointment.InvalidCode);
+            }
+
+            var (actor, _) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            RequireNurse(actor);
+            return await repository.RetractNoteAsync(actor, command.CitaId, command.VersionVista, reason, command.OperacionId, ct);
+        });
+
+    /// <summary>La última versión de la nota, solo para Enfermería y Medicina (Administración y el resto, acceso denegado); null si no hay ninguna. Si está retirada (Retracted), la nota ya no es la vigente pero su número es la versión vista para anotar otra.</summary>
+    public Task<ApplicationResult<ExternalNoteVersion?>> FindNoteAsync(Guid profileScopeId, CenterId centerId, Guid appointmentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<ExternalNoteVersion?>(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            RequireClinicalReader(actor);
+            return await repository.FindCurrentNoteAsync(actor, appointmentId, ct);
+        });
+
+    /// <summary>Todas las versiones de la nota con su autoría, solo para Enfermería y Medicina; cada apertura deja un evento de auditoría sin contenido.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ExternalNoteVersion>>> ListNoteVersionsAsync(
+        Guid profileScopeId, CenterId centerId, Guid appointmentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            RequireClinicalReader(actor);
+            return await repository.ListNoteVersionsAsync(actor, appointmentId, ct);
+        });
+
+    /// <summary>La siguiente cita prevista (solo ese dato de la nota) y la siguiente cita ya registrada de una cita visible para Administración, Enfermería o Medicina.</summary>
+    public Task<ApplicationResult<ExternalAppointmentFollowUp>> FindFollowUpAsync(Guid profileScopeId, CenterId centerId, Guid appointmentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            return await repository.FindFollowUpAsync(actor, appointmentId, ct) ?? throw new DomainValidationException(ExternalAppointment.NotFoundCode);
+        });
+
     /// <summary>Días de antelación del aviso de «falta transporte o acompañante» (diseño, valor 16) y desde cuántos se destaca más.</summary>
     public const int WarningDays = 7;
     public const int UrgentWarningDays = 2;
@@ -165,6 +224,22 @@ public sealed class ExternalAppointmentsApplicationService(
     private static void RequireManage(bool canManage)
     {
         if (!canManage)
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
+    private static void RequireNurse(ExternalAppointmentActor actor)
+    {
+        if (actor.Profile != SystemProfile.Enfermeria)
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
+    private static void RequireClinicalReader(ExternalAppointmentActor actor)
+    {
+        if (actor.Profile is not (SystemProfile.Enfermeria or SystemProfile.Medicina))
         {
             throw new AccessDeniedException();
         }

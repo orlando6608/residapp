@@ -16,7 +16,8 @@
     "Leer y registrar el resultado de las indicaciones de Medicina, y cerrar el episodio cuando están cumplidas.",
     "Derivar a Urgencias y firmar el informe, y registrar las llamadas a la familia.",
     "Preparar y corregir los comunicados a la familia antes de que se publiquen.",
-    "Corregir o rectificar tu valoración y consultar el historial y la línea temporal."
+    "Corregir o rectificar tu valoración y consultar el historial y la línea temporal.",
+    "Anotar qué cambia para el centro al terminar una cita externa realizada, y retirar la nota si fue un error (ver ENF-24)."
   ],
   "conPermiso": [
     "**Dar de alta residentes** (ver ENF-17).",
@@ -764,7 +765,7 @@
       "permisos": ["EXTERNAL_APPOINTMENT_MANAGE"],
       "concede": "Administración",
       "antes": [
-        "Tener el permiso **Registrar y cambiar las citas externas de los residentes**. Sin él, ves las citas de tus residentes pero no las cambias: te dice que se lo pidas a Administración. Verlas no necesita permiso.",
+        "Tener el permiso **Registrar y cambiar las citas externas de los residentes**. Sin él, ves las citas de tus residentes pero no las cambias: te dice que se lo pidas a Administración. Verlas no necesita permiso, ni tampoco anotar «Al terminar» en una cita realizada (ver ENF-24).",
         "Tener a mano lo que te han dado en el hospital o en el centro de salud: el día, la hora si la hay, el nombre del lugar y qué hay que llevar o hacer para salir.",
         "Saber que aquí solo van datos de agenda: el lugar es solo el nombre del hospital o centro, y «qué preparar» es solo lo que hay que llevar o hacer para salir. Las indicaciones clínicas no se escriben aquí."
       ],
@@ -787,13 +788,13 @@
         { "p": "«Para registrar o cambiar citas externas hace falta el permiso…»", "r": "Tu ámbito no tiene el permiso. Pídeselo a Administración, que es quien lo concede." },
         { "p": "«Revisa la cita: el día no puede ser anterior a hoy…»", "r": "Falta elegir el tipo, el transporte, el acompañante o qué ve la familia; el día es anterior a hoy; el lugar o «qué preparar» pasan de una línea corta; o has cambiado el día, o una hora ya puesta, sin elegir el motivo." },
         { "p": "«Otra persona ha cambiado esta cita…»", "r": "Alguien la guardó antes que tú. Te llevamos a la cita para que veas cómo está ahora y, si hace falta, repitas tu cambio." },
-        { "p": "«La cita ya está cerrada…»", "r": "Una cita realizada, no acudida o cancelada ya no se cambia ni se reabre. Si hay que volver a pedirla, regístrala de nuevo." },
+        { "p": "«La cita ya está cerrada…»", "r": "Una cita realizada, no acudida o cancelada ya no se cambia ni se reabre. Si fue realizada o no se acudió, pulsa **Registrar la siguiente cita** (necesita el mismo permiso) y se abre el formulario con lo principal ya puesto (ver ADM-48); si se canceló, regístrala de nuevo." },
         { "p": "«Ese cambio de estado no es posible…»", "r": "«Dar por realizada» y «No se acudió» solo se pueden marcar desde el día de la cita (el de hoy cuenta): en una cita futura, los botones no salen. Si la cita futura está equivocada, cámbiala o cancélala. Una cita confirmada por el hospital no vuelve a programada." },
         { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva; la familia no recibe avisos." },
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó. Ábrelas y pulsa **Dar por realizada** o **No se acudió**, o **Cancelar la cita**." },
         { "p": "Me equivoqué al registrarla.", "r": "Cámbiala. Si cambias el día o una hora ya puesta, elige el motivo «Error de registro»; el historial lo conserva." }
       ],
-      "rutas": ["Enfermeria/Index", "Enfermeria/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
+      "rutas": ["Enfermeria/Index", "Enfermeria/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar", "CitasExternas/SiguienteCita"],
       "mensajes": [
         "Cita externa registrada.",
         "Cita externa guardada.",
@@ -801,6 +802,48 @@
         "Cita externa cancelada.",
         "Revisa la cita:",
         "Otra persona ha cambiado esta cita"
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "ENF-24",
+      "pregunta": "¿Cómo anoto qué cambia al terminar una cita externa?",
+      "palabras": ["citas externas", "cita externa", "al terminar", "nota", "siguiente cita", "informe", "retirar", "versiones"],
+      "permisos": [],
+      "antes": [
+        "Que la cita esté **Realizada**. En una cita abierta, cancelada o a la que no se acudió no se anota nada.",
+        "No necesitas el permiso de registrar y cambiar citas: cualquier Enfermería con acceso al residente puede anotar.",
+        "Saber qué escribir: solo qué debe hacer o saber el centro (por ejemplo, «recoger el informe en el hospital el viernes»). No escribas diagnósticos, resultados de pruebas, dosis ni nombres de personas. Las indicaciones clínicas las registra Medicina."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas** y entra en la cita realizada del residente.", "botones": ["Citas externas"] },
+        { "texto": "En el bloque «Al terminar», pulsa **Anotar al terminar** (o **Cambiar la nota** si ya hay una).", "botones": ["Anotar al terminar", "Cambiar la nota"] },
+        { "texto": "Elige «Qué cambia para el centro» y, si quieres, escribe «Una línea para el centro (opcional)», de hasta 150 caracteres.", "campos": ["Qué cambia para el centro", "Una línea para el centro (opcional)"] },
+        { "texto": "Si ya se sabe cuándo es la próxima, rellena «Siguiente cita prevista (opcional)»: «Sin siguiente cita», «En» tantos meses (de 1 a 36) o «El día».", "campos": ["Siguiente cita prevista (opcional)", "Sin siguiente cita"] },
+        { "texto": "Pulsa **Guardar la nota**. Cada cambio guarda una versión nueva: las anteriores no se pierden y se leen en **Ver versiones anteriores**.", "botones": ["Guardar la nota", "Ver versiones anteriores"] },
+        { "texto": "Si la nota es un error, en «Retirar la nota» elige el «Motivo» y pulsa **Retirar la nota**. No borra nada: deja de ser la nota de la cita y se puede anotar otra.", "botones": ["Retirar la nota"], "campos": ["Motivo"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Nota guardada.» (o «Nota retirada. Las versiones anteriores se conservan.») y la nota en el bloque «Al terminar», con tu nombre y la hora." },
+        { "para": "Medicina", "texto": "Lee la nota y sus versiones, pero no la cambia." },
+        { "para": "Administración", "texto": "No lee la nota. Solo ve la fecha o el plazo de la siguiente cita prevista, para registrarla (ver ADM-48)." },
+        { "para": "Auxiliar", "texto": "No ve nada de la nota. La familia tampoco." }
+      ],
+      "dudas": [
+        { "p": "«La nota «al terminar» se anota cuando la cita está realizada.»", "r": "La cita sigue abierta, se canceló o no se acudió. Cuando esté realizada, vuelve a abrirla." },
+        { "p": "«Otra persona ha cambiado la nota…»", "r": "Alguien la guardó antes que tú. Mira cómo está ahora y, si hace falta, vuelve a anotar." },
+        { "p": "«Revisa la nota:…»", "r": "Falta elegir «Qué cambia para el centro», la línea pasa de 150 caracteres o tiene saltos de línea, o la siguiente cita no es un día posterior a la cita ni un plazo de 1 a 36 meses." },
+        { "p": "«La nota «al terminar» la escribe Enfermería…»", "r": "Solo Enfermería anota. Medicina y Administración no pueden." },
+        { "p": "Escribí algo que no debía.", "r": "Pulsa **Retirar la nota** con el motivo «Error de registro» o «Datos de otra persona». La versión anterior sigue guardada para Enfermería y Medicina: avisa a Administración del centro si contiene datos que no deben conservarse." }
+      ],
+      "rutas": ["Enfermeria/Index", "CitasExternas/Ver", "CitasExternas/Anotar", "CitasExternas/RetirarNota", "CitasExternas/Versiones"],
+      "mensajes": [
+        "Nota guardada.",
+        "Nota retirada. Las versiones anteriores se conservan.",
+        "Revisa la nota:",
+        "Otra persona ha cambiado la nota",
+        "La nota «al terminar» la escribe Enfermería",
+        "La nota «al terminar» se anota cuando la cita está realizada."
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }

@@ -91,7 +91,22 @@ public sealed partial class CitasExternasController(
             return RedirectToAction(nameof(Index));
         }
 
-        return View(new ExternalAppointmentDetailViewModel(loaded.Value.Record, loaded.Value.CanManage, appointments.TodayAtCenter()));
+        var record = loaded.Value.Record;
+        Application.Ports.ExternalAppointmentFollowUp? followUp = null;
+        Application.Ports.ExternalNoteVersion? note = null;
+        if (record.Status is ExternalAppointmentStatus.Realizada or ExternalAppointmentStatus.NoAcudida)
+        {
+            // La siguiente cita prevista y la ya registrada: lo único de la nota que ve Administración. La nota entera, solo Enfermería y Medicina (el caso de uso lo exige otra vez).
+            var follow = await appointments.FindFollowUpAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), id, ct);
+            followUp = follow.Ok ? follow.Value : null;
+            if (record.Status == ExternalAppointmentStatus.Realizada && scope.Profile is SystemProfile.Enfermeria or SystemProfile.Medicina)
+            {
+                var current = await appointments.FindNoteAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), id, ct);
+                note = current.Ok ? current.Value : null;
+            }
+        }
+
+        return View(new ExternalAppointmentDetailViewModel(record, loaded.Value.CanManage, appointments.TodayAtCenter(), scope.Profile, followUp, note));
     }
 
     [HttpGet]
@@ -145,7 +160,8 @@ public sealed partial class CitasExternasController(
 
         var result = await appointments.RegisterAsync(
             new RegisterExternalAppointmentCommand(
-                scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(form.ResidenteId), appointment, form.OperacionId == Guid.Empty ? null : form.OperacionId), ct);
+                scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(form.ResidenteId), appointment, form.OperacionId == Guid.Empty ? null : form.OperacionId,
+                form.CitaOrigenId), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = "Cita externa registrada.";
@@ -358,7 +374,15 @@ public sealed partial class CitasExternasController(
     {
         var residents = await ResidentsAsync(scope, ct);
         var chosen = residents.FirstOrDefault(r => r.Id == form.ResidenteId);
-        return View("Formulario", new ExternalAppointmentFormViewModel(true, form, chosen?.Name, chosen is null ? residents : null, error));
+        // Si es «la siguiente cita» de otra, el aviso de arriba se mantiene al volver a mostrar el formulario con un error.
+        DateOnly? originDate = null;
+        if (form.CitaOrigenId is { } origin)
+        {
+            var found = await appointments.FindAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), origin, ct);
+            originDate = found.Ok ? found.Value!.Appointment.Date : null;
+        }
+
+        return View("Formulario", new ExternalAppointmentFormViewModel(true, form, chosen?.Name, chosen is null ? residents : null, error, originDate));
     }
 
     /// <summary>Los residentes del ámbito, para elegirlos al registrar y para poner nombre a una lista filtrada. Cada perfil los lee con su propio caso de uso.</summary>
