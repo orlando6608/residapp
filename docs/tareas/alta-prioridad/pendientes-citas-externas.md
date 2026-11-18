@@ -1,6 +1,6 @@
 # Citas externas de los residentes: traspaso para construirlas
 
-**Estado a 2026-11-18: PR 3 (calendario del personal y vista del Auxiliar) hecho en la rama `feat-citas-externas-calendario`, pendiente de PR; siguiente, PR 4. Antes: PR 2 (pantallas del personal) hecho en la rama `feat-citas-externas-pantallas`, pendiente de PR; siguiente, PR 3. A 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 2: plan y prompt para empezar en el apartado 9 (los apartados 5 a 8 siguen como estaban).** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
+**Estado a 2026-11-18: PR 3 (calendario del personal y vista del Auxiliar) FUSIONADO (#328, `fe47aa6`); siguiente, PR 4 (nota «al terminar» y siguiente cita). Antes: PR 2 (pantallas del personal) FUSIONADO (#327, `7df5842`). A 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/continuar-construccion.md`. El siguiente es el PR 4: no tiene plan escrito todavía (el apartado 9 era el del PR 2, ya hecho; los apartados 5 a 8 siguen como estaban); antes de construir, planifica y consulta al DPO y a doc-usuario.** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
 
 ## 1. Qué hay que construir
 
@@ -78,7 +78,7 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consulta, 
 
 > Retomamos las citas externas de ResidApp. Lee `CLAUDE.md`, `docs/tareas/alta-prioridad/pendientes-citas-externas.md` (entero), `docs/producto/citas-externas-diseno.md` y `docs/privacidad/citas-externas-lectura-dpo.md`. Haz `git fetch` y comprueba el estado de `origin/main` y los PR abiertos. Después, propón el plan del PR 1 (script `0101`: esquema, seguridad por filas, permiso `EXTERNAL_APPOINTMENT_MANAGE`, baja de residente y pruebas de aislamiento) antes de escribir código, y pregúntame de una en una cualquier decisión que no esté ya en el diseño.
 
-## 9. PR 2: pantallas del personal (propuesta de ingeniería; ajústala al implementar)
+## 9. PR 2: pantallas del personal (HECHO y fusionado, #327; se conserva como referencia; propuesta de ingeniería; ajústala al implementar)
 
 **Qué hay ya (PR 1, en `main`):** `ExternalAppointmentsApplicationService` (registrar, cambiar, cambiar de estado, cancelar, buscar, listar por rango de fechas; devuelve `CanManage`), `SqlExternalAppointmentRepository`, el dominio `Domain/Appointments/ExternalAppointments.cs` (enums con `[Display]` en español, `Covered`, `TimeToConfirm`) y los errores traducidos en `ApplicationResult.cs` (`ExternalAppointmentFailures`). Ninguna pantalla lo usa todavía.
 
