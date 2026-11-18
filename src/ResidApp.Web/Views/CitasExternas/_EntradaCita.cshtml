@@ -1,0 +1,29 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model (ExternalAppointmentRecord Record, bool FullName, DateOnly Today)
+@* Una cita en el calendario: hora (o «Por confirmar»), residente (iniciales en la cuadrícula del mes, con el nombre completo solo para el lector de pantalla; nombre en la semana y en la lista del móvil), su
+   marca con palabra y color, y enlace a la cita. El nombre accesible es el texto visible más el nombre oculto, sin aria-label que lo sustituya. *@
+@{
+    var record = Model.Record;
+    var (markText, markCss) = ExternalAppointmentCalendarDisplay.Mark(record, Model.Today);
+    var name = Model.FullName ? record.ResidentName : ExternalAppointmentCalendarDisplay.Initials(record.ResidentName);
+}
+<a asp-action="Ver" asp-route-id="@record.Id" class="d-block text-decoration-none text-body border-start border-4 border-@markCss rounded-1 bg-body-tertiary px-2 py-1 mb-1">
+    <span class="fw-semibold">@ExternalAppointmentDisplay.Time(record.Appointment)</span>
+    <span>@name</span>
+    @if (!Model.FullName)
+    {
+        <span class="visually-hidden">(@record.ResidentName)</span>
+    }
+    else
+    {
+        <span class="text-body-secondary">· @EnumDisplay.Label(record.Appointment.Type)@(record.Appointment.Specialty is { } specialty ? " · " + EnumDisplay.Label(specialty) : "")</span>
+    }
+    <span class="badge text-bg-@markCss">@markText</span>
+    @if (record.ResidentSuspended)
+    {
+        <span class="badge text-bg-warning">Residente suspendido</span>
+    }
+</a>

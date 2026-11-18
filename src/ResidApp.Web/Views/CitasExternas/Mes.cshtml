@@ -1,0 +1,76 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model ExternalAppointmentCalendarViewModel
+@* Calendario mensual del personal (PR 3; boceto A de CJ). En pantallas anchas, una cuadrícula de 7 columnas (lunes a domingo) con las iniciales del residente; en el móvil, una lista por días con el
+   nombre, porque la cuadrícula no cabe. Cada cita lleva su marca con palabra y color. *@
+@{
+    ViewData["Title"] = "Calendario de citas externas: " + ExternalAppointmentCalendarDisplay.MonthTitle(Model.Reference);
+    var byDay = Model.Items.GroupBy(a => a.Appointment.Date).ToDictionary(g => g.Key, g => g.ToList());
+    const int maxPerCell = 3;
+}
+<partial name="_CalendarioCabecera" model="Model" />
+
+<div class="d-none d-md-block table-responsive">
+    <table class="table table-bordered align-top mb-3">
+        <caption class="visually-hidden">@ExternalAppointmentCalendarDisplay.MonthTitle(Model.Reference): citas externas por día</caption>
+        <thead>
+            <tr>
+                @foreach (var label in new[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" })
+                {
+                    <th scope="col" class="text-center">@label</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (var weekStart = Model.From; weekStart <= Model.To; weekStart = weekStart.AddDays(7))
+            {
+                <tr>
+                    @for (var i = 0; i < 7; i++)
+                    {
+                        var day = weekStart.AddDays(i);
+                        var inMonth = day.Month == Model.Reference.Month;
+                        var dayItems = byDay.TryGetValue(day, out var found) ? found : [];
+                        <td class="@(inMonth ? "" : "bg-body-secondary text-body-secondary") @(day == Model.Today ? "border-primary border-2" : "")" style="min-width: 8rem; height: 6rem;">
+                            <div class="small fw-semibold mb-1">
+                                <a asp-action="Semana" asp-route-dia="@day.ToString("yyyy-MM-dd")" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)" aria-label="@day.Day de @ExternalAppointmentCalendarDisplay.Month(day.Month): ver la semana">@day.Day</a>
+                                @if (day == Model.Today)
+                                {
+                                    <span class="badge text-bg-primary">hoy</span>
+                                }
+                            </div>
+                            @foreach (var item in dayItems.Take(maxPerCell))
+                            {
+                                <partial name="_EntradaCita" model="(item, false, Model.Today)" />
+                            }
+                            @if (dayItems.Count > maxPerCell)
+                            {
+                                <a class="small" asp-action="Semana" asp-route-dia="@day.ToString("yyyy-MM-dd")" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)">y @(dayItems.Count - maxPerCell) más</a>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* Móvil: lista por días, solo los días del mes que tienen citas. *@
+<div class="d-md-none">
+    @{
+        var monthDays = byDay.Where(kv => kv.Key.Month == Model.Reference.Month).OrderBy(kv => kv.Key).ToList();
+    }
+    @if (monthDays.Count == 0)
+    {
+        <p class="estado-vacio">No hay citas externas este mes@(Model.OnlyUncovered || Model.UnitId is not null ? " con ese filtro" : "").</p>
+    }
+    @foreach (var (day, dayItems) in monthDays)
+    {
+        <section class="mb-3" aria-labelledby="mes-dia-@day.ToString("yyyyMMdd")">
+            <h3 class="h6" id="mes-dia-@day.ToString("yyyyMMdd")">@ExternalAppointmentCalendarDisplay.DayLong(day)@(day == Model.Today ? " (hoy)" : "")</h3>
+            @foreach (var item in dayItems)
+            {
+                <partial name="_EntradaCita" model="(item, true, Model.Today)" />
+            }
+        </section>
+    }
+</div>

@@ -10,6 +10,7 @@
   "entregaA": ["Enfermería"],
   "siempre": [
     "Ver a tus residentes asignados, con su foto y su estado basal vigente (solo lectura).",
+    "Ver qué residentes tuyos salen hoy y mañana a una cita externa (ver AUX-09).",
     "Cerrar el turno de un residente con «Sin cambios» o con «No valorable».",
     "Registrar un cambio, ordinario o prioritario.",
     "Dictar el cambio por voz, si tu centro lo tiene activado (si no ves el bloque «Dictar el cambio», no lo está)."
@@ -22,7 +23,7 @@
     "Corregir o anular un cierre o un cambio ya registrado, ni ver qué ha pasado después con él."
   ],
   "revisadoPara": "0.4.0",
-  "revisado": "2026-11-16",
+  "revisado": "2026-11-18",
   "fichas": [
     {
       "codigo": "AUX-01",
@@ -259,6 +260,36 @@
       ],
       "rutas": ["Auxiliar/Registro", "Auxiliar/ConfirmarCambio"],
       "mensajes": [],
+      "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
+      "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
+    },
+    {
+      "codigo": "AUX-09",
+      "pregunta": "¿Cómo veo qué residentes salen hoy y mañana a una cita externa?",
+      "palabras": ["citas externas", "cita externa", "hospital", "consulta", "prueba", "salida", "preparar", "ayuno", "hoy", "mañana"],
+      "permisos": [],
+      "antes": [
+        "Tener residentes asignados (ver AUX-01): solo ves las citas de tus residentes.",
+        "Saber que aquí solo miras: no guardas ni cambias nada. Las citas las registra Administración o una Enfermería con permiso."
+      ],
+      "pasos": [
+        { "texto": "En **Mis residentes**, pulsa **Citas externas de hoy y mañana**.", "botones": ["Citas externas de hoy y mañana"] },
+        { "texto": "Lee cada día, «Hoy» y «Mañana»: la hora (o «Por confirmar»), el residente, «Qué preparar» (por ejemplo, ayuno, tarjeta sanitaria o silla de ruedas), «Acompaña: …» y «Transporte: …».", "campos": ["Qué preparar", "Acompaña", "Transporte"] },
+        { "texto": "Prepara al residente según lo que diga «Qué preparar». Si falta algo o no está claro, díselo a Enfermería según el protocolo de tu centro." }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Ves quién sale y cuándo. Si ningún residente sale, la pantalla dice «Ningún residente sale hoy» o «Ningún residente sale mañana»." },
+        { "para": "Enfermería", "texto": "No recibe nada de lo que miras: esta pantalla es solo de lectura." }
+      ],
+      "dudas": [
+        { "p": "No sale un residente que sé que tiene cita.", "r": "Solo salen los residentes que tienes asignados y las citas abiertas de hoy y mañana. Si el residente está ingresado en un hospital (suspendido), tampoco sale. Pregunta a Administración." },
+        { "p": "No veo la especialidad ni el lugar.", "r": "Es así a propósito: tu perfil ve la hora, qué preparar, quién acompaña y cómo va, y nada más." },
+        { "p": "¿Puedo imprimirla?", "r": "No: la pantalla no se imprime para que los datos del residente no queden a la vista." }
+      ],
+      "rutas": ["Auxiliar/Index", "Auxiliar/CitasExternas"],
+      "mensajes": [
+        "Ningún residente sale"
+      ],
       "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
       "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
     }

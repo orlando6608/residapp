@@ -691,6 +691,152 @@ public class CitasExternasTests
     }
 
     [Fact]
+    public async Task ElAuxiliar_VeHoyYMananaDeSusResidentesAsignados_SoloAbiertas_YSoloLosCamposQueLeCorresponden()
+    {
+        // PR 3 (DPO, apartados 2 y 6.4): el Auxiliar ve las citas abiertas de hoy y mañana de los residentes que tiene asignados, con hora, qué preparar, acompañante y transporte, y nada más.
+        var scene = await SceneAsync("Residente Cita Auxiliar Asignado");
+        var unassigned = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Auxiliar Sin Asignar");
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, scene.Admin.CenterId, scene.Admin.UnitId);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_residente (id, ambito_perfil_id, centro_id, residente_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @scope, @center, @resident, SYSUTCDATETIME(), @admin)
+                """, new { scope = auxiliar.ProfileScopeId, center = scene.Admin.CenterId.Value, resident = scene.ResidentId.Value, admin = scene.Admin.AccountId.Value });
+        }
+        var today = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, new TimeOnly(9, 0), specialty: ExternalAppointmentSpecialty.Oncologia, place: "Hospital Ficticio Secreto",
+            transport: ExternalTransportMode.Ambulancia, companion: ExternalCompanionMode.PersonalCentro, preparation: new ExternalPreparation(true, false, false, false, false, false, "Llevar gafas")));
+        var tomorrowNoTime = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1, withoutTime: true, companion: ExternalCompanionMode.Familiar));
+        await RegisterAsync(scene.Admin, scene.ResidentId, Cita(2));
+        var cancelled = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        Assert.True((await CancelAsync(scene.Admin, cancelled, 1)).Ok);
+        await RegisterAsync(scene.Admin, unassigned, Cita(0));
+
+        var result = await Service(auxiliar).ListForAuxiliarAsync(auxiliar.ProfileScopeId, auxiliar.CenterId);
+
+        Assert.True(result.Ok, result.Error?.Message);
+        Assert.Equal(InDays(0), result.Value!.Today);
+        Assert.Equal([today, tomorrowNoTime], result.Value.Appointments.Select(a => a.Id).ToArray());
+        var first = result.Value.Appointments[0];
+        Assert.Equal(new TimeOnly(9, 0), first.Time);
+        Assert.Equal(ExternalCompanionMode.PersonalCentro, first.CompanionMode);
+        Assert.Equal(ExternalTransportMode.Ambulancia, first.TransportMode);
+        Assert.True(first.Preparation.Fasting);
+        Assert.Equal("Llevar gafas", first.Preparation.Text);
+        Assert.Null(result.Value.Appointments[1].Time);
+        // Los demás perfiles no usan esta lectura, y el Auxiliar no usa las del personal.
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Admin).ListForAuxiliarAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Nurse).ListForAuxiliarAsync(scene.Nurse.ProfileScopeId, scene.Nurse.CenterId)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await ListAsync(auxiliar)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(auxiliar).FindAsync(auxiliar.ProfileScopeId, auxiliar.CenterId, today)).Error?.Code);
+        // Otro centro: nada, y con el ámbito de otro centro puesto a mano, acceso denegado.
+        var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Auxiliar);
+        Assert.Empty((await Service(outsider).ListForAuxiliarAsync(outsider.ProfileScopeId, outsider.CenterId)).Value!.Appointments);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(outsider).ListForAuxiliarAsync(outsider.ProfileScopeId, auxiliar.CenterId)).Error?.Code);
+    }
+
+    private static async Task<SeededProfile> AuxiliarWithResidentAsync(Scene scene)
+    {
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, scene.Admin.CenterId, scene.Admin.UnitId);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.ambitos_perfil_residente (id, ambito_perfil_id, centro_id, residente_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @scope, @center, @resident, SYSUTCDATETIME(), @admin)
+            """, new { scope = auxiliar.ProfileScopeId, center = scene.Admin.CenterId.Value, resident = scene.ResidentId.Value, admin = scene.Admin.AccountId.Value });
+        return auxiliar;
+    }
+
+    private static async Task<int> AuxiliarCountAsync(SeededProfile auxiliar) =>
+        (await Service(auxiliar).ListForAuxiliarAsync(auxiliar.ProfileScopeId, auxiliar.CenterId)).Value!.Appointments.Count;
+
+    [Fact]
+    public async Task ElAuxiliar_DejaDeVerLasCitas_SiSeRevocaLaAsignacionLaUnidadOElResidenteSeSuspende_YNoVeUnaUnidadDesactivada()
+    {
+        // Mismo criterio que «Mis residentes» (asignación vigente, unidad concedida y activa) y, por decisión de Orlando (2026-11-18), un residente suspendido por un ingreso hospitalario no sale.
+        var scene = await SceneAsync("Residente Cita Auxiliar Revocaciones");
+        var auxiliar = await AuxiliarWithResidentAsync(scene);
+        await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
+        Assert.Equal(1, await AuxiliarCountAsync(auxiliar));
+
+        // Suspensión: sigue activo pero hospitalizado.
+        var suspensionId = Guid.NewGuid();
+        await CountAsync("""
+            INSERT INTO dbo.suspensiones_residente (id, centro_id, residente_id, unidad_id, iniciada_por_cuenta_id, iniciada_en) VALUES (@id, @center, @resident, @unit, @admin, SYSUTCDATETIME());
+            SELECT 1
+            """, new { id = suspensionId, center = scene.Admin.CenterId.Value, resident = scene.ResidentId.Value, unit = scene.Admin.UnitId.Value, admin = scene.Admin.AccountId.Value });
+        Assert.Equal(0, await AuxiliarCountAsync(auxiliar));
+        await CountAsync("UPDATE dbo.suspensiones_residente SET finalizada_en = SYSUTCDATETIME(), finalizada_por_cuenta_id = @admin WHERE id = @id; SELECT 1", new { id = suspensionId, admin = scene.Admin.AccountId.Value });
+        Assert.Equal(1, await AuxiliarCountAsync(auxiliar));
+
+        // Unidad desactivada.
+        await CountAsync("UPDATE dbo.unidades SET estado = 'INACTIVE' WHERE id = @unit; SELECT 1", new { unit = scene.Admin.UnitId.Value });
+        Assert.Equal(0, await AuxiliarCountAsync(auxiliar));
+        await CountAsync("UPDATE dbo.unidades SET estado = 'ACTIVE' WHERE id = @unit; SELECT 1", new { unit = scene.Admin.UnitId.Value });
+        Assert.Equal(1, await AuxiliarCountAsync(auxiliar));
+
+        // Unidad revocada del ámbito del Auxiliar y, después, asignación revocada.
+        await CountAsync("UPDATE dbo.ambitos_perfil_unidad SET revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @admin WHERE ambito_perfil_id = @scope AND revocado_en IS NULL; SELECT 1",
+            new { scope = auxiliar.ProfileScopeId, admin = scene.Admin.AccountId.Value });
+        Assert.Equal(0, await AuxiliarCountAsync(auxiliar));
+
+        var second = await SceneAsync("Residente Cita Auxiliar Asignacion");
+        var other = await AuxiliarWithResidentAsync(second);
+        await RegisterAsync(second.Admin, second.ResidentId, Cita(1));
+        Assert.Equal(1, await AuxiliarCountAsync(other));
+        await CountAsync("UPDATE dbo.ambitos_perfil_residente SET revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @admin WHERE ambito_perfil_id = @scope AND revocado_en IS NULL; SELECT 1",
+            new { scope = other.ProfileScopeId, admin = second.Admin.AccountId.Value });
+        Assert.Equal(0, await AuxiliarCountAsync(other));
+    }
+
+    [Fact]
+    public async Task ElAuxiliar_SoloVeLasProgramadasYLasConfirmadasPorElHospital_PorHoraYConLaSinHoraAlFinal()
+    {
+        var scene = await SceneAsync("Residente Cita Auxiliar Estados");
+        var auxiliar = await AuxiliarWithResidentAsync(scene);
+        var late = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, new TimeOnly(16, 0)));
+        var noTime = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, withoutTime: true));
+        var early = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, new TimeOnly(8, 15)));
+        var confirmed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, new TimeOnly(12, 0)));
+        Assert.True((await StatusAsync(scene.Admin, confirmed, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
+        var done = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, new TimeOnly(9, 0)));
+        Assert.True((await StatusAsync(scene.Admin, done, 1, ExternalAppointmentStatus.Realizada)).Ok);
+        var missed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0, new TimeOnly(9, 30)));
+        Assert.True((await StatusAsync(scene.Admin, missed, 1, ExternalAppointmentStatus.NoAcudida)).Ok);
+
+        var result = (await Service(auxiliar).ListForAuxiliarAsync(auxiliar.ProfileScopeId, auxiliar.CenterId)).Value!;
+
+        Assert.Equal([early, confirmed, late, noTime], result.Appointments.Select(a => a.Id).ToArray());
+    }
+
+    [Fact]
+    public async Task ElAuxiliar_DejaDeVerLasCitas_SiSuResidenteSeTrasladaAUnaUnidadQueNoTiene()
+    {
+        var scene = await SceneAsync("Residente Cita Auxiliar Traslado");
+        var auxiliar = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Auxiliar, scene.Admin.CenterId, scene.Admin.UnitId);
+        var destination = await AdministracionResidentesTests.AddUnitAsync(scene.Admin.CenterId);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_residente (id, ambito_perfil_id, centro_id, residente_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @scope, @center, @resident, SYSUTCDATETIME(), @admin);
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @adminScope, @center, @destination, SYSUTCDATETIME(), @admin)
+                """, new { scope = auxiliar.ProfileScopeId, adminScope = scene.Admin.ProfileScopeId, center = scene.Admin.CenterId.Value, resident = scene.ResidentId.Value,
+                    admin = scene.Admin.AccountId.Value, destination = destination.Value });
+        }
+        await RegisterAsync(scene.Admin, scene.ResidentId, Cita(0));
+        Assert.Single((await Service(auxiliar).ListForAuxiliarAsync(auxiliar.ProfileScopeId, auxiliar.CenterId)).Value!.Appointments);
+
+        var transfer = new ResidentTransferApplicationService(
+            new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedExternalSessionIdentityProvider(scene.Admin.ExternalSubject),
+            new SqlResidentTransferRepository(TestDatabase.ConnectionFactory));
+        Assert.True((await transfer.TransferAsync(new TransferResidentCommand(
+            scene.Admin.ProfileScopeId, scene.Admin.CenterId, scene.ResidentId, scene.Admin.UnitId, destination, null, null, Guid.NewGuid()))).Ok);
+
+        Assert.Empty((await Service(auxiliar).ListForAuxiliarAsync(auxiliar.ProfileScopeId, auxiliar.CenterId)).Value!.Appointments);
+    }
+
+    [Fact]
     public async Task RegistrarDosVecesConLaMismaOperacion_CreaUnaSolaCita_SinRepetirHistorialNiAuditoria()
     {
         // Decisión de Orlando (2026-11-18, script 0102): un doble clic o un reenvío del formulario no crea otra cita.

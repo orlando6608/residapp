@@ -15,7 +15,7 @@ namespace ResidApp.Web.Controllers;
 /// AUX-06 a AUX-12 (Registrar cambio) de los grupos A3+A4. Traduce a AuxiliarApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed partial class AuxiliarController(AuxiliarApplicationService service) : Controller
+public sealed partial class AuxiliarController(AuxiliarApplicationService service, ExternalAppointmentsApplicationService externalAppointments) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {

@@ -1,0 +1,77 @@
+@using ResidApp.Web.Models
+@model ExternalAppointmentCalendarViewModel
+@* Cabecera común del calendario del personal (PR 3): título del periodo, navegación, pestañas Mes | Semana | Próximas y filtros de unidad y de «solo las que tienen algo sin cubrir». Las pestañas y la
+   navegación conservan los filtros. *@
+@{
+    var isMonth = Model.Mode == "Mes";
+    var previous = isMonth ? Model.Reference.AddMonths(-1) : Model.Reference.AddDays(-7);
+    var next = isMonth ? Model.Reference.AddMonths(1) : Model.Reference.AddDays(7);
+    var title = isMonth ? ExternalAppointmentCalendarDisplay.MonthTitle(Model.Reference) : ExternalAppointmentCalendarDisplay.WeekTitle(Model.Reference);
+    var filters = new Dictionary<string, string?> { ["unidad"] = Model.UnitId?.ToString(), ["sinCubrir"] = Model.OnlyUncovered ? "true" : null };
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@(isMonth ? "Mes" : "Semana")</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Calendario de citas externas</h1>
+
+<ul class="nav nav-pills mb-3" aria-label="Vista del calendario">
+    <li class="nav-item"><a class="nav-link @(isMonth ? "active" : "")" aria-current="@(isMonth ? "page" : null)" asp-action="Mes" asp-route-anio="@Model.Reference.Year" asp-route-mes="@Model.Reference.Month" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)">Mes</a></li>
+    <li class="nav-item"><a class="nav-link @(!isMonth ? "active" : "")" aria-current="@(!isMonth ? "page" : null)" asp-action="Semana" asp-route-dia="@((isMonth ? (Model.Today >= Model.Reference && Model.Today <= Model.To ? Model.Today : Model.Reference) : Model.Reference).ToString("yyyy-MM-dd"))" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)">Semana</a></li>
+    <li class="nav-item"><a class="nav-link" asp-action="Index">Próximas</a></li>
+</ul>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    @if (isMonth)
+    {
+        <a class="btn btn-outline-secondary" asp-action="Mes" asp-route-anio="@previous.Year" asp-route-mes="@previous.Month" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)" aria-label="Mes anterior">‹ Mes anterior</a>
+        <h2 class="h5 mb-0 flex-grow-1 text-center">@title</h2>
+        <a class="btn btn-outline-secondary" asp-action="Mes" asp-route-anio="@next.Year" asp-route-mes="@next.Month" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)" aria-label="Mes siguiente">Mes siguiente ›</a>
+    }
+    else
+    {
+        <a class="btn btn-outline-secondary" asp-action="Semana" asp-route-dia="@previous.ToString("yyyy-MM-dd")" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)" aria-label="Semana anterior">‹ Semana anterior</a>
+        <h2 class="h5 mb-0 flex-grow-1 text-center">@title</h2>
+        <a class="btn btn-outline-secondary" asp-action="Semana" asp-route-dia="@next.ToString("yyyy-MM-dd")" asp-route-unidad="@Model.UnitId" asp-route-sinCubrir="@(Model.OnlyUncovered ? "true" : null)" aria-label="Semana siguiente">Semana siguiente ›</a>
+    }
+</div>
+
+<form method="get" asp-action="@Model.Mode" class="row g-2 align-items-end mb-3" aria-label="Filtrar el calendario">
+    @if (isMonth)
+    {
+        <input type="hidden" name="anio" value="@Model.Reference.Year" />
+        <input type="hidden" name="mes" value="@Model.Reference.Month" />
+    }
+    else
+    {
+        <input type="hidden" name="dia" value="@Model.Reference.ToString("yyyy-MM-dd")" />
+    }
+    <div class="col-12 col-md-4">
+        <label class="form-label" for="unidad">Unidad</label>
+        <select class="form-select" id="unidad" name="unidad">
+            <option value="">Todas</option>
+            @foreach (var unit in Model.Units)
+            {
+                <option value="@unit.Id" selected="@(Model.UnitId == unit.Id)">@unit.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-md-5">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="sin-cubrir" name="sinCubrir" value="true" checked="@Model.OnlyUncovered" />
+            <label class="form-check-label" for="sin-cubrir">Mostrar solo las que tienen algo sin cubrir</label>
+        </div>
+    </div>
+    <div class="col-12 col-md-auto">
+        <button type="submit" class="btn btn-outline-primary">Aplicar</button>
+    </div>
+</form>
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}

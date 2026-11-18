@@ -780,7 +780,8 @@
       "despues": [
         { "para": "Tú", "texto": "Verás «Cita externa registrada.» (o «Cita externa guardada.», «Estado de la cita guardado.», «Cita externa cancelada.») y la ficha de la cita, con «Falta algo» mientras el transporte o el acompañante estén pendientes y «Cubierta» cuando estén resueltos." },
         { "para": "Administración", "texto": "Mientras falte transporte o acompañante en una cita de los próximos 7 días, le sale un aviso en su Inicio, con el residente y el día, sin la especialidad ni el lugar." },
-        { "para": "Medicina", "texto": "Ve la cita en su lista y en la ficha del residente, pero no la cambia." }
+        { "para": "Medicina", "texto": "Ve la cita en su lista y en la ficha del residente, pero no la cambia." },
+        { "para": "Tú", "texto": "Para ver las citas por días, usa las pestañas **Mes** y **Semana** de la lista: cada cita lleva una marca con palabra («Cubierta», «Falta transporte», «Por confirmar», «Por cerrar»…). Con «Mostrar solo las que tienen algo sin cubrir» y **Aplicar** ves solo las que necesitan algo." }
       ],
       "dudas": [
         { "p": "«Para registrar o cambiar citas externas hace falta el permiso…»", "r": "Tu ámbito no tiene el permiso. Pídeselo a Administración, que es quien lo concede." },
@@ -792,7 +793,7 @@
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó. Ábrelas y pulsa **Dar por realizada** o **No se acudió**, o **Cancelar la cita**." },
         { "p": "Me equivoqué al registrarla.", "r": "Cámbiala. Si cambias el día o una hora ya puesta, elige el motivo «Error de registro»; el historial lo conserva." }
       ],
-      "rutas": ["Enfermeria/Index", "Enfermeria/Residente", "CitasExternas/Index", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
+      "rutas": ["Enfermeria/Index", "Enfermeria/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
       "mensajes": [
         "Cita externa registrada.",
         "Cita externa guardada.",

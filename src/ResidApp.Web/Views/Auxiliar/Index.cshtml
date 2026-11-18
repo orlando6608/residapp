@@ -12,6 +12,7 @@
 
 <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"residentes"' />Mis residentes</h1>
 <div asp-validation-summary="All" class="text-danger"></div>
+<p><a asp-action="CitasExternas" class="btn btn-outline-primary btn-lg d-inline-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas externas de hoy y mañana</a></p>
 
 @if (TempData["Mensaje"] is string mensaje)
 {

@@ -20,6 +20,9 @@ public sealed record CancelExternalAppointmentCommand(
 /// <summary>Las citas externas que ve quien mira y si puede registrarlas y cambiarlas.</summary>
 public sealed record ExternalAppointmentList(IReadOnlyList<ExternalAppointmentRecord> Appointments, bool CanManage);
 
+/// <summary>Las citas de hoy y mañana del Auxiliar y qué día es hoy en el centro.</summary>
+public sealed record AuxiliarExternalAppointments(DateOnly Today, IReadOnlyList<ExternalAppointmentForAuxiliar> Appointments);
+
 /// <summary>
 /// Citas externas de los residentes, PR 1 (docs/producto/citas-externas-diseno.md; script 0101). Administración del centro registra y cambia siempre; Enfermería solo con el permiso
 /// EXTERNAL_APPOINTMENT_MANAGE que Administración da a su perfil; Medicina las ve y no las cambia. Auxiliar, Dirección Clínica, Plataforma y Familia no tienen acceso en esta fase. Enfermería
@@ -147,6 +150,16 @@ public sealed class ExternalAppointmentsApplicationService(
     /// <summary>Hoy en el centro (hora de Madrid), para que las pantallas ofrezcan el mismo día que el servicio exige.</summary>
     public DateOnly TodayAtCenter() => Today();
 
+    /// <summary>Lo que ve el Auxiliar (PR 3): hoy y mañana (día del centro), solo de sus residentes asignados, y solo los campos de <see cref="ExternalAppointmentForAuxiliar"/>. Para otro perfil, acceso denegado.</summary>
+    public Task<ApplicationResult<AuxiliarExternalAppointments>> ListForAuxiliarAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var scope = await ActiveScopeAsync(profileScopeId, centerId, [SystemProfile.Auxiliar], ct);
+            var today = Today();
+            var actor = new ExternalAppointmentActor(scope.AccountId, scope.ProfileScopeId, scope.Profile, scope.CenterId);
+            return new AuxiliarExternalAppointments(today, await repository.ListForAuxiliarAsync(actor, today, today.AddDays(1), ct));
+        });
+
     private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
 
     private static void RequireManage(bool canManage)
@@ -157,8 +170,8 @@ public sealed class ExternalAppointmentsApplicationService(
         }
     }
 
-    /// <summary>El ámbito activo de la cuenta de la sesión: Administración, Enfermería o Medicina (si no, acceso denegado) y si puede registrar y cambiar citas.</summary>
-    private async Task<(ExternalAppointmentActor Actor, bool CanManage)> ResolveAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
+    /// <summary>El ámbito activo de la cuenta de la sesión, si es de uno de los perfiles permitidos; si no, acceso denegado.</summary>
+    private async Task<ActiveProfileScope> ActiveScopeAsync(Guid profileScopeId, CenterId centerId, IReadOnlyCollection<SystemProfile> allowed, CancellationToken ct)
     {
         var identity = await session.GetVerifiedIdentityAsync(ct);
         if (identity is null || string.IsNullOrWhiteSpace(identity.ExternalSubject))
@@ -167,14 +180,17 @@ public sealed class ExternalAppointmentsApplicationService(
         }
 
         var scope = (await scopes.ListActiveAsync(identity.ExternalSubject, ct)).FirstOrDefault(s => s.ProfileScopeId == profileScopeId && s.CenterId == centerId);
-        if (scope is null || !Profiles.Contains(scope.Profile))
-        {
-            throw new AccessDeniedException();
-        }
+        return scope is null || !allowed.Contains(scope.Profile) ? throw new AccessDeniedException() : scope;
+    }
 
+    /// <summary>El ámbito activo de la cuenta de la sesión: Administración, Enfermería o Medicina (si no, acceso denegado) y si puede registrar y cambiar citas.</summary>
+    private async Task<(ExternalAppointmentActor Actor, bool CanManage)> ResolveAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct)
+    {
+        var scope = await ActiveScopeAsync(profileScopeId, centerId, Profiles, ct);
+        var identity = await session.GetVerifiedIdentityAsync(ct);
         var canManage = scope.Profile == SystemProfile.Administracion
             || (scope.Profile == SystemProfile.Enfermeria
-                && (await scopes.ListPermissionsAsync(identity.ExternalSubject, profileScopeId, centerId, ct)).Contains(ProfilePermissions.ExternalAppointmentManage));
+                && (await scopes.ListPermissionsAsync(identity!.ExternalSubject, profileScopeId, centerId, ct)).Contains(ProfilePermissions.ExternalAppointmentManage));
         return (new ExternalAppointmentActor(scope.AccountId, scope.ProfileScopeId, scope.Profile, scope.CenterId), canManage);
     }
 }

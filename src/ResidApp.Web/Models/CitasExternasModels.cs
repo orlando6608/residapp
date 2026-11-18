@@ -167,3 +167,74 @@ public static class ExternalAppointmentDisplay
 
 /// <summary>El bloque de la ficha del residente: sus citas abiertas de los próximos días, las «por cerrar» (abiertas con el día pasado) y si quien mira puede registrar.</summary>
 public sealed record ExternalAppointmentResidentBlockViewModel(Guid ResidentId, IReadOnlyList<ExternalAppointmentRecord> Open, bool CanManage, IReadOnlyList<ExternalAppointmentRecord> Overdue);
+
+/// <summary>
+/// Calendario del personal, mensual o semanal (PR 3). Items son las citas visibles entre From y To (ya filtradas por unidad y por «solo las que tienen algo sin cubrir»); Reference es el mes (su día 1)
+/// o el lunes de la semana que se mira. Units son las unidades de las citas de ese periodo, para el filtro.
+/// </summary>
+public sealed record ExternalAppointmentCalendarViewModel(
+    string Mode, DateOnly From, DateOnly To, DateOnly Reference, DateOnly Today, IReadOnlyList<ExternalAppointmentRecord> Items, bool CanManage,
+    Guid? UnitId, bool OnlyUncovered, IReadOnlyList<ExternalAppointmentUnitOption> Units);
+
+public sealed record ExternalAppointmentUnitOption(Guid Id, string Name);
+
+/// <summary>Textos del calendario, con los nombres de mes y de día escritos aquí para no depender de la cultura del servidor.</summary>
+public static class ExternalAppointmentCalendarDisplay
+{
+    private static readonly string[] Months =
+        ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+    private static readonly string[] DaysShort = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+    public static string Month(int month) => Months[month - 1];
+
+    public static string MonthTitle(DateOnly firstOfMonth) => $"{char.ToUpperInvariant(Months[firstOfMonth.Month - 1][0])}{Months[firstOfMonth.Month - 1][1..]} de {firstOfMonth.Year}";
+
+    /// <summary>Lun, Mar… (la semana empieza en lunes).</summary>
+    public static string DayShort(DateOnly day) => DaysShort[((int)day.DayOfWeek + 6) % 7];
+
+    public static string DayLong(DateOnly day) => $"{DayShort(day)} {day.Day}";
+
+    public static DateOnly MondayOf(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
+
+    public static string WeekTitle(DateOnly monday)
+    {
+        var sunday = monday.AddDays(6);
+        if (monday.Year != sunday.Year)
+        {
+            return $"{monday.Day} de {Month(monday.Month)} de {monday.Year} – {sunday.Day} de {Month(sunday.Month)} de {sunday.Year}";
+        }
+
+        return monday.Month == sunday.Month
+            ? $"{monday.Day} – {sunday.Day} de {Month(sunday.Month)} de {sunday.Year}"
+            : $"{monday.Day} de {Month(monday.Month)} – {sunday.Day} de {Month(sunday.Month)} de {sunday.Year}";
+    }
+
+    /// <summary>Las iniciales del nombre («Antonio Marín» → «A. M.»): en la cuadrícula del mes, donde no cabe el nombre, y para no enseñar nombres enteros de pasada.</summary>
+    public static string Initials(string name) =>
+        string.Join(' ', name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(3).Select(part => char.ToUpperInvariant(part[0]) + "."));
+
+    /// <summary>
+    /// La marca de una cita: la palabra y la clase de color (el color nunca va solo). Una cerrada o cancelada dice su estado; una abierta con el día ya pasado, «Por cerrar» (decisión de Orlando,
+    /// 2026-11-18); una abierta futura, qué falta, «Por confirmar» si todo está resuelto pero aún no hay hora (diseño, valor 9) o «Cubierta».
+    /// </summary>
+    public static (string Text, string Css) Mark(ExternalAppointmentRecord record, DateOnly today)
+    {
+        if (!ExternalAppointmentRules.IsOpen(record.Status))
+        {
+            return (EnumDisplay.Label(record.Status), "secondary");
+        }
+
+        if (record.Appointment.Date < today)
+        {
+            return ("Por cerrar", "warning");
+        }
+
+        if (ExternalAppointmentDisplay.Missing(record.Appointment) is { } missing)
+        {
+            return (char.ToUpperInvariant(missing[0]) + missing[1..], "danger");
+        }
+
+        return record.Appointment.TimeToConfirm ? ("Por confirmar", "warning") : ("Cubierta", "success");
+    }
+}

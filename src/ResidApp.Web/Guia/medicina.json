@@ -592,6 +592,7 @@
       "pasos": [
         { "texto": "En el Inicio, abre la tarjeta **Citas externas**; o, desde la ficha del residente, pulsa **Ver todas sus citas externas**.", "botones": ["Citas externas", "Ver todas sus citas externas"] },
         { "texto": "Elige el periodo en «Desde» y «Hasta» y pulsa **Ver esas fechas**. Por defecto salen los próximos 60 días.", "botones": ["Ver esas fechas"], "campos": ["Desde", "Hasta"] },
+        { "texto": "Para verlas por días, pulsa la pestaña **Mes** o **Semana**; muévete con **Mes siguiente ›** o **Semana siguiente ›**, filtra por «Unidad» o con «Mostrar solo las que tienen algo sin cubrir» y pulsa **Aplicar**. Pulsa una cita para abrirla. La marca de cada cita dice «Cubierta», qué falta, «Por confirmar» (aún sin hora) o «Por cerrar» (el día ya pasó y sigue abierta).", "botones": ["Mes", "Semana", "Mes siguiente ›", "Aplicar"], "campos": ["Unidad", "Mostrar solo las que tienen algo sin cubrir"] },
         { "texto": "Pulsa el nombre del residente para abrir la cita: día, hora (o «Por confirmar»), tipo, especialidad, lugar, transporte, acompañante y qué preparar." }
       ],
       "despues": [
@@ -600,11 +601,11 @@
       ],
       "dudas": [
         { "p": "«Aquí solo puedes ver las citas. Las registra Administración.»", "r": "Es lo normal en Medicina: no registra ni cambia citas externas." },
-        { "p": "No veo una cita que me han dicho que existe.", "r": "Solo salen las de los residentes de tus unidades y de las fechas elegidas: amplía «Hasta» o comprueba la unidad del residente." },
+        { "p": "No veo una cita que me han dicho que existe.", "r": "Solo salen las de los residentes de tus unidades y de las fechas elegidas: amplía «Hasta», cambia de mes o semana, quita el filtro «Unidad» o «Mostrar solo las que tienen algo sin cubrir», o comprueba la unidad del residente." },
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó y aún nadie ha marcado si se realizó. Las cierran Administración y las Enfermerías con permiso." },
         { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva." }
       ],
-      "rutas": ["Medicina/Index", "Medicina/Residente", "CitasExternas/Index", "CitasExternas/Ver"],
+      "rutas": ["Medicina/Index", "Medicina/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Ver"],
       "mensajes": [
         "Aquí solo puedes ver las citas. Las registra Administración."
       ],
