@@ -1,0 +1,34 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentResidentBlockViewModel
+@* Citas externas del residente en su ficha (script 0101): las abiertas de los próximos 60 días, con el acceso a registrar si quien mira puede. *@
+<section class="card mb-3" aria-labelledby="citas-externas-titulo">
+    <div class="card-body">
+        <h2 class="h5 card-title d-flex align-items-center gap-2" id="citas-externas-titulo"><partial name="_Icono" model='"citas"' />Citas externas</h2>
+        @if (Model.Open.Count == 0)
+        {
+            <p class="mb-2">No hay citas externas abiertas en los próximos 60 días.</p>
+        }
+        else
+        {
+            <ul class="mb-2">
+                @foreach (var item in Model.Open)
+                {
+                    var missing = ExternalAppointmentDisplay.Missing(item.Appointment);
+                    <li>
+                        <a asp-controller="CitasExternas" asp-action="Ver" asp-route-id="@item.Id">@ExternalAppointmentDisplay.Date(item.Appointment.Date), @ExternalAppointmentDisplay.Time(item.Appointment)</a>:
+                        @EnumDisplay.Label(item.Appointment.Type)@(missing is null ? "" : " (" + missing + ")")
+                    </li>
+                }
+            </ul>
+        }
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="CitasExternas" asp-action="Index" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-secondary">Ver todas sus citas externas</a>
+            @if (Model.CanManage)
+            {
+                <a asp-controller="CitasExternas" asp-action="Nueva" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-primary">Registrar cita externa</a>
+            }
+        </div>
+    </div>
+</section>

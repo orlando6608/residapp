@@ -41,6 +41,6 @@ public interface IExternalAppointmentRepository
     /// <summary>Una cita visible para el actor, o null si no existe o no está en su ámbito.</summary>
     Task<ExternalAppointmentRecord?> FindAsync(ExternalAppointmentActor actor, Guid appointmentId, CancellationToken ct = default);
 
-    /// <summary>Las citas visibles para el actor con fecha entre from y to (ambas incluidas), por fecha y hora; sin hora, al final del día.</summary>
-    Task<IReadOnlyList<ExternalAppointmentRecord>> ListAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, CancellationToken ct = default);
+    /// <summary>Las citas visibles para el actor con fecha entre from y to (ambas incluidas), por fecha y hora; sin hora, al final del día. Con residentId, solo las de ese residente.</summary>
+    Task<IReadOnlyList<ExternalAppointmentRecord>> ListAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, ResidentId? residentId = null, CancellationToken ct = default);
 }

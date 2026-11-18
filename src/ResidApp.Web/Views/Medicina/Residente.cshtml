@@ -58,4 +58,5 @@
 {
     <partial name="_FichaAntecedentes" model="new HealthBackgroundCardModel(Model.Resident.ResidentId.Value, healthBackground)" />
 }
+@await Component.InvokeAsync("CitasExternasResidente", new { residenteId = Model.Resident.ResidentId.Value })
 <partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContacts)" />

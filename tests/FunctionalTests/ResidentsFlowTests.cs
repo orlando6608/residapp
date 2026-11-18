@@ -2003,6 +2003,138 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.DoesNotContain("Fármaco Beta", byAuxiliar);
     }
 
+    [Fact]
+    public async Task CitasExternas_AdministracionRegistra_EnfermeriaConPermiso_MedicinaSoloVe_AuxiliarNo_ConLaAppEntera()
+    {
+        // Citas externas, PR 2 (script 0101): Administración registra y cambia siempre; Enfermería, solo con el permiso EXTERNAL_APPOINTMENT_MANAGE que le da Administración; Medicina
+        // las ve; una Auxiliar no entra. El aviso del inicio de Administración no lleva ni la especialidad ni el lugar. Las ayudas del DPO están junto a los campos y no hay
+        // cuadros de texto largos. Nombres, lugares y motivos inventados.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Cita Funcional");
+        var nurseSubject = await GrantNursingAsync(seed);
+        var nurse = await LoginAsync(nurseSubject);
+        var doctor = await LoginAsync(await GrantMedicineAsync(seed));
+        var auxiliar = await LoginAsync(await GrantAuxiliarAsync(seed, residentId));
+        var day = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(3).ToString("yyyy-MM-dd");
+        var farDay = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(40).ToString("yyyy-MM-dd");
+
+        async Task<(string Html, string? Id)> PostAsync(HttpClient client, string path, string formPath, Dictionary<string, string> fields)
+        {
+            var page = await client.GetStringAsync(formPath);
+            fields["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken");
+            var response = await client.PostAsync(path, new FormUrlEncodedContent(fields));
+            var query = response.RequestMessage!.RequestUri!.PathAndQuery;
+            return (WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()), Regex.Match(query, "([0-9a-f]{8}-[0-9a-f-]{27})").Groups[1].Value is { Length: > 0 } id ? id : null);
+        }
+
+        Dictionary<string, string> Fields(string date, string place = "Hospital de Prueba") => new()
+        {
+            ["Form.ResidenteId"] = residentId, ["Form.Fecha"] = date, ["Form.Tipo"] = "CONSULTA", ["Form.Especialidad"] = "CARDIOLOGIA", ["Form.Lugar"] = place,
+            ["Form.TransporteModo"] = "SIN_DETERMINAR", ["Form.AcompananteModo"] = "SIN_DETERMINAR", ["Form.Visibilidad"] = "VISIBLE",
+        };
+
+        var nueva = $"/CitasExternas/Nueva?residenteId={residentId}";
+        var form = WebUtility.HtmlDecode(await admin.GetStringAsync(nueva));
+        var withoutType = await PostAsync(admin, "/CitasExternas/Nueva", nueva, new() { ["Form.ResidenteId"] = residentId, ["Form.Fecha"] = day });
+        var registered = await PostAsync(admin, "/CitasExternas/Nueva", nueva, Fields(day));
+        var citaId = registered.Id;
+        var adminHome = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion"));
+        var nurseWithoutPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync(nueva));
+        var nurseList = WebUtility.HtmlDecode(await nurse.GetStringAsync("/CitasExternas"));
+        var doctorNew = WebUtility.HtmlDecode(await doctor.GetStringAsync(nueva));
+        var doctorList = WebUtility.HtmlDecode(await doctor.GetStringAsync("/CitasExternas"));
+        var doctorView = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/CitasExternas/Ver?id={citaId}"));
+        var auxiliarList = WebUtility.HtmlDecode(await auxiliar.GetStringAsync("/CitasExternas"));
+        var extremeDates = await admin.GetAsync("/CitasExternas?desde=9999-12-31&hasta=0001-01-01");
+
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var (nurseAccount, nurseScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @nurseSubject", new { nurseSubject });
+        var profilePage = await admin.GetStringAsync($"/Administracion/PerfilUsuario?cuentaId={nurseAccount}&ambitoId={nurseScope}");
+        var granted = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/PermisoPerfil", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(profilePage, "__RequestVerificationToken"), ["cuentaId"] = nurseAccount.ToString(),
+            ["ambitoId"] = nurseScope.ToString(), ["permiso"] = "EXTERNAL_APPOINTMENT_MANAGE", ["conceder"] = "true",
+        }))).Content.ReadAsStringAsync());
+        var nurseForm = WebUtility.HtmlDecode(await nurse.GetStringAsync(nueva));
+        var nurseRecord = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+
+        var editar = $"/CitasExternas/Editar?id={citaId}";
+        var editPage = WebUtility.HtmlDecode(await nurse.GetStringAsync(editar));
+        Dictionary<string, string> Edit(string date, string version, string transport, string motive = "") => new(Fields(date))
+        {
+            ["Form.CitaId"] = citaId!, ["Form.VersionVista"] = version, ["Form.TransporteModo"] = transport, ["Form.TransporteConfirmado"] = "true",
+            ["Form.AcompananteModo"] = "NO_NECESITA", ["Form.MotivoCodigo"] = motive,
+        };
+        var coveredByNurse = await PostAsync(nurse, "/CitasExternas/Editar", editar, Edit(day, "1", "FAMILIA"));
+        var adminHomeCovered = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion"));
+        var rescheduleWithoutReason = await PostAsync(nurse, "/CitasExternas/Editar", editar, Edit(farDay, "2", "FAMILIA"));
+        var staleEdit = await PostAsync(nurse, "/CitasExternas/Editar", editar, Edit(day, "1", "CENTRO"));
+        var rescheduled = await PostAsync(nurse, "/CitasExternas/Editar", editar, Edit(farDay, "2", "FAMILIA", "CAMBIO_DEL_HOSPITAL"));
+
+        var ver = $"/CitasExternas/Ver?id={citaId}";
+        var viewPage = WebUtility.HtmlDecode(await nurse.GetStringAsync(ver));
+        var done = await PostAsync(nurse, "/CitasExternas/Estado", ver, new() { ["id"] = citaId!, ["version"] = "3", ["estado"] = "REALIZADA" });
+        var afterDone = WebUtility.HtmlDecode(await nurse.GetStringAsync(editar));
+
+        var second = await PostAsync(admin, "/CitasExternas/Nueva", nueva, Fields(day, "Centro de Salud de Prueba"));
+        var cancelar = $"/CitasExternas/Cancelar?id={second.Id}";
+        var withoutReason = await PostAsync(admin, "/CitasExternas/Cancelar", cancelar, new() { ["Form.CitaId"] = second.Id!, ["Form.VersionVista"] = "1" });
+        var dischargePreview = WebUtility.HtmlDecode(await admin.GetStringAsync($"/Administracion/DarDeBaja?residenteId={residentId}"));
+        var cancelled = await PostAsync(admin, "/CitasExternas/Cancelar", cancelar,
+            new() { ["Form.CitaId"] = second.Id!, ["Form.VersionVista"] = "1", ["Form.MotivoCodigo"] = "CAMBIO_EN_EL_CENTRO" });
+
+        Assert.Contains("Revisa que sea la persona correcta.", form);
+        Assert.Contains("Residente Cita Funcional", form);
+        Assert.Contains("autocomplete=\"off\"", form);
+        Assert.Contains("Solo el nombre del hospital o centro. No escribas el servicio, la unidad ni el motivo.", form);
+        Assert.Contains("Solo lo que hay que llevar o hacer para salir. Las indicaciones clínicas van por Medicina, no aquí.", form);
+        Assert.Contains("maxlength=\"80\"", form);
+        Assert.Contains("maxlength=\"100\"", form);
+        Assert.DoesNotContain("<textarea", form);
+        Assert.Contains("Revisa la cita:", withoutType.Html);
+        Assert.NotNull(citaId);
+        Assert.Contains("Cita externa registrada.", registered.Html);
+        Assert.Contains("Por confirmar", registered.Html);
+        Assert.Contains("falta transporte y acompañante", registered.Html);
+        Assert.Contains("Cardiología", registered.Html);
+        Assert.Contains("Citas externas con algo sin cubrir", adminHome);
+        Assert.Contains("Residente Cita Funcional", adminHome);
+        Assert.Contains("falta transporte y acompañante", adminHome);
+        Assert.DoesNotContain("Cardiología", adminHome);
+        Assert.DoesNotContain("Hospital de Prueba", adminHome);
+        Assert.Contains("hace falta el permiso «Registrar y cambiar las citas externas de los residentes»", nurseWithoutPermission);
+        Assert.DoesNotContain("Registrar una cita externa", nurseList);
+        Assert.Contains("Residente Cita Funcional", nurseList);
+        Assert.Contains("Las registra Administración", doctorNew);
+        Assert.Contains("Residente Cita Funcional", doctorList);
+        Assert.DoesNotContain("Registrar una cita externa", doctorList);
+        Assert.DoesNotContain("Cambiar la cita", doctorView);
+        Assert.Contains("Solo puedes ver esta cita.", doctorView);
+        Assert.DoesNotContain("Pruebas, consultas y tratamientos de los residentes fuera del centro", auxiliarList);
+        Assert.Equal(HttpStatusCode.OK, extremeDates.StatusCode);
+        Assert.Contains("Permiso concedido.", granted);
+        Assert.Contains("Revisa que sea la persona correcta.", nurseForm);
+        Assert.Contains("Registrar cita externa", nurseRecord);
+        Assert.Contains("Cambiar la cita externa", editPage);
+        Assert.Contains("Cita externa guardada.", coveredByNurse.Html);
+        Assert.Contains("Cubierta", coveredByNurse.Html);
+        Assert.DoesNotContain("Citas externas con algo sin cubrir", adminHomeCovered);
+        Assert.Contains("Revisa la cita:", rescheduleWithoutReason.Html);
+        Assert.Contains("Otra persona ha cambiado esta cita", staleEdit.Html);
+        Assert.Contains("Cita externa guardada.", rescheduled.Html);
+        Assert.Contains("Dar por realizada", viewPage);
+        Assert.Contains("Estado de la cita guardado.", done.Html);
+        Assert.Contains("La cita está cerrada y no se puede cambiar.", done.Html);
+        Assert.Contains("La cita ya está cerrada", afterDone);
+        Assert.Contains("Elige el motivo de la cancelación.", withoutReason.Html);
+        Assert.Contains("Al dar de baja se cancelarán solas las citas externas abiertas", dischargePreview);
+        Assert.Contains("Cita externa cancelada.", cancelled.Html);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas_cambios WHERE cita_id = @id AND accion_codigo = 'REPROGRAMADA'", new { id = citaId }));
+        Assert.Equal("CAMBIO_DEL_HOSPITAL", await connection.ExecuteScalarAsync<string>("SELECT motivo_codigo FROM dbo.citas_externas_cambios WHERE cita_id = @id AND accion_codigo = 'REPROGRAMADA'", new { id = citaId }));
+    }
+
     private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields, string action = "Alergias")
     {
         fields["__RequestVerificationToken"] = token;

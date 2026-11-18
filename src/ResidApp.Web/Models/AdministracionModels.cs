@@ -15,10 +15,10 @@ namespace ResidApp.Web.Models;
 /// <summary>ADM-01: el inicio de Administración, con el número de residentes activos del ámbito y el de cuentas con
 /// algún perfil en el centro.</summary>
 /// <summary>El inicio de Administración. AccountsToReview son las cuentas suspendidas o sin ámbito (ProfessionalAccountAttention), null si no se
-/// pudieron leer.</summary>
+/// pudieron leer. ExternalAppointmentsUncovered son las citas externas de los próximos días con transporte o acompañante sin cubrir (null si no se pudieron leer; script 0101).</summary>
 public sealed record AdministracionInicioViewModel(
     int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null,
-    int? AccountsToReview = null)
+    int? AccountsToReview = null, IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsUncovered = null, DateOnly ExternalAppointmentsToday = default)
 {
     public bool NothingPending => Attention is { NothingPending: true } && (AccountsToReview ?? 0) == 0;
 }

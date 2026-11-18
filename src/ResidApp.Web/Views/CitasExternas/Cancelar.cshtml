@@ -1,0 +1,52 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentCancelViewModel
+@* Citas externas de los residentes, PR 2 (script 0101): cancelar una cita abierta. El motivo es de lista cerrada, más una línea corta opcional. *@
+@{
+    var record = Model.Record;
+    ViewData["Title"] = "Cancelar la cita externa";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        <li class="breadcrumb-item"><a asp-action="Ver" asp-route-id="@record.Id">@record.ResidentName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cancelar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Cancelar la cita externa</h1>
+<p>Cita de <strong>@record.ResidentName</strong> el @ExternalAppointmentDisplay.Date(record.Appointment.Date), @ExternalAppointmentDisplay.Time(record.Appointment). Una cita cancelada no se puede reabrir: si hay que volver a pedirla, se registra otra.</p>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+
+<form asp-action="Cancelar" method="post" autocomplete="off">
+    <input type="hidden" name="Form.CitaId" value="@record.Id" />
+    <input type="hidden" name="Form.VersionVista" value="@Model.Form.VersionVista" />
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-5">
+            <label class="form-label" for="motivo">Motivo de la cancelación</label>
+            <select class="form-select" id="motivo" name="Form.MotivoCodigo" required>
+                <option value="">Elige el motivo</option>
+                @foreach (var reason in Enum.GetValues<ExternalAppointmentReasonCode>())
+                {
+                    <option value="@reason.ToCode()" selected="@(Model.Form.MotivoCodigo == reason.ToCode())">@EnumDisplay.Label(reason)</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-7">
+            <label class="form-label" for="motivo-linea">Una línea más (opcional)</label>
+            <input class="form-control" id="motivo-linea" name="Form.MotivoLinea" maxlength="@ExternalAppointmentRules.MaxReasonLineLength" value="@Model.Form.MotivoLinea" autocomplete="off" aria-describedby="motivo-ayuda" />
+            <div class="form-text" id="motivo-ayuda">No escribas diagnósticos ni nombres.</div>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-danger btn-lg">Cancelar la cita</button>
+        <a asp-action="Ver" asp-route-id="@record.Id" class="btn btn-outline-secondary btn-lg">No cancelar</a>
+    </div>
+</form>

@@ -1,6 +1,6 @@
 {
   "perfil": "Enfermeria",
-  "proposito": "Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide qué hacer: cerrar el evento, hacer seguimiento, escalarlo a Medicina o activar el protocolo urgente. Cumple las indicaciones de Medicina, deriva a Urgencias y prepara los comunicados a la familia. Con permiso, también da de alta residentes, gestiona la foto, firma el estado basal y rellena la ficha de antecedentes de salud. ResidApp no diagnostica ni decide nada clínico: registra lo que decides tú.",
+  "proposito": "Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide qué hacer: cerrar el evento, hacer seguimiento, escalarlo a Medicina o activar el protocolo urgente. Cumple las indicaciones de Medicina, deriva a Urgencias y prepara los comunicados a la familia. Con permiso, también da de alta residentes, gestiona la foto, firma el estado basal rellena la ficha de antecedentes de salud y registra las citas externas de los residentes. ResidApp no diagnostica ni decide nada clínico: registra lo que decides tú.",
   "rutina": [
     "Entras en el **Inicio de Enfermería**: las tarjetas te dicen cuántos eventos prioritarios hay, cuántos protocolos urgentes y seguimientos abiertos, cuántas indicaciones de Medicina esperan y cuántos episodios hay para cerrar.",
     "Abres primero la bandeja prioritaria y después la de cambios ordinarios: cada evento se valora y se decide.",
@@ -23,6 +23,7 @@
     "Crear, completar y firmar el **estado basal**: **Basal inicial (al alta)** para el basal del alta y **Reevaluar el basal** para cualquier otro motivo (ver ENF-18).",
     "**Poner, cambiar y quitar la foto del residente** (ver ENF-19).",
     "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos, ver ENF-20; enfermedades e intervenciones, ver ENF-21; medicación habitual, ver ENF-22).",
+    "**Registrar y cambiar las citas externas de los residentes** (ver ENF-23).",
     "Estos permisos los concede Administración."
   ],
   "nunca": [
@@ -34,7 +35,7 @@
     "Cambiar los rangos de referencia de las constantes: los fija Dirección Clínica. Tú los ves en la valoración, como aviso."
   ],
   "revisadoPara": "0.4.0",
-  "revisado": "2026-11-16",
+  "revisado": "2026-11-18",
   "fichas": [
     {
       "codigo": "ENF-01",
@@ -47,7 +48,7 @@
       "pasos": [
         { "texto": "Pulsa **Mi panel** (arriba): se abre el **Inicio de Enfermería**.", "botones": ["Mi panel"], "campos": ["Inicio de Enfermería"] },
         { "texto": "Si algún hito de tu perfil está a punto de vencer o ya ha pasado de plazo, arriba, antes de las tarjetas, ves un aviso **Hitos fuera de plazo o a punto de vencer** (o «Hitos a punto de vencer»): cada línea trae el residente, la unidad y el hito, con «Vence a las…» o «Plazo pasado desde las…». Pulsa el nombre del residente para abrir su ficha." },
-        { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Bandeja prioritaria**, **Protocolos urgentes**, **Seguimientos**, **Indicaciones** (con las «sin leer»), **Para cerrar**, **Cambios ordinarios**, **Escalados a Medicina**, **Comunicaciones** (por publicar) y **Residentes**.", "campos": ["Bandeja prioritaria", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Para cerrar", "Cambios ordinarios", "Escalados a Medicina", "Comunicaciones", "Residentes"] },
+        { "texto": "Lee las tarjetas, de lo más urgente a lo menos: **Bandeja prioritaria**, **Protocolos urgentes**, **Seguimientos**, **Indicaciones** (con las «sin leer»), **Para cerrar**, **Cambios ordinarios**, **Escalados a Medicina**, **Comunicaciones** (por publicar), **Residentes** y **Citas externas**.", "campos": ["Bandeja prioritaria", "Protocolos urgentes", "Seguimientos", "Indicaciones", "Para cerrar", "Cambios ordinarios", "Escalados a Medicina", "Comunicaciones", "Residentes", "Citas externas"] },
         { "texto": "Pulsa una tarjeta para abrir su bandeja." }
       ],
       "despues": [
@@ -755,6 +756,50 @@
       ],
       "manual": { "id": "ficha-antecedentes", "titulo": "Ficha de antecedentes de salud" },
       "flujo": { "id": "llegada", "titulo": "Llega un residente: alta, familia y basal" }
+    },
+    {
+      "codigo": "ENF-23",
+      "pregunta": "¿Cómo registro y cambio las citas externas de un residente?",
+      "palabras": ["citas externas", "cita externa", "hospital", "consulta", "prueba", "transporte", "acompañante", "reprogramar", "cancelar", "permiso"],
+      "permisos": ["EXTERNAL_APPOINTMENT_MANAGE"],
+      "concede": "Administración",
+      "antes": [
+        "Tener el permiso **Registrar y cambiar las citas externas de los residentes**. Sin él, ves las citas de tus residentes pero no las cambias: te dice que se lo pidas a Administración. Verlas no necesita permiso.",
+        "Tener a mano lo que te han dado en el hospital o en el centro de salud: el día, la hora si la hay, el nombre del lugar y qué hay que llevar o hacer para salir.",
+        "Saber que aquí solo van datos de agenda: el lugar es solo el nombre del hospital o centro, y «qué preparar» es solo lo que hay que llevar o hacer para salir. Las indicaciones clínicas no se escriben aquí."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas**; o, desde la ficha del residente, pulsa **Registrar cita externa**.", "botones": ["Citas externas", "Registrar cita externa"] },
+        { "texto": "En la lista, pulsa **Registrar una cita externa** y elige al residente (si vienes de su ficha, ya está elegido). Comprueba que sea la persona correcta.", "botones": ["Registrar una cita externa"], "campos": ["Residente"] },
+        { "texto": "Rellena el «Día» y, si ya la saben, la «Hora (opcional)»; si no, déjala vacía y saldrá como «Por confirmar». Elige el «Tipo de cita» y, si quieres, la «Especialidad (opcional)».", "campos": ["Día", "Hora (opcional)", "Tipo de cita", "Especialidad (opcional)"] },
+        { "texto": "Escribe el «Lugar» (solo el nombre del hospital o centro), elige el «Transporte» y el «Acompañante» y marca «El transporte está confirmado» o «El acompañante está confirmado» cuando esté resuelto. «Sin determinar» siempre queda pendiente y «No necesita» queda confirmado.", "campos": ["Lugar", "Transporte", "Acompañante", "El transporte está confirmado", "El acompañante está confirmado"] },
+        { "texto": "Marca lo que hay que llevar o hacer en «Qué preparar», elige «Qué ve la familia» y pulsa **Registrar la cita**.", "botones": ["Registrar la cita"], "campos": ["Qué preparar", "Qué ve la familia"] },
+        { "texto": "Para cambiarla, ábrela desde la lista y pulsa **Cambiar la cita**, haz el cambio y pulsa **Guardar los cambios**. Si cambias el día o la hora, es una reprogramación: elige el «Motivo de la reprogramación».", "botones": ["Cambiar la cita", "Guardar los cambios"], "campos": ["Motivo de la reprogramación"] },
+        { "texto": "Cuando pase, abre la cita y pulsa **Confirmada por el hospital**, **Dar por realizada** o **No se acudió**. Para anularla, pulsa **Cancelar la cita** y elige el «Motivo de la cancelación».", "botones": ["Confirmada por el hospital", "Dar por realizada", "No se acudió", "Cancelar la cita"], "campos": ["Motivo de la cancelación"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Cita externa registrada.» (o «Cita externa guardada.», «Estado de la cita guardado.», «Cita externa cancelada.») y la ficha de la cita, con «Falta algo» mientras el transporte o el acompañante estén pendientes y «Cubierta» cuando estén resueltos." },
+        { "para": "Administración", "texto": "Mientras falte transporte o acompañante en una cita de los próximos 7 días, le sale un aviso en su Inicio, con el residente y el día, sin la especialidad ni el lugar." },
+        { "para": "Medicina", "texto": "Ve la cita en su lista y en la ficha del residente, pero no la cambia." }
+      ],
+      "dudas": [
+        { "p": "«Para registrar o cambiar citas externas hace falta el permiso…»", "r": "Tu ámbito no tiene el permiso. Pídeselo a Administración, que es quien lo concede." },
+        { "p": "«Revisa la cita: el día no puede ser anterior a hoy…»", "r": "Falta elegir el tipo, el transporte, el acompañante o qué ve la familia; el día es anterior a hoy; el lugar o «qué preparar» pasan de una línea corta; o has cambiado el día o la hora sin elegir el motivo." },
+        { "p": "«Otra persona ha cambiado esta cita…»", "r": "Alguien la guardó antes que tú. Te llevamos a la cita para que veas cómo está ahora y, si hace falta, repitas tu cambio." },
+        { "p": "«La cita ya está cerrada…»", "r": "Una cita realizada, no acudida o cancelada ya no se cambia ni se reabre. Si hay que volver a pedirla, regístrala de nuevo." },
+        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva; la familia no recibe avisos." },
+        { "p": "Me equivoqué al registrarla.", "r": "Cámbiala. Si cambias el día o la hora, elige el motivo «Error de registro»; el historial lo conserva." }
+      ],
+      "rutas": ["Enfermeria/Index", "Enfermeria/Residente", "CitasExternas/Index", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
+      "mensajes": [
+        "Cita externa registrada.",
+        "Cita externa guardada.",
+        "Estado de la cita guardado.",
+        "Cita externa cancelada.",
+        "Revisa la cita:",
+        "Otra persona ha cambiado esta cita"
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }
   ]
 }

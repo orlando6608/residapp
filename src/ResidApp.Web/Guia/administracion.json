@@ -1,6 +1,6 @@
 {
   "perfil": "Administracion",
-  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes y sus familias, gestiona los comunicados y las citas, y organiza los turnos, los equipos y el organigrama. No ve el basal ni ningún contenido clínico.",
+  "proposito": "Administración monta y mantiene el centro: su nombre y logo, sus unidades, edificios y habitaciones, las cuentas de las personas que trabajan en él con sus perfiles, unidades y permisos, y la entrada y salida de datos. También da de alta a los residentes y sus familias, gestiona los comunicados, las citas con la familia y las citas externas de los residentes, y organiza los turnos, los equipos y el organigrama. No ve el basal ni ningún contenido clínico.",
   "rutina": [
     "Abres **Inicio de Administración** y miras el bloque **Requiere atención**: cada línea te lleva a la pantalla donde se resuelve.",
     "Cuando empieza alguien, le das de alta en **Usuarios**, le concedes su perfil y sus unidades y le entregas su invitación en mano.",
@@ -13,6 +13,7 @@
     "Dar de alta cuentas del personal, entregarles su invitación de acceso o de recuperación, concederles y revocarles perfiles y unidades, y suspenderlas o reactivarlas.",
     "Conceder y revocar los permisos configurables de Enfermería, Medicina y Dirección / Coordinación Clínica, y asignar residentes a un Auxiliar.",
     "Dar acceso a alguien que ya tiene cuenta en otro centro, con una hoja que esa persona usa desde «Mi cuenta».",
+    "Registrar y cambiar las citas externas de los residentes, y ver cuáles tienen el transporte o el acompañante sin cubrir (ver ADM-47).",
     "Importar y exportar la estructura y el censo de residentes, y consultar la auditoría administrativa de tu ámbito."
   ],
   "conPermiso": [],
@@ -24,7 +25,7 @@
     "Añadirte unidades a tu ámbito ni marcar a otra cuenta como principal, si no eres la Administración principal del centro."
   ],
   "revisadoPara": "0.4.0",
-  "revisado": "2026-11-16",
+  "revisado": "2026-11-18",
   "fichas": [
     {
       "codigo": "ADM-01",
@@ -38,7 +39,7 @@
         { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente, fotos de más de 12 meses y cuentas profesionales suspendidas o sin ámbito.", "campos": ["Inicio de Administración", "Requiere atención"] },
         { "texto": "Si no hay nada que atender, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
         { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados en los últimos 7 días." },
-        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
+        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Citas externas**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**. Aparte de «Requiere atención», el aviso **Citas externas con algo sin cubrir** (ver ADM-47) lista las citas de los próximos 7 días a las que falta transporte o acompañante.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
       ],
       "despues": [
         { "para": "Administración", "texto": "Cada línea te lleva ya filtrada a la lista donde se resuelve (por ejemplo, **Usuarios** solo con las cuentas que conviene revisar). Las cifras de residentes y autorizaciones son de tu ámbito; las de citas y cuentas, de todo el centro." }
@@ -431,11 +432,11 @@
     {
       "codigo": "ADM-14",
       "pregunta": "¿Cómo concedo o revoco un permiso configurable de Enfermería, Medicina o Dirección?",
-      "palabras": ["permiso", "conceder permiso", "revocar permiso", "basal", "alta de residentes", "foto", "antecedentes", "alergias", "rangos", "plazos", "indicadores", "lectura clínica"],
+      "palabras": ["permiso", "conceder permiso", "revocar permiso", "basal", "alta de residentes", "foto", "antecedentes", "alergias", "citas externas", "rangos", "plazos", "indicadores", "lectura clínica"],
       "permisos": [],
       "antes": [
         "Ningún perfil trae estos permisos por defecto: **solo Administración los concede**. Valen en las unidades del perfil.",
-        "Ten claro qué permiso corresponde a cada perfil: **Enfermería:** «Dar de alta residentes», «Basal inicial (al alta)», «Reevaluar el basal» , «Poner, cambiar y quitar la foto del residente» y «Rellenar y cambiar la ficha de antecedentes de salud». **Medicina:** «Basal inicial (al alta)», «Reevaluar el basal» y «Rellenar y cambiar la ficha de antecedentes de salud». **Dirección:** «Lectura clínica detallada y auditada», «Gestionar los rangos de referencia de constantes», «Gestionar los plazos de los hitos del proceso» y «Ver los indicadores y la calidad de proceso». Auxiliar, Familia, Administración y Plataforma no tienen permisos configurables."
+        "Ten claro qué permiso corresponde a cada perfil: **Enfermería:** «Dar de alta residentes», «Basal inicial (al alta)», «Reevaluar el basal» , «Poner, cambiar y quitar la foto del residente», «Rellenar y cambiar la ficha de antecedentes de salud» y «Registrar y cambiar las citas externas de los residentes». **Medicina:** «Basal inicial (al alta)», «Reevaluar el basal» y «Rellenar y cambiar la ficha de antecedentes de salud». **Dirección:** «Lectura clínica detallada y auditada», «Gestionar los rangos de referencia de constantes», «Gestionar los plazos de los hitos del proceso» y «Ver los indicadores y la calidad de proceso». Auxiliar, Familia, Administración y Plataforma no tienen permisos configurables."
       ],
       "pasos": [
         { "texto": "En **Usuarios**, abre la ficha de la cuenta y pulsa **Gestionar** en su perfil.", "botones": ["Gestionar"] },
@@ -443,7 +444,7 @@
         { "texto": "Pulsa **Conceder** para darlo o **Revocar** para quitarlo.", "botones": ["Conceder", "Revocar"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual." },
+        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual; con el de citas externas, registrar y cambiar las citas externas de los residentes (ver ADM-47)." },
         { "para": "Medicina", "texto": "Con los permisos de basal puede crear, completar y firmar el basal; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual." },
         { "para": "Dirección / Coordinación Clínica", "texto": "Con cada permiso se le abren la lectura clínica con finalidad declarada, los rangos, los plazos o los indicadores y la calidad de proceso." }
       ],
@@ -743,12 +744,12 @@
         "Una forma de **avisar tú a la familia**: ResidApp no le manda ningún aviso."
       ],
       "pasos": [
-        { "texto": "En la ficha del residente, pulsa **Dar de baja**. La pantalla dice cuántas citas futuras y solicitudes de cita abiertas se cancelarán o cerrarán solas.", "botones": ["Dar de baja"] },
+        { "texto": "En la ficha del residente, pulsa **Dar de baja**. La pantalla dice cuántas citas futuras, citas externas y solicitudes de cita abiertas se cancelarán o cerrarán solas.", "botones": ["Dar de baja"] },
         { "texto": "Elige el «Motivo de la baja» y, si es «Otro motivo», escribe el «Detalle del motivo (obligatorio con «Otro motivo»)».", "campos": ["Motivo de la baja", "Detalle del motivo (obligatorio con «Otro motivo»)"] },
-        { "texto": "Pulsa **Dar de baja**. Vuelves a «Residentes dados de baja», con el aviso «… se ha dado de baja. Sus datos se conservan 15 años.» (y, si había citas, «Se canceló 1 cita futura. La familia no recibe aviso: avísala tú.»).", "botones": ["Dar de baja"] }
+        { "texto": "Pulsa **Dar de baja**. Vuelves a «Residentes dados de baja», con el aviso «… se ha dado de baja. Sus datos se conservan 15 años.» (y, si había citas, «Se canceló 1 cita futura.» o «Se canceló 1 cita externa.», y «La familia no recibe aviso: avísala tú.»).", "botones": ["Dar de baja"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "**No recibe ningún aviso: avísala tú** (por teléfono o por el canal habitual del centro). Sus citas futuras se cancelan y sus solicitudes abiertas se cierran, y quedan en el historial como «Sistema, a causa de la baja»; si reactivas al residente, no se restauran." },
+        { "para": "Familia", "texto": "**No recibe ningún aviso: avísala tú** (por teléfono o por el canal habitual del centro). Sus citas futuras se cancelan y sus solicitudes abiertas se cierran, y quedan en el historial como «Sistema, a causa de la baja»; lo mismo ocurre con sus citas externas abiertas de hoy en adelante; si reactivas al residente, no se restauran." },
         { "para": "Administración", "texto": "Los datos **no se borran**: se conservan 15 años desde la baja, en solo lectura, en «Residentes dados de baja» (ver ADM-25). Si solo está ingresado en un hospital un tiempo, no es una baja: usa Suspender (ver ADM-23)." }
       ],
       "dudas": [
@@ -758,6 +759,7 @@
       "rutas": ["Administracion/Residente", "Administracion/DarDeBaja"],
       "mensajes": [
         "se ha dado de baja. Sus datos se conservan",
+        "Al dar de baja se cancelarán solas las citas externas abiertas",
         "Si el motivo es «Otro motivo», escribe cuál (hasta 500 caracteres).",
         "El estado del residente ha cambiado mientras preparabas la baja. Revisa su ficha."
       ],
@@ -1488,6 +1490,50 @@
         "Persona quitada del cargo. El organigrama solo guarda lo actual."
       ],
       "manual": { "id": "organigrama-cargos", "titulo": "Organigrama y cargos" }
+    },
+    {
+      "codigo": "ADM-47",
+      "pregunta": "¿Cómo registro, cambio y sigo las citas externas de un residente?",
+      "palabras": ["citas externas", "cita externa", "hospital", "consulta", "prueba", "tratamiento", "transporte", "acompañante", "reprogramar", "cancelar", "sin cubrir"],
+      "permisos": [],
+      "antes": [
+        "Tener los datos de la cita: el día, la hora si la hay, el tipo, el nombre del hospital o centro y cómo llegará el residente.",
+        "Saber que son las citas del residente **fuera del centro** (pruebas, consultas, tratamientos). No son las «Citas con la familia» del centro.",
+        "Saber que aquí solo van datos de agenda: el lugar es solo el nombre del hospital o centro, y «qué preparar» es solo lo que hay que llevar o hacer para salir. Las indicaciones clínicas no se escriben aquí."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas**; o, desde la ficha del residente, pulsa **Registrar cita externa**.", "botones": ["Citas externas", "Registrar cita externa"] },
+        { "texto": "En la lista, pulsa **Registrar una cita externa** y elige al «Residente» (si vienes de su ficha, ya está elegido). Comprueba que sea la persona correcta.", "botones": ["Registrar una cita externa"], "campos": ["Residente"] },
+        { "texto": "Rellena el «Día» y, si ya la saben, la «Hora (opcional)»; si no, déjala vacía y saldrá como «Por confirmar». Elige el «Tipo de cita» y, si quieres, la «Especialidad (opcional)».", "campos": ["Día", "Hora (opcional)", "Tipo de cita", "Especialidad (opcional)"] },
+        { "texto": "Escribe el «Lugar», elige el «Transporte» y el «Acompañante» y marca «El transporte está confirmado» o «El acompañante está confirmado» cuando esté resuelto. «Sin determinar» siempre queda pendiente y «No necesita» queda confirmado.", "campos": ["Lugar", "Transporte", "Acompañante", "El transporte está confirmado", "El acompañante está confirmado"] },
+        { "texto": "Marca lo que hay que llevar o hacer en «Qué preparar», elige «Qué ve la familia» y pulsa **Registrar la cita**.", "botones": ["Registrar la cita"], "campos": ["Qué preparar", "Qué ve la familia"] },
+        { "texto": "Para cambiarla, ábrela desde la lista y pulsa **Cambiar la cita**, haz el cambio y pulsa **Guardar los cambios**. Si cambias el día o la hora, es una reprogramación: elige el «Motivo de la reprogramación».", "botones": ["Cambiar la cita", "Guardar los cambios"], "campos": ["Motivo de la reprogramación"] },
+        { "texto": "Cuando pase, abre la cita y pulsa **Confirmada por el hospital**, **Dar por realizada** o **No se acudió**. Para anularla, pulsa **Cancelar la cita** y elige el «Motivo de la cancelación».", "botones": ["Confirmada por el hospital", "Dar por realizada", "No se acudió", "Cancelar la cita"], "campos": ["Motivo de la cancelación"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Cita externa registrada.» (o «Cita externa guardada.», «Estado de la cita guardado.», «Cita externa cancelada.»). Mientras falte transporte o acompañante en una cita de los próximos 7 días, te sale un aviso en tu Inicio, con el residente, el día y qué falta, sin la especialidad ni el lugar; a 2 días o menos sale más destacado." },
+        { "para": "Enfermería", "texto": "Ve la cita en su lista y en la ficha del residente. La cambia solo si le has concedido el permiso (ver ADM-14)." },
+        { "para": "Medicina", "texto": "Ve la cita, pero no la cambia." },
+        { "para": "Familia", "texto": "Todavía no ve las citas externas." }
+      ],
+      "dudas": [
+        { "p": "«Revisa la cita: el día no puede ser anterior a hoy…»", "r": "Falta elegir el tipo, el transporte, el acompañante o qué ve la familia; el día es anterior a hoy; el lugar o «qué preparar» pasan de una línea corta; o has cambiado el día o la hora sin elegir el motivo." },
+        { "p": "«Otra persona ha cambiado esta cita…»", "r": "Alguien la guardó antes que tú. Te llevamos a la cita para que veas cómo está ahora y, si hace falta, repitas tu cambio." },
+        { "p": "«La cita ya está cerrada…»", "r": "Una cita realizada, no acudida o cancelada ya no se cambia ni se reabre. Si hay que volver a pedirla, regístrala de nuevo." },
+        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva; la familia no recibe avisos." },
+        { "p": "Doy de baja al residente.", "r": "Sus citas externas abiertas de hoy en adelante se cancelan solas y la pantalla de la baja te dice cuántas son. No se restauran al reactivarlo. La familia no recibe aviso: avísala tú." },
+        { "p": "El aviso del Inicio no sale.", "r": "Solo sale si hay una cita abierta en los próximos 7 días con el transporte o el acompañante sin confirmar. Si todo está «Cubierta», no hay aviso." }
+      ],
+      "rutas": ["Administracion/Index", "Administracion/Residente", "CitasExternas/Index", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar"],
+      "mensajes": [
+        "Cita externa registrada.",
+        "Cita externa guardada.",
+        "Estado de la cita guardado.",
+        "Cita externa cancelada.",
+        "Revisa la cita:",
+        "Otra persona ha cambiado esta cita"
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }
   ]
 }

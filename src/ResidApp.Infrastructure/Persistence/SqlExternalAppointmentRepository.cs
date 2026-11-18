@@ -199,14 +199,14 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
         return row is null ? null : ToRecord(row);
     }
 
-    public async Task<IReadOnlyList<ExternalAppointmentRecord>> ListAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ExternalAppointmentRecord>> ListAsync(ExternalAppointmentActor actor, DateOnly from, DateOnly to, ResidentId? residentId = null, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<Row>(new CommandDefinition($"""
             {SelectSql}
-             WHERE e.centro_id = @CenterId AND e.fecha BETWEEN @From AND @To AND {AppointmentScopeSql}
+             WHERE e.centro_id = @CenterId AND e.fecha BETWEEN @From AND @To AND (@ResidentId IS NULL OR e.residente_id = @ResidentId) AND {AppointmentScopeSql}
              ORDER BY e.fecha, CASE WHEN e.hora IS NULL THEN 1 ELSE 0 END, e.hora, e.creada_en
-            """, Params(actor, new { From = from, To = to }), cancellationToken: ct));
+            """, Params(actor, new { From = from, To = to, ResidentId = residentId?.Value }), cancellationToken: ct));
         return rows.Select(ToRecord).ToList();
     }
 

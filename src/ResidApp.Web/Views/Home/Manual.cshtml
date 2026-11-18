@@ -14,13 +14,13 @@
         <li><strong>Auxiliar:</strong> sus residentes asignados, el registro cotidiano y el registro de cambios ordinarios o prioritarios.</li>
         <li><strong>Enfermería:</strong> residentes, estado basal completo (nueve áreas, Barthel y firma), evento propio, bandejas,
             valoración, cierre con la decisión de comunicación familiar, seguimiento, escalado a Medicina, indicaciones médicas,
-            protocolo urgente y derivación a Urgencias.</li>
+            protocolo urgente y derivación a Urgencias y, con permiso, las citas externas de los residentes.</li>
         <li><strong>Medicina:</strong> residentes, evento propio, escalados recibidos, valoración médica, indicaciones a Enfermería,
-            seguimiento médico, protocolo urgente, derivación a Urgencias, cierre médico y, con permiso, el estado basal.</li>
+            seguimiento médico, protocolo urgente, derivación a Urgencias, cierre médico, las citas externas de los residentes (solo verlas) y, con permiso, el estado basal.</li>
         <li><strong>Enfermería y Medicina:</strong> el historial y la línea temporal de cada residente, y la corrección o rectificación de
             la propia valoración.</li>
         <li><strong>Administración:</strong> residentes y su ficha (traslados, bajas y suspensiones), familiares y autorizaciones, usuarios y permisos, nombre y logo del centro, estructura del
-            centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, organigrama y cargos, citas con la familia, importación y exportación de datos, comunicados a la familia y auditoría.</li>
+            centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, organigrama y cargos, citas con la familia, citas externas de los residentes, importación y exportación de datos, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
         <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente y las citas con el centro.</li>
@@ -83,6 +83,7 @@
             <a class="list-group-item list-group-item-action" href="#correccion">Corregir o rectificar una valoración (Enfermería y Medicina)</a>
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#citas-administracion">Citas con la familia (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#citas-externas">Citas externas de los residentes</a>
             <a class="list-group-item list-group-item-action" href="#portal-familiar">Portal Familiar</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -263,7 +264,7 @@
                 <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Administración principal de las dos plantas.</td></tr>
                 <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Las dos plantas, con lectura clínica auditada, rangos de referencia, plazos de los hitos e indicadores y calidad de proceso.</td></tr>
                 <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Las dos plantas, con permiso de basal y de la ficha de antecedentes.</td></tr>
-                <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal y de la ficha de antecedentes; miembro de los equipos de las dos plantas.</td></tr>
+                <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal, de la ficha de antecedentes y de las citas externas; miembro de los equipos de las dos plantas.</td></tr>
                 <tr><td><code>almendros-enfermeria-planta1</code></td><td>Enfermería</td><td>Solo la Planta 1, con los mismos permisos; sirve para probar el historial tras un traslado.</td></tr>
                 <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con cinco residentes en «Mis residentes»: Rosa, Antonio, Carmen, Lucía y Manuel.</td></tr>
                 <tr><td><code>almendros-elena</code></td><td>Familiar</td><td>Elena, hija de Rosa, en el Portal Familiar.</td></tr>
@@ -387,7 +388,7 @@
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
         son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
         «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»), <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»), <strong>Citas con la familia</strong> (ver «Citas con la familia») e <strong>Importar datos</strong> y <strong>Exportar datos</strong> (ver «Importar y exportar datos»). En el alta, la unidad se elige en una lista con las unidades de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»), <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»), <strong>Citas con la familia</strong> (ver «Citas con la familia»), <strong>Citas externas</strong> (ver «Citas externas de los residentes»; ahí se explica también el aviso «Citas externas con algo sin cubrir», que sale aparte de «Requiere atención») e <strong>Importar datos</strong> y <strong>Exportar datos</strong> (ver «Importar y exportar datos»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
         «Sin habitación asignada») y la fecha de alta. Puedes buscar por nombre, sin
@@ -442,7 +443,7 @@
         se cierran con la baja. La baja también <strong>cancela solas las citas futuras</strong> del residente y <strong>cierra sus solicitudes de cita
         abiertas</strong> (las de ese residente, no las de la misma familia con otros residentes): quedan en el historial como «sistema, a causa de la baja
         del residente», con la cuenta de Administración que dio la baja, y el hueco de una propuesta cerrada queda libre. Antes de confirmar, la pantalla dice
-        cuántas citas y solicitudes se verán afectadas. <strong>La familia no recibe ningún aviso</strong> de la baja (la aplicación no manda ningún correo al dar de baja): avísala tú. Si
+        cuántas citas y solicitudes se verán afectadas. Cancela también, del mismo modo, las <strong>citas externas</strong> abiertas de hoy en adelante (ver «Citas externas de los residentes»), y la pantalla las cuenta aparte. <strong>La familia no recibe ningún aviso</strong> de la baja (la aplicación no manda ningún correo al dar de baja): avísala tú. Si
         después reactivas al residente, esas citas no se restauran y la familia tendrá que pedirlas de nuevo. La suspensión no toca ni citas ni solicitudes.
     </p>
     <p class="mb-0">
@@ -610,6 +611,52 @@
     </p>
 </section>
 
+<section id="citas-externas" class="mb-4">
+    <h2 class="h5">
+        Citas externas de los residentes
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración, Enfermería y Medicina</span>
+    </h2>
+    <p>
+        Las <strong>citas externas</strong> son las pruebas, consultas y tratamientos del residente <strong>fuera del centro</strong> (en un hospital o centro de salud). No son las
+        «Citas con la familia», que se piden al centro. Es una agenda y un recordatorio: no organiza turnos ni rutas, no adjunta informes y no tiene chat. Todo lo que se guarda de una
+        cita es dato de salud, por eso la ficha usa listas cerradas y líneas cortas.
+    </p>
+    <p>
+        <strong>Quién puede qué.</strong> Administración registra y cambia las citas de todo el centro. Enfermería las registra y las cambia solo si Administración le ha concedido el
+        permiso <strong>Registrar y cambiar las citas externas de los residentes</strong> (viene apagado); sin él, las ve. Medicina solo las ve. Enfermería y Medicina ven las de los
+        residentes de sus unidades. Auxiliar, Dirección Clínica y Plataforma no tienen acceso.
+    </p>
+    <p>
+        <strong>Dónde está.</strong> En el Inicio de Administración, de Enfermería y de Medicina, la tarjeta <strong>Citas externas</strong> abre la lista, con las citas de los próximos 60 días
+        y un filtro «Desde» y «Hasta». En la ficha de cada residente hay un bloque <strong>Citas externas</strong> con sus próximas citas abiertas, «Ver todas sus citas externas» y, a quien puede
+        registrar, <strong>Registrar cita externa</strong>.
+    </p>
+    <p>
+        <strong>Qué se anota.</strong> El día (el del centro) y, si ya se sabe, la hora; sin hora, la cita sale como «Por confirmar». El tipo (prueba, consulta, tratamiento u otra) y, si se quiere,
+        la especialidad, de una lista cerrada. El lugar, que es <strong>solo el nombre del hospital o centro</strong> (una línea de 80 caracteres): no el servicio, la unidad ni el motivo. El transporte
+        (la familia, el centro, ambulancia o sin determinar) y el acompañante (un familiar, personal del centro, lo lleva el transporte, no necesita o sin determinar), cada uno con su casilla de
+        «confirmado»: «sin determinar» siempre queda pendiente y «no necesita» queda confirmado. Qué preparar (ayuno, último informe, tarjeta sanitaria, medicación, silla de ruedas u otra, más una línea
+        de 100 caracteres con solo lo que hay que llevar o hacer para salir; las indicaciones clínicas no se escriben aquí). Y <strong>qué ve la familia</strong> (visible, sin especialidad u oculta). Una cita está
+        <strong>«Cubierta»</strong> cuando el transporte y el acompañante están confirmados; si no, dice «Falta algo» y qué falta.
+    </p>
+    <p>
+        <strong>Estados y cambios.</strong> Una cita nace «Programada». Se puede marcar <strong>Confirmada por el hospital</strong>, <strong>Realizada</strong>, <strong>No se acudió</strong> o
+        <strong>Cancelada</strong> (con un motivo de una lista y, si quieres, una línea de 100 caracteres sin diagnósticos ni nombres). Realizada, no acudida y cancelada son finales: la cita no se
+        reabre ni se cambia. «Reprogramada» no es un estado: cambiar el día o la hora es reprogramar y pide un motivo, y queda en el historial. Si otra persona guardó antes que tú, la pantalla lo
+        dice («Otra persona ha cambiado esta cita») en vez de pisar su cambio. Cada cambio queda en el historial y en la auditoría, que lleva solo identificadores, nunca el contenido de la cita.
+    </p>
+    <p>
+        <strong>Aviso en el Inicio de Administración.</strong> Aparte de «Requiere atención», el Inicio de Administración muestra <strong>Citas externas con algo sin cubrir</strong>: las citas abiertas que
+        empiezan en 7 días o menos y tienen el transporte o el acompañante sin confirmar; con 2 días o menos sale más destacado. Dice el residente, el día, la hora y qué falta, y nunca la
+        especialidad ni el lugar. Se calcula al abrir el Inicio.
+    </p>
+    <p>
+        <strong>Residente suspendido o de baja.</strong> Si el residente está suspendido por un ingreso hospitalario, sus citas siguen vivas y llevan la marca «Residente suspendido». Al darlo de baja,
+        sus citas externas abiertas de hoy en adelante se cancelan solas; la pantalla de la baja las cuenta y no se restauran al
+        reactivarlo. La familia aún no ve las citas externas.
+    </p>
+</section>
+
 <section id="usuarios-administracion" class="mb-4">
     <h2 class="h5">
         Usuarios, perfiles y unidades
@@ -665,7 +712,7 @@
         <strong>Revocar</strong>. Cada perfil tiene sus permisos:
     </p>
     <ul>
-        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente y rellenar y cambiar la ficha de antecedentes de salud.</li>
+        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente, rellenar y cambiar la ficha de antecedentes de salud y registrar y cambiar las citas externas de los residentes.</li>
         <li><strong>Medicina:</strong> basal inicial, reevaluar el basal y rellenar y cambiar la ficha de antecedentes de salud.</li>
         <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia, gestionar los plazos de los hitos del proceso y ver los indicadores y la calidad de proceso (las Direcciones que ya existían no lo tienen hasta que se lo concedas).</li>
         <li>Auxiliar y Administración no tienen permisos configurables.</li>
@@ -1247,7 +1294,9 @@
     </p>
     <p class="mb-0">
         Debajo del basal está el bloque <strong>Antecedentes de salud</strong>, con las alergias e intolerancias a medicamentos, las
-        enfermedades e intervenciones y la medicación habitual del residente (ver "Ficha de antecedentes de salud").
+        enfermedades e intervenciones y la medicación habitual del residente (ver "Ficha de antecedentes de salud"). Más abajo está el bloque
+        <strong>Citas externas</strong>, con sus próximas citas fuera del centro (ver «Citas externas de los residentes»); en Medicina y en la ficha
+        administrativa de Administración hay el mismo bloque.
     </p>
 </section>
 
@@ -1914,6 +1963,7 @@
         <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
+        <li>Citas externas: un calendario mensual y semanal, una nota al terminar la cita y que la familia las vea y pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve y las gestiona el personal).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
     </ul>
 </section>

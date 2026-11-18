@@ -28,7 +28,8 @@ public class CitasExternasTests
         return new(scopes, new FixedExternalSessionIdentityProvider(profile.ExternalSubject), new SqlExternalAppointmentRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
     }
 
-    private static DateOnly InDays(int days) => DateOnly.FromDateTime(DateTime.UtcNow).AddDays(days);
+    // El día del centro (hora de Madrid), el mismo que usa el servicio: con la fecha UTC la prueba fallaba unas horas cada noche.
+    private static DateOnly InDays(int days) => ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(days);
 
     private static ExternalAppointment Cita(
         int days = 5, TimeOnly? time = null, bool withoutTime = false, ExternalAppointmentSpecialty? specialty = ExternalAppointmentSpecialty.Cardiologia, string? place = "Hospital Ficticio Norte",
@@ -581,6 +582,84 @@ public class CitasExternasTests
             Assert.Contains("PROFILE_PERMISSION_NOT_ALLOWED", failure.Message);
         }
         Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.permisos_perfil WHERE ambito_perfil_id = @scope AND permiso_codigo = 'EXTERNAL_APPOINTMENT_MANAGE'", new { scope = scene.Nurse.ProfileScopeId }));
+    }
+
+    [Fact]
+    public async Task UnTrasladoDeUnidad_MueveLaVisibilidadDeLaCita_SinTocarLaCita()
+    {
+        // PR 2: la cita no guarda unidad, así que al trasladar al residente la cita deja de verla quien solo tiene la unidad de origen y pasa a verla quien tiene la de destino;
+        // Administración (todo el centro) la ve siempre. Comprobado a la vez que se rechaza el cambio de quien ya no la ve.
+        var scene = await SceneAsync("Residente Cita Traslado");
+        var id = await RegisterAsync(scene.Admin, scene.ResidentId);
+        var destination = await AdministracionResidentesTests.AddUnitAsync(scene.Admin.CenterId);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                VALUES (NEWID(), @ProfileScopeId, @CenterId, @UnitId, SYSUTCDATETIME(), @AccountId)
+                """, new { scene.Admin.ProfileScopeId, CenterId = scene.Admin.CenterId.Value, UnitId = destination.Value, AccountId = scene.Admin.AccountId.Value });
+        }
+        var nurseDestination = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, scene.Admin.CenterId, destination, [ProfilePermissions.ExternalAppointmentManage]);
+        Assert.Single((await ListAsync(scene.Nurse)).Value!.Appointments);
+        Assert.Single((await ListAsync(scene.Doctor)).Value!.Appointments);
+        Assert.Empty((await ListAsync(nurseDestination)).Value!.Appointments);
+
+        var transfer = new ResidentTransferApplicationService(
+            new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedExternalSessionIdentityProvider(scene.Admin.ExternalSubject),
+            new SqlResidentTransferRepository(TestDatabase.ConnectionFactory));
+        Assert.True((await transfer.TransferAsync(new TransferResidentCommand(
+            scene.Admin.ProfileScopeId, scene.Admin.CenterId, scene.ResidentId, scene.Admin.UnitId, destination, null, null, Guid.NewGuid()))).Ok);
+
+        Assert.Empty((await ListAsync(scene.Nurse)).Value!.Appointments);
+        Assert.Empty((await ListAsync(scene.Doctor)).Value!.Appointments);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Nurse).FindAsync(scene.Nurse.ProfileScopeId, scene.Nurse.CenterId, id)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await UpdateAsync(scene.Nurse, id, 1, Cita(days: 5, place: "Otro hospital"))).Error?.Code);
+        var atDestination = (await ListAsync(nurseDestination)).Value!.Appointments;
+        Assert.Equal(id, Assert.Single(atDestination).Id);
+        var byAdmin = (await Service(scene.Admin).FindAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId, id)).Value!;
+        Assert.Equal(destination, byAdmin.UnitId);
+        Assert.Equal(1, byAdmin.Version);
+    }
+
+    [Fact]
+    public async Task ElAvisoDeCitasSinCubrir_SoloAdministracion_SoloAbiertasDeLosProximosSieteDias_ConAlgoPendiente()
+    {
+        var scene = await SceneAsync("Residente Cita Aviso");
+        var covered = Cita(days: 3, transport: ExternalTransportMode.Familia, transportState: ExternalArrangementState.Confirmado,
+            companion: ExternalCompanionMode.NoNecesita, companionState: ExternalArrangementState.Confirmado);
+        var urgent = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 1));
+        var soon = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 5, transport: ExternalTransportMode.Centro, transportState: ExternalArrangementState.Confirmado));
+        await RegisterAsync(scene.Admin, scene.ResidentId, covered);
+        await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 20));
+        var cancelled = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 2));
+        Assert.True((await CancelAsync(scene.Admin, cancelled, 1)).Ok);
+        var done = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(days: 3));
+        Assert.True((await StatusAsync(scene.Admin, done, 1, ExternalAppointmentStatus.Realizada)).Ok);
+
+        var uncovered = await Service(scene.Admin).ListUncoveredAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId);
+
+        Assert.True(uncovered.Ok, uncovered.Error?.Message);
+        Assert.Equal([urgent, soon], uncovered.Value!.Select(a => a.Id).ToArray());
+        Assert.All(uncovered.Value!, a => Assert.False(a.Appointment.Covered));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Nurse).ListUncoveredAsync(scene.Nurse.ProfileScopeId, scene.Nurse.CenterId)).Error?.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(scene.Doctor).ListUncoveredAsync(scene.Doctor.ProfileScopeId, scene.Doctor.CenterId)).Error?.Code);
+        var otherCenterAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        Assert.Empty((await Service(otherCenterAdmin).ListUncoveredAsync(otherCenterAdmin.ProfileScopeId, otherCenterAdmin.CenterId)).Value!);
+    }
+
+    [Fact]
+    public async Task ElListadoPorResidente_SoloTraeLasCitasDeEsePersona()
+    {
+        var scene = await SceneAsync("Residente Cita Filtro Uno");
+        var other = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Filtro Dos");
+        var mine = await RegisterAsync(scene.Admin, scene.ResidentId);
+        await RegisterAsync(scene.Admin, other);
+
+        var filtered = await Service(scene.Admin).ListAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId, InDays(-1), InDays(30), scene.ResidentId);
+        var all = await ListAsync(scene.Admin);
+
+        Assert.Equal(mine, Assert.Single(filtered.Value!.Appointments).Id);
+        Assert.Equal(2, all.Value!.Appointments.Count);
     }
 
     [Fact]

@@ -1,0 +1,201 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model ExternalAppointmentFormViewModel
+@* Citas externas de los residentes, PR 2 (script 0101): registrar o cambiar una cita. Todo lo que se escribe es dato de salud: los campos son listas cerradas o líneas cortas (nunca un
+   cuadro de texto grande) y cada línea lleva su ayuda a la vista (condiciones del DPO, apartado 3). Sin autocompletado del navegador. *@
+@{
+    var form = Model.Form;
+    var title = Model.IsNew ? "Registrar una cita externa" : "Cambiar la cita externa";
+    ViewData["Title"] = title;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        @if (!Model.IsNew)
+        {
+            <li class="breadcrumb-item"><a asp-action="Ver" asp-route-id="@form.CitaId">@Model.ResidentName</a></li>
+        }
+        <li class="breadcrumb-item active" aria-current="page">@(Model.IsNew ? "Registrar" : "Cambiar")</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@title</h1>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
+}
+
+<form asp-action="@(Model.IsNew ? "Nueva" : "Editar")" method="post" autocomplete="off">
+    <input type="hidden" name="Form.CitaId" value="@form.CitaId" />
+    <input type="hidden" name="Form.VersionVista" value="@form.VersionVista" />
+
+    @if (Model.Residents is not null)
+    {
+        <div class="mb-3">
+            <label class="form-label" for="residente">Residente</label>
+            <select class="form-select" id="residente" name="Form.ResidenteId" required>
+                <option value="">Elige un residente</option>
+                @foreach (var resident in Model.Residents)
+                {
+                    <option value="@resident.Id" selected="@(form.ResidenteId == resident.Id)">@resident.Name@(resident.Location is null ? "" : " · " + resident.Location)</option>
+                }
+            </select>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" name="Form.ResidenteId" value="@form.ResidenteId" />
+        <p class="h5">@Model.ResidentName</p>
+        <p><strong>Revisa que sea la persona correcta.</strong></p>
+    }
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="fecha">Día</label>
+            <input class="form-control" type="date" id="fecha" name="Form.Fecha" value="@form.Fecha?.ToString("yyyy-MM-dd")" required />
+        </div>
+        <div class="col-12 col-md-4">
+            <label class="form-label" for="hora">Hora (opcional)</label>
+            <input class="form-control" type="time" id="hora" name="Form.Hora" value="@form.Hora?.ToString("HH:mm")" aria-describedby="hora-ayuda" />
+            <div class="form-text" id="hora-ayuda">Si aún no la saben, déjala vacía: saldrá como «Por confirmar».</div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="tipo">Tipo de cita</label>
+            <select class="form-select" id="tipo" name="Form.Tipo" required>
+                <option value="">Elige el tipo</option>
+                @foreach (var type in Enum.GetValues<ExternalAppointmentType>())
+                {
+                    <option value="@type.ToCode()" selected="@(form.Tipo == type.ToCode())">@EnumDisplay.Label(type)</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-6">
+            <label class="form-label" for="especialidad">Especialidad (opcional)</label>
+            <select class="form-select" id="especialidad" name="Form.Especialidad">
+                <option value="">Sin indicar</option>
+                @foreach (var specialty in Enum.GetValues<ExternalAppointmentSpecialty>())
+                {
+                    <option value="@specialty.ToCode()" selected="@(form.Especialidad == specialty.ToCode())">@EnumDisplay.Label(specialty)</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label" for="lugar">Lugar</label>
+        <input class="form-control" id="lugar" name="Form.Lugar" maxlength="@ExternalAppointment.MaxPlaceLength" value="@form.Lugar" autocomplete="off" aria-describedby="lugar-ayuda" />
+        <div class="form-text" id="lugar-ayuda">Solo el nombre del hospital o centro. No escribas el servicio, la unidad ni el motivo.</div>
+    </div>
+
+    <fieldset class="mb-3">
+        <legend class="h5">Transporte y acompañante</legend>
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="transporte">Transporte</label>
+                <select class="form-select" id="transporte" name="Form.TransporteModo" required>
+                    @foreach (var mode in Enum.GetValues<ExternalTransportMode>())
+                    {
+                        <option value="@mode.ToCode()" selected="@(form.TransporteModo == mode.ToCode())">@EnumDisplay.Label(mode)</option>
+                    }
+                </select>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="transporte-confirmado" name="Form.TransporteConfirmado" value="true" checked="@form.TransporteConfirmado" />
+                    <label class="form-check-label" for="transporte-confirmado">El transporte está confirmado</label>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="acompanante">Acompañante</label>
+                <select class="form-select" id="acompanante" name="Form.AcompananteModo" required>
+                    @foreach (var mode in Enum.GetValues<ExternalCompanionMode>())
+                    {
+                        <option value="@mode.ToCode()" selected="@(form.AcompananteModo == mode.ToCode())">@EnumDisplay.Label(mode)</option>
+                    }
+                </select>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="acompanante-confirmado" name="Form.AcompananteConfirmado" value="true" checked="@form.AcompananteConfirmado" />
+                    <label class="form-check-label" for="acompanante-confirmado">El acompañante está confirmado</label>
+                </div>
+            </div>
+        </div>
+        <p class="form-text mb-0">«Sin determinar» siempre queda pendiente y «No necesita» queda confirmado. Mientras falte alguno, Administración recibe un aviso en su inicio.</p>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h5">Qué preparar</legend>
+        <div class="row">
+            <div class="col-12 col-md-4">
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="prep-ayuno" name="Form.PrepAyuno" value="true" checked="@form.PrepAyuno" /><label class="form-check-label" for="prep-ayuno">Ayuno</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="prep-informe" name="Form.PrepInforme" value="true" checked="@form.PrepInforme" /><label class="form-check-label" for="prep-informe">Último informe</label></div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="prep-tarjeta" name="Form.PrepTarjeta" value="true" checked="@form.PrepTarjeta" /><label class="form-check-label" for="prep-tarjeta">Tarjeta sanitaria</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="prep-medicacion" name="Form.PrepMedicacion" value="true" checked="@form.PrepMedicacion" /><label class="form-check-label" for="prep-medicacion">Medicación</label></div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="prep-silla" name="Form.PrepSilla" value="true" checked="@form.PrepSilla" /><label class="form-check-label" for="prep-silla">Silla de ruedas</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="prep-otra" name="Form.PrepOtra" value="true" checked="@form.PrepOtra" /><label class="form-check-label" for="prep-otra">Otra</label></div>
+            </div>
+        </div>
+        <div class="mt-2">
+            <label class="form-label" for="prep-texto">Una línea más (opcional)</label>
+            <input class="form-control" id="prep-texto" name="Form.PrepTexto" maxlength="@ExternalPreparation.MaxTextLength" value="@form.PrepTexto" autocomplete="off" aria-describedby="prep-ayuda" />
+            <div class="form-text" id="prep-ayuda">Solo lo que hay que llevar o hacer para salir. Las indicaciones clínicas van por Medicina, no aquí.</div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h5">Qué ve la familia</legend>
+        @foreach (var visibility in Enum.GetValues<ExternalFamilyVisibility>())
+        {
+            <div class="form-check mb-1">
+                <input class="form-check-input" type="radio" name="Form.Visibilidad" id="visibilidad-@visibility.ToCode()" value="@visibility.ToCode()" required checked="@(form.Visibilidad == visibility.ToCode())" />
+                <label class="form-check-label" for="visibilidad-@visibility.ToCode()">@EnumDisplay.Label(visibility)</label>
+            </div>
+        }
+        <p class="form-text mb-0">La familia aún no ve las citas externas: esta elección se aplicará cuando se active esa parte. Por defecto, visible.</p>
+    </fieldset>
+
+    @if (!Model.IsNew)
+    {
+        <fieldset class="mb-3">
+            <legend class="h5">Si cambias el día o la hora</legend>
+            <p class="form-text">Cambiar el día o la hora es reprogramar la cita y exige un motivo. Si no los cambias, deja esto en blanco.</p>
+            <div class="row g-3">
+                <div class="col-12 col-md-5">
+                    <label class="form-label" for="motivo">Motivo de la reprogramación</label>
+                    <select class="form-select" id="motivo" name="Form.MotivoCodigo">
+                        <option value="">Elige el motivo</option>
+                        @foreach (var reason in Enum.GetValues<ExternalAppointmentReasonCode>())
+                        {
+                            <option value="@reason.ToCode()" selected="@(form.MotivoCodigo == reason.ToCode())">@EnumDisplay.Label(reason)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-7">
+                    <label class="form-label" for="motivo-linea">Una línea más (opcional)</label>
+                    <input class="form-control" id="motivo-linea" name="Form.MotivoLinea" maxlength="@ExternalAppointmentRules.MaxReasonLineLength" value="@form.MotivoLinea" autocomplete="off" aria-describedby="motivo-ayuda" />
+                    <div class="form-text" id="motivo-ayuda">No escribas diagnósticos ni nombres.</div>
+                </div>
+            </div>
+        </fieldset>
+    }
+
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary btn-lg">@(Model.IsNew ? "Registrar la cita" : "Guardar los cambios")</button>
+        @if (Model.IsNew)
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary btn-lg">Volver a la lista</a>
+        }
+        else
+        {
+            <a asp-action="Ver" asp-route-id="@form.CitaId" class="btn btn-outline-secondary btn-lg">Volver a la cita</a>
+        }
+    </div>
+</form>
