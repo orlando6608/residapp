@@ -673,6 +673,43 @@ public class CitasExternasTests
     }
 
     [Fact]
+    public async Task RegistrarDosVecesConLaMismaOperacion_CreaUnaSolaCita_SinRepetirHistorialNiAuditoria()
+    {
+        // Decisión de Orlando (2026-11-18, script 0102): un doble clic o un reenvío del formulario no crea otra cita.
+        var scene = await SceneAsync("Residente Cita Doble Clic");
+        var other = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Doble Clic Otro");
+        var operation = Guid.NewGuid();
+        Task<ApplicationResult<Guid>> Register(SeededProfile by, ResidentId resident, Guid? op) =>
+            Service(by).RegisterAsync(new RegisterExternalAppointmentCommand(by.ProfileScopeId, by.CenterId, resident, Cita(), op));
+
+        var first = await Register(scene.Admin, scene.ResidentId, operation);
+        var second = await Register(scene.Admin, scene.ResidentId, operation);
+
+        Assert.True(first.Ok, first.Error?.Message);
+        Assert.Equal(first.Value, second.Value);
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.citas_externas WHERE residente_id = @r", new { r = scene.ResidentId.Value }));
+        Assert.Equal(1, await ChangesAsync(first.Value));
+        Assert.Equal(1, await AuditAsync(first.Value, "EXT_APPOINTMENT_CREATE"));
+
+        // El mismo identificador para otro residente: error genérico, y no se crea nada.
+        var forged = await Register(scene.Admin, other, operation);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, forged.Error?.Code);
+        Assert.Equal(0, await CountAsync("SELECT COUNT(*) FROM dbo.citas_externas WHERE residente_id = @r", new { r = other.Value }));
+
+        // Sin identificador (código sin formulario) cada registro es una cita nueva; dos envíos a la vez con el mismo identificador, una sola.
+        Assert.NotEqual((await Register(scene.Admin, scene.ResidentId, null)).Value, (await Register(scene.Admin, scene.ResidentId, null)).Value);
+        var racing = Guid.NewGuid();
+        var both = await Task.WhenAll(Register(scene.Nurse, scene.ResidentId, racing), Register(scene.Nurse, scene.ResidentId, racing));
+        Assert.All(both, r => Assert.True(r.Ok, r.Error?.Message));
+        Assert.Equal(both[0].Value, both[1].Value);
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.citas_externas WHERE operacion_id = @racing", new { racing }));
+
+        // El identificador no se puede cambiar después.
+        var failure = await SqlFailureAsync("UPDATE dbo.citas_externas SET operacion_id = NEWID(), version = version + 1 WHERE id = @id", new { id = first.Value });
+        Assert.Contains("EXTERNAL_APPOINTMENT_IDENTITY_IMMUTABLE", failure.Message);
+    }
+
+    [Fact]
     public async Task LasCitasPorCerrar_SonLasAbiertasConElDiaPasado_DelAmbitoDeCadaPerfil_YElFiltroPorResidente()
     {
         // Decisión de Orlando (2026-11-18): una cita abierta cuyo día pasó sin marcarse realizada ni «no se acudió» sale como «por cerrar» (últimos 365 días); se puede cerrar después de su día.

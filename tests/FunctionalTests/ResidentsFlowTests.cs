@@ -2146,6 +2146,19 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Citas externas por cerrar", overdueList);
         Assert.Contains("Las cierran Administración y las Enfermerías con permiso.", overdueList);
         Assert.Contains("Por cerrar:", overdueRecord);
+
+        // Doble envío del formulario de registrar (script 0102): el mismo formulario, enviado dos veces, deja una sola cita.
+        var doublePage = WebUtility.HtmlDecode(await admin.GetStringAsync(nueva));
+        var operation = ExtractValue(doublePage, "Form.OperacionId");
+        Assert.NotEqual(Guid.Empty.ToString(), operation);
+        var doublePlace = $"Hospital Doble Envío {Guid.NewGuid():N}"[..40];
+        var doubleFields = Fields(day, doublePlace);
+        doubleFields["Form.OperacionId"] = operation;
+        doubleFields["__RequestVerificationToken"] = ExtractValue(doublePage, "__RequestVerificationToken");
+        var firstSend = await admin.PostAsync("/CitasExternas/Nueva", new FormUrlEncodedContent(doubleFields));
+        var secondSend = await admin.PostAsync("/CitasExternas/Nueva", new FormUrlEncodedContent(doubleFields));
+        Assert.Equal(firstSend.RequestMessage!.RequestUri!.AbsolutePath, secondSend.RequestMessage!.RequestUri!.AbsolutePath);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas WHERE lugar = @doublePlace", new { doublePlace }));
     }
 
     private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields, string action = "Alergias")

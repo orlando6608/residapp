@@ -59,7 +59,7 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
           LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = e.residente_id AND location.centro_id = e.centro_id AND location.vigente_hasta IS NULL
         """;
 
-    public async Task<Guid> CreateAsync(ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, CancellationToken ct = default)
+    public async Task<Guid> CreateAsync(ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, Guid? operationId = null, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -78,18 +78,40 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
             throw new AccessDeniedException();
         }
 
+        // Reenvío del mismo formulario (script 0102): con el residente ya bloqueado, si esta cuenta ya registró esta operación, se devuelve la cita creada sin repetir nada (ni historial ni
+        // auditoría). Si el identificador es de otro residente, error genérico: no se dice nada más.
+        if (operationId is { } operation)
+        {
+            var existing = await connection.QuerySingleOrDefaultAsync<ExistingRow?>(new CommandDefinition("""
+                SELECT id AS Id, residente_id AS ResidentId FROM dbo.citas_externas
+                 WHERE centro_id = @CenterId AND creada_por_cuenta_id = @AccountId AND operacion_id = @OperationId
+                """, Params(actor, new { OperationId = operation }), transaction, cancellationToken: ct));
+            if (existing is not null)
+            {
+                return existing.ResidentId == residentId.Value ? existing.Id : throw new AccessDeniedException();
+            }
+        }
+
         var id = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
-        await connection.ExecuteAsync(new CommandDefinition("""
+        try
+        {
+            await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.citas_externas
                 (id, centro_id, residente_id, fecha, hora, tipo_codigo, especialidad_codigo, lugar, transporte_modo_codigo, transporte_estado_codigo,
                  acompanante_modo_codigo, acompanante_estado_codigo, preparar_ayuno, preparar_informe, preparar_tarjeta, preparar_medicacion, preparar_silla_ruedas,
-                 preparar_otra, preparar_texto, estado_codigo, visibilidad_familia_codigo, version, creada_por_cuenta_id, creada_por_perfil, creada_en, modificada_en)
+                 preparar_otra, preparar_texto, estado_codigo, visibilidad_familia_codigo, version, creada_por_cuenta_id, creada_por_perfil, creada_en, modificada_en, operacion_id)
             VALUES
                 (@Id, @CenterId, @ResidentId, @Date, @Time, @Type, @Specialty, @Place, @TransportMode, @TransportState,
                  @CompanionMode, @CompanionState, @Fasting, @LastReport, @HealthCard, @Medication, @Wheelchair,
-                 @PrepOther, @PrepText, 'PROGRAMADA', @Visibility, 1, @AccountId, @Profile, @Now, @Now);
-            """, Params(actor, Fields(appointment, new { Id = id, ResidentId = residentId.Value, Now = now.UtcDateTime })), transaction, cancellationToken: ct));
+                 @PrepOther, @PrepText, 'PROGRAMADA', @Visibility, 1, @AccountId, @Profile, @Now, @Now, @OperationId);
+            """, Params(actor, Fields(appointment, new { Id = id, ResidentId = residentId.Value, Now = now.UtcDateTime, OperationId = operationId })), transaction, cancellationToken: ct));
+        }
+        catch (SqlException error) when (error.Number is 2601 or 2627)
+        {
+            // Un identificador de operación ya usado que esta consulta no puede ver (otro ámbito): el mismo error genérico, sin el texto de SQL, que trae los valores de la clave.
+            throw new AccessDeniedException();
+        }
 
         await AddChangeAsync(connection, transaction, actor, id, 1, "CREADA", null, appointment.Date, null, appointment.Time, null, "PROGRAMADA", null, null, now, ct);
         await AuditAsync(connection, transaction, actor, residentId.Value, unit.UnitId, id, "EXT_APPOINTMENT_CREATE", now, ct);
@@ -348,6 +370,8 @@ public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connec
         EnumCode.ParseCode<ExternalAppointmentStatus>(row.Status), row.Version, row.Suspended);
 
     private sealed record UnitRow(Guid? UnitId);
+
+    private sealed record ExistingRow(Guid Id, Guid ResidentId);
 
     private sealed record Row(
         Guid Id, Guid ResidentId, string ResidentName, Guid? UnitId, DateOnly Date, TimeSpan? Time, string Type, string? Specialty, string? Place,

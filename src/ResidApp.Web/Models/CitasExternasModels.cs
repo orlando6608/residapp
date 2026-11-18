@@ -16,6 +16,8 @@ public sealed class ExternalAppointmentFormModel
 {
     public Guid ResidenteId { get; set; }
     public Guid CitaId { get; set; }
+    /// <summary>Identificador de operación del formulario de registrar (script 0102): un reenvío del mismo formulario no crea otra cita.</summary>
+    public Guid OperacionId { get; set; }
     public int VersionVista { get; set; }
     public DateOnly? Fecha { get; set; }
     public TimeOnly? Hora { get; set; }
@@ -70,6 +72,7 @@ public sealed class ExternalAppointmentFormModel
     public static ExternalAppointmentFormModel ForNew(Guid residentId, DateOnly today) => new()
     {
         ResidenteId = residentId,
+        OperacionId = Guid.NewGuid(),
         Fecha = today,
         TransporteModo = ExternalTransportMode.SinDeterminar.ToCode(),
         AcompananteModo = ExternalCompanionMode.SinDeterminar.ToCode(),

@@ -31,6 +31,7 @@
 
 <form asp-action="@(Model.IsNew ? "Nueva" : "Editar")" method="post" autocomplete="off">
     <input type="hidden" name="Form.CitaId" value="@form.CitaId" />
+    <input type="hidden" name="Form.OperacionId" value="@form.OperacionId" />
     <input type="hidden" name="Form.VersionVista" value="@form.VersionVista" />
 
     @if (Model.Residents is not null)

@@ -21,8 +21,9 @@ public sealed record ExternalAppointmentRecord(
 /// </summary>
 public interface IExternalAppointmentRepository
 {
-    /// <summary>Registra una cita programada de un residente activo y devuelve su identificador.</summary>
-    Task<Guid> CreateAsync(ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, CancellationToken ct = default);
+    /// <summary>Registra una cita programada de un residente activo y devuelve su identificador. Con operationId (el del formulario, script 0102), un reenvío del mismo formulario no crea otra cita:
+    /// devuelve la ya creada, sin repetir historial ni auditoría.</summary>
+    Task<Guid> CreateAsync(ExternalAppointmentActor actor, ResidentId residentId, ExternalAppointment appointment, Guid? operationId = null, CancellationToken ct = default);
 
     /// <summary>Cambia la ficha de una cita abierta y devuelve la versión nueva. Si cambian la fecha o la hora es una reprogramación y exige un motivo de lista cerrada; si no, es una
     /// modificación y no lleva motivo.</summary>

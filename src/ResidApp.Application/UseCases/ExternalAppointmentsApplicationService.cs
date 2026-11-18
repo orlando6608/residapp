@@ -7,7 +7,7 @@ using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
-public sealed record RegisterExternalAppointmentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita);
+public sealed record RegisterExternalAppointmentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, ExternalAppointment Cita, Guid? OperacionId = null);
 
 public sealed record UpdateExternalAppointmentCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid CitaId, int VersionVista, ExternalAppointment Cita, ExternalAppointmentReasonCode? Motivo, string? LineaMotivo);
@@ -36,7 +36,7 @@ public sealed class ExternalAppointmentsApplicationService(
         {
             var (actor, canManage) = await ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             RequireManage(canManage);
-            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), ct);
+            return await repository.CreateAsync(actor, command.ResidenteId, command.Cita.RequireNotInPast(Today()), command.OperacionId, ct);
         });
 
     /// <summary>Devuelve la versión nueva. Cambiar la fecha o la hora es reprogramar y exige un motivo; el día nuevo no puede ser anterior a hoy. Cambiar otra cosa no lleva motivo.</summary>

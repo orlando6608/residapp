@@ -141,7 +141,8 @@ public sealed class CitasExternasController(
         }
 
         var result = await appointments.RegisterAsync(
-            new RegisterExternalAppointmentCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(form.ResidenteId), appointment), ct);
+            new RegisterExternalAppointmentCommand(
+                scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(form.ResidenteId), appointment, form.OperacionId == Guid.Empty ? null : form.OperacionId), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = "Cita externa registrada.";
