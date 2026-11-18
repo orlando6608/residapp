@@ -68,7 +68,10 @@ public sealed class CitasExternasController(
         {
             residentName = (await ResidentsAsync(scope, ct)).FirstOrDefault(r => r.Id == filtered)?.Name;
         }
-        return View(new ExternalAppointmentListViewModel(result.Value!.Appointments, result.Value.CanManage, from, to, today, scope.Profile, residenteId, residentName));
+        // Las «por cerrar» (abiertas con el día pasado) salen siempre arriba, también con otro filtro de fechas: si no, nadie vuelve a verlas.
+        var overdue = await appointments.ListOverdueAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), residenteId is { } filter && filter != Guid.Empty ? ResidentId.From(filter) : null, ct);
+        return View(new ExternalAppointmentListViewModel(
+            result.Value!.Appointments, result.Value.CanManage, from, to, today, scope.Profile, residenteId, residentName, overdue.Ok ? overdue.Value! : []));
     }
 
     [HttpGet]

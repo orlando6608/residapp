@@ -113,6 +113,21 @@ public sealed class ExternalAppointmentsApplicationService(
     public const int WarningDays = 7;
     public const int UrgentWarningDays = 2;
 
+    /// <summary>Hasta cuántos días atrás se buscan las citas «por cerrar».</summary>
+    public const int OverdueLookbackDays = 365;
+
+    /// <summary>Las citas «por cerrar» (decisión de Orlando, 2026-11-18): abiertas (programadas o confirmadas por el hospital) cuyo día ya pasó sin marcarse realizadas ni «no se acudió», de los
+    /// últimos <see cref="OverdueLookbackDays"/> días, por fecha. Cada perfil con acceso ve las de su ámbito; con residentId, solo las de ese residente. Se calcula al abrir, sin tabla.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ExternalAppointmentRecord>>> ListOverdueAsync(
+        Guid profileScopeId, CenterId centerId, ResidentId? residentId = null, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<ExternalAppointmentRecord>>(async () =>
+        {
+            var (actor, _) = await ResolveAsync(profileScopeId, centerId, ct);
+            var today = Today();
+            var past = await repository.ListAsync(actor, today.AddDays(-OverdueLookbackDays), today.AddDays(-1), residentId, ct);
+            return past.Where(a => ExternalAppointmentRules.IsOpen(a.Status)).ToList();
+        });
+
     /// <summary>El aviso del inicio de Administración (diseño, valor 16): citas abiertas que empiezan dentro de <see cref="WarningDays"/> días con el transporte o el acompañante sin
     /// confirmar, por fecha. Se calcula al abrir, sin tabla. Solo Administración; para el resto, acceso denegado.</summary>
     public Task<ApplicationResult<IReadOnlyList<ExternalAppointmentRecord>>> ListUncoveredAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>

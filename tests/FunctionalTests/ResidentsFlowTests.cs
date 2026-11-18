@@ -2133,6 +2133,19 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Cita externa cancelada.", cancelled.Html);
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas_cambios WHERE cita_id = @id AND accion_codigo = 'REPROGRAMADA'", new { id = citaId }));
         Assert.Equal("CAMBIO_DEL_HOSPITAL", await connection.ExecuteScalarAsync<string>("SELECT motivo_codigo FROM dbo.citas_externas_cambios WHERE cita_id = @id AND accion_codigo = 'REPROGRAMADA'", new { id = citaId }));
+
+        // Por cerrar: una cita abierta cuyo día ya pasó (se mueve por SQL, la pantalla no deja registrar una pasada) sale en el inicio de Administración, en la lista y en la ficha.
+        var third = await PostAsync(admin, "/CitasExternas/Nueva", nueva, Fields(day, "Clínica Ficticia"));
+        await connection.ExecuteAsync("UPDATE dbo.citas_externas SET fecha = @date, version = version + 1 WHERE id = @id",
+            new { id = third.Id, date = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(-2).ToDateTime(TimeOnly.MinValue) });
+        var overdueHome = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion"));
+        var overdueList = WebUtility.HtmlDecode(await doctor.GetStringAsync("/CitasExternas"));
+        var overdueRecord = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+        Assert.Contains("Citas externas por cerrar", overdueHome);
+        Assert.DoesNotContain("Clínica Ficticia", overdueHome);
+        Assert.Contains("Citas externas por cerrar", overdueList);
+        Assert.Contains("Las cierran Administración y las Enfermerías con permiso.", overdueList);
+        Assert.Contains("Por cerrar:", overdueRecord);
     }
 
     private async Task<string> PostFichaAsync(HttpClient client, string token, string residentId, Dictionary<string, string> fields, string action = "Alergias")

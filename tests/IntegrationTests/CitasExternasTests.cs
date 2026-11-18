@@ -673,6 +673,46 @@ public class CitasExternasTests
     }
 
     [Fact]
+    public async Task LasCitasPorCerrar_SonLasAbiertasConElDiaPasado_DelAmbitoDeCadaPerfil_YElFiltroPorResidente()
+    {
+        // Decisión de Orlando (2026-11-18): una cita abierta cuyo día pasó sin marcarse realizada ni «no se acudió» sale como «por cerrar» (últimos 365 días); se puede cerrar después de su día.
+        var scene = await SceneAsync("Residente Cita Por Cerrar");
+        var other = await AdministracionResidentesTests.CreateResidentAsync(scene.Admin, "Residente Cita Por Cerrar Otro");
+        var late = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        var lateConfirmed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        Assert.True((await StatusAsync(scene.Admin, lateConfirmed, 1, ExternalAppointmentStatus.ConfirmadaHospital)).Ok);
+        var closed = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        var tooOld = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(1));
+        var future = await RegisterAsync(scene.Admin, scene.ResidentId, Cita(10));
+        var lateOther = await RegisterAsync(scene.Admin, other, Cita(1));
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            foreach (var (id, days) in new[] { (late, -3), (lateConfirmed, -1), (closed, -3), (tooOld, -400), (lateOther, -2) })
+            {
+                await connection.ExecuteAsync("UPDATE dbo.citas_externas SET fecha = @date, version = version + 1 WHERE id = @id", new { id, date = InDays(days).ToDateTime(TimeOnly.MinValue) });
+            }
+        }
+
+        Assert.True((await StatusAsync(scene.Admin, closed, 2, ExternalAppointmentStatus.Realizada)).Ok);
+        foreach (var by in new[] { scene.Admin, scene.Nurse, scene.Doctor })
+        {
+            var overdue = await Service(by).ListOverdueAsync(by.ProfileScopeId, by.CenterId);
+            Assert.True(overdue.Ok, overdue.Error?.Message);
+            Assert.Equal(new[] { late, lateOther, lateConfirmed }.OrderBy(i => i).ToArray(), overdue.Value!.Select(a => a.Id).OrderBy(i => i).ToArray());
+            Assert.DoesNotContain(overdue.Value!, a => a.Id == closed || a.Id == tooOld || a.Id == future);
+        }
+        var filtered = await Service(scene.Admin).ListOverdueAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId, scene.ResidentId);
+        Assert.Equal(new[] { late, lateConfirmed }.OrderBy(i => i).ToArray(), filtered.Value!.Select(a => a.Id).OrderBy(i => i).ToArray());
+        var otherCenterAdmin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        Assert.Empty((await Service(otherCenterAdmin).ListOverdueAsync(otherCenterAdmin.ProfileScopeId, otherCenterAdmin.CenterId)).Value!);
+
+        // Después de su día todavía se puede cerrar.
+        var closing = await StatusAsync(scene.Admin, late, 2, ExternalAppointmentStatus.NoAcudida);
+        Assert.True(closing.Ok, closing.Error?.Message);
+        Assert.DoesNotContain((await Service(scene.Admin).ListOverdueAsync(scene.Admin.ProfileScopeId, scene.Admin.CenterId)).Value!, a => a.Id == late);
+    }
+
+    [Fact]
     public async Task ElListadoPorResidente_SoloTraeLasCitasDeEsePersona()
     {
         var scene = await SceneAsync("Residente Cita Filtro Uno");

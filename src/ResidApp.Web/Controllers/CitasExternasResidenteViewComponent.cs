@@ -31,6 +31,7 @@ public sealed class CitasExternasResidenteViewComponent(ExternalAppointmentsAppl
         }
 
         var open = result.Value!.Appointments.Where(a => ExternalAppointmentRules.IsOpen(a.Status)).ToList();
-        return View(new ExternalAppointmentResidentBlockViewModel(residenteId, open, result.Value.CanManage));
+        var overdue = await appointments.ListOverdueAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId));
+        return View(new ExternalAppointmentResidentBlockViewModel(residenteId, open, result.Value.CanManage, overdue.Ok ? overdue.Value! : []));
     }
 }

@@ -116,6 +116,23 @@ else
     </section>
 }
 
+@* Citas externas por cerrar (decisión de Orlando, 2026-11-18): abiertas cuyo día ya pasó sin marcarse realizadas ni «no se acudió». Solo residente y día. *@
+@if (Model.ExternalAppointmentsOverdue is { Count: > 0 } overdueExternal)
+{
+    <section class="mb-4" aria-labelledby="citas-externas-por-cerrar">
+        <h2 class="h5 d-flex align-items-center gap-2" id="citas-externas-por-cerrar"><partial name="_Icono" model='"citas"' />Citas externas por cerrar</h2>
+        <p class="mb-2">El día de estas citas ya pasó y siguen abiertas: marca si se realizó, si no se acudió, o cancélalas.</p>
+        <ul class="list-group mb-2">
+            @foreach (var late in overdueExternal)
+            {
+                <li class="list-group-item">
+                    <a asp-controller="CitasExternas" asp-action="Ver" asp-route-id="@late.Id">@late.ResidentName</a>: @ExternalAppointmentDisplay.Date(late.Appointment.Date)
+                </li>
+            }
+        </ul>
+    </section>
+}
+
 <div class="row g-3">
     <div class="col-12 col-md-6">
         <a asp-action="Residentes" class="card text-decoration-none h-100">

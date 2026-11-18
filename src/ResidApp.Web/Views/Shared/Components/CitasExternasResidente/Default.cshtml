@@ -23,6 +23,18 @@
                 }
             </ul>
         }
+        @if (Model.Overdue.Count > 0)
+        {
+            <div class="alert alert-warning py-2" role="status">
+                <strong>Por cerrar:</strong> el día ya pasó y siguen abiertas.
+                <ul class="mb-0">
+                    @foreach (var late in Model.Overdue)
+                    {
+                        <li><a asp-controller="CitasExternas" asp-action="Ver" asp-route-id="@late.Id">@ExternalAppointmentDisplay.Date(late.Appointment.Date), @ExternalAppointmentDisplay.Time(late.Appointment)</a>: @EnumDisplay.Label(late.Appointment.Type)</li>
+                    }
+                </ul>
+            </div>
+        }
         <div class="d-flex flex-wrap gap-2">
             <a asp-controller="CitasExternas" asp-action="Index" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-secondary">Ver todas sus citas externas</a>
             @if (Model.CanManage)

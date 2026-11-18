@@ -40,6 +40,25 @@ else
     <p class="text-muted">Aquí solo puedes ver las citas. Las registra Administración.</p>
 }
 
+@if (Model.Overdue.Count > 0)
+{
+    @* Por cerrar (decisión de Orlando, 2026-11-18): citas abiertas cuyo día ya pasó sin marcarse realizadas ni «no se acudió». Salen siempre, con cualquier filtro de fechas. *@
+    <section class="alert alert-warning" aria-labelledby="por-cerrar">
+        <h2 class="h5" id="por-cerrar">Citas externas por cerrar</h2>
+        <p class="mb-2">El día de estas citas ya pasó y siguen abiertas.@(Model.CanManage ? " Ábrelas y marca si se realizó, si no se acudió, o cancélalas." : " Las cierran Administración y las Enfermerías con permiso.")</p>
+        <ul class="mb-0">
+            @foreach (var late in Model.Overdue)
+            {
+                <li>
+                    <a asp-action="Ver" asp-route-id="@late.Id">@late.ResidentName</a>:
+                    @ExternalAppointmentDisplay.Date(late.Appointment.Date), @ExternalAppointmentDisplay.Time(late.Appointment)
+                    <span class="badge text-bg-warning">Por cerrar</span>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
 <form method="get" class="row g-2 align-items-end mb-3" aria-label="Filtrar por fechas">
     @if (Model.ResidentId is { } residentId)
     {

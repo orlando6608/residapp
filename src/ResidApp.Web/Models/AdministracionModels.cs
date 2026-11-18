@@ -18,7 +18,8 @@ namespace ResidApp.Web.Models;
 /// pudieron leer. ExternalAppointmentsUncovered son las citas externas de los próximos días con transporte o acompañante sin cubrir (null si no se pudieron leer; script 0101).</summary>
 public sealed record AdministracionInicioViewModel(
     int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null,
-    int? AccountsToReview = null, IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsUncovered = null, DateOnly ExternalAppointmentsToday = default)
+    int? AccountsToReview = null, IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsUncovered = null, DateOnly ExternalAppointmentsToday = default,
+    IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsOverdue = null)
 {
     public bool NothingPending => Attention is { NothingPending: true } && (AccountsToReview ?? 0) == 0;
 }

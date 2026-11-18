@@ -101,9 +101,10 @@ public sealed class ExternalAppointmentFormModel
     };
 }
 
-/// <summary>La lista «Próximas»: las citas entre dos días, con quién la mira y si puede registrar. ResidentId y ResidentName, si se filtra por un residente.</summary>
+/// <summary>La lista «Próximas»: las citas entre dos días, con quién la mira y si puede registrar. ResidentId y ResidentName, si se filtra por un residente. Overdue son las «por cerrar».</summary>
 public sealed record ExternalAppointmentListViewModel(
-    IReadOnlyList<ExternalAppointmentRecord> Items, bool CanManage, DateOnly From, DateOnly To, DateOnly Today, SystemProfile Profile, Guid? ResidentId, string? ResidentName);
+    IReadOnlyList<ExternalAppointmentRecord> Items, bool CanManage, DateOnly From, DateOnly To, DateOnly Today, SystemProfile Profile, Guid? ResidentId, string? ResidentName,
+    IReadOnlyList<ExternalAppointmentRecord> Overdue);
 
 /// <summary>El formulario de registrar o cambiar. Residents solo se rellena al registrar desde la lista (sin residente elegido); ResidentName, al registrar con residente o al cambiar.</summary>
 public sealed record ExternalAppointmentFormViewModel(
@@ -161,5 +162,5 @@ public static class ExternalAppointmentDisplay
     };
 }
 
-/// <summary>El bloque de la ficha del residente: sus citas abiertas de los próximos días y si quien mira puede registrar.</summary>
-public sealed record ExternalAppointmentResidentBlockViewModel(Guid ResidentId, IReadOnlyList<ExternalAppointmentRecord> Open, bool CanManage);
+/// <summary>El bloque de la ficha del residente: sus citas abiertas de los próximos días, las «por cerrar» (abiertas con el día pasado) y si quien mira puede registrar.</summary>
+public sealed record ExternalAppointmentResidentBlockViewModel(Guid ResidentId, IReadOnlyList<ExternalAppointmentRecord> Open, bool CanManage, IReadOnlyList<ExternalAppointmentRecord> Overdue);
