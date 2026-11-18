@@ -21,6 +21,7 @@ Este documento recoge las reglas de trabajo que rigen cualquier colaboración so
 
 ## Dónde está el resto del contexto del proyecto
 
+- `docs\INDICE.md` — índice de fuentes de verdad: qué documento manda sobre cada tema, qué hacer si dos se contradicen y qué significa un código con prefijo (`ADM-21` es una cosa en el boceto y otra en la Guía). Empieza por aquí si no sabes dónde mirar.
 - `docs\decisiones-arquitectura\` — directrices técnicas de la migración a .NET 10. Toda función con IA sigue el ADR 0011 (`0011-arquitectura-ia.md`): proveedor detrás de puertos, solo los casos de uso aprobados y solo proveedores autorizados.
 - `docs\producto\` — visión, objetivos y alcance del producto, y estado de la migración.
 - `docs\flujos-clinicos\` — procesos asistenciales paso a paso.

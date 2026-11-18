@@ -267,6 +267,8 @@ Referencias de orientación:
 
 ## Documentación y fuentes de verdad
 
+Para saber **qué documento manda** sobre cada tema, y qué hacer si dos se contradicen, mira [`docs/INDICE.md`](docs/INDICE.md).
+
 La documentación funcional viva está en [`docs/producto/`](docs/producto/):
 
 - [`vision-general.md`](docs/producto/vision-general.md) — qué es ResidApp y el problema que resuelve.
