@@ -1,6 +1,6 @@
 # Citas externas de los residentes: traspaso para construirlas
 
-**Estado a 2026-11-18: PR 4 (nota «al terminar» y siguiente cita) hecho en la rama `feat-citas-externas-nota`, pendiente de fusionar; siguiente, PR 5 (familia, solo ver; sin plan escrito). Antes: PR 3 (calendario del personal y vista del Auxiliar) FUSIONADO (#328, `fe47aa6`); siguiente, PR 4 (nota «al terminar» y siguiente cita). Antes: PR 2 (pantallas del personal) FUSIONADO (#327, `7df5842`). A 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/historial/2026-11-02_a_2026-11-18.md`. El siguiente es el PR 5: no tiene plan escrito todavía (el apartado 9 era el del PR 2, ya hecho; los apartados 5 a 8 siguen como estaban); antes de construir, planifica y consulta al DPO y a doc-usuario. Para el PR 4 queda el relevo de `docs/prompts-ia/historial/2026-11-02_a_2026-11-18.md`.** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
+**Estado a 2026-11-18: PR 4 (nota «al terminar» y siguiente cita) FUSIONADO (#330); siguiente, PR 5 (familia, solo ver): el plan y las siete decisiones de Orlando están en el apartado 10 (consultados el DPO y doc-usuario); sin construir. Antes: PR 3 (calendario del personal y vista del Auxiliar) FUSIONADO (#328, `fe47aa6`); siguiente, PR 4 (nota «al terminar» y siguiente cita). Antes: PR 2 (pantallas del personal) FUSIONADO (#327, `7df5842`). A 2026-11-17 (noche): PR 1 FUSIONADO (#325, `0e8a274`: script `0101`, dominio, servicio, repositorio, baja y pruebas; sin pantallas). Lo hecho y lo que cambió está en la primera entrada «RELEVO» de `docs/prompts-ia/historial/2026-11-02_a_2026-11-18.md`. El siguiente es el PR 5: **plan en el apartado 10** (el apartado 9 era el del PR 2, ya hecho; los apartados 5 a 8 siguen como estaban). Para el PR 4 queda el relevo de `docs/prompts-ia/historial/2026-11-02_a_2026-11-18.md`.** Diseño aprobado por Orlando y lectura del DPO hecha. Este documento es el punto de entrada para una sesión nueva. Léelo entero antes de tocar nada; después, `docs/producto/citas-externas-diseno.md` (las decisiones) y `docs/privacidad/citas-externas-lectura-dpo.md` (las condiciones de privacidad).
 
 ## 1. Qué hay que construir
 
@@ -101,3 +101,69 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consulta, 
 **Prompt para empezar el PR 2:**
 
 > Retomamos las citas externas de ResidApp, PR 2 (pantallas del personal). Lee `CLAUDE.md`, `docs/tareas/alta-prioridad/pendientes-citas-externas.md` (entero, sobre todo el apartado 9) y `docs/producto/citas-externas-diseno.md`. Haz `git fetch` y comprueba `origin/main` y los PR abiertos (el PR 1 fue el #325). Propón el plan del PR 2 antes de escribir código y pregúntame de una en una cualquier decisión que no esté ya en el diseño.
+
+## 10. PR 5: familia, solo ver (PLAN decidido el 2026-11-18; sin construir)
+
+Consultados `dpo-residapp` y `doc-usuario-residapp` (sus conclusiones están integradas abajo). Orlando decidió una a una las siete cuestiones del apartado 10.1. No hay botones de acción ni correos: eso es el PR 6.
+
+### 10.1 Decisiones de Orlando (2026-11-18)
+
+1. **Encender el interruptor del centro:** confirmación expresa con recuento. Administración marca que la residencia ya informó a residentes y familias, que tiene el procedimiento de voluntad del residente y que actualizó la EIPD; la pantalla muestra cuántas citas abiertas se verían, por nivel, y enlaza a la lista para revisarlas. Se audita quién, cuándo y con qué versión de la fila. Lo enciende **Administración** (el DPO pregunta si debería ser Dirección; no se ha cambiado).
+2. **Interruptor por residente:** lo cambian **Administración y Enfermería** (esta, solo de las unidades del residente y **sin** el permiso `EXTERNAL_APPOINTMENT_MANAGE`: es una herramienta de privacidad). Quitar la restricción pide confirmación y muestra cuántas citas se abrirían. Ambas direcciones se auditan con valor anterior y nuevo, sin texto libre de motivo. Medicina no (queda «solo ve»; se pregunta a CJ en el documento breve).
+3. **Nivel «sin especialidad»:** la familia ve el **tipo general** («Consulta / Prueba / Tratamiento fuera del centro»; «Cita fuera del centro» si es «otra»), no la especialidad. Si la persona experta lo pide, bajar a «Cita fuera del centro» es un cambio de una línea. En `0101` solo existen prueba, consulta, tratamiento y otra: no hay «tipo detallado».
+4. **Qué ve de lo que ya no va a ser:** una cita visible que se cancela sigue saliendo como «Cancelada», sin motivo, hasta su fecha original. Realizadas y «no se acudió» nunca se ven. La lista llega a **90 días**. Una cancelación por baja no aparece (el residente de baja no sale en `AccessibleLinks`).
+5. **Interruptor del centro:** pantalla propia dentro de Citas externas de Administración («Ajustes para la familia»); no va en «Datos del centro» ni en «Citas» (que es de las citas con la familia).
+6. **Nombre del enlace para la familia:** «Citas fuera del centro».
+7. **Vistas:** lista por días (la principal, y la única en móvil) y mes con una marca neutra por día (sin tipo, especialidad ni número). Sin semana por ahora.
+
+### 10.2 Qué hacer
+
+**Script `0104`** (siguiente libre; mira antes `ls database/scripts`):
+- `citas_externas_configuracion_centro`: `centro_id` PK, `familia_ve_citas BIT NOT NULL DEFAULT 0`, `version`, quién y cuándo. Historial de solo añadir (`INSTEAD OF UPDATE, DELETE`).
+- `citas_externas_ajuste_residente`: clave compuesta a `residentes(centro_id, id)`, `familia_no_ve BIT`, `version`, quién y cuándo, con su historial de solo añadir. Sin fila = la familia ve.
+- Seguridad por filas por centro, `GRANT`/`DENY` al rol `residapp_aplicacion` y matriz de `0091`; `CoberturaRlsTests` y `PermisosAplicacionTests` obligan a cubrir cada tabla. **Catálogo de expurgo** (a mano, ver `expurgo-y-supresion.md`): la del residente con la categoría del residente.
+- Las acciones de auditoría nuevas (activar o desactivar el centro, restringir o liberar un residente) llevan solo identificadores y valor anterior y nuevo como código cerrado; añádelas a `AdministrativeAudit.cs` y `AuditoriaModels.cs`.
+
+**Regla única de visibilidad** (se evalúa en cada lectura, sin caché en memoria): la familia ve una cita solo si el centro está encendido **y** el residente no está restringido **y** el nivel no es `OCULTA`. Sin fila de configuración = apagado. Si la consulta falla, no sale nada.
+
+**Lectura de la familia:** puerto y repositorio nuevos (patrón de `FamilyAppointments` y `SqlFamilyAppointments`) con `SqlFamilyPortalReader.AccessibleLinks` (vínculo, autorización activa y vigente, residente `ACTIVE`; suspendido o de baja no muestra nada). Modelo propio `ExternalAppointmentForFamily`, **redactado en el servidor según el nivel** (en el SQL con `CASE` o en el mapeo; nunca «oculto en pantalla»):
+- VISIBLE: día, hora (o «por confirmar»), tipo, especialidad, lugar, qué preparar, transporte y acompañante (modo y estado), si está cubierta.
+- SIN_ESPECIALIDAD: lo mismo con el tipo general y sin especialidad.
+- Nunca: nota «al terminar», motivo de cancelar, nombre de quien se encarga, historial, quién la registró, ni citas realizadas o «no se acudió».
+- Prueba por reflexión sobre las propiedades del modelo (modelo: `ExternalAppointmentAuxiliarViewTests`).
+
+**Pantallas** del Portal Familiar bajo `/Familia/Residente/{linkId}/…` (el nombre de la acción se decide al construir; la Guía exige que exista en el controlador):
+- Lista por días, mes y detalle. El enlace sale en la pantalla del residente siempre que el centro esté encendido y el residente no restringido, **haya o no citas** (que el enlace aparezca o no dice algo). Con la lista vacía: «No hay citas que mostrar», no «No hay citas». Con el centro apagado o el residente restringido, la URL directa da el **mismo 404** que una cita inexistente, de otro residente o `OCULTA`.
+- `Cache-Control: no-store` en estas pantallas (lectura del DPO, apartado 5.1) y ningún dato de la cita en títulos, `aria-label` ni URL. `sw.js` ya no guarda navegaciones.
+- En el detalle: «Esta información la ve quien está autorizado a acompañar a [nombre del residente] y solo en la medida en que él o ella lo permite. Si crees que no debería verla, avisa al centro.» (DPO 10.3; esa frase solo es cierta si el centro tiene el procedimiento de voluntad del residente: depende de lo que valide la persona experta). **No** va la promesa «el centro se pondrá en contacto contigo».
+- Junto al nivel «sin especialidad» del formulario del personal, un aviso: «Lugar y Qué preparar siguen viéndolos la familia: no escribas ahí la especialidad».
+- Quitar el texto de `CitasExternas/Formulario.cshtml` (línea ~169) «La familia aún no ve las citas externas…».
+
+**Pruebas:**
+- Aislamiento: centro A no ve B (también con la cookie de ámbito manipulada), un `linkId` ajeno da 404 como uno inexistente, una familia vinculada en dos centros ve cada uno por separado, Plataforma, Auxiliar y Enfermería no entran por esa ruta; vínculo desvinculado, autorización revocada o caducada, residente suspendido y de baja.
+- Cada nivel y cada interruptor; una cita `OCULTA` con un lugar reconocible no aparece en ningún HTML; en SIN_ESPECIALIDAD, ninguna etiqueta de especialidad (recorre todos los códigos) sale en el HTML; canceladas y el límite de 90 días; que el recuento de la confirmación no cuenta las `OCULTA`.
+- Los interruptores: permiso por perfil y unidad, versión (bloqueo optimista), historial inmutable.
+- Una prueba funcional que falle si en el Manual, la Guía o las vistas queda «aún no ve las citas externas» o «Todavía no ve las citas externas».
+
+**Documentación de usuario (actualización larga; no obliga a re-sellar, todo sigue en 0.4.0):**
+- `Manual.cshtml`: línea 26 (resumen por perfil); sección «Citas externas» (617, 631, 639; quitar la frase de 679 «La familia aún no ve…»); párrafo nuevo «Citas fuera del centro» en «Portal Familiar» junto a «Citas» (~1960), y reescribir el «Próximamente» de ~1993 para que solo conserve «que se ofrezca a llevar o acompañar» (es el PR 6).
+- Guía: ficha nueva en `familia.json` (con su ruta real; retocar `proposito`, `siempre`, `nunca` y FAM-08), ficha nueva en `administracion.json` para «Ajustes para la familia» y un paso para el interruptor del residente (ADM-20 o ADM-47), retoques de ADM-47 (línea ~1518, ya no es «Todavía no ve») y ADM-48, y `enfermeria.json:763` (puede apagarlo por residente). Medicina y Auxiliar, sin cambios. `GuiaDerivaTests` exige rutas, botones, campos y títulos del Manual literales: escribe los textos desde las vistas.
+- Flujo de trabajo: opcional, una línea en «La familia, informada». Acceso y sesión y las guías de CJ: sin cambios (no hay que subir ningún `data-version`; si el interruptor viniera encendido en los centros de ejemplo cambiaría `pruebas-6` paso 558: déjalo **apagado** en `centros_prueba.sql`).
+- Con `probar-en-navegador` (JavaScript, sesión): que cada nivel se vea o no se vea, que el enlace desaparezca con cualquiera de los dos interruptores, que no haya botones de acción, el mes en móvil y escritorio, y el corte con residente suspendido o de baja. Cierra con `qa-revisor-residapp`.
+
+**Al cerrar el PR 5:** `docs/privacidad/antes-de-datos-reales.md` y la EIPD del centro (los riesgos del apartado 10.3); `expurgo-y-supresion.md`.
+
+### 10.3 Riesgos que deben constar para la EIPD y la persona experta (DPO, 2026-11-18)
+
+- **El interruptor del residente es todo o nada**: no distingue entre familiares. «A mi hija no se lo cuentes» solo se resuelve ocultando una cita concreta o revocando a ese familiar. Abierta la decisión de un nivel por vínculo (Orlando, CJ y DPO real).
+- Al encender el interruptor del centro, las citas ya registradas (todas nacieron `VISIBLE`) pasan a verse; por eso la confirmación con recuento.
+- Que el enlace aparezca o desaparezca dice algo; si se restringe a un residente, un familiar atento lo deduce. Aceptado.
+- La frecuencia de las marcas del mes y el patrón semanal pueden delatar un tratamiento aunque no salga la especialidad; `lugar` y `qué preparar` son texto libre y pueden repetirla (decisión 7 del diseño). El límite de 90 días lo reduce.
+- Lo que un familiar ya vio antes de una restricción no se puede deshacer.
+- La decisión 5 (la familia ve siempre la especialidad, apartándose del DPO) consta por escrito en la EIPD con responsable y fecha.
+- Las lecturas de la familia no se auditan (decisión general).
+- **Para el PR 6, anotado desde ya:** con el interruptor del residente apagado desaparecen las tareas de «Me encargo yo» y no salen correos, comprobándolo otra vez al enviar; y `AccessibleLinks` no mira que la cuenta esté activa (`SqlChangeNoticeStore.cs`), cosa que importa al enviar correos.
+
+### 10.4 Prompt para empezar el PR 5
+
+> Retomamos las citas externas de ResidApp, PR 5 (la familia solo ve). Lee `CLAUDE.md`, `docs/tareas/alta-prioridad/pendientes-citas-externas.md` (entero, sobre todo el apartado 10) y `docs/producto/citas-externas-diseno.md`. Haz `git fetch` y comprueba `origin/main` y los PR abiertos. El plan y las siete decisiones de Orlando ya están escritas en el apartado 10: no vuelvas a preguntarlas. Empieza por el script `0104` y sus pruebas de aislamiento y permisos antes de las pantallas.
