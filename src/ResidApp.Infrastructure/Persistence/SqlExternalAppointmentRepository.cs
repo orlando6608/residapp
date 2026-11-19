@@ -15,7 +15,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// bloquea la cita (o al residente activo, al registrar), vuelve a comprobar el ámbito y, en Enfermería, el permiso EXTERNAL_APPOINTMENT_MANAGE, comprueba la versión vista, escribe su
 /// fila en dbo.citas_externas_cambios y deja el evento en dbo.eventos_auditoria con solo identificadores: ni la especialidad, ni el lugar, ni qué preparar, ni los motivos.
 /// </summary>
-public sealed class SqlExternalAppointmentRepository(SqlConnectionFactory connections) : IExternalAppointmentRepository
+public sealed partial class SqlExternalAppointmentRepository(SqlConnectionFactory connections) : IExternalAppointmentRepository
 {
     private const string ResourceType = "EXTERNAL_APPOINTMENT";
 

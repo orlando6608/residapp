@@ -1,6 +1,6 @@
 {
   "perfil": "Familiar",
-  "proposito": "El Portal Familiar es la parte de ResidApp para las familias. Te deja leer las novedades que el equipo asistencial decide publicar sobre tu residente y reservar o solicitar citas con el equipo. No es un canal urgente y no hay chat: lo urgente se resuelve siempre por teléfono con el centro.",
+  "proposito": "El Portal Familiar es la parte de ResidApp para las familias. Te deja leer las novedades que el equipo asistencial decide publicar sobre tu residente, reservar o solicitar citas con el equipo y, si el centro lo abre, ver las citas de tu residente fuera del centro. No es un canal urgente y no hay chat: lo urgente se resuelve siempre por teléfono con el centro.",
   "rutina": [
     "Entras con tu usuario y tu contraseña. Si solo tienes un residente, llegas directamente a su pantalla.",
     "Lees las novedades nuevas (llevan la etiqueta «Nueva») y, si el centro lo ha elegido, el resumen diario o semanal.",
@@ -13,7 +13,8 @@
     "Leer las novedades publicadas sobre tu residente y, si el centro lo ha elegido, su resumen diario o semanal.",
     "Reservar una cita directamente o solicitarla, según cómo lo tenga organizado el centro.",
     "Reprogramar o cancelar tus citas hasta la antelación mínima que fije el centro.",
-    "Responder a una propuesta de cita: aceptarla, pedir otro horario o cancelar la solicitud."
+    "Responder a una propuesta de cita: aceptarla, pedir otro horario o cancelar la solicitud.",
+    "Ver las citas de tu residente fuera del centro (pruebas, consultas, tratamientos) de hoy a los próximos 90 días, si el centro las ha abierto a las familias."
   ],
   "conPermiso": [],
   "nunca": [
@@ -21,6 +22,7 @@
     "Ver la foto de identificación del residente ni los nombres de los profesionales.",
     "Ver datos de otros familiares ni las citas que ha reservado otra persona.",
     "Escribir al equipo (no hay chat) ni elegir un profesional concreto para una cita.",
+    "Cambiar o confirmar desde el portal una cita fuera del centro, ni ver su nota «al terminar», el motivo de una cancelación ni quién se encarga del transporte.",
     "Usar el portal para algo urgente: para eso, el teléfono del centro."
   ],
   "revisadoPara": "0.4.0",
@@ -281,10 +283,11 @@
       "palabras": ["urgente", "teléfono", "qué veo", "qué no veo", "información", "privacidad"],
       "permisos": [],
       "antes": [
-        "Saber que el portal enseña solo lo que el centro decide publicar y las citas que gestionas tú; no es un parte médico ni un canal urgente."
+        "Saber que el portal enseña solo lo que el centro decide publicar, las citas que gestionas tú y, si el centro lo abre, las citas de tu residente fuera del centro; no es un parte médico ni un canal urgente."
       ],
       "pasos": [
         { "texto": "Para saber cómo está tu residente, lee las **Novedades del centro** (ver FAM-02) y, si hay, el resumen (ver FAM-03).", "campos": ["Novedades del centro"] },
+        { "texto": "Para saber qué citas tiene fuera del centro, mira **Citas fuera del centro** (ver FAM-09), si el botón sale.", "botones": ["Citas fuera del centro"] },
         { "texto": "Si necesitas algo **urgente**, no uses el portal: llama por teléfono al centro. Lo recuerda cada pantalla: «Este portal no es un canal urgente.»" },
         { "texto": "Si necesitas información que no sale aquí (valoraciones, constantes, medicación, historial), pídela por teléfono al centro: el portal no la muestra nunca." },
         { "texto": "Si dejas de ver a tu residente, ver FAM-01: puede que haya cambiado tu autorización." }
@@ -299,6 +302,39 @@
       "rutas": ["PortalFamiliar/Residente", "PortalFamiliar/Index"],
       "mensajes": [
         "Este portal no es un canal urgente. Si necesitas información urgente, llama por teléfono al centro."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-09",
+      "pregunta": "¿Cómo veo las citas de mi residente fuera del centro?",
+      "palabras": ["citas fuera del centro", "citas externas", "hospital", "consulta", "prueba", "tratamiento", "calendario", "mes", "lista"],
+      "permisos": [],
+      "antes": [
+        "Estar viendo a tu residente (ver FAM-01).",
+        "Saber que esta parte la abre el centro: si no ves el botón **Citas fuera del centro**, el centro no la ha abierto todavía o ha decidido que no se muestre para tu residente. El portal no dice cuál de las dos cosas es.",
+        "Saber que aquí solo ves las citas: no se pueden cambiar ni confirmar desde el portal."
+      ],
+      "pasos": [
+        { "texto": "Abre a tu residente y pulsa **Citas fuera del centro**.", "botones": ["Citas fuera del centro"] },
+        { "texto": "Ves una lista por días, de hoy a los próximos 90 días: la hora (o «Por confirmar»), el tipo de cita, el lugar y si falta resolver el transporte o el acompañante.", "campos": ["Por confirmar"] },
+        { "texto": "En pantallas anchas, pulsa **Mes** para ver una marca en los días con alguna cita (no dice cuál) y **Lista** para volver.", "botones": ["Mes", "Lista"] },
+        { "texto": "Pulsa una cita para abrirla: día, hora, lugar, qué preparar, transporte y acompañante." }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Leer no cambia nada ni avisa al centro. Las pantallas no se guardan en el navegador. Una cita cancelada sigue saliendo como «Cancelada» hasta su día; las realizadas y las que no se acudió no salen." }
+      ],
+      "dudas": [
+        { "p": "No veo el botón «Citas fuera del centro».", "r": "El centro no ha abierto esta parte a las familias, o ha decidido que no se muestre para tu residente. Si necesitas saber de una cita, llama por teléfono al centro." },
+        { "p": "«No hay citas que mostrar.»", "r": "No hay citas de los próximos 90 días que el centro haya decidido enseñar a las familias. No significa que no haya ninguna." },
+        { "p": "Veo «Consulta fuera del centro» sin la especialidad.", "r": "Es así a propósito: el centro puede decidir que la especialidad no se muestre. Para saber más, llama por teléfono al centro." },
+        { "p": "Quiero decir que yo llevo a mi residente, o que no puedo.", "r": "Por ahora no se puede desde el portal. Llama por teléfono al centro." }
+      ],
+      "rutas": ["PortalFamiliar/Residente", "PortalFamiliar/CitasFuera", "PortalFamiliar/CitasFueraMes", "PortalFamiliar/CitaFuera"],
+      "mensajes": [
+        "No hay citas que mostrar.",
+        "Esta información la ve quien está autorizado a acompañar a"
       ],
       "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }

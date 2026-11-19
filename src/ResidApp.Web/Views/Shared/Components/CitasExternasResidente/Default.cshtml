@@ -35,6 +35,24 @@
                 </ul>
             </div>
         }
+        @if (Model.Family is { } family)
+        {
+            <p class="mb-2">
+                @if (family.Restricted)
+                {
+                    <span class="badge text-bg-warning">Familia restringida</span> <span>La familia de esta persona no ve sus citas externas.</span>
+                }
+                else if (family.CenterEnabled)
+                {
+                    <span>La familia de esta persona ve sus citas externas.</span>
+                }
+                else
+                {
+                    <span>El centro todavía no ha abierto las citas externas a las familias.</span>
+                }
+                <a asp-controller="CitasExternas" asp-action="FamiliaResidente" asp-route-residenteId="@Model.ResidentId">Ver o cambiar lo que ve la familia</a>
+            </p>
+        }
         <div class="d-flex flex-wrap gap-2">
             <a asp-controller="CitasExternas" asp-action="Index" asp-route-residenteId="@Model.ResidentId" class="btn btn-outline-secondary">Ver todas sus citas externas</a>
             @if (Model.CanManage)

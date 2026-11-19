@@ -818,4 +818,153 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
 
         Assert.True(visited > 50, $"El barrido solo visitó {visited} rutas.");
     }
+
+    /// <summary>Citas externas para la familia (script 0104; PR 5), de punta a punta por HTTP: con el centro apagado la familia no ve nada ni por la dirección directa; Administración abre con las tres
+    /// confirmaciones; la familia ve cada nivel como toca (la especialidad de «sin especialidad» y todo lo oculto no salen en ningún HTML); Enfermería sin el permiso de gestionar citas restringe a
+    /// la familia de un residente; y al cerrar, todo vuelve a 404. Nombres, lugares y especialidades inventados.</summary>
+    [Fact]
+    public async Task CitasExternasParaLaFamilia_InterruptoresNivelesYCortes_ConLaAppEntera()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var nurse = await LoginAsync(seed.Nurse);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Cita Familia Funcional", "Hija Cita Familia Funcional");
+        var foreignResidentId = await CreateResidentAsync(admin, seed, "Residente Ajeno Cita Familia", "Otra Familia Cita");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var foreignLinkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(foreignResidentId) });
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        string Day(int offset) => ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(offset).ToString("yyyy-MM-dd");
+        var nueva = $"/CitasExternas/Nueva?residenteId={residentId}";
+        async Task<Guid> RegisterAsync(int offset, string specialty, string place, string visibility)
+        {
+            var page = await admin.GetStringAsync(nueva);
+            var response = await admin.PostAsync("/CitasExternas/Nueva", new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+                ["Form.ResidenteId"] = residentId, ["Form.Fecha"] = Day(offset), ["Form.Tipo"] = "CONSULTA", ["Form.Especialidad"] = specialty, ["Form.Lugar"] = place,
+                ["Form.TransporteModo"] = "SIN_DETERMINAR", ["Form.AcompananteModo"] = "SIN_DETERMINAR", ["Form.Visibilidad"] = visibility,
+            }));
+            return Guid.Parse(Regex.Match(response.RequestMessage!.RequestUri!.PathAndQuery, "([0-9a-f]{8}-[0-9a-f-]{27})").Groups[1].Value);
+        }
+
+        var visible = await RegisterAsync(3, "CARDIOLOGIA", "Hospital Visible Prueba", "VISIBLE");
+        var withoutSpecialty = await RegisterAsync(4, "NEUROLOGIA", "Hospital Sin Especialidad Prueba", "SIN_ESPECIALIDAD");
+        var hidden = await RegisterAsync(5, "ONCOLOGIA", "Lugar Oculto Reconocible", "OCULTA");
+        var family = await LoginAsync(subject);
+        var home = $"/Familia/Residente/{linkId}";
+
+        // 1. Centro apagado: ni el enlace, ni la lista, ni el mes, ni una cita por su dirección directa. Es el mismo 404 que con una cita ajena o inexistente.
+        Assert.DoesNotContain("Citas fuera del centro", await BodyAsync(await family.GetAsync(home)));
+        foreach (var url in new[] { $"{home}/CitasFuera", $"{home}/CitasFuera/Mes", $"{home}/CitasFuera/{visible}", $"{home}/CitasFuera/{Guid.NewGuid()}", $"/Familia/Residente/{foreignLinkId}/CitasFuera" })
+        {
+            Assert.Equal(HttpStatusCode.NotFound, (await family.GetAsync(url)).StatusCode);
+        }
+
+        // 2. Solo Administración abre, y con las tres confirmaciones; el recuento sale antes de abrir.
+        var settingsUrl = "/CitasExternas/AjustesFamilia";
+        var settings = await BodyAsync(await admin.GetAsync(settingsUrl));
+        Assert.Contains("Ahora las familias no ven las citas externas.", settings);
+        Assert.Contains("se verían 2 citas abiertas", settings);
+        Assert.Contains("1 con especialidad y 1 sin especialidad", settings);
+        var nurseSettings = await BodyAsync(await nurse.GetAsync(settingsUrl));
+        Assert.Contains("Los ajustes de lo que ve la familia los cambia Administración.", nurseSettings);
+        // Un POST directo de Enfermería al interruptor del centro no cambia nada, aunque lleve las tres confirmaciones.
+        var nurseToken = ExtractValue(await nurse.GetStringAsync($"/CitasExternas/FamiliaResidente?residenteId={residentId}"), "__RequestVerificationToken");
+        var nurseDirect = await nurse.PostAsync(settingsUrl, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = nurseToken, ["version"] = "0", ["encender"] = "true", ["informada"] = "true", ["voluntad"] = "true", ["eipd"] = "true",
+        }));
+        Assert.Contains("Los ajustes de lo que ve la familia los cambia Administración.", await BodyAsync(nurseDirect));
+        Assert.DoesNotContain("Citas fuera del centro", await BodyAsync(await family.GetAsync(home)));
+        var withoutConfirmations = await PostAsync(admin, settingsUrl, settingsUrl, new() { ["version"] = "0", ["encender"] = "true", ["informada"] = "true", ["voluntad"] = "true" });
+        Assert.Contains("Para abrir las citas externas a las familias tienes que marcar las tres confirmaciones.", withoutConfirmations);
+        Assert.DoesNotContain("Citas fuera del centro", await BodyAsync(await family.GetAsync(home)));
+        var opened = await PostAsync(admin, settingsUrl, settingsUrl, new()
+        {
+            ["version"] = "0", ["encender"] = "true", ["informada"] = "true", ["voluntad"] = "true", ["eipd"] = "true",
+        });
+        Assert.Contains("Las familias ya pueden ver las citas externas.", opened);
+        var stale = await PostAsync(admin, settingsUrl, settingsUrl, new() { ["version"] = "0", ["encender"] = "false" });
+        Assert.Contains("Otra persona ha cambiado esto mientras lo mirabas.", stale);
+
+        // 3. La familia ve cada nivel como toca, sin caché y sin datos de la cita en el título de la pestaña.
+        Assert.Contains("Citas fuera del centro", await BodyAsync(await family.GetAsync(home)));
+        var listResponse = await family.GetAsync($"{home}/CitasFuera");
+        var list = await BodyAsync(listResponse);
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        Assert.Contains("no-store", listResponse.Headers.CacheControl?.ToString());
+        Assert.Contains("Hospital Visible Prueba", list);
+        Assert.Contains("Consulta fuera del centro: Cardiología", list);
+        Assert.Contains("Hospital Sin Especialidad Prueba", list);
+        Assert.DoesNotContain("Neurología", list);
+        Assert.DoesNotContain("Oncología", list);
+        Assert.DoesNotContain("Lugar Oculto Reconocible", list);
+        Assert.DoesNotContain("Residente Ajeno Cita Familia", list);
+        Assert.DoesNotContain("Me encargo yo", list);
+        var title = Regex.Match(list, "<title>.*?</title>", RegexOptions.Singleline).Value;
+        Assert.Contains("Citas fuera del centro", title);
+        Assert.DoesNotContain("Hospital", title);
+        Assert.DoesNotContain("Cardiología", title);
+        var detailResponse = await family.GetAsync($"{home}/CitasFuera/{visible}");
+        var detail = await BodyAsync(detailResponse);
+        Assert.Contains("no-store", detailResponse.Headers.CacheControl?.ToString());
+        Assert.Contains("Cardiología", detail);
+        Assert.Contains("Esta información la ve quien está autorizado a acompañar a Residente Cita Familia Funcional", detail);
+        Assert.DoesNotContain("Me encargo yo", detail);
+        Assert.DoesNotContain("No puedo", detail);
+        var noSpecialtyDetail = await BodyAsync(await family.GetAsync($"{home}/CitasFuera/{withoutSpecialty}"));
+        Assert.Contains("Hospital Sin Especialidad Prueba", noSpecialtyDetail);
+        Assert.DoesNotContain("Neurología", noSpecialtyDetail);
+        Assert.Equal(HttpStatusCode.NotFound, (await family.GetAsync($"{home}/CitasFuera/{hidden}")).StatusCode);
+        // El mes de la primera cita (a final de mes caería en el siguiente): se pide por su año y su mes.
+        var firstDay = DateOnly.ParseExact(Day(3), "yyyy-MM-dd");
+        var month = await BodyAsync(await family.GetAsync($"{home}/CitasFuera/Mes?anio={firstDay.Year}&mes={firstDay.Month}"));
+        Assert.Contains("Hay una cita ese día", month);
+        Assert.DoesNotContain("Hospital Visible Prueba", month);
+        Assert.DoesNotContain("Cardiología", month);
+
+        // 4. Enfermería, sin el permiso de gestionar citas, restringe a la familia de ese residente; el enlace y las citas desaparecen en el acto.
+        var residentUrl = $"/CitasExternas/FamiliaResidente?residenteId={residentId}";
+        Assert.DoesNotContain("name=\"Form.Fecha\"", await BodyAsync(await nurse.GetAsync(nueva)));
+        var residentPage = await BodyAsync(await nurse.GetAsync(residentUrl));
+        Assert.Contains("La familia de esta persona ve sus citas externas", residentPage);
+        Assert.Contains("Que su familia no vea las citas externas", residentPage);
+        var restricted = await PostAsync(nurse, "/CitasExternas/FamiliaResidente", residentUrl, new() { ["residenteId"] = residentId, ["version"] = "0", ["restringir"] = "true" });
+        Assert.Contains("La familia ya no ve las citas externas de esta persona.", restricted);
+        Assert.DoesNotContain("Citas fuera del centro", await BodyAsync(await family.GetAsync(home)));
+        foreach (var url in new[] { $"{home}/CitasFuera", $"{home}/CitasFuera/Mes", $"{home}/CitasFuera/{visible}" })
+        {
+            Assert.Equal(HttpStatusCode.NotFound, (await family.GetAsync(url)).StatusCode);
+        }
+        var staleRestriction = await PostAsync(nurse, "/CitasExternas/FamiliaResidente", residentUrl, new() { ["residenteId"] = residentId, ["version"] = "0", ["restringir"] = "true" });
+        Assert.Contains("Otra persona ha cambiado esto mientras lo mirabas.", staleRestriction);
+
+        // 5. Quitar la restricción enseña antes cuántas citas se abrirían; Administración lo hace y la familia vuelve a verlas.
+        var restrictedPage = Regex.Replace(await BodyAsync(await admin.GetAsync(residentUrl)), "\\s+", " ");
+        Assert.Contains("La familia de esta persona no ve sus citas externas.", restrictedPage);
+        Assert.Contains("la familia verá 2 citas abiertas", restrictedPage);
+        var released = await PostAsync(admin, "/CitasExternas/FamiliaResidente", residentUrl, new() { ["residenteId"] = residentId, ["version"] = "1", ["restringir"] = "false" });
+        Assert.Contains("La familia vuelve a ver las citas externas de esta persona.", released);
+        Assert.Contains("Hospital Visible Prueba", await BodyAsync(await family.GetAsync($"{home}/CitasFuera")));
+
+        // 6. Al cerrar el centro, todo vuelve a 404; y el formulario del personal ya no dice que la familia no ve nada, y avisa del lugar y qué preparar.
+        var closed = await PostAsync(admin, settingsUrl, settingsUrl, new() { ["version"] = "1", ["encender"] = "false" });
+        Assert.Contains("Las familias ya no ven las citas externas.", closed);
+        Assert.Equal(HttpStatusCode.NotFound, (await family.GetAsync($"{home}/CitasFuera")).StatusCode);
+        Assert.DoesNotContain("Citas fuera del centro", await BodyAsync(await family.GetAsync(home)));
+        var form = await BodyAsync(await admin.GetAsync(nueva));
+        Assert.DoesNotContain("La familia aún no ve", form);
+        Assert.Contains("no escribas ahí la especialidad", form);
+    }
 }

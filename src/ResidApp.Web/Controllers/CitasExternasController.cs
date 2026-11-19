@@ -19,7 +19,7 @@ namespace ResidApp.Web.Controllers;
 [Authorize]
 public sealed partial class CitasExternasController(
     ExternalAppointmentsApplicationService appointments, AdministracionApplicationService administration,
-    EnfermeriaApplicationService nursing, MedicinaApplicationService medicine) : Controller
+    EnfermeriaApplicationService nursing, MedicinaApplicationService medicine, ExternalAppointmentFamilySettingsApplicationService familySettings) : Controller
 {
     private const int DefaultDays = 60;
     private const int MaxDays = 366;

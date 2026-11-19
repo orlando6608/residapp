@@ -46,6 +46,11 @@ else
     <p class="text-muted">Aquí solo puedes ver las citas. Las registra Administración.</p>
 }
 
+@if (Model.Profile == SystemProfile.Administracion)
+{
+    <p><a asp-action="AjustesFamilia" class="btn btn-outline-secondary">Ajustes para la familia</a></p>
+}
+
 @if (Model.Overdue.Count > 0)
 {
     @* Por cerrar (decisión de Orlando, 2026-11-18): citas abiertas cuyo día ya pasó sin marcarse realizadas ni «no se acudió». Salen siempre, con cualquier filtro de fechas. *@

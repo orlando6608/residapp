@@ -23,7 +23,7 @@
             centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, organigrama y cargos, citas con la familia, citas externas de los residentes, importación y exportación de datos, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
-        <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente y las citas con el centro.</li>
+        <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente, las citas con el centro y, si el centro lo abre, sus citas fuera del centro.</li>
         <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro, módulos opcionales de cada centro y cuentas que trabajan en varios centros.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
@@ -636,7 +636,7 @@
         la especialidad, de una lista cerrada. El lugar, que es <strong>solo el nombre del hospital o centro</strong> (una línea de 80 caracteres): no el servicio, la unidad ni el motivo. El transporte
         (la familia, el centro, ambulancia o sin determinar) y el acompañante (un familiar, personal del centro, lo lleva el transporte, no necesita o sin determinar), cada uno con su casilla de
         «confirmado»: «sin determinar» siempre queda pendiente y «no necesita» queda confirmado. Qué preparar (ayuno, último informe, tarjeta sanitaria, medicación, silla de ruedas u otra, más una línea
-        de 100 caracteres con solo lo que hay que llevar o hacer para salir; las indicaciones clínicas no se escriben aquí). Y <strong>qué ve la familia</strong> (visible, sin especialidad u oculta). Una cita está
+        de 100 caracteres con solo lo que hay que llevar o hacer para salir; las indicaciones clínicas no se escriben aquí). Y <strong>qué ve la familia</strong> (visible, sin especialidad u oculta; ver «Lo que ve la familia» más abajo). Una cita está
         <strong>«Cubierta»</strong> cuando el transporte y el acompañante están confirmados; si no, dice «Falta algo» y qué falta.
     </p>
     <p>
@@ -674,9 +674,22 @@
         (solo residente y día). Se cierra como cualquier otra: <strong>Dar por realizada</strong>, <strong>No se acudió</strong> o <strong>Cancelar la cita</strong>. Se buscan las de los últimos 365 días.
     </p>
     <p>
+        <strong>Lo que ve la familia.</strong> Por defecto, <strong>la familia no ve nada</strong>: es una parte que el centro abre cuando está preparado. Hay dos interruptores y un nivel por cita.
+        <strong>El del centro</strong> está en <strong>Citas externas</strong> → <strong>Ajustes para la familia</strong> y solo lo cambia Administración: para <strong>Abrir las citas externas a las familias</strong> tiene
+        que marcar tres confirmaciones (que la residencia ya informó a los residentes y a sus familias, que tiene un procedimiento para tener en cuenta la voluntad de cada residente y que ha actualizado su
+        evaluación de impacto en protección de datos), y antes de abrir la pantalla dice cuántas citas abiertas de los próximos 90 días se verían, con especialidad y sin ella (todas las citas nacen visibles: conviene
+        revisar la lista antes). Para <strong>Cerrar las citas externas a las familias</strong> no hace falta confirmar nada, y las familias dejan de verlas al momento. <strong>El del residente</strong> está en el bloque
+        «Citas externas» de su ficha (<strong>Ver o cambiar lo que ve la familia</strong>): Administración y la Enfermería de su unidad pueden pulsar <strong>Que su familia no vea las citas externas</strong> (para eso
+        Enfermería no necesita el permiso de registrar y cambiar citas, porque es una medida de privacidad) y <strong>Volver a abrir las citas externas a su familia</strong>, que antes dice cuántas citas se abrirían; Medicina
+        solo lo ve. Es todo o nada para esa persona: vale para todos sus familiares autorizados, y si solo se quiere que no lo vea uno, se oculta una cita concreta o se retira a ese familiar del portal. Cada cambio
+        queda guardado con quién, cuándo y el valor anterior, sin escribir ningún motivo. <strong>El nivel de cada cita</strong> es el campo «Qué ve la familia» de la ficha: «visible» (tipo, especialidad y lugar),
+        «sin especialidad» (tipo general y lugar, sin la especialidad) u «oculta» (no se ve ni se cuenta). Con «sin especialidad», el lugar y qué preparar siguen viéndolos: no hay que escribir ahí la especialidad. La
+        familia nunca ve la nota «Al terminar», el motivo de una cancelación, quién se encarga del transporte ni el historial, y las citas realizadas o a las que no se acudió no le salen nunca.
+    </p>
+    <p>
         <strong>Residente suspendido o de baja.</strong> Si el residente está suspendido por un ingreso hospitalario, sus citas siguen vivas y llevan la marca «Residente suspendido». Al darlo de baja,
         sus citas externas abiertas de hoy en adelante se cancelan solas; la pantalla de la baja las cuenta y no se restauran al
-        reactivarlo. La familia aún no ve las citas externas.
+        reactivarlo. Mientras está suspendido o de baja, su familia no ve ninguna.
     </p>
 </section>
 
@@ -1967,6 +1980,15 @@
         desactiva el servicio, no se ofrece reservar, pero las citas ya confirmadas se siguen viendo y se pueden cancelar.
     </p>
     <p>
+        <strong>Citas fuera del centro.</strong> Si el centro ha abierto las citas externas a las familias y la familia de su residente no está restringida, en la pantalla del residente sale el botón
+        <strong>Citas fuera del centro</strong> (aunque no haya ninguna cita, para que su presencia no diga nada). Muestra las pruebas, consultas y tratamientos de su residente fuera de la residencia, de hoy a los
+        próximos 90 días, <strong>solo para verlas</strong>: una lista por días (la única en el móvil) y, en pantallas anchas, una pestaña <strong>Mes</strong> con una marca por cada día con alguna cita, sin decir cuál. Cada cita
+        dice la hora o «Por confirmar», qué tipo es («Consulta fuera del centro», con la especialidad solo si el centro la deja ver), el lugar, qué preparar, quién lleva y quién acompaña y si falta algo por resolver; una cita
+        cancelada sigue saliendo como «Cancelada», sin motivo, hasta su día. Si no hay ninguna, dice «No hay citas que mostrar». Estas pantallas no se guardan en el navegador. Si el centro cierra esta parte o restringe a
+        su residente, el botón y las citas desaparecen al momento. La información la ve quien está autorizado a acompañar al residente y solo en la medida en que él o ella lo permite; si cree que no debería verla, que avise
+        al centro.
+    </p>
+    <p>
         <strong>Solicitar una cita.</strong> Si el centro tiene la solicitud previa activa, en lugar de «Reservar una cita» aparece «Solicitar una cita»: elige el equipo y la modalidad,
         el motivo, un comentario breve opcional (el formulario avisa: «No escribas datos clínicos detallados; el equipo te llamará») y los días y la parte del día en que podría,
         y envía la solicitud. Queda «Pendiente de gestión»; no hay ninguna cita hasta que el centro
@@ -1990,7 +2012,7 @@
         <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
-        <li>Citas externas: que la familia las vea y pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve y las gestiona el personal).</li>
+        <li>Citas externas: que la familia pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve, y solo si el centro las abre).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
     </ul>
 </section>

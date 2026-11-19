@@ -782,6 +782,7 @@
         { "para": "Tú", "texto": "Verás «Cita externa registrada.» (o «Cita externa guardada.», «Estado de la cita guardado.», «Cita externa cancelada.») y la ficha de la cita, con «Falta algo» mientras el transporte o el acompañante estén pendientes y «Cubierta» cuando estén resueltos." },
         { "para": "Administración", "texto": "Mientras falte transporte o acompañante en una cita de los próximos 7 días, le sale un aviso en su Inicio, con el residente y el día, sin la especialidad ni el lugar." },
         { "para": "Medicina", "texto": "Ve la cita en su lista y en la ficha del residente, pero no la cambia." },
+        { "para": "Familia", "texto": "Solo la ve si el centro ha abierto las citas externas a las familias y la de ese residente no está restringida. Tú puedes restringirla para un residente de tus unidades sin este permiso (ver ENF-25)." },
         { "para": "Tú", "texto": "Para ver las citas por días, usa las pestañas **Mes** y **Semana** de la lista: cada cita lleva una marca con palabra («Cubierta», «Falta transporte», «Por confirmar», «Por cerrar»…). Con «Mostrar solo las que tienen algo sin cubrir» y **Aplicar** ves solo las que necesitan algo." }
       ],
       "dudas": [
@@ -844,6 +845,40 @@
         "Otra persona ha cambiado la nota",
         "La nota «al terminar» la escribe Enfermería",
         "La nota «al terminar» se anota cuando la cita está realizada."
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "ENF-25",
+      "pregunta": "¿Cómo hago que la familia de un residente no vea sus citas externas, o vuelva a verlas?",
+      "palabras": ["citas externas", "familia", "portal familiar", "restringir", "privacidad", "ocultar", "voluntad del residente"],
+      "permisos": [],
+      "antes": [
+        "Saber que esto **no necesita** el permiso de registrar y cambiar citas: es una medida de privacidad de tus residentes, y la tienes por tu perfil en los residentes de tus unidades.",
+        "Saber que es todo o nada para esa persona: vale para todos sus familiares autorizados. Si solo se quiere que no lo vea uno, se oculta una cita concreta (ver ENF-23) o Administración retira a ese familiar del portal.",
+        "Saber que solo cambia lo que la familia ve si el centro ha abierto las citas externas a las familias; si no, ninguna familia las ve (lo decide Administración, ver ADM-49)."
+      ],
+      "pasos": [
+        { "texto": "Desde la ficha del residente, en el bloque «Citas externas», pulsa **Ver o cambiar lo que ve la familia**.", "botones": ["Ver o cambiar lo que ve la familia"], "campos": ["Citas externas"] },
+        { "texto": "Lee si su familia ve ahora sus citas externas y cuántas. Para quitárselas, pulsa **Que su familia no vea las citas externas**.", "botones": ["Que su familia no vea las citas externas"] },
+        { "texto": "Para volver a abrírselas, pulsa **Volver a abrir las citas externas a su familia**: antes te dice cuántas citas se abrirían.", "botones": ["Volver a abrir las citas externas a su familia"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «La familia ya no ve las citas externas de esta persona.» o «La familia vuelve a ver las citas externas de esta persona.». Queda guardado quién lo cambió y cuándo, sin ningún texto escrito." },
+        { "para": "Familia", "texto": "El botón «Citas fuera del centro» desaparece (o vuelve) en su pantalla del residente al momento. Lo que ya vio antes no se puede deshacer." },
+        { "para": "Administración", "texto": "Puede hacer lo mismo con cualquier residente del centro y es quien abre o cierra esta parte para todo el centro. Medicina ve el estado, pero no lo cambia." }
+      ],
+      "dudas": [
+        { "p": "«Otra persona ha cambiado esto mientras lo mirabas.»", "r": "Alguien lo cambió antes que tú. La pantalla muestra cómo está ahora; si hace falta, repite tu cambio." },
+        { "p": "«Solo Administración y la Enfermería de la unidad de esta persona pueden cambiar lo que ve su familia.»", "r": "Ese residente no es de tus unidades, o has entrado con otro perfil." },
+        { "p": "Dice que el centro todavía no ha abierto las citas externas a las familias.", "r": "Es una decisión de Administración. Lo que dejes elegido aquí se aplicará cuando las abra." }
+      ],
+      "rutas": ["Enfermeria/Residente", "CitasExternas/FamiliaResidente"],
+      "mensajes": [
+        "La familia ya no ve las citas externas de esta persona.",
+        "La familia vuelve a ver las citas externas de esta persona.",
+        "Otra persona ha cambiado esto mientras lo mirabas.",
+        "Solo Administración y la Enfermería de la unidad de esta persona pueden cambiar lo que ve su familia."
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }
