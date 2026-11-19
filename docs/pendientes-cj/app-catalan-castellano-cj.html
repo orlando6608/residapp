@@ -1,0 +1,684 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan solas en el servidor (api/respuestas/); ingeniería las lee de allí. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La aplicación entera en catalán y castellano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+  /* Nota de ingeniería: lo que ingeniería responde a una pregunta (fichero .notas.json del documento); solo lectura. */
+  .nota-ing { background: var(--surface); border: 1px solid var(--accent); border-left-width: 4px; padding: 8px 12px; border-radius: 4px; margin: 10px 0 0; font-size: 0.95rem; }
+  .nota-ing strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .nota-ing p { margin: 0; white-space: pre-line; }
+</style>
+<body data-doc="app-catalan-castellano-cj" data-version="2026-11-19">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Producto · Pendiente de tu criterio</p>
+    <h1>La aplicación entera en catalán y castellano</h1>
+    <p class="meta">Estado a 19/11/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Hasta ahora estaba decidido que solo las familias (el Portal Familiar, las pantallas de entrada y los correos) pudieran verse en catalán. Orlando propone ir más lejos:
+      que <strong>toda la aplicación</strong>, el Manual, las guías de adiestramiento y todo lo que se imprima o salga en PDF estén en <strong>catalán y castellano</strong>, para que se pueda usar
+      en Cataluña desde el primer día. Cada persona elegirá el idioma de su pantalla. A nadie se le obliga a escribir ni a dictar en catalán: lo que escribe o dicta el personal
+      sigue siendo cosa suya, y la aplicación no lo traduce. Aquí te preguntamos lo que solo sabes tú o tus compañeros: cómo se habla de verdad en el trabajo y quién puede revisar los textos.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué bloquea</span><span>Nada hoy: no está construido. Tus respuestas deciden cómo se escribe el catalán clínico y quién lo revisa.</span></div>
+    <div role="listitem"><span class="k">Qué no cambia</span><span>Nadie está obligado a escribir ni dictar en catalán. Lo que escribe el personal no se traduce.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>9 preguntas en 4 temas.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se guarda solo en el servidor: puedes cerrar y seguir otro día, también desde otro ordenador.</span></li>
+      <li><span class="step-n">2</span><strong>No hay que enviar nada</strong>
+        <span>No hay botón de guardar ni fichero que mandar: abajo verás «Guardado en el servidor» con la hora. Si cambias una respuesta, se guarda la nueva. Ingeniería recibe un aviso cuando dejas de responder un rato. No hace falta haberlo respondido todo.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y verás lo que ya has contestado. No escribas datos personales reales en los comentarios.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Cómo se dicen en la práctica los términos clínicos</h2>
+    <div class="stack prose">
+      <p>
+        Para escribir una pantalla en catalán hay que poner una palabra concreta en cada sitio. Ingeniería consultará los diccionarios oficiales (el <strong>TERMCAT</strong>, que es el centro oficial de terminología catalana, y el
+        <strong>Diccionari enciclopèdic de medicina</strong>), pero un diccionario no siempre dice lo que se oye en una planta. Tres situaciones que nos preocupan:
+      </p>
+      <ul>
+        <li><strong>Hay dos formas válidas.</strong> Una oficial, que recoge el diccionario, y otra que es la que usa la gente en el trabajo. Si ponemos la oficial y nadie la dice, la pantalla suena rara y alguien puede dudar de qué hace un botón. Si ponemos la de uso, puede que no sea la recomendada.
+          Ejemplo orientativo (puede que ingeniería se equivoque): para el accidente cerebrovascular se oye «ictus» y también «accident vascular cerebral».</li>
+        <li><strong>Hay nombres que no se traducen.</strong> Por ejemplo, las escalas con nombre de persona (Barthel) o los nombres de los fármacos, que en la práctica se escriben casi igual en catalán y en castellano. No queremos inventar una traducción donde nadie la usa.</li>
+        <li><strong>Hay siglas que cambian.</strong> Muchas coinciden (TA, FC), pero otras no: por ejemplo, EPOC en castellano es MPOC en catalán.</li>
+      </ul>
+      <p>
+        Con tus respuestas fijamos una <strong>regla de desempate</strong> para escribir el glosario (la lista de términos con su traducción) sin tener que preguntarte palabra por palabra: tú solo revisarías las excepciones.
+        Nada de esto toca los valores clínicos: son solo los nombres con los que se muestran.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">Cuando un término tiene una forma oficial y otra de uso, ¿cuál ponemos por defecto en las pantallas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es la regla general del glosario. Las excepciones las apuntas en el comentario o en la pregunta 1.3.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">La oficial (la de TERMCAT o el diccionario), aunque suene menos habitual.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">La que se usa en el trabajo, aunque no sea la oficial.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">La oficial, salvo una lista de excepciones que te iremos pidiendo.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="D"><span class="letter">D</span><span class="txt">No sé si hay diferencia notable entre las dos.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">Las escalas y pruebas con nombre de persona (Barthel y otras), ¿cómo las dice el personal en catalán?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide cómo se escriben sus títulos en pantallas, manual y PDF.</p>
+        <fieldset class="choices" aria-labelledby="t-1-2">
+          <label class="choice"><input type="radio" name="r-1-2" value="A"><span class="letter">A</span><span class="txt">Se traduce la parte genérica y se deja el nombre propio («índex de Barthel»).</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="B"><span class="letter">B</span><span class="txt">Se dice como en castellano, sin traducir nada («índice de Barthel»).</span></label>
+          <label class="choice"><input type="radio" name="r-1-2" value="C"><span class="letter">C</span><span class="txt">Depende de la escala (explícalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Qué términos, siglas, escalas o medicamentos se dicen siempre igual (en castellano o en inglés) aunque se hable en catalán?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Esos no se traducirán. Basta con los que se te ocurran ahora; ingeniería irá preguntando el resto con una lista concreta cuando redacte el glosario.</p>
+        <label class="field">Tu lista (opcional)<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Quién revisa el catalán</h2>
+    <div class="stack prose">
+      <p>
+        Ingeniería puede redactar las traducciones con ayuda de los diccionarios, pero <strong>no puede darlas por buenas sola</strong>. Los usuarios habituales serán auxiliares, enfermeros, médicos y administrativos que
+        trabajan en catalán, así que lo ideal es que cada persona revise lo de su área: un administrativo sabe mejor que nadie cómo se dice un trámite, y una auxiliar cómo se dice un cuidado. Aunque tú personalmente uses sobre todo el castellano,
+        puedes ayudarnos a encontrar a esas personas.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">¿Quién puede revisar los textos en catalán de las pantallas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Se revisarían una vez (todo lo ya construido) y cada vez que se añada algo nuevo. Los términos clínicos son los más delicados.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Yo, y busco además a algunas personas del centro de distintos perfiles (indícalas, sin datos personales, en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Yo, pero solo los términos clínicos; el resto, otra persona.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">Un traductor externo, con mi visto bueno para los términos clínicos.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="D"><span class="letter">D</span><span class="txt">No lo sé todavía.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Manual, guías de adiestramiento y PDF</h2>
+    <div class="stack prose">
+      <p>
+        El Manual de usuario y las guías de adiestramiento acompañarán a la aplicación cuando esté en uso: son la referencia y la ayuda para quien trabaja con ella, y por eso también estarán en catalán.
+        Lo mismo con todo lo que se imprima o salga en PDF: saldrá en el idioma que la persona tenga elegido en la aplicación.
+      </p>
+      <p>
+        Hay un límite que conviene que conozcas: un informe en catalán puede contener una nota que escribió alguien en castellano. La aplicación <strong>no traduce lo que escribe el personal</strong>.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">¿Quién puede revisar el Manual y las guías de adiestramiento en catalán?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Son textos largos y explican cómo trabajar, así que tienen que estar bien escritos y ser fáciles de seguir.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Las mismas personas que revisan las pantallas.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Otras personas (indícalo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Un traductor externo.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="D"><span class="letter">D</span><span class="txt">No lo sé todavía.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">Los documentos que se imprimen o salen en PDF tienen textos fijos (títulos, cabeceras, avisos). ¿Quieres revisar cada uno en catalán antes de usarlo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Sirve para saber cuánto te pedimos revisar y cuándo.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Sí, todos.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">Solo los que llevan texto clínico o legal.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="C"><span class="letter">C</span><span class="txt">No hace falta: basta con el glosario ya revisado.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.3">
+        <div class="q-head"><span class="n">3.3</span><h3 class="q-title" id="t-3-3">Si un informe sale en catalán pero una nota que contiene la escribió alguien en castellano, ¿es aceptable?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Es lo normal si cada persona escribe en el idioma que prefiere. La alternativa sería avisar en el documento de que contiene notas en otro idioma.</p>
+        <fieldset class="choices" aria-labelledby="t-3-3">
+          <label class="choice"><input type="radio" name="r-3-3" value="A"><span class="letter">A</span><span class="txt">Sí, es aceptable; en el trabajo ya se mezclan los dos idiomas.</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="B"><span class="letter">B</span><span class="txt">Sí, pero que el documento avise de que contiene notas en otro idioma.</span></label>
+          <label class="choice"><input type="radio" name="r-3-3" value="C"><span class="letter">C</span><span class="txt">No (explícalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · A quién le hace falta y por dónde empezar</h2>
+    <div class="stack prose">
+      <p>
+        Traducir toda la aplicación es mucho más trabajo que traducir el Portal Familiar: unas veinte veces más textos. Por eso queremos saber a quién le sirve de verdad y qué debe estar antes.
+      </p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">En el centro del piloto y en los centros que conoces, ¿cuánto personal trabajaría en catalán si pudiera elegirlo en la aplicación?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">No cambia lo decidido (la aplicación estará en los dos idiomas), pero nos ayuda a ordenar el trabajo y a saber a qué perfiles probar primero.</p>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Casi todo el personal.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Una parte importante.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Pocas personas.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="D"><span class="letter">D</span><span class="txt">No lo sé.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.2">
+        <div class="q-head"><span class="n">4.2</span><h3 class="q-title" id="t-4-2">Si no se puede tener todo a la vez, ¿qué debe estar primero en catalán?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hacemos el trabajo por áreas, y cada una se entrega entera: una pantalla a medias sería peor que una entera en castellano.</p>
+        <fieldset class="choices" aria-labelledby="t-4-2">
+          <label class="choice"><input type="radio" name="r-4-2" value="A"><span class="letter">A</span><span class="txt">Lo del trabajo diario en planta (auxiliares y enfermería).</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="B"><span class="letter">B</span><span class="txt">El Manual y las guías de adiestramiento.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="C"><span class="letter">C</span><span class="txt">Medicina, Administración y Dirección.</span></label>
+          <label class="choice"><input type="radio" name="r-4-2" value="D"><span class="letter">D</span><span class="txt">Todo es igual de urgente: sin todo no podría usarse en un centro con personal en catalán.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción: todas las decisiones son
+    de CJ. Cuando respondas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora a la
+    aplicación. Tus respuestas se guardan en el servidor de desarrollo, detrás de la clave de estos documentos.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Estado de las respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). Las respuestas se guardan solas en el servidor. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var API = "api/respuestas/" + DOC;
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;      // hay cambios que aún no están en el servidor
+  var savedAt = null;     // cuándo se guardó por última vez en el servidor
+  var ready = false;      // ya se ha leído lo que hay en el servidor: hasta entonces no se guarda nada (no se pisa lo guardado con una página vacía)
+  var failed = "";        // por qué falló el último guardado ("" si no falló)
+  var rev = 0;            // número de cambio: si cambia mientras se guarda, queda algo por guardar
+  var timer = null;
+  var saving = false;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (failed) say("error", failed);
+    else if (!ready) say("", "Comprobando lo que ya tienes guardado…");
+    else if (dirty) say("", "Guardando…");
+    else if (savedAt) say("ok", "Guardado en el servidor (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda solo.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  // Guarda en el servidor lo que hay en pantalla. Si falla, lo marcado sigue en este navegador y se reintenta solo.
+  function save() {
+    clearTimeout(timer);
+    if (!ready) return;
+    if (saving) { timer = setTimeout(save, 1000); return; }
+    var sent = rev;
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    saving = true;
+    fetch(API, { method: "PUT", headers: { "Content-Type": "application/json" }, body: json, credentials: "same-origin", keepalive: json.length < 60000 })
+      .then(function (r) {
+        if (!r.ok) throw r.status;
+        failed = "";
+        savedAt = data.guardado;
+        if (rev === sent) dirty = false; else timer = setTimeout(save, 1000);
+      })
+      .catch(function (e) {
+        failed = e === 401
+          ? "Se ha cerrado el acceso a estos documentos. Vuelve a abrirlos con la clave; lo que has marcado sigue en este navegador."
+          : "No se ha podido guardar en el servidor. Lo que marcas sigue en este navegador y se reintentará.";
+        timer = setTimeout(save, 15000);
+      })
+      .finally(function () { saving = false; store(collect()); status(); });
+  }
+
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    rev++;
+    store(refresh());
+    status();
+    clearTimeout(timer);
+    timer = setTimeout(save, 2000);
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  // Si se cierra o se cambia de pestaña con algo sin guardar, se guarda ya.
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  // Recupera lo último que se guardó en el servidor. Hasta que lo consigue (200 o 404) no se guarda nada.
+  function load() {
+    fetch(API, { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) {
+        if (r.status === 204) return null;
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        ready = true;
+        failed = "";
+        if (data && data.documento === DOC && !dirty) {
+          apply(data);
+          savedAt = data.guardado || null;
+          store(refresh());
+          if (data.cuestionario !== VERSION) {
+            say("error", "Tus respuestas son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+            return;
+          }
+        } else if (!data && !dirty && refresh().respondidas > 0) {
+          dirty = true; // respuestas de este navegador que el servidor todavía no tiene: se suben
+        }
+        if (dirty) save();
+        status();
+      })
+      .catch(function () {
+        failed = "No se han podido leer las respuestas guardadas en el servidor. No se guarda nada hasta conseguirlo; se reintenta solo.";
+        status();
+        setTimeout(load, 10000);
+      });
+  }
+
+  // Notas de ingeniería: lo que ingeniería responde a cada pregunta (<documento>.notas.json, se despliega con la aplicación). Solo lectura; sin nota, no se muestra nada.
+  function notes() {
+    fetch(DOC + ".notas.json", { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var ns = (data && data.documento === DOC && data.notas) || {};
+        questions.forEach(function (q) {
+          var t = ns[q.dataset.q];
+          if (typeof t !== "string" || !t.trim()) return;
+          var box = document.createElement("aside");
+          box.className = "nota-ing";
+          box.setAttribute("aria-label", "Nota de ingeniería");
+          var h = document.createElement("strong");
+          h.textContent = "Nota de ingeniería";
+          var p = document.createElement("p");
+          p.textContent = t.trim(); // texto plano, nunca HTML
+          box.appendChild(h);
+          box.appendChild(p);
+          q.appendChild(box);
+        });
+      })
+      .catch(function () { /* sin notas */ });
+  }
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+  if (location.protocol.indexOf("http") === 0) { load(); notes(); }
+  else say("error", "Abre este documento desde la web de ResidApp para que se guarden las respuestas.");
+})();
+</script>
+</body>
+</html>
