@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.5.0](https://github.com/orlando6608/residapp/compare/v0.4.0...v0.5.0) (2026-11-19)
+
+
+### Features
+
+* «Realizada» y «No se acudió» solo desde el día de la cita ([137b1d3](https://github.com/orlando6608/residapp/commit/137b1d3275b175a4e338b11a5b43488d9c4acea2))
+* calendario del personal y vista del Auxiliar de las citas externas (PR 3 de 6) ([fe47aa6](https://github.com/orlando6608/residapp/commit/fe47aa6953b0cd7101f100589331dc6a3618f41a))
+* calendario del personal y vista del Auxiliar de las citas externas (PR 3 de 6) ([0ed2e4b](https://github.com/orlando6608/residapp/commit/0ed2e4b288a62e99330d335b0997db109fc9c8e0))
+* Calidad de proceso mide cada caso con el plazo de cuando empezó ([0e92d6b](https://github.com/orlando6608/residapp/commit/0e92d6ba18b63ab8456161bba19f8ff2addc5baf))
+* Calidad de proceso mide cada caso con el plazo de cuando empezó y avisa si los plazos cambiaron ([00ee0a8](https://github.com/orlando6608/residapp/commit/00ee0a89739b52f31120aafb93f608a1b828b39a))
+* citas externas «por cerrar» (abiertas con el día pasado) ([ac30b94](https://github.com/orlando6608/residapp/commit/ac30b94607dfc0dbea5a4c167d889d8bf3bc7788))
+* citas externas de los residentes, esquema y reglas (PR 1 de 6, sin pantallas) ([0e8a274](https://github.com/orlando6608/residapp/commit/0e8a2748be554c4b8f9884e75aa5ee0c3b4cd15f))
+* citas externas de los residentes, esquema y reglas (PR 1 de 6, sin pantallas) ([69bf53e](https://github.com/orlando6608/residapp/commit/69bf53e4a83a16cb28b5e680c6c62726d0f078a1))
+* citas externas, la familia actúa y correos (PR 6 del vertical) ([18b1777](https://github.com/orlando6608/residapp/commit/18b17771cd478d48e0731cc20717a7986ed6f83b))
+* citas externas, la familia actúa y correos (PR 6 del vertical) ([3d022a1](https://github.com/orlando6608/residapp/commit/3d022a148c676995e0161dec04f1ef492f74744c))
+* citas externas, la familia solo ve (PR 5 del vertical) ([5f16363](https://github.com/orlando6608/residapp/commit/5f16363e223389c8d4c6758ab70aab60a122df7a))
+* citas externas, la familia solo ve (PR 5) ([fd338ca](https://github.com/orlando6608/residapp/commit/fd338ca2ec6d2f5cc5a8668a19864b48d93019fa))
+* el dictado por voz es el módulo opcional DICTADO_VOZ de cada centro (ADR 0015, incremento 3) ([98c279c](https://github.com/orlando6608/residapp/commit/98c279c20c1974257320083cd9e3896809937f2f))
+* el dictado por voz es el módulo opcional DICTADO_VOZ de cada centro (ADR 0015, incremento 3) ([1a47a84](https://github.com/orlando6608/residapp/commit/1a47a845797a42f11d94c18e6b606f3f06bf6a8b))
+* la referencia de la petición de un módulo la asigna ResidApp (ADR 0015) ([b1d1fea](https://github.com/orlando6608/residapp/commit/b1d1feaecc8544259ea16bc288850f0e7329856d))
+* la referencia de la petición de un módulo la asigna ResidApp (ADR 0015) ([c492f4a](https://github.com/orlando6608/residapp/commit/c492f4ae72030c4a99aa1a1a423064d8646598d7))
+* marca de entorno en la base de datos para el ajuste de módulos de desarrollo ([f14bc1f](https://github.com/orlando6608/residapp/commit/f14bc1f35bb1a95d2fccdd22b0fab6d73d3ce5f0))
+* marca de entorno en la base de datos para Modulos__ActivarTodos (ADR 0015, script 0100) ([82662cb](https://github.com/orlando6608/residapp/commit/82662cbe28c8420257f7d4edba66234eed8c43d8))
+* módulos opcionales por centro: tabla de cambios, estado calculado y guardia (ADR 0015, incrementos 1 y 2) ([029a326](https://github.com/orlando6608/residapp/commit/029a3264b193dfa68ac628844da9b5486cfcf975))
+* módulos opcionales por centro: tabla de cambios, estado calculado y guardia (ADR 0015, incrementos 1 y 2) ([d7787e7](https://github.com/orlando6608/residapp/commit/d7787e78e39bc97ab2535447698145fd7865dc40))
+* nota «al terminar» y siguiente cita de las citas externas (PR 4 de 6) ([0fb6ca9](https://github.com/orlando6608/residapp/commit/0fb6ca95a123f3254eecf40e55c3c4e79be60469))
+* nota «al terminar» y siguiente cita de las citas externas (PR 4 de 6) ([4714cd6](https://github.com/orlando6608/residapp/commit/4714cd60c9129f4a423da89edcb508c3c8309683))
+* pantalla de Plataforma para activar y apagar módulos por centro (ADR 0015, incremento 4) ([0fc7f18](https://github.com/orlando6608/residapp/commit/0fc7f1880ab45a66de9ebde170f82525b4914427))
+* pantalla de Plataforma para activar y apagar módulos por centro (ADR 0015, incremento 4) ([9e44476](https://github.com/orlando6608/residapp/commit/9e44476c46eea31b0de0d7939169ba0462d1cb0e))
+* pantallas del personal de las citas externas (PR 2 de 6) ([7df5842](https://github.com/orlando6608/residapp/commit/7df5842f2f5f38741ead81d551d258f8adeea022))
+* pantallas del personal de las citas externas (PR 2 de 6) ([841a551](https://github.com/orlando6608/residapp/commit/841a5518bc2856574a77ebf60547962af5fa0f95))
+* poner la hora por primera vez en una cita externa no es reprogramar ([5217101](https://github.com/orlando6608/residapp/commit/52171011dc6f08c6fe778960dac79a4066f96b25))
+* un doble envío de «Registrar la cita» externa ya no crea dos citas ([7cb6154](https://github.com/orlando6608/residapp/commit/7cb61548c34300278ef81bfc87dc627567e00f7c))
+
+
+### Bug Fixes
+
+* [Authorize] en el controlador de las citas externas para CodeQL ([443a4da](https://github.com/orlando6608/residapp/commit/443a4da97d4330d4532ca1550738ae7b8e0037ba))
+* una alta de módulo no puede nacer vencida y la hora de la solicitud tiene tope inferior (revisión del PR 305) ([f97ab98](https://github.com/orlando6608/residapp/commit/f97ab9822ed2f40ae742a258c10a3250da4debb2))
+
 ## [0.4.0](https://github.com/orlando6608/residapp/compare/v0.3.0...v0.4.0) (2026-11-16)
 
 
