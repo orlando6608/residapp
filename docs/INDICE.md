@@ -4,7 +4,7 @@
 
 **Cómo se mantiene.** Cuando crees, muevas o retires un documento que sea la fuente de un tema, actualiza su fila en el mismo cambio. Un puntero que ya no apunta a nada se corrige o se quita; no se deja. La prueba [IndiceDeFuentesTests](../tests/UnitTests/IndiceDeFuentesTests.cs) falla si un enlace apunta a algo que ya no existe, si un ADR numerado no tiene su enlace o si una carpeta de `docs/` queda sin ningún enlace; lo que una prueba no puede saber (que la fuente que dice cada fila siga siendo la correcta) se revisa a mano al cerrar cada versión MENOR, y el sello de abajo lo exige. Las palabras que pueden sonar técnicas se explican al final.
 
-**Revisado para ResidApp v0.4.0.** Es el sello de la última revisión humana: cada fila se contrastó con el repositorio (que la fuente siga existiendo, siga mandando y diga su estado actual) y se comprobó que no faltan documentos nuevos. Al cerrar una versión MENOR se repasa el índice y se sube el sello; la prueba falla si es de una versión MENOR anterior a la de `src/Directory.Build.props`.
+**Revisado para ResidApp v0.5.0.** Es el sello de la última revisión humana: cada fila se contrastó con el repositorio (que la fuente siga existiendo, siga mandando y diga su estado actual) y se comprobó que no faltan documentos nuevos. Al cerrar una versión MENOR se repasa el índice y se sube el sello; la prueba falla si es de una versión MENOR anterior a la de `src/Directory.Build.props`.
 
 ## Mapa por tema
 

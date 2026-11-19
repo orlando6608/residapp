@@ -1,6 +1,6 @@
 # Citas externas de los residentes: diseño y valores por defecto
 
-**Estado: diseño APROBADO por Orlando el 2026-11-17 (los 17 valores por defecto y las nueve decisiones del apartado 2 bis). Sin SQL ni código todavía.** Parte de las respuestas de CJ del 2026-11-17 (`citas-externas-modulo-cj`, 14 de 14; viven en el servidor), de la lectura del DPO (`docs/privacidad/citas-externas-lectura-dpo.md`, borrador) y de las decisiones de Orlando del mismo día: **módulo base** con interruptores por centro para la familia y los correos (apagados por defecto), interruptor por residente y acción «Ya no puedo».
+**Estado: diseño APROBADO por Orlando el 2026-11-17 (los 17 valores por defecto y las nueve decisiones del apartado 2 bis). Construido en seis entregas (scripts `0101` a `0105`; 2026-11-19: PR 1 a 6 fusionados); lo que cambió al construir y lo que falta está en `docs/tareas/alta-prioridad/pendientes-citas-externas.md`.** Parte de las respuestas de CJ del 2026-11-17 (`citas-externas-modulo-cj`, 14 de 14; viven en el servidor), de la lectura del DPO (`docs/privacidad/citas-externas-lectura-dpo.md`, borrador) y de las decisiones de Orlando del mismo día: **módulo base** con interruptores por centro para la familia y los correos (apagados por defecto), interruptor por residente y acción «Ya no puedo».
 
 ## 1. Qué es
 

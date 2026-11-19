@@ -15,6 +15,8 @@ La hoja de ruta original del prototipo legado (consolidación documental → lí
 | Familia / Portal Familiar | En curso: primera entrega hecha (cuenta del familiar, elegir residente y leer comunicados publicados; script `0052`) y segunda (publicación correctora vinculada y retirada de lo ya publicado; script `0053`) y tercera (citas con reserva directa, de punta a punta; script `0054`) y cuarta (citas con solicitud previa: la familia solicita, Administración propone y la familia acepta; script `0057`). El resumen periódico (diario o semanal, por centro; script `0074`) está hecho desde el 2026-10-26. Faltan los avisos y el proveedor de identidad real (ADR 0007) |
 | Administración | En curso — ver `docs/tareas/alta-prioridad/pendientes-administracion.md`. El inicio ya muestra lo que requiere atención (ADM-01, solo cifras: solicitudes y citas, autorizaciones de familiares, residentes sin habitación y comunicados) |
 | Dirección / Coordinación Clínica | En curso — ver `docs/tareas/alta-prioridad/pendientes-direccion.md` |
+| Citas externas de los residentes (módulo base) | Construido en seis entregas (scripts `0101` a `0105`, 2026-11-17 a 2026-11-19): ficha y pantallas del personal, vista del Auxiliar, nota «al terminar», la familia ve las citas y actúa («Me encargo yo», «Ya no puedo», «No puedo») y correos a la familia, con interruptores por centro apagados por defecto. Faltan la validación experta de privacidad y la de CJ — ver `docs/tareas/alta-prioridad/pendientes-citas-externas.md` |
+| Ficha de antecedentes de salud | Construida en tres fases (alergias, enfermedades e intervenciones, medicación habitual; scripts `0094`, `0096` y `0097`) — ver `docs/producto/ficha-antecedentes-salud-diseno.md` |
 
 ## Estado detallado del vertical Residente / Basal
 
