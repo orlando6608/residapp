@@ -111,4 +111,34 @@ public class CorreoOptionsTests
         correoApagado.Activo = false;
         Assert.False(correoApagado.ToSettings().Reminder);
     }
+
+    [Fact]
+    public void ElAvisoDeCitasExternas_PorDefectoEstaApagado_YTieneSuInterruptorPropio_SinEncenderLosOtrosAvisos()
+    {
+        Assert.False(new CorreoOptions().AvisoCitaExterna);
+        Assert.False(Complete().ToSettings().ExternalNotice);
+
+        var soloExterno = Complete();
+        soloExterno.AvisoCitaExterna = true;
+        var settings = soloExterno.ToSettings();
+        Assert.True(settings.ExternalNotice);
+        Assert.False(settings.ChangeNotice);
+        Assert.False(settings.Reminder);
+
+        // Encender los otros no enciende este.
+        var otros = Complete();
+        otros.AvisoCambioCita = true;
+        otros.RecordatorioCita = true;
+        Assert.False(otros.ToSettings().ExternalNotice);
+
+        // Sin el correo encendido (o sin lo necesario para enviar), el interruptor propio no basta.
+        var correoApagado = Complete();
+        correoApagado.AvisoCitaExterna = true;
+        correoApagado.Activo = false;
+        Assert.False(correoApagado.ToSettings().ExternalNotice);
+        var sinDestinos = Complete();
+        sinDestinos.AvisoCitaExterna = true;
+        sinDestinos.DireccionesPermitidas = [];
+        Assert.False(sinDestinos.ToSettings().ExternalNotice);
+    }
 }

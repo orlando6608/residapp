@@ -226,6 +226,8 @@ public class AvisosCitasExternasCorreoTests
     [InlineData("la persona se da de baja", "BAJA_DE_AVISOS")]
     [InlineData("pierde el acceso", "SIN_ACCESO")]
     [InlineData("la cuenta se suspende", "SIN_ACCESO")]
+    [InlineData("el residente se suspende", "SIN_ACCESO")]
+    [InlineData("el residente se da de baja", "CITA_NO_VIGENTE")]
     [InlineData("se apagan los correos", "AVISOS_DESACTIVADOS")]
     [InlineData("la cita se cancela", "CITA_NO_VIGENTE")]
     public async Task ElAvisoSeVuelveAComprobarAlEnviar_YSiYaNoVale_QuedaOmitidoConSuMotivo_SinEnviarNada(string change, string expectedReason)
@@ -257,6 +259,14 @@ public class AvisosCitasExternasCorreoTests
                 break;
             case "la cuenta se suspende":
                 await ExecuteAsync("UPDATE dbo.cuentas SET estado = 'SUSPENDED' WHERE sujeto_externo = @subject", new { subject = world.First.Subject });
+                break;
+            case "el residente se suspende":
+                Assert.True((await EstadoResidenteTests.Build(world.Setup.Admin.ExternalSubject).SuspendAsync(new SuspendResidentCommand(
+                    world.Setup.Admin.ProfileScopeId, world.Setup.Admin.CenterId, world.Setup.ResidentId, Guid.NewGuid(), null))).Ok);
+                break;
+            case "el residente se da de baja":
+                Assert.True((await EstadoResidenteTests.Build(world.Setup.Admin.ExternalSubject).DischargeAsync(new DischargeResidentCommand(
+                    world.Setup.Admin.ProfileScopeId, world.Setup.Admin.CenterId, world.Setup.ResidentId, Guid.NewGuid(), ResidApp.Domain.Residents.ResidentDischargeReason.AltaVoluntaria, null))).Ok);
                 break;
             case "se apagan los correos":
                 Assert.True((await Settings(world.Setup.Admin).SetMailAsync(new SetExternalMailCommand(world.Setup.Admin.ProfileScopeId, world.Setup.Admin.CenterId, 1, false, false))).Ok);
@@ -305,6 +315,144 @@ public class AvisosCitasExternasCorreoTests
         var other = await RegisterAsync(off, 7);
         await ReserveAsync(Today, 11);
         Assert.Empty(await RowsAsync(other));
+    }
+
+    // ---- La franja de envío, al minuto y con el cambio de hora ----
+
+    private static DateOnly NextDay(int month, int dayOfMonth)
+    {
+        var candidate = new DateOnly(Today.Year, month, dayOfMonth);
+        return candidate <= Today ? candidate.AddYears(1) : candidate;
+    }
+
+    private static async Task<int> ReserveAtAsync(DateTime utc)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        return await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+            "EXEC dbo.reservar_avisos_citas_externas_en @ahora_utc = @utc, @idioma = 'es', @version = '1'", new { utc }, commandTimeout: 180));
+    }
+
+    [Theory]
+    [InlineData(9, 59, false)]
+    [InlineData(10, 0, true)]
+    [InlineData(18, 59, true)]
+    [InlineData(19, 0, false)]
+    public async Task LaFranjaEmpiezaALas1000YTerminaALas1859_AlMinuto(int hour, int minute, bool reserves)
+    {
+        var world = await WorldAsync($"Residente Correo Franja {hour}{minute} {Guid.NewGuid():N}"[..40]);
+        var id = await RegisterAsync(world, 7);
+
+        await ReserveAtAsync(TimeZoneInfo.ConvertTimeToUtc(Today.ToDateTime(new TimeOnly(hour, minute)), Madrid));
+
+        Assert.Equal(reserves ? 2 : 0, (await RowsAsync(id)).Count);
+    }
+
+    [Theory]
+    [InlineData(7, 7, 59, false)] // verano (CEST, UTC+2): las 07:59 UTC son las 09:59
+    [InlineData(7, 8, 0, true)]
+    [InlineData(7, 16, 59, true)] // las 18:59
+    [InlineData(7, 17, 0, false)] // las 19:00
+    [InlineData(1, 8, 59, false)] // invierno (CET, UTC+1): las 08:59 UTC son las 09:59
+    [InlineData(1, 9, 0, true)]
+    [InlineData(1, 17, 59, true)] // las 18:59
+    [InlineData(1, 18, 0, false)] // las 19:00
+    public async Task ConElCambioDeHora_LaFranjaSigueSiendoLaDeMadrid(int month, int utcHour, int utcMinute, bool reserves)
+    {
+        var day = NextDay(month, 15);
+        var world = await WorldAsync($"Residente Correo Hora {month}{utcHour}{utcMinute} {Guid.NewGuid():N}"[..40]);
+        var id = await RegisterAsync(world, day.DayNumber - Today.DayNumber + 7);
+
+        await ReserveAtAsync(new DateTime(day.Year, day.Month, day.Day, utcHour, utcMinute, 0, DateTimeKind.Utc));
+
+        Assert.Equal(reserves ? 2 : 0, (await RowsAsync(id)).Count);
+    }
+
+    // ---- Otras citas y otras personas ----
+
+    [Fact]
+    public async Task UnaCitaConfirmadaPorElHospital_TambienRecibeSusAvisos()
+    {
+        var world = await WorldAsync("Residente Correo Hospital");
+        var id = await RegisterAsync(world, 7);
+        await ExecuteAsync("UPDATE dbo.citas_externas SET estado_codigo = 'CONFIRMADA_HOSPITAL', version = version + 1, modificada_en = SYSUTCDATETIME() WHERE id = @id", new { id });
+        var sender = new FakeEmailSender();
+
+        await ReserveAsync(Today, 11);
+        Assert.Equal(2, (await RowsAsync(id)).Count);
+
+        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 11));
+        Assert.Equal(1, sender.Sent.Count(m => m.To == world.First.Address));
+        Assert.Equal(1, sender.Sent.Count(m => m.To == world.Second.Address));
+    }
+
+    [Fact]
+    public async Task LaBajaDeUnaPersonaConDosResidentes_ValeParaLosDos_YSeVeEnLosDos()
+    {
+        var world = await WorldAsync("Residente Correo Dos Residentes");
+        var admin = world.Setup.Admin;
+        var second = await CreateResidentAsync(admin, "Residente Correo Otro Familiar");
+        var linked = await Build(admin.ExternalSubject).LinkFamilyMemberAsync(new LinkFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, second, Guid.NewGuid(), world.First.FamilyId, "Madre"));
+        Assert.True(linked.Ok, linked.Error?.Message);
+        await ChangeAsync(admin, second, linked.Value, FamilyAuthorizationChange.Abrir, 0);
+        await ChangeAsync(admin, second, linked.Value, FamilyAuthorizationChange.Activar, 1);
+
+        async Task<Guid> RegisterForSecondAsync()
+        {
+            var registered = await Staff(admin).RegisterAsync(new RegisterExternalAppointmentCommand(
+                admin.ProfileScopeId, admin.CenterId, second,
+                new ExternalAppointment(Today.AddDays(7), new TimeOnly(10, 30), ExternalAppointmentType.Consulta, ExternalAppointmentSpecialty.Oncologia, "Hospital Ficticio Norte",
+                    ExternalTransportMode.Familia, ExternalArrangementState.Pendiente, ExternalCompanionMode.Familiar, ExternalArrangementState.Pendiente, null, ExternalFamilyVisibility.Visible)));
+            Assert.True(registered.Ok, registered.Error?.Message);
+            return registered.Value;
+        }
+
+        // Antes de la baja, la persona recibe el aviso de la cita de su otro residente (la única que tiene acceso).
+        var before = await RegisterForSecondAsync();
+        await ReserveAsync(Today, 11);
+        Assert.Equal(world.First.FamilyId, Assert.Single(await RowsAsync(before)).FamilyId);
+
+        // Se la da de baja desde el primer residente: vale para el segundo.
+        Assert.True((await Settings(admin).SetFamilyMemberMailAsync(new SetExternalFamilyMemberMailCommand(
+            admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId, world.First.FamilyId, 0, true))).Ok);
+        var members = (await Settings(admin).ListFamilyMembersAsync(admin.ProfileScopeId, admin.CenterId, second)).Value!;
+        Assert.True(members.Single(m => m.FamilyId == world.First.FamilyId).OptedOut);
+
+        var after = await RegisterForSecondAsync();
+        await ReserveAsync(Today, 12);
+        Assert.Empty(await RowsAsync(after));
+
+        var sender = new FakeEmailSender();
+        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 12));
+        var omitted = Assert.Single(await RowsAsync(before));
+        Assert.Equal(("OMITIDO", "BAJA_DE_AVISOS"), (omitted.State, omitted.Reason));
+        Assert.DoesNotContain(sender.Sent, m => m.To == world.First.Address);
+    }
+
+    [Fact]
+    public async Task UnaPersonaAnonimizada_YaNoFiguraComoOfrecida_NoRecibeAvisos_YOtraPuedeTomarlo()
+    {
+        var world = await WorldAsync("Residente Correo Anonimizada");
+        var admin = world.Setup.Admin;
+        var id = await RegisterAsync(world, 7);
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(world.First, id, FamilyArrangementAction.Take));
+        // Anonimizar es cosa de la Administración principal del centro.
+        await ExecuteAsync(
+            "INSERT INTO dbo.administraciones_principales_cambios (id, centro_id, ambito_perfil_id, numero, principal, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en) VALUES (NEWID(), @center, @scope, 1, 1, @account, 'ADMINISTRACION', SYSUTCDATETIME())",
+            new { center = admin.CenterId.Value, scope = admin.ProfileScopeId, account = admin.AccountId.Value });
+
+        var preview = (await Build(admin.ExternalSubject).PreviewFamilyAnonymizationAsync(
+            new PreviewFamilyAnonymizationQuery(admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId, world.First.LinkId))).Value!;
+        var anonymized = await Build(admin.ExternalSubject).AnonymizeFamilyMemberAsync(new AnonymizeFamilyMemberCommand(
+            admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId, world.First.LinkId, FamilyAnonymizationReason.PeticionDelInteresado, true, preview.Version));
+        Assert.True(anonymized.Ok, anonymized.Error?.Message);
+
+        var offers = (await Settings(admin).ReadOffersAsync(admin.ProfileScopeId, admin.CenterId, id)).Value!;
+        Assert.Empty(offers.Offers);
+
+        await ReserveAsync(Today, 11);
+        Assert.Equal(world.Second.FamilyId, Assert.Single(await RowsAsync(id)).FamilyId);
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(world.Second, id, FamilyArrangementAction.Take));
     }
 
     // ---- El envío ----

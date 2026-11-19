@@ -123,6 +123,20 @@ Criterios de aceptación:
 
 Códigos de origen: `ADM-01`, `ADM-10`.
 
+### 11. Abrir a las familias las citas externas y sus avisos por correo
+
+**Como** Administración, **quiero** decidir cuándo las familias ven las citas externas de sus residentes y reciben avisos por correo, y ver lo que se ofrecen a hacer, **para** que la familia ayude sin que el centro pierda el control de lo que se muestra.
+
+Criterios de aceptación:
+- Todo viene apagado. Solo yo abro las citas externas a las familias, tras marcar tres confirmaciones (la residencia ha informado, tiene un procedimiento para la voluntad del residente y ha actualizado su EIPD) y ver cuántas citas se verían; cerrarlas no pide confirmación y surte efecto en el acto.
+- Puedo restringir a la familia de un residente concreto, y la Enfermería de su unidad también, sin necesitar el permiso de gestionar citas; es todo o nada para esa persona.
+- Solo yo enciendo los avisos por correo, con una confirmación y con las citas externas ya abiertas; además hace falta el interruptor del entorno. Si cierro las citas, la pantalla avisa de que no sale ningún correo.
+- En la ficha de una cita veo lo que ha ofrecido la familia (con el nombre solo si tengo permiso) y cuántas personas dijeron «No puedo», nunca quiénes; en el Inicio la cita sale como «Ofrecido por un familiar, sin confirmar». Hasta que yo confirme el transporte o el acompañante, la cita no está «Cubierta».
+- Puedo dar de baja de los avisos a una persona de la familia (y volver a darla de alta); vale para todos sus residentes del centro y no veo su dirección.
+- Cada cambio queda en la auditoría con quién y cuándo, sin nombres ni direcciones.
+
+Códigos de origen: ninguno del PRD (función posterior); ver `docs/producto/citas-externas-diseno.md`.
+
 ## Tabla resumen de trazabilidad
 
 | Historia | Códigos cubiertos |
@@ -137,6 +151,7 @@ Códigos de origen: `ADM-01`, `ADM-10`.
 | 8. Citas — solicitud previa | `ADM-07`, `CIT-01`, `CIT-S01` a `CIT-S04`, `CIT-C01` a `CIT-C03` |
 | 9. Auditoría administrativa | `ADM-09`, `AUD-01` a `AUD-03` |
 | 10. Panel inicial y cuenta multirol | `ADM-01`, `ADM-10` |
+| 11. Citas externas y avisos a las familias | (sin código del PRD; `citas-externas-diseno.md`) |
 
 ## Nota de procedencia
 
