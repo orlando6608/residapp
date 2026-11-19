@@ -398,8 +398,10 @@ public class AvisosCitasExternasCorreoTests
         var id = await RegisterAsync(world, 7);
         using var connection = await OpenAsTaskAsync();
 
-        // Lo que necesita, con sus procedimientos y sus lecturas de siempre.
-        await connection.ExecuteScalarAsync<int>(SqlExternalNoticeStore.ReserveSql, new { language = "es", version = "1" });
+        // Lo que necesita, con sus procedimientos y sus lecturas de siempre. El procedimiento de la tarea usa el reloj real y solo reserva entre las 10:00 y las 18:59 (Madrid): para no
+        // depender de la hora a la que corre la prueba, el aviso se reserva antes con la hora simulada (como propietario) y la tarea ejecuta el suyo, que puede no crear nada.
+        await ReserveAsync(Today, 11);
+        Assert.True(await connection.ExecuteScalarAsync<int>(SqlExternalNoticeStore.ReserveSql, new { language = "es", version = "1" }) >= 0);
         var notice = await connection.QueryFirstAsync<Guid>("SELECT TOP (1) id FROM dbo.envios_correo WHERE referencia_id = @id", new { id });
         var check = await connection.QuerySingleAsync<(string? Reason, Guid? AccountId, Guid? LinkId, DateTime? Date)>(SqlExternalNoticeStore.CheckSql, new { id = notice });
         Assert.Null(check.Reason);
