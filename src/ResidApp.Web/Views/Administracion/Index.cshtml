@@ -110,6 +110,10 @@ else
                     {
                         <span class="badge text-bg-danger ms-1">En 2 días o menos</span>
                     }
+                    @if (Model.ExternalAppointmentsOffered?.Contains(item.Id) == true)
+                    {
+                        <span class="badge text-bg-warning ms-1">Ofrecido por un familiar, sin confirmar</span>
+                    }
                 </li>
             }
         </ul>

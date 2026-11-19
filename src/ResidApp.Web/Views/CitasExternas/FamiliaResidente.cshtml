@@ -69,3 +69,44 @@ else
 {
     <p class="text-muted">Aquí solo puedes ver este ajuste. Lo cambian Administración y la Enfermería de la unidad de esta persona.</p>
 }
+
+@if (Model.Members is { } members)
+{
+    <hr class="my-4" />
+    <h2 class="h4" id="correo-personas">Avisos por correo de las personas de la familia</h2>
+    <p class="text-muted">
+        Aquí das de baja de los avisos por correo de citas externas a quien lo pida. La baja vale para esa persona en todos sus residentes del centro. Nunca se muestra su dirección.
+    </p>
+    @if (members.Count == 0)
+    {
+        <p>Este residente no tiene familiares con vínculo vigente.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-3">
+            @foreach (var member in members)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span>
+                        <strong>@member.Name</strong> (@member.Relationship)
+                        @if (member.OptedOut)
+                        {
+                            <span class="badge text-bg-secondary">Dada de baja de los avisos</span>
+                        }
+                        else if (!member.HasConfirmedAddress)
+                        {
+                            <span class="badge text-bg-light border">Sin dirección confirmada: no recibe avisos</span>
+                        }
+                    </span>
+                    <form method="post" asp-action="FamiliaCorreo" aria-label="@(member.OptedOut ? "Volver a dar de alta en los avisos por correo a " : "Dar de baja de los avisos por correo a ")@member.Name">
+                        <input type="hidden" name="residenteId" value="@Model.ResidentId" />
+                        <input type="hidden" name="familiarId" value="@member.FamilyId" />
+                        <input type="hidden" name="version" value="@member.Number" />
+                        <input type="hidden" name="baja" value="@(member.OptedOut ? "false" : "true")" />
+                        <button type="submit" class="btn @(member.OptedOut ? "btn-outline-primary" : "btn-outline-danger")">@(member.OptedOut ? "Volver a darla de alta" : "Dar de baja de los avisos")</button>
+                    </form>
+                </li>
+            }
+        </ul>
+    }
+}

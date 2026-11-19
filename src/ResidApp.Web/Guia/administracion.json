@@ -869,7 +869,7 @@
       "palabras": ["editar familiar", "correo", "avisos", "confirmar dirección", "referente", "tutor legal"],
       "permisos": [],
       "antes": [
-        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo es voluntario y solo sirve para avisarle de que tiene una propuesta de cita pendiente, de que el centro ha cambiado o cancelado una cita, o de que tiene una cita mañana (recordatorio del día antes): los avisos no dicen el nombre del residente, ni el centro, ni la hora ni el motivo; el recordatorio solo dice que tiene una cita mañana.",
+        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo es voluntario y solo sirve para avisarle de que tiene una propuesta de cita pendiente, de que el centro ha cambiado o cancelado una cita, de que tiene una cita mañana (recordatorio del día antes) o, si el centro lo ha encendido (ver ADM-50), de que hay un aviso sobre una cita fuera del centro de su residente: los avisos no dicen el nombre del residente, ni el centro, ni la hora ni el motivo; el recordatorio solo dice que tiene una cita mañana.",
         "Si el familiar está vinculado a más residentes, los cambios de nombre, teléfono y correo valen para todos; la relación es solo de este residente."
       ],
       "pasos": [
@@ -880,7 +880,7 @@
         { "texto": "Si la persona pide que no le manden más avisos, pulsa **Quitar la confirmación de la dirección** (está en la pantalla de edición, solo si la dirección está confirmada) o borra el correo.", "botones": ["Quitar la confirmación de la dirección"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "Si el correo está confirmado, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla." }
+        { "para": "Familia", "texto": "Si el correo está confirmado, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). Si te pide no recibir solo los de citas fuera del centro, ver ADM-50. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla." }
       ],
       "dudas": [
         { "p": "«Escribe un correo válido.»", "r": "La dirección no tiene forma de correo (falta la @ o el dominio): corrígela o bórrala." },
@@ -1515,7 +1515,7 @@
         { "para": "Enfermería", "texto": "Ve la cita en su lista y en la ficha del residente. La cambia solo si le has concedido el permiso (ver ADM-14)." },
         { "para": "Medicina", "texto": "Ve la cita, pero no la cambia." },
         { "para": "Auxiliar", "texto": "Ve una vista reducida de las citas de hoy y mañana de sus residentes (hora, qué preparar, quién acompaña y cómo va), sin especialidad ni lugar." },
-        { "para": "Familia", "texto": "Solo las ve si el centro ha abierto las citas externas a las familias y la de ese residente no está restringida (ver ADM-49). Según «Qué ve la familia», ve la cita entera, sin la especialidad, o nada." },
+        { "para": "Familia", "texto": "Solo las ve si el centro ha abierto las citas externas a las familias y la de ese residente no está restringida (ver ADM-49). Según «Qué ve la familia», ve la cita entera, sin la especialidad, o nada. Si el transporte o el acompañante son de la familia, puede ofrecerse con «Me encargo yo» (ver FAM-10): en la ficha ves «Ofrecido, sin confirmar» con su nombre y cuántas personas dijeron «No puedo»; la parte sigue pendiente hasta que tú la marques como confirmada." },
         { "para": "Tú", "texto": "Para ver las citas por días, usa las pestañas **Mes** y **Semana** de la lista. Con «Mostrar solo las que tienen algo sin cubrir» y **Aplicar** ves lo mismo que avisa el Inicio, además de las de más adelante. Una cita abierta con el día pasado sale como «Por cerrar»." }
       ],
       "dudas": [
@@ -1527,6 +1527,7 @@
         { "p": "Con «sin especialidad», ¿qué ve la familia?", "r": "El tipo general («Consulta fuera del centro») y el lugar, sin la especialidad. El lugar y «Qué preparar» siguen viéndolos: no escribas ahí la especialidad." },
         { "p": "Doy de baja al residente.", "r": "Sus citas externas abiertas de hoy en adelante se cancelan solas y la pantalla de la baja te dice cuántas son. No se restauran al reactivarlo. La familia no recibe aviso: avísala tú." },
         { "p": "El aviso del Inicio no sale.", "r": "Solo sale si hay una cita abierta en los próximos 7 días con el transporte o el acompañante sin confirmar. Si todo está «Cubierta», no hay aviso." },
+        { "p": "En el aviso del Inicio sale «Ofrecido por un familiar, sin confirmar».", "r": "Un familiar pulsó «Me encargo yo» (ver FAM-10). No cuenta como cubierto: compruébalo con la familia y, si es cierto, marca el transporte o el acompañante como confirmado en la cita." },
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó. Ábrelas y pulsa **Dar por realizada** o **No se acudió**, o **Cancelar la cita**. Salen en tu Inicio, arriba en la lista de citas y en la ficha del residente, con la marca «Por cerrar»." }
       ],
       "rutas": ["Administracion/Index", "Administracion/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Nueva", "CitasExternas/Ver", "CitasExternas/Editar", "CitasExternas/Estado", "CitasExternas/Cancelar", "CitasExternas/SiguienteCita"],
@@ -1595,7 +1596,7 @@
       ],
       "despues": [
         { "para": "Tú", "texto": "Verás «Las familias ya pueden ver las citas externas.» o «Las familias ya no ven las citas externas.» (y, por residente, «La familia ya no ve las citas externas de esta persona.» o «La familia vuelve a ver las citas externas de esta persona.»). Queda guardado quién lo cambió y cuándo, sin ningún texto escrito." },
-        { "para": "Familia", "texto": "Al abrir, cada familiar autorizado ve en su pantalla del residente el botón «Citas fuera del centro», solo para ver (ver FAM-09). Al cerrar o restringir, desaparece al momento; lo que ya vio no se puede deshacer." },
+        { "para": "Familia", "texto": "Al abrir, cada familiar autorizado ve en su pantalla del residente el botón «Citas fuera del centro», donde puede ofrecerse a llevar o acompañar (ver FAM-09 y FAM-10). Al cerrar o restringir, desaparece al momento; lo que ya vio no se puede deshacer." },
         { "para": "Enfermería", "texto": "También puede restringir o volver a abrir a la familia de un residente de sus unidades, sin necesitar el permiso de registrar citas (ver ENF-25). Medicina solo lo ve." }
       ],
       "dudas": [
@@ -1612,6 +1613,43 @@
         "La familia vuelve a ver las citas externas de esta persona.",
         "Para abrir las citas externas a las familias tienes que marcar las tres confirmaciones.",
         "Otra persona ha cambiado esto mientras lo mirabas."
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "ADM-50",
+      "pregunta": "¿Cómo enciendo los avisos por correo de las citas externas y doy de baja a una persona de la familia?",
+      "palabras": ["citas externas", "correo", "avisos", "familia", "7 días", "víspera", "2 días", "baja", "dejar de recibir", "encender"],
+      "permisos": [],
+      "antes": [
+        "Que las citas externas ya estén **abiertas a las familias** (ver ADM-49): sin eso no se pueden encender los avisos.",
+        "Que la residencia haya **informado a las familias** de que recibirán estos avisos por correo y de que pueden pedir a la Administración dejar de recibirlos.",
+        "Saber que, además de este ajuste, el aviso tiene que estar encendido en la aplicación (lo hace quien administra el entorno); por defecto está apagado. Sin eso no sale ningún correo, aunque lo enciendas aquí.",
+        "Saber qué reciben: a los 7 días y la víspera de cada cita visible, «Tienes un aviso sobre una cita en ResidApp»; y a los 2 días, «Una cita en ResidApp todavía necesita ayuda», solo si falta algo que la familia pueda cubrir. Ningún correo dice cuándo, dónde ni de qué es la cita."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas**, pulsa **Ajustes para la familia** y baja hasta «Avisos por correo de las citas externas».", "botones": ["Citas externas", "Ajustes para la familia"], "campos": ["Avisos por correo de las citas externas"] },
+        { "texto": "Marca la confirmación («La residencia ha informado a las familias…») y pulsa **Encender los avisos por correo**.", "botones": ["Encender los avisos por correo"] },
+        { "texto": "Para apagarlos, entra en la misma pantalla y pulsa **Apagar los avisos por correo**: no pide confirmación.", "botones": ["Apagar los avisos por correo"] },
+        { "texto": "Para que **una persona** no reciba estos avisos, abre la ficha del residente, en «Citas externas» pulsa **Ver o cambiar lo que ve la familia** y, en «Avisos por correo de las personas de la familia», pulsa **Dar de baja de los avisos** junto a su nombre. Para devolverla, **Volver a darla de alta**.", "botones": ["Ver o cambiar lo que ve la familia", "Dar de baja de los avisos", "Volver a darla de alta"], "campos": ["Avisos por correo de las personas de la familia"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Los avisos por correo de citas externas quedan encendidos.» o «…apagados.», y «Esa persona deja de recibir los avisos por correo de citas externas.» o «…vuelve a recibir…». Queda guardado quién lo hizo y cuándo; la baja vale para todos los residentes de esa persona en el centro." },
+        { "para": "Familia", "texto": "Recibe los correos descritos en FAM-11. Si alguien se ofreció a una cita, a 7 días y la víspera el aviso va solo a esa persona; si nadie, a todas las autorizadas con dirección confirmada (un correo a cada una). A quien está de baja, o no tiene la dirección confirmada, no le llega ninguno." }
+      ],
+      "dudas": [
+        { "p": "«Los avisos por correo están apagados. Para poder encenderlos, abre primero las citas externas a las familias.»", "r": "Primero abre las citas externas a las familias en la misma pantalla (ver ADM-49)." },
+        { "p": "Sale «Las citas externas están cerradas a las familias, así que ahora no sale ningún aviso.»", "r": "Los avisos estaban encendidos, pero cerraste las citas. Si las vuelves a abrir, los avisos se reanudan con este ajuste." },
+        { "p": "Lo he encendido y no sale ningún correo.", "r": "Mira que el aviso esté encendido en la aplicación (por defecto está apagado), que la persona tenga la dirección confirmada (ver ADM-28), que no esté de baja y que haya una cita que avisar a 7, 2 o 1 días." },
+        { "p": "Una persona pide no recibir más estos avisos.", "r": "Dala de baja con **Dar de baja de los avisos**. Si prefieres que no reciba ningún aviso de ResidApp, quita la confirmación de su dirección (ver ADM-28)." }
+      ],
+      "rutas": ["CitasExternas/AjustesFamilia", "CitasExternas/AjustesCorreo", "CitasExternas/FamiliaResidente", "CitasExternas/FamiliaCorreo"],
+      "mensajes": [
+        "Los avisos por correo de citas externas quedan encendidos.",
+        "Los avisos por correo de citas externas quedan apagados.",
+        "Esa persona deja de recibir los avisos por correo de citas externas.",
+        "Esa persona vuelve a recibir los avisos por correo de citas externas.",
+        "Para encender los avisos por correo tienes que marcar la confirmación."
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }

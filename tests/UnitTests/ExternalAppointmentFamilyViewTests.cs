@@ -12,7 +12,7 @@ public class ExternalAppointmentFamilyViewTests
 {
     private static readonly string[] Allowed =
     [
-        "Id", "Date", "Time", "Type", "Specialty", "Place", "Preparation", "TransportMode", "TransportState", "CompanionMode", "CompanionState", "Cancelled", "Covered",
+        "Id", "Date", "Time", "Type", "Specialty", "Place", "Preparation", "TransportMode", "TransportState", "CompanionMode", "CompanionState", "Cancelled", "Covered", "CoveredByFamily", "TransportHolder", "CompanionHolder", "Refused", "CanRefuse", "TransportLapsed", "CompanionLapsed",
     ];
 
     private static readonly string[] Forbidden = ["Note", "Reason", "Visibility", "History", "Change", "Creat", "Author", "Account", "Profile", "Name", "Version", "Resident", "Unit", "Origin", "Status"];
@@ -64,4 +64,47 @@ public class ExternalAppointmentFamilyViewTests
 
     [Fact]
     public void LaVentanaDeLaFamilia_EsDeNoventaDias() => Assert.Equal(90, ExternalFamilyRules.WindowDays);
+}
+
+public class ExternalAppointmentFamilyActionTests
+{
+    private static ExternalAppointmentForFamily Appointment(
+        ExternalFamilyHolder transport = ExternalFamilyHolder.Nobody, ExternalFamilyHolder companion = ExternalFamilyHolder.Nobody, bool refused = false,
+        ExternalTransportMode transportMode = ExternalTransportMode.Familia, ExternalArrangementState transportState = ExternalArrangementState.Pendiente, bool cancelled = false) =>
+        new(Guid.NewGuid(), new DateOnly(2030, 1, 1), null, ExternalAppointmentType.Consulta, null, null, ExternalPreparation.None, transportMode, transportState,
+            ExternalCompanionMode.Familiar, ExternalArrangementState.Pendiente, cancelled, transport, companion, refused);
+
+    [Fact]
+    public void LosBotones_DependenDeQuienLoTiene_YDeSiElPersonalLoConfirmo()
+    {
+        var free = Appointment();
+        Assert.True(free.CanTake(ExternalArrangementScope.Transporte));
+        Assert.False(free.CanRelease(ExternalArrangementScope.Transporte));
+        Assert.True(free.CanRefuse);
+
+        var mine = Appointment(transport: ExternalFamilyHolder.You);
+        Assert.False(mine.CanTake(ExternalArrangementScope.Transporte));
+        Assert.True(mine.CanRelease(ExternalArrangementScope.Transporte));
+        Assert.False(mine.CanRefuse); // quien se encargó de algo suelta, no dice «No puedo»
+
+        var other = Appointment(transport: ExternalFamilyHolder.Another);
+        Assert.False(other.CanTake(ExternalArrangementScope.Transporte));
+        Assert.False(other.CanRelease(ExternalArrangementScope.Transporte));
+        Assert.True(other.CanTake(ExternalArrangementScope.Acompanante));
+
+        Assert.False(Appointment(refused: true).CanRefuse);
+        Assert.False(Appointment(transportState: ExternalArrangementState.Confirmado).CanTake(ExternalArrangementScope.Transporte));
+        Assert.False(Appointment(transportMode: ExternalTransportMode.Centro).CanTake(ExternalArrangementScope.Transporte));
+        var cancelled = Appointment(cancelled: true);
+        Assert.False(cancelled.CanTake(ExternalArrangementScope.Transporte) || cancelled.CanRelease(ExternalArrangementScope.Transporte) || cancelled.CanRefuse);
+    }
+
+    [Fact]
+    public void ParaLaFamiliaUnEncargoCuentaComoCubierto_ParaElPersonalNo()
+    {
+        var offered = Appointment(ExternalFamilyHolder.You, ExternalFamilyHolder.Another);
+        Assert.True(offered.CoveredByFamily);
+        Assert.False(offered.Covered);
+        Assert.False(Appointment(ExternalFamilyHolder.You).CoveredByFamily);
+    }
 }

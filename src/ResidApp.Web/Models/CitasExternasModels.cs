@@ -117,7 +117,8 @@ public sealed record ExternalAppointmentFormViewModel(
 
 /// <summary>La ficha de una cita. FollowUp (la siguiente cita prevista y la ya registrada) y Note (la versión vigente de la nota «al terminar», solo Enfermería y Medicina) salen de consultas aparte: Administración no recibe la nota. Profile es quien mira.</summary>
 public sealed record ExternalAppointmentDetailViewModel(
-    ExternalAppointmentRecord Record, bool CanManage, DateOnly Today, SystemProfile Profile = SystemProfile.Administracion, ExternalAppointmentFollowUp? FollowUp = null, ExternalNoteVersion? Note = null);
+    ExternalAppointmentRecord Record, bool CanManage, DateOnly Today, SystemProfile Profile = SystemProfile.Administracion, ExternalAppointmentFollowUp? FollowUp = null, ExternalNoteVersion? Note = null,
+    ExternalFamilyOffers? Offers = null);
 
 public sealed record ExternalAppointmentCancelViewModel(ExternalAppointmentRecord Record, ExternalAppointmentFormModel Form, string? Error);
 
@@ -319,7 +320,8 @@ public static class ExternalNoteDisplay
 }
 
 /// <summary>La pantalla «Ajustes para la familia» del centro (PR 5; script 0104): si las familias ven las citas externas, cuántas verían y, al encender, las tres confirmaciones. Error es el aviso si lo marcado no vale.</summary>
-public sealed record ExternalFamilyCenterViewModel(ExternalFamilyCenterState State, string? Error);
+public sealed record ExternalFamilyCenterViewModel(ExternalFamilyCenterState State, string? Error, ExternalFamilyMailState? Mail = null, string? MailError = null);
 
 /// <summary>La pantalla del interruptor de un residente (PR 5): si su familia ve las citas externas, cuántas se abrirían o se ven, y si quien mira puede cambiarlo (Administración y Enfermería; Medicina solo mira).</summary>
-public sealed record ExternalFamilyResidentViewModel(Guid ResidentId, ExternalFamilyResidentState State, bool CanChange, string? Error);
+public sealed record ExternalFamilyResidentViewModel(
+    Guid ResidentId, ExternalFamilyResidentState State, bool CanChange, string? Error, IReadOnlyList<ExternalFamilyMember>? Members = null);

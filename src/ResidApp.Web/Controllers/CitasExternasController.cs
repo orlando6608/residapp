@@ -106,7 +106,9 @@ public sealed partial class CitasExternasController(
             }
         }
 
-        return View(new ExternalAppointmentDetailViewModel(record, loaded.Value.CanManage, appointments.TodayAtCenter(), scope.Profile, followUp, note));
+        // Lo que la familia ha ofrecido (PR 6): el nombre solo lo ven Administración y Enfermería con permiso; de «No puedo», solo el recuento.
+        var offers = ExternalAppointmentRules.IsOpen(record.Status) ? await familySettings.ReadOffersAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), id, ct) : null;
+        return View(new ExternalAppointmentDetailViewModel(record, loaded.Value.CanManage, appointments.TodayAtCenter(), scope.Profile, followUp, note, offers is { Ok: true } ? offers.Value : null));
     }
 
     [HttpGet]

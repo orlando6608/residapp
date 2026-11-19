@@ -159,6 +159,20 @@ public class AislamientoPortalFamiliarTests
             }
         },
 
+        // PR 6: «Me encargo yo» y compañía. Con el vínculo de otra familia da lo mismo que no existir; un identificador ajeno, también. (Otro familiar del mismo residente sí puede actuar sobre sus citas.)
+        ["IFamilyExternalAppointments.ArrangeAsync"] = async (w, a) =>
+        {
+            var query = await QueryAsync(a.Subject);
+            foreach (var action in Enum.GetValues<FamilyArrangementAction>())
+            {
+                Denied(await ExternalsOf(a).ArrangeAsync(query, w.Titular.LinkId, w.ExternalId, ExternalArrangementScope.Transporte, action));
+                if (!a.SameResident)
+                {
+                    await ForeignIdAsync(id => ExternalsOf(a).ArrangeAsync(query, a.LinkId, id, ExternalArrangementScope.Transporte, action), w.ExternalId);
+                }
+            }
+        },
+
         ["IFamilyAppointments.ReadAppointmentAsync"] = async (w, a) =>
         {
             var query = await QueryAsync(a.Subject);
@@ -226,7 +240,7 @@ public class AislamientoPortalFamiliarTests
             .RegisterAsync(new RegisterExternalAppointmentCommand(
                 owner.Admin.ProfileScopeId, owner.Admin.CenterId, owner.ResidentId,
                 new ExternalAppointment(externalDay, new TimeOnly(9, 0), ExternalAppointmentType.Consulta, ExternalAppointmentSpecialty.Cardiologia, "Hospital Barrera",
-                    ExternalTransportMode.SinDeterminar, ExternalArrangementState.Pendiente, ExternalCompanionMode.SinDeterminar, ExternalArrangementState.Pendiente, null, ExternalFamilyVisibility.Visible)));
+                    ExternalTransportMode.Familia, ExternalArrangementState.Pendiente, ExternalCompanionMode.Familiar, ExternalArrangementState.Pendiente, null, ExternalFamilyVisibility.Visible)));
         Assert.True(external.Ok, external.Error?.Message);
         var opened = await new ExternalAppointmentFamilySettingsApplicationService(staffScopes, staffSession, new SqlExternalAppointmentRepository(TestDatabase.ConnectionFactory), TimeProvider.System)
             .SetCenterAsync(new SetExternalFamilyCenterCommand(owner.Admin.ProfileScopeId, owner.Admin.CenterId, 0, true, true, true, true));

@@ -14,6 +14,12 @@ public sealed record SetExternalFamilyCenterCommand(
 /// <summary>Restringir (o dejar de restringir) a la familia de un residente.</summary>
 public sealed record SetExternalFamilyResidentCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, bool Restringir);
 
+/// <summary>Encender o apagar los avisos por correo de citas externas del centro (PR 6). Informada solo cuenta al encender.</summary>
+public sealed record SetExternalMailCommand(Guid AmbitoPerfilId, CenterId CentroId, int VersionVista, bool Encender, bool Informada);
+
+/// <summary>Dar de baja (o volver a dar de alta) a una persona de la familia de los avisos por correo de citas externas (PR 6).</summary>
+public sealed record SetExternalFamilyMemberMailCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid FamiliarId, int VersionVista, bool DarDeBaja);
+
 /// <summary>
 /// Los interruptores de las citas externas para la familia (PR 5; script 0104). El del centro lo cambia solo Administración, con las tres confirmaciones al encender. El del residente lo cambian
 /// Administración y la Enfermería de su unidad (sin el permiso de gestionar citas: es una herramienta de privacidad); Medicina solo lo ve. El ámbito y la unidad se vuelven a comprobar en cada
@@ -42,6 +48,37 @@ public sealed class ExternalAppointmentFamilySettingsApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
             await settings.SetResidentAsync(
                 await ActorAsync(command.AmbitoPerfilId, command.CentroId, [SystemProfile.Administracion, SystemProfile.Enfermeria], ct), command.ResidenteId, command.VersionVista, command.Restringir, ct));
+
+    // ---- PR 6 (script 0105): los avisos por correo y lo que ofrece la familia ----
+
+    public Task<ApplicationResult<ExternalFamilyMailState>> ReadMailAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () => await settings.ReadMailAsync(await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion], ct), ct));
+
+    /// <summary>Solo Administración. Encender exige la confirmación; apagar no. Devuelve el número nuevo.</summary>
+    public Task<ApplicationResult<int>> SetMailAsync(SetExternalMailCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await settings.SetMailAsync(await ActorAsync(command.AmbitoPerfilId, command.CentroId, [SystemProfile.Administracion], ct), command.VersionVista, command.Encender, command.Informada, ct));
+
+    public Task<ApplicationResult<IReadOnlyList<ExternalFamilyMember>>> ListFamilyMembersAsync(Guid profileScopeId, CenterId centerId, ResidentId residentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await settings.ListFamilyMembersAsync(await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion], ct), residentId, ct));
+
+    public Task<ApplicationResult<int>> SetFamilyMemberMailAsync(SetExternalFamilyMemberMailCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await settings.SetFamilyMemberMailAsync(
+                await ActorAsync(command.AmbitoPerfilId, command.CentroId, [SystemProfile.Administracion], ct), command.ResidenteId, command.FamiliarId, command.VersionVista, command.DarDeBaja, ct));
+
+    /// <summary>Lo que la familia ha ofrecido en una cita. Null si el actor no la ve (el mismo «no existe» de siempre).</summary>
+    public Task<ApplicationResult<ExternalFamilyOffers>> ReadOffersAsync(Guid profileScopeId, CenterId centerId, Guid appointmentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await settings.ReadOffersAsync(
+                await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion, SystemProfile.Enfermeria, SystemProfile.Medicina], ct), appointmentId, Today(), ct)
+            ?? throw new AccessDeniedException());
+
+    public Task<ApplicationResult<IReadOnlySet<Guid>>> ListOfferedAsync(Guid profileScopeId, CenterId centerId, IReadOnlyCollection<Guid> appointmentIds, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await settings.ListOfferedAsync(
+                await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion, SystemProfile.Enfermeria, SystemProfile.Medicina], ct), appointmentIds, Today(), ct));
 
     private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
 
@@ -79,6 +116,15 @@ public sealed class FamilyExternalAppointmentsApplicationService(
         FamilyPortalQuery query, Guid linkId, Guid appointmentId, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
             await appointments.FindAsync(await AccessAsync(query, ct), linkId, appointmentId, Today(), ct) ?? throw new AccessDeniedException());
+
+    /// <summary>«Me encargo yo», «Ya no puedo», «No puedo» y deshacer «No puedo» (PR 6). Lo que la familia no puede ver es el mismo AccessDenied; «ya lo tiene otra persona» y «ya no hace falta» se devuelven como resultado.</summary>
+    public Task<ApplicationResult<FamilyArrangementOutcome>> ArrangeAsync(
+        FamilyPortalQuery query, Guid linkId, Guid appointmentId, ExternalArrangementScope scope, FamilyArrangementAction action, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var outcome = await appointments.ArrangeAsync(await AccessAsync(query, ct), linkId, appointmentId, scope, action, Today(), ct);
+            return outcome == FamilyArrangementOutcome.NotFound ? throw new AccessDeniedException() : outcome;
+        });
 
     private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
 

@@ -19,7 +19,7 @@ namespace ResidApp.Web.Models;
 public sealed record AdministracionInicioViewModel(
     int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null,
     int? AccountsToReview = null, IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsUncovered = null, DateOnly ExternalAppointmentsToday = default,
-    IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsOverdue = null)
+    IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsOverdue = null, IReadOnlySet<Guid>? ExternalAppointmentsOffered = null)
 {
     public bool NothingPending => Attention is { NothingPending: true } && (AccountsToReview ?? 0) == 0;
 }

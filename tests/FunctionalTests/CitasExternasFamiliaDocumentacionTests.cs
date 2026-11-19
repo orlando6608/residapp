@@ -9,6 +9,8 @@ public class CitasExternasFamiliaDocumentacionTests
     private static readonly string[] Stale =
     [
         "aún no ve las citas externas", "todavía no ve las citas externas", "aun no ve las citas externas", "familia aún no ve las citas", "la familia todavía no ve las citas",
+        // Desde el PR 6 la familia también actúa («Me encargo yo», «Ya no puedo», «No puedo»): ya no es solo para verlas.
+        "solo para verlas", "Por ahora no se puede desde el portal", "no se pueden cambiar ni confirmar desde el portal", "Sin botones de acción",
     ];
 
     private static string Raiz()
