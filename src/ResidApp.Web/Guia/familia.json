@@ -26,8 +26,8 @@
     "Cambiar, confirmar o cancelar desde el portal una cita fuera del centro (tu «Me encargo yo» es un ofrecimiento, no una confirmación), ni ver su nota «al terminar», el motivo de una cancelación ni el nombre de otro familiar que se ha encargado.",
     "Usar el portal para algo urgente: para eso, el teléfono del centro."
   ],
-  "revisadoPara": "0.4.0",
-  "revisado": "2026-11-16",
+  "revisadoPara": "0.5.0",
+  "revisado": "2026-11-19",
   "fichas": [
     {
       "codigo": "FAM-01",

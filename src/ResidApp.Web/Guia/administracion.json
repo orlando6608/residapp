@@ -24,8 +24,8 @@
     "Crear un centro nuevo, ni ver otro centro: eso es de Plataforma.",
     "Añadirte unidades a tu ámbito ni marcar a otra cuenta como principal, si no eres la Administración principal del centro."
   ],
-  "revisadoPara": "0.4.0",
-  "revisado": "2026-11-18",
+  "revisadoPara": "0.5.0",
+  "revisado": "2026-11-19",
   "fichas": [
     {
       "codigo": "ADM-01",
