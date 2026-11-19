@@ -159,7 +159,7 @@ Estado: **plan del 2026-11-19, con las decisiones de Orlando y la primera lectur
 | Bloque | Contenido | Origen |
 | --- | --- | --- |
 | Salud | Base de datos (ok o fallo y milisegundos de una consulta mínima); correo (activo o apagado, con o sin cadena de conexión); dictado (clave global puesta o no). Correo y dictado solo miran la configuración: **no llaman al proveedor** (gastaría cuota y enviaría tráfico a un tercero en cada refresco). No hay bloque de «almacenamiento de ficheros»: las fotos y los logos están en SQL. | Comprobación al abrir la pantalla. Además, un `/healthz` mínimo, sin detalles, para el health check de App Service |
-| Tareas en segundo plano | Las tareas (hoy **seis**: aviso de cambio, recordatorio de cita, avisos sin resolver, purga de correos y los dos avisos de CJ; la séptima, avisos externos, llega con el PR 6): última vuelta, última vuelta correcta, duración y tipo de excepción, o el estado «apagada por configuración». **Sin «elementos tratados»**: con un solo centro piloto, un recuento de 1 equivale a un correo a una familia en un minuto concreto | Tabla nueva, **una fila por tarea** que se actualiza y sin histórico, sin centro ni datos personales ni mensajes (decisión 2) |
+| Tareas en segundo plano | Las tareas (hoy **siete**: aviso de cambio, recordatorio de cita, avisos externos de citas, avisos sin resolver, purga de correos y los dos avisos de CJ): última vuelta, última vuelta correcta, duración y tipo de excepción, o el estado «apagada por configuración». **Sin «elementos tratados»**: con un solo centro piloto, un recuento de 1 equivale a un correo a una familia en un minuto concreto | Tabla nueva, **una fila por tarea** que se actualiza y sin histórico, sin centro ni datos personales ni mensajes (decisión 2) |
 | Errores (fase 2) | Hoy y últimos 7 días naturales (el contador es diario: no se pueden calcular 24 h) por firma, plantilla de ruta y centro (el centro solo en acceso denegado y fallo inesperado), con su contador | Tabla nueva de recuentos por día (decisión 3) |
 | Versión | Versión desplegada y hora de arranque del proceso | Ya existe |
 | Enlace | Al panel de Azure | Un ajuste con la dirección |
@@ -184,9 +184,9 @@ Un catálogo de reglas en código, revisado por PR como los prompts. Cada regla 
 
 ### Entregas
 
-- **Fase 1:** salud, latido de tareas, versión, enlace a Azure, `/healthz` y reglas R1 a R6. Necesita un script SQL nuevo (la tabla del latido; número libre posterior al `0105`, que es del PR 6 de las citas externas) y la consulta previa a `dpo-residapp`.
+- **Fase 1:** salud, latido de tareas, versión, enlace a Azure, `/healthz` y reglas R1 a R6. Necesita un script SQL nuevo (la tabla del latido; el último aplicado en `main` es el `0105` de las citas externas, así que será el `0106` o el primero libre al construirlo) y la consulta previa a `dpo-residapp`.
 - **Fase 2:** tabla de errores con centro y reglas R7 a R9. Necesita un **ADR nuevo** que cambie el ADR 0008 (una tabla con centro que lee Plataforma) y al DPO.
-- No se empieza hasta cerrar el PR 6 y el hito 0.5.0.
+- El PR 6 de las citas externas y el hito 0.5.0 ya están cerrados en `main`; falta que Orlando decida cuándo empezar.
 
 ### Errores con centro: condiciones (decisión 3 y lectura del DPO)
 
@@ -278,7 +278,7 @@ Reglas de implementación:
 1. **Base común (sin SQL nuevo).** Estructura de tres capas, componentes de tarjeta, aviso y gráfico SVG con tabla accesible, y selector de periodo. Se da por terminada cuando se ve igual en claro, oscuro, móvil de 375 px e impresión.
 2. **Administración.** Avisos existentes más invitaciones y bajas por vencer; ocupación, altas y bajas, citas y autorizaciones. Se prueba con Los Almendros y Los Olmos. Se añaden sus historias de usuario a `docs\historias-usuarios\administracion.md`.
 3. **Dirección / Coordinación Clínica (solo base).** Los dos avisos nuevos, tras decidir el umbral con CJ y revisar la ausencia de cifra mínima en los indicadores de hoy. El módulo gráfico es una propuesta aparte.
-4. **Plataforma.** Con las cifras de servicio de arriba («Servicio»). Se prueba con los dos centros de pruebas y la cuenta de Plataforma de pruebas. La sección «Operación técnica» tiene sus propias dos fases (ver su apartado) y no empieza hasta cerrar el PR 6 de las citas externas y el hito 0.5.0.
+4. **Plataforma.** Con las cifras de servicio de arriba («Servicio»). Se prueba con los dos centros de pruebas y la cuenta de Plataforma de pruebas. La sección «Operación técnica» tiene sus propias dos fases (ver su apartado) y empieza cuando Orlando lo decida (el PR 6 de las citas externas y el hito 0.5.0 ya están cerrados).
 5. **Panel de turno para Medicina y Enfermería (fase posterior).** No es un cuadro de gestión sino una lista accionable del turno: eventos prioritarios abiertos, escalados recibidos (Medicina), indicaciones sin leer (Enfermería), seguimientos con la fecha pasada, protocolos urgentes activos y residentes sin basal. Casi sin gráficos y sin cifras por profesional, para que no se lea como un ranking de personas.
 
 Cada fase actualiza el Manual, la Guía por perfil y el Flujo de trabajo con el agente que ya mantiene la documentación (`doc-usuario-residapp`), y se revisa con `qa-revisor-residapp` antes de darla por cerrada. Antes de la fase 2 se consulta a `dpo-residapp` sobre la finalidad nueva de los gráficos de Administración.
