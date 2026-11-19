@@ -420,6 +420,202 @@ public class CitasExternasFamiliaActuaTests
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @center AND accion_codigo LIKE 'EXT\\_APPOINTMENT\\_ARRANGE%' ESCAPE '\\'", new { center = setup.Admin.CenterId.Value }));
     }
 
+    // ---- Límites: el residente, los 90 días, la cita confirmada por el hospital y las carreras ----
+
+    [Fact]
+    public async Task ConElResidenteSuspendidoODeBaja_LaFamiliaNoPuedeActuar_YAlVolverSiPuede()
+    {
+        var setup = await SetupAsync("Residente Actua Suspendido");
+        await OpenFamilyAsync(setup);
+        var id = await RegisterAsync(setup);
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Take));
+        var status = EstadoResidenteTests.Build(setup.Admin.ExternalSubject);
+
+        async Task AssertDeniedAsync()
+        {
+            foreach (var action in new[] { FamilyArrangementAction.Take, FamilyArrangementAction.Release, FamilyArrangementAction.Refuse, FamilyArrangementAction.UndoRefuse })
+            {
+                var result = await Family(setup.Subject).ArrangeAsync(await QueryAsync(setup.Subject), setup.LinkId, id, ExternalArrangementScope.Transporte, action);
+                Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+            }
+        }
+
+        // Suspensión (ingreso en un hospital): la cita sigue viva y el encargo se conserva, pero la familia no puede tocar nada mientras dure.
+        Assert.True((await status.SuspendAsync(new SuspendResidentCommand(setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), null))).Ok);
+        await AssertDeniedAsync();
+        Assert.True((await status.ResumeAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId)).Ok);
+        Assert.Equal(ExternalFamilyHolder.You, (await SeenAsync(setup.Subject, setup.LinkId, id)).TransportHolder);
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Release));
+
+        // Baja: tampoco; y al reactivarlo, la cita que se canceló con la baja no admite nada (no se restaura).
+        Assert.True((await status.DischargeAsync(new DischargeResidentCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), ResidApp.Domain.Residents.ResidentDischargeReason.AltaVoluntaria, null))).Ok);
+        await AssertDeniedAsync();
+        Assert.True((await status.ReactivateAsync(new ReactivateResidentCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, Guid.NewGuid(), setup.Admin.UnitId, null, null))).Ok);
+        Assert.Equal(FamilyArrangementOutcome.NotApplicable, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Take));
+    }
+
+    [Fact]
+    public async Task LaFamiliaActuaHastaLosNoventaDias_YMasAllaEsElMismoAccesoDenegado()
+    {
+        var setup = await SetupAsync("Residente Actua Noventa");
+        await OpenFamilyAsync(setup);
+        var at90 = await RegisterAsync(setup, 90);
+        var at91 = await RegisterAsync(setup, 91);
+
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, at90, FamilyArrangementAction.Take));
+        Assert.Equal(ExternalFamilyHolder.You, (await SeenAsync(setup.Subject, setup.LinkId, at90)).TransportHolder);
+
+        foreach (var action in new[] { FamilyArrangementAction.Take, FamilyArrangementAction.Refuse })
+        {
+            var result = await Family(setup.Subject).ArrangeAsync(await QueryAsync(setup.Subject), setup.LinkId, at91, ExternalArrangementScope.Transporte, action);
+            Assert.Equal(ApplicationFailureCode.AccessDenied, result.Error!.Code);
+        }
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Family(setup.Subject).FindAsync(await QueryAsync(setup.Subject), setup.LinkId, at91)).Error!.Code);
+        Assert.Equal(0, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.citas_externas_encargos WHERE cita_id = @at91", new { at91 }));
+    }
+
+    [Fact]
+    public async Task UnaCitaConfirmadaPorElHospital_SigueAdmitiendoLoQueHaceLaFamilia()
+    {
+        var setup = await SetupAsync("Residente Actua Hospital");
+        await OpenFamilyAsync(setup);
+        var id = await RegisterAsync(setup);
+        await ExecuteAsync("UPDATE dbo.citas_externas SET estado_codigo = 'CONFIRMADA_HOSPITAL', version = version + 1, modificada_en = SYSUTCDATETIME() WHERE id = @id", new { id });
+
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Take));
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Take, ExternalArrangementScope.Acompanante));
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Release));
+        var seen = await SeenAsync(setup.Subject, setup.LinkId, id);
+        Assert.Equal(ExternalFamilyHolder.Nobody, seen.TransportHolder);
+        Assert.Equal(ExternalFamilyHolder.You, seen.CompanionHolder);
+    }
+
+    [Fact]
+    public async Task QuienTomaMientrasOtraPersonaSuelta_NoDejaDosDuenos_YLaSueltaSiempreSale()
+    {
+        var setup = await SetupAsync("Residente Actua Toma Y Suelta");
+        await OpenFamilyAsync(setup);
+        var second = await AddSecondAsync(setup);
+
+        for (var round = 0; round < 6; round++)
+        {
+            var id = await RegisterAsync(setup, 5 + round);
+            Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Take));
+            var results = await Task.WhenAll(
+                Task.Run(() => ActAsync(second.Subject, second.LinkId, id, FamilyArrangementAction.Take)),
+                Task.Run(() => ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Release)));
+
+            Assert.Equal(FamilyArrangementOutcome.Done, results[1]);
+            Assert.Contains(results[0], new[] { FamilyArrangementOutcome.Done, FamilyArrangementOutcome.TakenByAnother });
+            var first = await SeenAsync(setup.Subject, setup.LinkId, id);
+            var other = await SeenAsync(second.Subject, second.LinkId, id);
+            if (results[0] == FamilyArrangementOutcome.Done)
+            {
+                Assert.Equal((ExternalFamilyHolder.Another, ExternalFamilyHolder.You), (first.TransportHolder, other.TransportHolder));
+            }
+            else
+            {
+                Assert.Equal((ExternalFamilyHolder.Nobody, ExternalFamilyHolder.Nobody), (first.TransportHolder, other.TransportHolder));
+            }
+        }
+    }
+
+    [Fact]
+    public async Task QuienTomaMientrasElPersonalConfirma_LaParteQuedaConfirmada_YNadieFiguraComoOfrecido()
+    {
+        var setup = await SetupAsync("Residente Actua Toma Y Confirma");
+        await OpenFamilyAsync(setup);
+
+        for (var round = 0; round < 6; round++)
+        {
+            var id = await RegisterAsync(setup, 5 + round);
+            var results = await Task.WhenAll(
+                Task.Run(() => ActAsync(setup.Subject, setup.LinkId, id, FamilyArrangementAction.Take)),
+                Task.Run(async () =>
+                {
+                    await ExecuteAsync(
+                        "UPDATE dbo.citas_externas SET transporte_estado_codigo = @confirmed, version = version + 1, modificada_en = SYSUTCDATETIME() WHERE id = @id",
+                        new { id, confirmed = ExternalArrangementState.Confirmado.ToCode() });
+                    return FamilyArrangementOutcome.Done;
+                }));
+
+            Assert.Contains(results[0], new[] { FamilyArrangementOutcome.Done, FamilyArrangementOutcome.NotApplicable });
+            var seen = await SeenAsync(setup.Subject, setup.LinkId, id);
+            Assert.Equal(ExternalFamilyHolder.Nobody, seen.TransportHolder);
+            Assert.False(seen.CanTake(ExternalArrangementScope.Transporte));
+            var offers = (await Settings(setup.Admin).ReadOffersAsync(setup.Admin.ProfileScopeId, setup.Admin.CenterId, id)).Value!;
+            Assert.DoesNotContain(offers.Offers, o => o.Scope == ExternalArrangementScope.Transporte);
+        }
+    }
+
+    // ---- La invitación de alta ----
+
+    [Fact]
+    public async Task ConUnaInvitacionDeAltaSinUsarOAnulada_NoHayAcceso_YAlUsarla_SiHay()
+    {
+        var setup = await SetupAsync("Residente Actua Invitacion");
+        var second = await AddSecondAsync(setup);
+        var today = InDays(0).ToDateTime(TimeOnly.MinValue);
+
+        async Task<int> AccessAsync(Guid link) => await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.fn_familiares_con_acceso(@link, @today)", new { link, today });
+        async Task<Guid> InviteAsync(string subject)
+        {
+            var account = await ScalarAsync<Guid>("SELECT id FROM dbo.cuentas WHERE sujeto_externo = @subject", new { subject });
+            var invitation = Guid.NewGuid();
+            await ExecuteAsync("""
+                INSERT INTO dbo.invitaciones_acceso (id, cuenta_id, centro_id, tipo, resumen_token, emitida_en, emitida_por_cuenta_id, perfil_emisor, caduca_en)
+                VALUES (@invitation, @account, @center, 'ALTA', CONVERT(CHAR(64), HASHBYTES('SHA2_256', CONVERT(VARCHAR(36), NEWID())), 2), SYSUTCDATETIME(), @by, 'ADMINISTRACION', DATEADD(HOUR, 72, SYSUTCDATETIME()))
+                """, new { invitation, account, center = setup.Admin.CenterId.Value, by = setup.Admin.AccountId.Value });
+            return invitation;
+        }
+
+        Assert.Equal((1, 1), (await AccessAsync(setup.LinkId), await AccessAsync(second.LinkId)));
+
+        // Una invitación de alta viva: la persona aún no ha llegado a entrar.
+        var open = await InviteAsync(setup.Subject);
+        Assert.Equal((0, 1), (await AccessAsync(setup.LinkId), await AccessAsync(second.LinkId)));
+        // Anulada sin usar: tampoco entró.
+        await ExecuteAsync("UPDATE dbo.invitaciones_acceso SET anulada_en = SYSUTCDATETIME() WHERE id = @open", new { open });
+        Assert.Equal(0, await AccessAsync(setup.LinkId));
+        // Usada: la activación se completó.
+        var used = await InviteAsync(setup.Subject);
+        await ExecuteAsync("UPDATE dbo.invitaciones_acceso SET usada_en = SYSUTCDATETIME() WHERE id = @used", new { used });
+        Assert.Equal(1, await AccessAsync(setup.LinkId));
+    }
+
+    // ---- La baja y el alta de los avisos, en la auditoría ----
+
+    [Fact]
+    public async Task LaBajaYElAltaDeLosAvisosDeUnaPersona_QuedanEnLaAuditoria_SinNombreNiDireccion()
+    {
+        var setup = await SetupAsync("Residente Actua Auditoria Baja");
+        var familyId = await ScalarAsync<Guid>("SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @link", new { link = setup.LinkId });
+        var admin = Settings(setup.Admin);
+        var change = new SetExternalFamilyMemberMailCommand(setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, familyId, 0, true);
+
+        Assert.True((await admin.SetFamilyMemberMailAsync(change)).Ok);
+        Assert.True((await admin.SetFamilyMemberMailAsync(change with { VersionVista = 1, DarDeBaja = false })).Ok);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var events = (await connection.QueryAsync<(string Action, string Profile, Guid? ResidentId)>(
+            "SELECT accion_codigo, perfil_activo, residente_id FROM dbo.eventos_auditoria WHERE centro_id = @center AND accion_codigo IN ('EXT_APPOINTMENT_MAIL_OPT_OUT', 'EXT_APPOINTMENT_MAIL_OPT_IN')",
+            new { center = setup.Admin.CenterId.Value })).ToList();
+        Assert.Equal(["EXT_APPOINTMENT_MAIL_OPT_IN", "EXT_APPOINTMENT_MAIL_OPT_OUT"], events.Select(e => e.Action).Order().ToArray());
+        Assert.All(events, e => Assert.Equal(("ADMINISTRACION", setup.ResidentId.Value), (e.Profile, e.ResidentId)));
+
+        var everything = string.Concat(await connection.QueryAsync<string>(
+            "SELECT (SELECT * FROM dbo.eventos_auditoria e WHERE e.id = audit.id FOR JSON PATH) FROM dbo.eventos_auditoria audit WHERE audit.centro_id = @center AND audit.accion_codigo LIKE 'EXT\\_APPOINTMENT\\_MAIL\\_OPT%' ESCAPE '\\'",
+            new { center = setup.Admin.CenterId.Value }));
+        Assert.NotEmpty(everything);
+        foreach (var secret in new[] { "Lucía", "Pérez", "@", "600123456" })
+        {
+            Assert.DoesNotContain(secret, everything);
+        }
+    }
+
     // ---- Los avisos por correo del centro y la baja ----
 
     [Fact]

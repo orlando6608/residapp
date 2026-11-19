@@ -89,6 +89,23 @@ Criterios de aceptación:
 
 Códigos de origen: `FAM-01`, `AUTH-03`.
 
+### 7. Ver las citas de mi residente fuera del centro y ofrecerme a ayudar
+
+**Como** familiar, **quiero** ver las pruebas, consultas y tratamientos de mi residente fuera del centro y ofrecerme a llevarlo o acompañarlo, **para** que el centro sepa con quién cuenta, sin que yo vea más de lo necesario.
+
+Criterios de aceptación:
+- Solo veo estas citas si el centro las ha abierto a las familias y la familia de mi residente no está restringida; si no, el botón «Citas fuera del centro» no sale y no se me dice cuál es el motivo.
+- Veo las de hoy a los próximos 90 días que el centro decide enseñarme: hora (o «Por confirmar»), tipo, lugar, qué preparar y si falta resolver el transporte o el acompañante. La especialidad solo si el centro la deja ver; nunca la nota «al terminar», el motivo de una cancelación ni el historial.
+- Si el transporte o el acompañante son de la familia y siguen pendientes, puedo pulsar «Me encargo yo». El primero que pulsa se queda esa parte (aunque dos pulsen a la vez) y los demás familiares solo ven «lo hará un familiar», sin nombre.
+- Puedo soltarlo («Ya no puedo encargarme») o decir que no puedo ayudar con esa cita («No puedo») y deshacerlo; «No puedo» no sale si ya me he encargado de algo.
+- Junto a los botones la pantalla me dice que el personal verá mi nombre, que es un aviso que el centro confirmará por su cuenta y que no sustituye al teléfono.
+- Mi ofrecimiento deja de contar si la cita cambia de día o de modo, si el personal confirma esa parte o si pierdo el acceso al portal; si cambió la cita, la pantalla me lo dice.
+- Con mi residente suspendido o de baja, o con una cita oculta, cancelada, más allá de los 90 días o de otro residente, no puedo actuar: siempre el mismo «no disponible», sin distinguir causas.
+- Si el centro ha encendido los avisos por correo y mi dirección está confirmada y no estoy de baja, recibo un correo genérico a los 7 días y la víspera de cada cita (si alguien se ofreció, solo esa persona) y otro a los 2 días solo si aún falta algo que la familia pueda cubrir. Ningún correo dice cuándo, dónde ni de qué es la cita, y solo salen entre las 10:00 y las 18:59 (hora de Madrid).
+- Para no recibir estos avisos se lo digo a la Administración del centro; la baja vale para todos mis residentes.
+
+Códigos de origen: ninguno del PRD (función posterior); ver `docs/producto/citas-externas-diseno.md` y las respuestas de CJ del 2026-11-17.
+
 ## Tabla resumen de trazabilidad
 
 | Historia | Códigos cubiertos |
@@ -99,6 +116,7 @@ Códigos de origen: `FAM-01`, `AUTH-03`.
 | 4. Reserva directa de cita | `CIT-04`, `CIT-05`, `CIT-D01` a `CIT-D05` |
 | 5. Solicitud previa de cita | `CIT-04`, `CIT-05`, `CIT-S01` a `CIT-S04` |
 | 6. Estados excepcionales del portal | `FAM-01`, `AUTH-03` |
+| 7. Citas fuera del centro y «Me encargo yo» | (sin código del PRD; `citas-externas-diseno.md`) |
 
 ## Nota de procedencia
 
