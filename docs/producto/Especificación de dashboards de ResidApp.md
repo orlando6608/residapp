@@ -111,7 +111,7 @@ Barras apiladas por estado, línea de episodios nuevos y cerrados, medianas de t
 
 ## Dashboard de Plataforma
 
-Plataforma es quien opera ResidApp, no el personal de un centro, no ve residentes ni contenido clínico (ADR 0006) y no es un módulo (ADR 0015). Su dashboard mide el **funcionamiento del servicio**: cuentas, invitaciones y accesos, nada asistencial. Solo usa tablas que la aplicación ya lee para Plataforma o que no están bajo seguridad por filas (la regla que impide que un centro lea datos de otro, ADR 0008), de modo que **no hay que ampliar sus permisos**.
+Plataforma es quien opera ResidApp, no el personal de un centro, no ve residentes ni contenido clínico (ADR 0006) y no es un módulo (ADR 0015). Su dashboard mide el **funcionamiento del servicio**: cuentas, invitaciones y accesos, nada asistencial. Solo usa tablas que la aplicación ya lee para Plataforma o que no están bajo seguridad por filas (la regla que impide que un centro lea datos de otro, ADR 0008), de modo que **no hay que ampliar sus permisos** (en la sección «Servicio»; la fase 2 de «Operación técnica» añade una tabla con lectura por procedimiento).
 
 ### Avisos (de más a menos urgente)
 
@@ -141,11 +141,97 @@ Plataforma es quien opera ResidApp, no el personal de un centro, no ve residente
 
 La tabla de centros es la pieza principal: una fila por centro con su estado de arranque, sus cuentas y sus invitaciones pendientes. Va en **orden fijo** (por nombre o fecha de alta) y con una etiqueta de estado en texto; no se reordena según lo que requiera atención.
 
-**No se muestra**, en esta versión: residentes activos ni registros por día; nombres de cuenta ni direcciones IP; correos enviados, omitidos o fallidos; errores de la aplicación (ver «Decisiones abiertas»). La apertura de este dashboard no se anota en la auditoría, porque solo enseña agregados sin datos personales; si el DPO lo pide, se haría con la protección contra envíos duplicados que exigen las directrices PWA (apartado 4).
+**No se muestra**, en esta versión: residentes activos ni registros por día; nombres de cuenta ni direcciones IP; correos enviados, omitidos o fallidos; errores de la aplicación (los errores técnicos van en «Operación técnica», fase 2, más abajo). La apertura de este dashboard no se anota en la auditoría, porque solo enseña agregados sin datos personales; si el DPO lo pide, se haría con la protección contra envíos duplicados que exigen las directrices PWA (apartado 4).
+
+## Dashboard de Plataforma: Operación técnica
+
+Estado: **plan del 2026-11-19, con las decisiones de Orlando y la primera lectura del DPO (`docs\privacidad\operacion-tecnica-plataforma-lectura-dpo.md`, borrador sin validar por una persona experta); nada construido.** Lo ya descrito arriba pasa a llamarse **«Servicio»** (cuentas, invitaciones, accesos). Esta es la segunda sección, **«Operación técnica»**: dos pestañas bajo la misma ruta y la misma autorización de Plataforma. Plataforma es **solo en español** (el ADR 0013 solo obliga al Portal Familiar y a las pantallas de entrada).
+
+**Finalidad:** vigilar la disponibilidad y el buen funcionamiento del servicio. No mide a personas ni a centros con fines comerciales.
+
+### Reparto entre Azure y la app (decisión 1)
+
+- **Azure** vigila la infraestructura: errores 500, tiempos de respuesta, base de datos, correo y costes, con un panel y alertas en el portal. Es lo que Azure ya sabe y no cuesta código. **La app no lee Azure Monitor ni lleva una credencial de Azure**: sería una superficie nueva en la cuenta más delicada.
+- **La app** muestra solo lo que Azure no puede saber: si sus tareas en segundo plano están corriendo, si la clave del dictado está puesta y qué códigos de error de dominio se repiten.
+
+### Qué muestra
+
+| Bloque | Contenido | Origen |
+| --- | --- | --- |
+| Salud | Base de datos (ok o fallo y milisegundos de una consulta mínima); correo (activo o apagado, con o sin cadena de conexión); dictado (clave global puesta o no). Correo y dictado solo miran la configuración: **no llaman al proveedor** (gastaría cuota y enviaría tráfico a un tercero en cada refresco). No hay bloque de «almacenamiento de ficheros»: las fotos y los logos están en SQL. | Comprobación al abrir la pantalla. Además, un `/healthz` mínimo, sin detalles, para el health check de App Service |
+| Tareas en segundo plano | Las tareas (hoy **seis**: aviso de cambio, recordatorio de cita, avisos sin resolver, purga de correos y los dos avisos de CJ; la séptima, avisos externos, llega con el PR 6): última vuelta, última vuelta correcta, duración y tipo de excepción, o el estado «apagada por configuración». **Sin «elementos tratados»**: con un solo centro piloto, un recuento de 1 equivale a un correo a una familia en un minuto concreto | Tabla nueva, **una fila por tarea** que se actualiza y sin histórico, sin centro ni datos personales ni mensajes (decisión 2) |
+| Errores (fase 2) | Hoy y últimos 7 días naturales (el contador es diario: no se pueden calcular 24 h) por firma, plantilla de ruta y centro (el centro solo en acceso denegado y fallo inesperado), con su contador | Tabla nueva de recuentos por día (decisión 3) |
+| Versión | Versión desplegada y hora de arranque del proceso | Ya existe |
+| Enlace | Al panel de Azure | Un ajuste con la dirección |
+
+### Recomendaciones: reglas deterministas, sin IA (decisión 7)
+
+Un catálogo de reglas en código, revisado por PR como los prompts. Cada regla tiene un código, una condición sobre cifras ya calculadas, un **texto fijo en español** que dice qué hacer y un enlace. Los umbrales van en configuración y no se inventan: se arranca con un valor provisional y se ajusta tras una semana de datos reales. Un test por regla. Van en **orden fijo** (por el de la tabla, no por gravedad), el color nunca va solo y una cifra a cero no sale en rojo.
+
+| Regla | Cuándo salta | Qué recomienda | Fase |
+| --- | --- | --- | --- |
+| R1. Tarea sin latido | Pasa más de 3 veces su intervalo desde su última vuelta. Una tarea «apagada por configuración» (hoy no hace vuelta) no cuenta; si no, saltaría siempre en desarrollo | Comprobar «Siempre activo» en la Web App | 1 |
+| R2. Recordatorio sin vuelta en franja | Hoy no hay vuelta del recordatorio entre las 10:00 y las 18:59 (hora de Madrid) | Igual, y avisa de que ese día se pierden recordatorios sin error visible | 1 |
+| R3. Tarea sin identidad propia | La conexión de la tarea no es del rol `residapp_tareas` (hoy solo lo escribe el registro) | Dar el rol al usuario de la tarea | 1 |
+| R4. Última vuelta en error | Termina en excepción, con su tipo | Explicación fija por tipo de excepción | 1 |
+| R5. Dictado sin clave | Algún centro tiene activo el módulo de dictado y la clave global falta | Poner la clave o apagar el módulo en ese centro | 1 |
+| R6. Base lenta | Los milisegundos superan un umbral (se fija viendo antes el valor normal) | Mirar el panel de Azure | 1 |
+| R7. Firma de error nueva | Una firma que no estaba en los 7 días anteriores | Mirar el registro de Azure con esa firma | 2 |
+| R8. Errores concentrados en un centro | Un centro suma al menos **5 errores** (mínimo absoluto, provisional, en configuración) y más de un porcentaje de los errores de hoy. El denominador solo cuenta errores con centro (los de seguridad e inesperados) | Contactar con ese centro. El texto **no cita el art. 33 RGPD**: un pico de errores no es una brecha (CEPD 9/2022, párrafo 44) | 2 |
+| R9. Conflictos de concurrencia repetidos, **global y sin centro** | El mismo código `*_CONFLICT` varias veces en la misma ruta, en todo el servicio | Señal de diseño del producto (por ejemplo, avisar mejor a quien edita), no de cómo trabaja un centro | 2 |
+
+**Sin IA, por ahora.** El botón «Análisis ejecutivo con IA» se descarta de momento: el único proveedor autorizado es Mistral (Claude exigiría contrato, EIPD y un ADR), el único caso de uso aprobado es el dictado (ADR 0011) y un resumen de cinco hallazgos aporta poco sobre los textos de las reglas. Si se reabre: con Mistral, solo en Plataforma (no lleva datos personales), solo sobre la salida de las reglas y nunca sobre la base, voluntario, auditado sin contenido y con un ADR nuevo. El DPO añade tres condiciones: que antes se cumpla la primera puerta del ADR 0011 («un caso que las reglas no resuelvan», que hoy falla); acotar el criterio de 2026-10-21 (el ADR 0011 dice que la IA «no… resume, prioriza»); y que los campos enviados vayan en una lista cerrada. No se reabre mientras no se cumpla la primera.
+
+### Entregas
+
+- **Fase 1:** salud, latido de tareas, versión, enlace a Azure, `/healthz` y reglas R1 a R6. Necesita un script SQL nuevo (la tabla del latido; número libre posterior al `0105`, que es del PR 6 de las citas externas) y la consulta previa a `dpo-residapp`.
+- **Fase 2:** tabla de errores con centro y reglas R7 a R9. Necesita un **ADR nuevo** que cambie el ADR 0008 (una tabla con centro que lee Plataforma) y al DPO.
+- No se empieza hasta cerrar el PR 6 y el hito 0.5.0.
+
+### Errores con centro: condiciones (decisión 3 y lectura del DPO)
+
+Condiciones que fijan la decisión de Orlando y la lectura del DPO:
+
+- Se guarda solo **día, firma, plantilla de ruta, centro y contador**: la firma es el tipo de excepción, el número de SQL o el código de dominio, con lista cerrada y «(otro)» para lo demás. Nunca el mensaje, el cuerpo, la cadena de consulta ni un identificador de residente, de vínculo o de invitación. **Ni la hora**: ninguna columna de fecha con hora, ni identidad creciente (conservaría el orden de aparición), ni `rowversion` ni tabla temporal.
+- La plantilla de ruta sale de los **metadatos del punto final**, nunca de la dirección real de la petición; sin coincidencia pone «(sin ruta)». Prueba con GUID y token de invitación reales.
+- El centro **no sale de la cookie del ámbito activo** (hoy no se valida contra la base): es el que deduce la base a partir del ámbito, no lo recibe la aplicación. **Solo lo llevan el acceso denegado y el fallo inesperado**; los conflictos de concurrencia (`*_CONFLICT`) no llevan centro, porque son un hecho de dos personas trabajando a la vez y, con centro, pantalla y día, podrían señalar a personas concretas de un centro pequeño. Fuera de una petición (las tareas) o antes de entrar, queda vacío; es aceptable, no se rellena con IP, hora ni cruces con el registro de accesos, y la pantalla enseña «sin centro».
+- La tabla queda **fuera de la seguridad por filas**, como `eventos_acceso`. La aplicación solo la toca con dos procedimientos `EXECUTE AS OWNER`: uno de escritura (que además borra lo que pase de **30 días**) y otro de lectura que comprueba el ámbito `PLATAFORMA`. Hace falta un ADR nuevo.
+- Volcado por lotes desde la memoria, con tope de combinaciones por día; un fallo del volcado no afecta a la petición y, si la base no responde, los errores del lote se descartan. Para eso queda el registro de A4.
+- Motivo de querer el centro (Orlando): acotar al máximo la causa de un fallo y alcanzar rápido a la residencia afectada, dentro del plazo propio del contrato.
+
+**Decisiones de Orlando frente a la recomendación del DPO (2026-11-19).** El DPO propuso (1) centro solo para acceso denegado y fallo inesperado; (2) que la lectura devuelva solo totales por separado, nunca el cruce centro × firma × ruta; y (3) R9 solo global. Orlando, tras revisar el riesgo en lenguaje llano, **aceptó (1) y (3)** y **se aparta en (2)**: Plataforma ve el **cruce completo, sin mínimo**, para esos dos tipos de error, porque lo más valioso para hallar la causa es la primera aparición de un fallo raro en un centro concreto, y un mínimo la ocultaría. El riesgo que queda: con centro, pantalla y día, un fallo inesperado con un solo caso puede señalar de forma indirecta a una persona de un centro pequeño (considerando 26 del RGPD). Lo acotan que los conflictos de concurrencia (lo que dos personas hicieron a la vez) no llevan centro, los 30 días, la ausencia de hora y la cláusula que prohíbe usarlo para evaluar al personal. **El DPO real o un abogado debe validar expresamente este cruce antes de usarlo con datos reales.** El mínimo de 5 solo se aplica a R8.
+
+### Azure: alertas y panel (decisiones 4, 5, 6 y 9)
+
+No se construye en el repositorio: es un documento con los comandos y los umbrales, que aplica Orlando. Todo es de **desarrollo**; producción queda en el ADR 0014. Solo métricas de plataforma, sin Log Analytics (que tiene coste y una retención por decidir).
+
+| Alertas | Estado |
+| --- | --- |
+| Errores 5xx (≥ 5), accesos denegados 403 (≥ 20) y conexiones fallidas de SQL (≥ 5), ventana de 5 min, grupo `ag-residapp-dev-alertas` | Existen (A4) |
+| Presupuestos `PresupuestoResidApp` (10 €/mes; avisos al 50 %, 80 % previsto y 95 %) y `AlertaResidApp20` (20 €/mes, 100 % real) | Existen; se dejan como están. El gasto normal ronda los 16 €/mes (dato del relevo del 2026-11-03, a reverificar) |
+| Salud de la web: health check de App Service, tiempo de respuesta, CPU y memoria del plan | Nuevo |
+| Base de datos: CPU o DTU sostenido, bloqueos y espacio usado | Nuevo |
+| Correo: métrica de estado de entrega de ACS con resultado «Failure» (el total, no el rebote por destinatario) | Nuevo |
+
+**Panel:** un Dashboard del portal de Azure, compartido, con cuatro bloques (ventana de 24 h, ampliable a 7 d): Web (peticiones, 5xx, 403, tiempo de respuesta, health check, CPU y memoria), Base de datos (CPU o DTU, conexiones fallidas, bloqueos, espacio), Correo (solicitudes y estado de entrega) y Coste del mes. Se exporta como JSON. Si el suplente ha de verlo, necesita un permiso de lectura mínimo sobre el grupo de recursos (hoy solo tiene lectura de blobs).
+
+### Lectura del DPO (2026-11-19) y lo que queda
+
+Las cinco preguntas están respondidas en `docs\privacidad\operacion-tecnica-plataforma-lectura-dpo.md` (borrador de una segunda lectura, no de un DPO designado):
+
+1. **Latido:** admisible sin lectura nueva, con una fila por tarea y sin histórico.
+2. **Errores con centro:** admisible solo con las condiciones de arriba; la cifra mínima clásica choca con la finalidad (R7 quiere ver el error raro), así que la protección es el mínimo absoluto de 5 y que no haya cruce libre. Las decisiones de Orlando que se apartan de esto están señaladas arriba.
+3. **Centro vacío:** aceptable.
+4. **Frase de finalidad:** la actual **no basta**. Hay que añadir el diagnóstico de fallos, la atribución a un centro y una prohibición explícita de usar estos recuentos para medir personas, equipos o centros ni con fines comerciales (art. 28.3.a y 28.10 RGPD; art. 33.2 LOPDGDD). Tres redacciones propuestas (encargo del centro, registro de actividades y política para profesionales) están en el apartado 4 del borrador del DPO; y lo decidido coincide con ellas en que el centro solo va en fallos de seguridad e inesperados; hay que ajustarlas únicamente en que dicen «sin cruce de centro con pantalla», cuando Plataforma sí ve el cruce.
+5. **Retención:** **30 días** (decidido por Orlando; lo valida el DPO real), nunca más que los 90 de A4, y sin relación con el plazo aún sin decidir de `eventos_acceso` (esta tabla no lleva IP).
+
+Quedan abiertos: la redacción final de la cláusula y quién la firma por la residencia; la validación del DPO real del cruce completo sin mínimo; y el mínimo de 5 de R8, que no sale de ninguna norma (con CJ, junto con la cifra mínima general).
+
+Quedan **fuera** de este apartado el reparto de costes y el margen por centro, el DAU/WAU por centro, los correos por centro, y leer el coste de Azure por su API: ver «Costes y consumo en Plataforma» en las decisiones abiertas.
 
 ## Datos, histórico y rendimiento
 
-**No hay almacenamiento nuevo.** Todo se calcula al abrir la pantalla; las tendencias salen de datos que ya llevan fecha:
+**No hay almacenamiento nuevo, salvo las dos tablas de «Operación técnica»** (latido de las tareas y recuentos de errores), sin datos personales directos. Todo lo demás se calcula al abrir la pantalla; las tendencias salen de datos que ya llevan fecha:
 
 - Altas y bajas, historial de ubicación (permite calcular la ocupación en cualquier día), episodios, hitos del proceso, citas y comunicados.
 - Autorizaciones de familiares: la vigente es el último cambio de cada vínculo, así que el historial de cambios da su evolución.
@@ -172,7 +258,7 @@ Los dashboards no amplían lo que cada perfil puede ver: solo lo resumen. Cada b
 
 | Perfil | Qué puede ver el dashboard | Qué no ve |
 | --- | --- | --- |
-| Plataforma | Cifras de servicio por centro: centros, cuentas, invitaciones y arranque; accesos del servicio entero | Residentes, contenido clínico, cifras asistenciales, nombres de cuenta, IP, auditoría de otros centros |
+| Plataforma | Cifras de servicio por centro: centros, cuentas, invitaciones y arranque; accesos del servicio entero; latido de las tareas; recuentos diarios de errores técnicos por firma y ruta, y por centro solo en acceso denegado y fallo inesperado (fase 2, con las condiciones de «Operación técnica») | Residentes, contenido clínico, cifras asistenciales, nombres de cuenta, IP, auditoría de otros centros |
 | Administración | Cifras administrativas de su centro y de las unidades de su ámbito | Contenido clínico; nombres en los cuadros de gestión |
 | Dirección / Coordinación Clínica | Estado operativo y fechas de hitos por unidad; indicadores y calidad de proceso solo con su permiso | Observaciones, valoraciones, indicaciones y fotos; la lectura clínica detallada sigue siendo la consulta auditada del basal |
 
@@ -192,7 +278,7 @@ Reglas de implementación:
 1. **Base común (sin SQL nuevo).** Estructura de tres capas, componentes de tarjeta, aviso y gráfico SVG con tabla accesible, y selector de periodo. Se da por terminada cuando se ve igual en claro, oscuro, móvil de 375 px e impresión.
 2. **Administración.** Avisos existentes más invitaciones y bajas por vencer; ocupación, altas y bajas, citas y autorizaciones. Se prueba con Los Almendros y Los Olmos. Se añaden sus historias de usuario a `docs\historias-usuarios\administracion.md`.
 3. **Dirección / Coordinación Clínica (solo base).** Los dos avisos nuevos, tras decidir el umbral con CJ y revisar la ausencia de cifra mínima en los indicadores de hoy. El módulo gráfico es una propuesta aparte.
-4. **Plataforma.** Con las cifras de servicio de arriba. Se prueba con los dos centros de pruebas y la cuenta de Plataforma de pruebas.
+4. **Plataforma.** Con las cifras de servicio de arriba («Servicio»). Se prueba con los dos centros de pruebas y la cuenta de Plataforma de pruebas. La sección «Operación técnica» tiene sus propias dos fases (ver su apartado) y no empieza hasta cerrar el PR 6 de las citas externas y el hito 0.5.0.
 5. **Panel de turno para Medicina y Enfermería (fase posterior).** No es un cuadro de gestión sino una lista accionable del turno: eventos prioritarios abiertos, escalados recibidos (Medicina), indicaciones sin leer (Enfermería), seguimientos con la fecha pasada, protocolos urgentes activos y residentes sin basal. Casi sin gráficos y sin cifras por profesional, para que no se lea como un ranking de personas.
 
 Cada fase actualiza el Manual, la Guía por perfil y el Flujo de trabajo con el agente que ya mantiene la documentación (`doc-usuario-residapp`), y se revisa con `qa-revisor-residapp` antes de darla por cerrada. Antes de la fase 2 se consulta a `dpo-residapp` sobre la finalidad nueva de los gráficos de Administración.
@@ -209,6 +295,9 @@ Cada fase actualiza el Manual, la Guía por perfil y el Flujo de trabajo con el 
 | Plataforma: lista de cuentas con muchos fallos y enlace a «Soporte de accesos» | Esa pantalla no existe; el registro de accesos no guarda el centro y su plazo de conservación está sin decidir; listar cuentas es vigilancia por persona |
 | Plataforma: tabla ordenada por lo que requiere atención | Guía de diseño: el orden no se reajusta según las cifras |
 | Plataforma: auditar la apertura del dashboard | No hay datos personales; una lectura que escribe auditoría exige protección contra duplicados |
+| Operación técnica: leer Azure Monitor desde la app | Exigiría una identidad con permiso de lectura sobre Azure dentro de la app (superficie nueva); el portal ya da el panel y las alertas (decisión 1) |
+| Operación técnica: botón «Análisis ejecutivo con IA» | Claude no es proveedor autorizado y el análisis no es un caso de uso aprobado (ADR 0011); aporta poco sobre las reglas (decisión 7) |
+| Operación técnica: coste y margen por centro, DAU/WAU por centro, correos por centro | Datos que no existen o están bajo seguridad por filas; costes compartidos; actividad por persona sin cifra mínima |
 | Librería de gráficos propia | Sin precedente en la app; la guía prohíbe `style` y `script` en línea; la política de privacidad afirma que solo hay Bootstrap y jQuery |
 
 ## Decisiones abiertas
@@ -220,12 +309,12 @@ Cada fase actualiza el Manual, la Guía por perfil y el Flujo de trabajo con el 
 - [ ] **Umbrales de aviso.** Antigüedad de un episodio abierto para avisar a Dirección, y plazo para dar por pendiente una reevaluación de basal (CJ).
 - [ ] **Uso por módulo en Plataforma.** El DPO admite contadores de uso por centro y por módulo, sin cuenta, si la ficha del módulo y el contrato los mencionan; decidir si se quieren cuando haya más de un módulo.
 - [ ] **Costes y consumo en Plataforma** (idea de Orlando, 2026-11-16; nada construido). Propuesta por fases: **0)** sin código, un presupuesto con alertas en Azure Cost Management y un límite de gasto en la consola de Mistral; **1)** cuando haya varios centros reales o más de un módulo de pago, contadores por centro y módulo (sin cuenta, como en «Uso por módulo») y una tarjeta de «uso estimado» (contador × tarifa configurable; no es la factura); **2)** opcional, leer el coste real de Azure por su API con una identidad de solo lectura. La factura de Azure no se puede desglosar por centro (recursos compartidos: como mucho, un prorrateo con regla explícita) y la de Mistral tampoco (clave única). Dudas: regla de prorrateo, tarifas, permiso de lectura sobre la suscripción frente al aislamiento (ADR 0014), y cifra mínima si un centro tiene una sola persona usando el dictado (sería un contador por persona de hecho). Los contadores también sirven para fijar precios de módulos (ADR 0015, decisión 9). Antes de crear esquema SQL, consultar a `dpo-residapp`.
-- [ ] **Correos y errores en Plataforma.** Hoy no se muestran. Hacerlo exigiría un procedimiento de base de datos que devuelva solo recuentos (cambia el ADR 0008 y necesita al DPO) o mirar la telemetría de Azure fuera de la app. La retención de esos registros ya está pendiente con el DPO.
+- [x] **Errores en Plataforma.** Decidido el 2026-11-19: Azure vigila la infraestructura y la app guarda recuentos de errores por firma, día y centro (fase 2 de «Operación técnica»; exige un ADR nuevo que cambie el 0008 y al DPO). **Correos por centro** sigue sin mostrarse (`envios_correo` está bajo seguridad por filas); la métrica de fallos de entrega se mira en Azure. Retención de la tabla de errores: **30 días**, a validar por el DPO real.
 - [ ] **Vista consolidada.** Las cuentas con varios centros ven cada centro por separado; una vista conjunta sería un módulo distinto, decisión de producto y de privacidad aparte (ADR 0008, lectura del DPO).
 
 ## Referencias
 
-- `docs\decisiones-arquitectura\0006-perfil-plataforma.md`, `0008-multicentro-y-grupos.md`, `0015-modulos-opcionales.md`.
+- `docs\decisiones-arquitectura\0006-perfil-plataforma.md`, `0008-multicentro-y-grupos.md`, `0011-arquitectura-ia.md`, `0014-entorno-produccion.md` (observabilidad), `0015-modulos-opcionales.md`.
 - `docs\privacidad\modulos-opcionales-lectura-dpo.md` (apartado 6, cautelas de agregación) y `anexo-modulos-contrato-borrador.md` (4.3).
 - `docs\privacidad\dashboards-lectura-dpo.md`: lectura del DPO sobre esta especificación (borrador; la valida una persona antes de usarlo con datos reales).
 - `docs\bocetos-pantallas\guia-diseno-sistema-visual.md` y `docs\decisiones-arquitectura\directrices-pwa-movil.md`.
