@@ -25,8 +25,8 @@
     "Ver la auditoría: lo que haces queda en la auditoría de cada centro y la ve su Administración.",
     "Entregarte una invitación a ti ni suspender tu propia cuenta."
   ],
-  "revisadoPara": "0.4.0",
-  "revisado": "2026-11-16",
+  "revisadoPara": "0.5.0",
+  "revisado": "2026-11-19",
   "fichas": [
     {
       "codigo": "PLA-01",
