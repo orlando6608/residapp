@@ -320,6 +320,15 @@ builder.Services.AddKeyedScoped<ReminderService>(ChangeNoticeWorker.ServiceKey, 
     services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
     message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 builder.Services.AddHostedService<ReminderWorker>();
+// Avisos de citas externas a la familia (PR 6; script 0105): 7 días antes, la víspera y, a los 2 días, solo si sigue sin cubrir. Apagados por defecto (Correo:Activo y Correo:AvisoCitaExterna, y el interruptor de cada
+// centro). Misma conexión propia de la tarea: la base reserva y comprueba con procedimientos porque el rol no puede insertar ni leer los datos de la cita.
+builder.Services.AddKeyedScoped<IExternalNoticeStore>(
+    ChangeNoticeWorker.ServiceKey, (_, _) => new SqlExternalNoticeStore(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
+builder.Services.AddKeyedScoped<ExternalNoticeService>(ChangeNoticeWorker.ServiceKey, (services, _) => new ExternalNoticeService(
+    services.GetRequiredKeyedService<IExternalNoticeStore>(ChangeNoticeWorker.ServiceKey), services.GetRequiredService<IEmailSender>(),
+    services.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
+    message => services.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
+builder.Services.AddHostedService<ExternalNoticeWorker>();
 // La purga del registro de envíos (script 0085) usa la misma conexión propia de la tarea: el rol solo puede ejecutar el procedimiento que borra lo de más de 12 meses.
 builder.Services.AddScoped<IEmailLogPurge>(_ => new SqlEmailLogPurge(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
 builder.Services.AddHostedService<EmailLogPurgeWorker>();

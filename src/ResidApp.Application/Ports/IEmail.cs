@@ -26,9 +26,9 @@ public interface IEmailSender
 /// <summary>Cómo está el envío en este entorno. <see cref="Active"/> exige interruptor, cadena de conexión, remitente y dirección base; sin ella no se reserva ni se
 /// envía nada. Con <see cref="AllowedRecipients"/> vacío solo se envía si <see cref="AnyRecipient"/> está encendido (producción): los datos de prueba pueden
 /// llevar direcciones de personas reales. <see cref="ChangeNotice"/> es el interruptor propio del aviso de cambio de cita y <see cref="Reminder"/> el del recordatorio del día antes
-/// (los dos apagados por defecto): además de <see cref="Active"/>.</summary>
+/// y <see cref="ExternalNotice"/> el de los avisos de citas externas a la familia (7 días, víspera y 2 días; script 0105) (los tres apagados por defecto): además de <see cref="Active"/>.</summary>
 public sealed record EmailSettings(
-    bool Active, string BaseUrl, string Language, bool AnyRecipient, IReadOnlyList<string> AllowedRecipients, bool ChangeNotice = false, bool Reminder = false)
+    bool Active, string BaseUrl, string Language, bool AnyRecipient, IReadOnlyList<string> AllowedRecipients, bool ChangeNotice = false, bool Reminder = false, bool ExternalNotice = false)
 {
     public static EmailSettings Off { get; } = new(false, "", "es", false, []);
 }
@@ -39,6 +39,8 @@ public static class EmailLog
     public const string ProposalTemplate = "AVISO_PROPUESTA_CITA";
     public const string ChangeTemplate = "AVISO_CAMBIO_CITA";
     public const string ReminderTemplate = "RECORDATORIO_CITA";
+    public const string ExternalNoticeTemplate = "AVISO_CITA_EXTERNA";
+    public const string ExternalNoticeUncoveredTemplate = "AVISO_CITA_EXTERNA_SIN_CUBRIR";
 
     public const string Pending = "PENDIENTE";
     public const string Sent = "ENVIADO";
@@ -143,6 +145,33 @@ public interface IReminderStore
 
     /// <summary>Vuelve a leer la cita y el vínculo (la misma consulta que el portal) y dice a quién escribir o por qué no, en el orden de docs/privacidad/recordatorio-cita-por-correo.md, apartado 3.</summary>
     Task<ChangeNoticePreparation> PrepareAsync(PendingReminder reminder, DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>Cierra una fila PENDIENTE: ENVIADO, FALLIDO u OMITIDO.</summary>
+    Task ResolveAsync(Guid id, string state, string? reason, string? operationId, int attempts, DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>Si la conexión de la tarea tiene la identidad que ve todos los centros (miembro del rol residapp_tareas, o db_owner en local y en las pruebas).</summary>
+    Task<bool> HasTaskIdentityAsync(CancellationToken ct = default);
+}
+
+/// <summary>Un aviso de cita externa reservado y todavía sin enviar (script 0105). <paramref name="Key"/> es «tramo|fecha de la cita» (7D|aaaa-mm-dd, 1D|… o 2D|…) con la que se reservó; ni dirección, ni hora, ni lugar, ni especialidad.</summary>
+public sealed record PendingExternalNotice(Guid Id, CenterId CenterId, Guid AppointmentId, string Key, string Language, string Template);
+
+/// <summary>El registro de envíos de los avisos de citas externas a la familia (script 0105). Nadie los desencadena: la tarea programada pide al procedimiento <see cref="ReserveAsync"/> que reserve una fila por
+/// persona y cita según el tramo (el rol de la tarea no puede insertar ni leer los datos de la cita) y luego reclama, comprueba, envía y resuelve cada una. La comprobación, una sola regla en la base de datos,
+/// decide a quién se escribe (a quien se encargó, o a todos si nadie) y por qué no; después se vuelve a comprobar el acceso con la misma consulta que usa el portal.</summary>
+public interface IExternalNoticeStore
+{
+    /// <summary>Llama al procedimiento de la base de datos, que solo actúa en la franja de envío y devuelve cuántas filas creó.</summary>
+    Task<int> ReserveAsync(string language, string templateVersion, CancellationToken ct = default);
+
+    /// <summary>Los avisos PENDIENTES sin reclamar, los más antiguos primero.</summary>
+    Task<IReadOnlyList<PendingExternalNotice>> ListPendingAsync(int limit, CancellationToken ct = default);
+
+    /// <summary>Lo reclama para esta ejecución. False si otra ejecución ya lo reclamó: así no sale dos veces aunque haya dos copias de la aplicación.</summary>
+    Task<bool> ClaimAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Vuelve a comprobar el aviso (cita vigente y visible, interruptores, baja, quién lo tiene) y el acceso del portal, y dice a quién escribir o por qué no.</summary>
+    Task<ChangeNoticePreparation> PrepareAsync(PendingExternalNotice notice, DateTimeOffset now, CancellationToken ct = default);
 
     /// <summary>Cierra una fila PENDIENTE: ENVIADO, FALLIDO u OMITIDO.</summary>
     Task ResolveAsync(Guid id, string state, string? reason, string? operationId, int attempts, DateTimeOffset now, CancellationToken ct = default);

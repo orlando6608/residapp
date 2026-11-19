@@ -23,7 +23,7 @@
             centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, organigrama y cargos, citas con la familia, citas externas de los residentes, importación y exportación de datos, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
-        <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente, las citas con el centro y, si el centro lo abre, sus citas fuera del centro.</li>
+        <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente, las citas con el centro y, si el centro lo abre, sus citas fuera del centro (en las que puede ofrecerse a llevar o acompañar).</li>
         <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro, módulos opcionales de cada centro y cuentas que trabajan en varios centros.</li>
     </ul>
     Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
@@ -666,7 +666,7 @@
     <p>
         <strong>Aviso en el Inicio de Administración.</strong> Aparte de «Requiere atención», el Inicio de Administración muestra <strong>Citas externas con algo sin cubrir</strong>: las citas abiertas que
         empiezan en 7 días o menos y tienen el transporte o el acompañante sin confirmar; con 2 días o menos sale más destacado. Dice el residente, el día, la hora y qué falta, y nunca la
-        especialidad ni el lugar. Se calcula al abrir el Inicio.
+        especialidad ni el lugar; si un familiar se ha ofrecido a cubrirlo, lo marca como «Ofrecido por un familiar, sin confirmar» (sigue sin cubrir hasta que lo confirmes). Se calcula al abrir el Inicio.
     </p>
     <p>
         <strong>Citas por cerrar.</strong> Una cita abierta (programada o confirmada por el hospital) cuyo día ya pasó sin marcarse como realizada ni «No se acudió» sale como <strong>«Por cerrar»</strong>:
@@ -674,7 +674,7 @@
         (solo residente y día). Se cierra como cualquier otra: <strong>Dar por realizada</strong>, <strong>No se acudió</strong> o <strong>Cancelar la cita</strong>. Se buscan las de los últimos 365 días.
     </p>
     <p>
-        <strong>Lo que ve la familia.</strong> Por defecto, <strong>la familia no ve nada</strong>: es una parte que el centro abre cuando está preparado. Hay dos interruptores y un nivel por cita.
+        <strong>Lo que ve la familia.</strong> Por defecto, <strong>la familia no ve nada</strong>: es una parte que el centro abre cuando está preparado. Hay tres interruptores (el del centro, el del correo y el del residente) y un nivel por cita.
         <strong>El del centro</strong> está en <strong>Citas externas</strong> → <strong>Ajustes para la familia</strong> y solo lo cambia Administración: para <strong>Abrir las citas externas a las familias</strong> tiene
         que marcar tres confirmaciones (que la residencia ya informó a los residentes y a sus familias, que tiene un procedimiento para tener en cuenta la voluntad de cada residente y que ha actualizado su
         evaluación de impacto en protección de datos), y antes de abrir la pantalla dice cuántas citas abiertas de los próximos 90 días se verían, con especialidad y sin ella (todas las citas nacen visibles: conviene
@@ -684,7 +684,23 @@
         solo lo ve. Es todo o nada para esa persona: vale para todos sus familiares autorizados, y si solo se quiere que no lo vea uno, se oculta una cita concreta o se retira a ese familiar del portal. Cada cambio
         queda guardado con quién, cuándo y el valor anterior, sin escribir ningún motivo. <strong>El nivel de cada cita</strong> es el campo «Qué ve la familia» de la ficha: «visible» (tipo, especialidad y lugar),
         «sin especialidad» (tipo general y lugar, sin la especialidad) u «oculta» (no se ve ni se cuenta). Con «sin especialidad», el lugar y qué preparar siguen viéndolos: no hay que escribir ahí la especialidad. La
-        familia nunca ve la nota «Al terminar», el motivo de una cancelación, quién se encarga del transporte ni el historial, y las citas realizadas o a las que no se acudió no le salen nunca.
+        familia nunca ve la nota «Al terminar», el motivo de una cancelación, el nombre de quien se encarga del transporte o del acompañamiento ni el historial, y las citas realizadas o a las que no se acudió no le salen nunca.
+    </p>
+    <p>
+        <strong>Lo que hace la familia y lo que ves tú.</strong> En el detalle de una cita, un familiar puede pulsar <strong>Me encargo yo del transporte</strong> o <strong>Me encargo yo del acompañamiento</strong> (solo si esa parte es de la
+        familia y está pendiente), <strong>Ya no puedo encargarme</strong> (para soltarlo) o <strong>No puedo</strong> (para decir que no puede ayudar con esa cita; se puede quitar). El primero que pulsa se queda esa parte; los demás
+        familiares ven «lo hará un familiar», sin nombre. Es solo un <strong>ofrecimiento</strong>: no confirma nada. La parte sigue «pendiente» y la cita no pasa a «Cubierta» hasta que el personal la confirma. En la ficha de la cita, Administración y la Enfermería con el permiso de registrar y cambiar citas ven el nombre
+        del familiar que se ofreció; Enfermería sin ese permiso y Medicina ven «un familiar»; todos ven cuántas personas dijeron «No puedo» (solo el número, nunca quiénes). El Auxiliar no ve nada de esto. En el Inicio de Administración la cita sale como
+        <strong>«Ofrecido por un familiar, sin confirmar»</strong>. Si la cita cambia de día o la parte deja de ser de la familia, el ofrecimiento deja de contar y la persona lo ve en su pantalla («Te habías encargado… ya no cuenta»); si el personal confirma
+        la parte, también deja de contar. Si alguien pierde el acceso al portal, su ofrecimiento tampoco cuenta.
+    </p>
+    <p>
+        <strong>Avisos por correo a la familia.</strong> Se encienden en <strong>Citas externas</strong> → <strong>Ajustes para la familia</strong> → <strong>Avisos por correo de las citas externas</strong> (solo Administración, con una confirmación: que la
+        residencia ha informado a las familias; exige que las citas externas estén abiertas a las familias). Además hace falta el interruptor de la aplicación (<code>Correo:AvisoCitaExterna</code>), apagado por defecto. Con todo encendido, para cada cita visible
+        la familia recibe un correo genérico («Tienes un aviso sobre una cita en ResidApp») a los 7 días y otro la víspera, y a los 2 días otro («Una cita en ResidApp todavía necesita ayuda») solo si todavía falta algo que la familia pueda cubrir
+        (transporte o acompañante que sea de la familia y que nadie se haya ofrecido a hacer). Ningún correo dice el día, el lugar, la especialidad ni el residente: se ve al entrar. Si alguien se ofreció, a 7 días y la víspera el correo va solo a esa persona (si
+        puede recibirlo); si no, a todos los familiares autorizados con la dirección confirmada. Cada persona recibe su propio correo. Para que una persona no reciba estos avisos, Administración la da de baja de ellos en <strong>Avisos por correo de las personas de la familia</strong>, dentro de «Lo que ve la familia» del residente (vale
+        para todos sus residentes del centro); la baja y el alta quedan en la auditoría. El correo no se puede responder y no sustituye al teléfono.
     </p>
     <p>
         <strong>Residente suspendido o de baja.</strong> Si el residente está suspendido por un ingreso hospitalario, sus citas siguen vivas y llevan la marca «Residente suspendido». Al darlo de baja,
@@ -1982,11 +1998,14 @@
     <p>
         <strong>Citas fuera del centro.</strong> Si el centro ha abierto las citas externas a las familias y la familia de su residente no está restringida, en la pantalla del residente sale el botón
         <strong>Citas fuera del centro</strong> (aunque no haya ninguna cita, para que su presencia no diga nada). Muestra las pruebas, consultas y tratamientos de su residente fuera de la residencia, de hoy a los
-        próximos 90 días, <strong>solo para verlas</strong>: una lista por días (la única en el móvil) y, en pantallas anchas, una pestaña <strong>Mes</strong> con una marca por cada día con alguna cita, sin decir cuál. Cada cita
+        próximos 90 días: una lista por días (la única en el móvil) y, en pantallas anchas, una pestaña <strong>Mes</strong> con una marca por cada día con alguna cita, sin decir cuál. Cada cita
         dice la hora o «Por confirmar», qué tipo es («Consulta fuera del centro», con la especialidad solo si el centro la deja ver), el lugar, qué preparar, quién lleva y quién acompaña y si falta algo por resolver; una cita
         cancelada sigue saliendo como «Cancelada», sin motivo, hasta su día. Si no hay ninguna, dice «No hay citas que mostrar». Estas pantallas no se guardan en el navegador. Si el centro cierra esta parte o restringe a
         su residente, el botón y las citas desaparecen al momento. La información la ve quien está autorizado a acompañar al residente y solo en la medida en que él o ella lo permite; si cree que no debería verla, que avise
-        al centro.
+        al centro. Al abrir una cita, si el transporte o el acompañante son de la familia y están pendientes, puede pulsar <strong>Me encargo yo del transporte</strong> o <strong>del acompañamiento</strong> (el primero que pulsa se
+        queda esa parte; el resto ve «lo hará un familiar»), <strong>Ya no puedo encargarme</strong> para soltarlo o <strong>No puedo</strong> (y después <strong>Quitar el «No puedo»</strong>). Junto a los botones, la pantalla avisa de que el personal verá su nombre, de que es
+        un aviso que el centro confirmará por su cuenta y de que no sustituye al teléfono. Si la cita cambia y su ofrecimiento deja de valer, lo dice. Si el centro lo enciende, puede recibir correos genéricos («Tienes un aviso sobre una cita en
+        ResidApp») a los 7 días y la víspera de cada cita, y a los 2 días otro si todavía falta algo que pueda cubrir la familia; no dicen el día, el lugar ni de qué es, y para no recibirlos se lo pide a la Administración del centro.
     </p>
     <p>
         <strong>Solicitar una cita.</strong> Si el centro tiene la solicitud previa activa, en lugar de «Reservar una cita» aparece «Solicitar una cita»: elige el equipo y la modalidad,
@@ -2012,7 +2031,6 @@
         <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
-        <li>Citas externas: que la familia pueda ofrecerse a llevar o acompañar al residente (hoy solo las ve, y solo si el centro las abre).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>
     </ul>
 </section>

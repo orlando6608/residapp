@@ -967,4 +967,112 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.DoesNotContain("La familia aún no ve", form);
         Assert.Contains("no escribas ahí la especialidad", form);
     }
+
+    /// <summary>La familia actúa (script 0105; PR 6), de punta a punta por HTTP: «Me encargo yo», «Ya no puedo» y «No puedo» desde el detalle de la cita; el personal ve el nombre y lo marca como «ofrecido, sin confirmar»;
+    /// otra persona recibe el aviso de que ya lo tiene alguien; los avisos por correo del centro los enciende solo Administración, y la baja de una persona es suya. Datos inventados.</summary>
+    [Fact]
+    public async Task LaFamiliaActua_MeEncargoYoYNoPuedo_ConLaAppEntera()
+    {
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.Admin);
+        var nurse = await LoginAsync(seed.Nurse);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Actua Funcional", "Hija Actua Funcional");
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var linkId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.residentes_familiares WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
+        var subject = $"familia-{Guid.NewGuid():N}"[..20];
+        var authorizationUrl = $"/Administracion/AutorizacionFamiliar?residenteId={residentId}&vinculoId={linkId}";
+        await PostAsync(admin, "/Administracion/AccesoPortalFamiliar", authorizationUrl, new() { ["residenteId"] = residentId, ["vinculoId"] = linkId.ToString(), ["usuario"] = subject });
+        foreach (var (change, expected) in new[] { ("Abrir", 0), ("Activar", 1) })
+        {
+            await PostAsync(admin, "/Administracion/AutorizacionFamiliar", authorizationUrl, new()
+            {
+                ["Form.ResidenteId"] = residentId, ["Form.VinculoId"] = linkId.ToString(), ["Form.CambiosEsperados"] = expected.ToString(), ["Form.Cambio"] = change,
+            });
+        }
+
+        string Day(int offset) => ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(offset).ToString("yyyy-MM-dd");
+        var page = await admin.GetStringAsync($"/CitasExternas/Nueva?residenteId={residentId}");
+        var created = await admin.PostAsync("/CitasExternas/Nueva", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"), ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+            ["Form.ResidenteId"] = residentId, ["Form.Fecha"] = Day(3), ["Form.Tipo"] = "CONSULTA", ["Form.Especialidad"] = "CARDIOLOGIA", ["Form.Lugar"] = "Hospital Actua Prueba",
+            ["Form.TransporteModo"] = "FAMILIA", ["Form.AcompananteModo"] = "FAMILIAR", ["Form.Visibilidad"] = "VISIBLE",
+        }));
+        var appointmentId = Guid.Parse(Regex.Match(created.RequestMessage!.RequestUri!.PathAndQuery, "([0-9a-f]{8}-[0-9a-f-]{27})").Groups[1].Value);
+        var settingsUrl = "/CitasExternas/AjustesFamilia";
+        await PostAsync(admin, settingsUrl, settingsUrl, new() { ["version"] = "0", ["encender"] = "true", ["informada"] = "true", ["voluntad"] = "true", ["eipd"] = "true" });
+
+        var family = await LoginAsync(subject);
+        var detail = $"/Familia/Residente/{linkId}/CitasFuera/{appointmentId}";
+        var action = $"{detail}/Accion";
+
+        // 1. El detalle ofrece los botones y dice, antes de pulsar, qué verán el personal y la familia.
+        var before = await BodyAsync(await family.GetAsync(detail));
+        Assert.Contains("Me encargo yo del transporte", before);
+        Assert.Contains("Me encargo yo del acompañamiento", before);
+        Assert.Contains("el personal del centro verá tu nombre. Otros familiares solo verán que lo hará un familiar.", before);
+        Assert.DoesNotContain("el centro se pondrá en contacto contigo", before);
+        Assert.Contains("No puedo", before);
+
+        // 2. Me encargo yo: queda anotado, sin tocar lo que el personal confirma.
+        var taken = await PostAsync(family, action, detail, new() { ["ambito"] = "Transporte", ["accion"] = "Take" });
+        Assert.Contains("Anotado: te encargas del transporte.", taken);
+        Assert.Contains("te encargas tú, pendiente de confirmar por el centro", taken);
+        Assert.Contains("Ya no puedo encargarme del transporte", taken);
+        Assert.DoesNotContain("Me encargo yo del transporte", taken);
+
+        // 3. El personal con permiso ve el nombre y que está sin confirmar; Enfermería, sin el permiso de citas, ve «un familiar».
+        var staffView = await BodyAsync(await admin.GetAsync($"/CitasExternas/Ver/{appointmentId}"));
+        Assert.Contains("Lo que ha ofrecido la familia", staffView);
+        Assert.Contains("Ofrecido, sin confirmar", staffView);
+        Assert.Contains("Hija Actua Funcional", staffView);
+        var nurseView = await BodyAsync(await nurse.GetAsync($"/CitasExternas/Ver/{appointmentId}"));
+        Assert.DoesNotContain("Hija Actua Funcional", nurseView);
+        Assert.Contains("un familiar", nurseView);
+
+        // 4. Una acción mal formada o de otro vínculo es el mismo 404; no cambia nada.
+        Assert.Equal(HttpStatusCode.NotFound, (await PostRawAsync(family, action, detail, new() { ["ambito"] = "Transporte", ["accion"] = "Cualquiera" })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await PostRawAsync(family, $"/Familia/Residente/{Guid.NewGuid()}/CitasFuera/{appointmentId}/Accion", detail, new() { ["ambito"] = "Transporte", ["accion"] = "Release" })).StatusCode);
+
+        // 5. Ya no puedo, y luego No puedo (y volver atrás): el personal solo cuenta, sin nombre.
+        Assert.Contains("Anotado: ya no te encargas del transporte.", await PostAsync(family, action, detail, new() { ["ambito"] = "Transporte", ["accion"] = "Release" }));
+        var refused = await PostAsync(family, action, detail, new() { ["accion"] = "Refuse" });
+        Assert.Contains("Anotado: has dicho que no puedes.", refused);
+        Assert.Contains("Quitar el «No puedo»", refused);
+        var staffAfter = await BodyAsync(await admin.GetAsync($"/CitasExternas/Ver/{appointmentId}"));
+        Assert.Contains("1 persona de la familia ha dicho que no puede.", staffAfter);
+        Assert.Contains("Anotado: vuelves a estar disponible.", await PostAsync(family, action, detail, new() { ["accion"] = "UndoRefuse" }));
+
+        // 6. Los avisos por correo los enciende solo Administración, con confirmación; la baja de una persona también.
+        var mailUrl = "/CitasExternas/AjustesCorreo";
+        var residentUrl = $"/CitasExternas/FamiliaResidente?residenteId={residentId}";
+        var nurseMail = await nurse.PostAsync(mailUrl, new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(await nurse.GetStringAsync(residentUrl), "__RequestVerificationToken"), ["version"] = "0", ["encender"] = "true", ["informada"] = "true",
+        }));
+        Assert.Contains("Los ajustes de lo que ve la familia los cambia Administración.", await BodyAsync(nurseMail));
+        Assert.Contains("tienes que marcar la confirmación", await PostAsync(admin, mailUrl, settingsUrl, new() { ["version"] = "0", ["encender"] = "true" }));
+        var enabled = await PostAsync(admin, mailUrl, settingsUrl, new() { ["version"] = "0", ["encender"] = "true", ["informada"] = "true" });
+        Assert.Contains("Los avisos por correo de citas externas quedan encendidos.", enabled);
+        Assert.Contains("Ahora las familias reciben los avisos por correo de las citas externas.", enabled);
+
+        var familyId = await connection.ExecuteScalarAsync<Guid>("SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId", new { linkId });
+        var members = await BodyAsync(await admin.GetAsync(residentUrl));
+        Assert.Contains("Hija Actua Funcional", members);
+        var optedOut = await PostAsync(admin, "/CitasExternas/FamiliaCorreo", residentUrl, new() { ["residenteId"] = residentId, ["familiarId"] = familyId.ToString(), ["version"] = "0", ["baja"] = "true" });
+        Assert.Contains("Esa persona deja de recibir los avisos por correo de citas externas.", optedOut);
+        Assert.Contains("Dada de baja de los avisos", optedOut);
+        Assert.DoesNotContain("Avisos por correo de las personas de la familia", await BodyAsync(await nurse.GetAsync(residentUrl)));
+
+        // 7. Con la familia del residente restringida, los botones y la acción desaparecen (404).
+        await PostAsync(admin, "/CitasExternas/FamiliaResidente", residentUrl, new() { ["residenteId"] = residentId, ["version"] = "0", ["restringir"] = "true" });
+        Assert.Equal(HttpStatusCode.NotFound, (await family.GetAsync(detail)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await PostRawAsync(family, action, $"/Familia/Residente/{linkId}", new() { ["ambito"] = "Transporte", ["accion"] = "Take" })).StatusCode);
+    }
+
+    private static async Task<HttpResponseMessage> PostRawAsync(HttpClient client, string url, string pageUrl, Dictionary<string, string> fields)
+    {
+        fields["__RequestVerificationToken"] = ExtractValue(await client.GetStringAsync(pageUrl), "__RequestVerificationToken");
+        return await client.PostAsync(url, new FormUrlEncodedContent(fields));
+    }
 }

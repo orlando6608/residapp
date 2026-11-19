@@ -28,7 +28,7 @@ public sealed partial class AdministracionController(
     AdministrationOverviewApplicationService overview, AdministracionIntercambioApplicationService intercambio,
     AdministracionCentroApplicationService centro, ResidentPhotoApplicationService photos,
     AdministracionOrganigramaApplicationService organigrama, Microsoft.Extensions.Options.IOptions<PrivacidadOptions> privacidad,
-    ExternalAppointmentsApplicationService externalAppointments) : Controller
+    ExternalAppointmentsApplicationService externalAppointments, ExternalAppointmentFamilySettingsApplicationService externalFamily) : Controller
 {
     /// <summary>Quien no tiene activo el perfil de Administración no ve estas pantallas: se le lleva a su inicio, en vez de enseñarle una pantalla
     /// vacía con un aviso. Solo orienta (la cookie del ámbito no está firmada): cada caso de uso vuelve a autorizar. Los envíos (POST) pasan,
@@ -63,12 +63,17 @@ public sealed partial class AdministracionController(
         var communications = await familyCommunications.ListAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
         // Igual que el bloque anterior, el aviso de las citas externas sin cubrir es un añadido: si falla, el inicio sigue sin él.
         var uncovered = await externalAppointments.ListUncoveredAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        // De esas citas, las que alguien de la familia ha ofrecido y el personal aún no ha confirmado (PR 6): siguen en la lista, marcadas como «ofrecido, sin confirmar».
+        var offered = uncovered.Ok && uncovered.Value!.Count > 0
+            ? await externalFamily.ListOfferedAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), [.. uncovered.Value.Select(u => u.Id)], ct)
+            : null;
         var overdueExternal = await externalAppointments.ListOverdueAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), null, ct);
         return View(new AdministracionInicioViewModel(
             result.Value?.Count ?? 0, accounts.Value?.Count ?? 0, attention.Value,
             communications.Ok ? AdministrationCommunicationsSummary.From(communications.Value!, DateTimeOffset.UtcNow) : null,
             accounts.Ok ? accounts.Value!.Count(ProfessionalAccountAttention.NeedsReview) : null,
-            uncovered.Ok ? uncovered.Value : null, externalAppointments.TodayAtCenter(), overdueExternal.Ok ? overdueExternal.Value : null));
+            uncovered.Ok ? uncovered.Value : null, externalAppointments.TodayAtCenter(), overdueExternal.Ok ? overdueExternal.Value : null,
+            offered is { Ok: true } ? offered.Value : null));
     }
 
     public async Task<IActionResult> Residentes(AdministrativeResidentFilter filtro, CancellationToken ct)

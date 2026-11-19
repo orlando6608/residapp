@@ -31,7 +31,8 @@
 
 <p>
     Aquí decides si las familias ven en el Portal Familiar las citas de sus residentes fuera del centro. Cada familiar autorizado ve solo las de su residente, de hoy a los próximos 90 días
-    y solo las que no están ocultas. No ven la nota «al terminar», el motivo de una cancelación ni quién se encarga del transporte. Viene apagada y solo la abres tú.
+    y solo las que no están ocultas. Pueden ofrecerse a llevar o acompañar («Me encargo yo») o decir que no pueden. No ven la nota «al terminar» ni el motivo de una cancelación, y de quien se ofrece solo ven que lo hará un familiar, sin su nombre.
+    Viene apagada y solo la abres tú.
 </p>
 
 @if (state.Enabled)
@@ -79,4 +80,46 @@ else
         <p class="form-text">Queda guardado quién lo abre, cuándo y con qué confirmaciones. Después podrás restringir a la familia de un residente concreto desde su ficha.</p>
         <button type="submit" class="btn btn-primary btn-lg">Abrir las citas externas a las familias</button>
     </form>
+}
+
+@if (Model.Mail is { } mail)
+{
+    <hr class="my-4" />
+    <h2 class="h4" id="correo">Avisos por correo de las citas externas</h2>
+    <p>
+        Además de verlas en el portal, las familias pueden recibir un correo a los 7 días, la víspera y, a los 2 días, solo si todavía falta algo que pueda cubrir la familia. El correo no dice ni cuándo, ni dónde, ni de qué es la cita:
+        solo avisa de que hay algo en ResidApp. Va a quien se ha encargado de la cita y, si nadie lo ha hecho, a todas las personas autorizadas con una dirección confirmada. Cada persona recibe su propio correo.
+        Viene apagado y solo lo enciendes tú. Para que no llegue a una persona concreta, dala de baja desde la pantalla de la familia de su residente.
+    </p>
+
+    @if (mail.Enabled)
+    {
+        <div class="alert alert-info" role="status"><strong>Ahora las familias reciben los avisos por correo de las citas externas.</strong></div>
+        @if (!mail.FamilyEnabled)
+        {
+            <div class="alert alert-warning" role="status">Las citas externas están cerradas a las familias, así que ahora no sale ningún aviso. Si las vuelves a abrir, los avisos se reanudan con este ajuste.</div>
+        }
+        <form method="post" asp-action="AjustesCorreo" aria-label="Apagar los avisos por correo de las citas externas">
+            <input type="hidden" name="version" value="@mail.Number" />
+            <input type="hidden" name="encender" value="false" />
+            <button type="submit" class="btn btn-outline-danger btn-lg">Apagar los avisos por correo</button>
+        </form>
+    }
+    else if (!mail.FamilyEnabled)
+    {
+        <div class="alert alert-secondary" role="status">Los avisos por correo están apagados. Para poder encenderlos, abre primero las citas externas a las familias.</div>
+    }
+    else
+    {
+        <div class="alert alert-secondary" role="status"><strong>Ahora las familias no reciben avisos por correo de las citas externas.</strong></div>
+        <form method="post" asp-action="AjustesCorreo" aria-label="Encender los avisos por correo de las citas externas">
+            <input type="hidden" name="version" value="@mail.Number" />
+            <input type="hidden" name="encender" value="true" />
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="correo-informada" name="informada" value="true" required />
+                <label class="form-check-label" for="correo-informada">La residencia ha informado a las familias de que recibirán estos avisos por correo, y de que pueden pedir a la Administración dejar de recibirlos.</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Encender los avisos por correo</button>
+        </form>
+    }
 }

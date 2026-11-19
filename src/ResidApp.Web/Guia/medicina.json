@@ -596,7 +596,7 @@
         { "texto": "Pulsa el nombre del residente para abrir la cita: día, hora (o «Por confirmar»), tipo, especialidad, lugar, transporte, acompañante y qué preparar." }
       ],
       "despues": [
-        { "para": "Tú", "texto": "Ves la cita y si le falta algo («Falta algo») o está «Cubierta». No hay botones de cambio: te dice que las registra Administración. Si la cita está realizada, ves además el bloque «Al terminar», con la nota de Enfermería (ver MED-18)." },
+        { "para": "Tú", "texto": "Ves la cita y si le falta algo («Falta algo») o está «Cubierta». No hay botones de cambio: te dice que las registra Administración. Si la cita está realizada, ves además el bloque «Al terminar», con la nota de Enfermería (ver MED-18). Si un familiar se ha ofrecido a llevar o acompañar, ves «Ofrecido, sin confirmar» con «un familiar» (sin nombre) y cuántas personas dijeron «No puedo»; la parte sigue pendiente hasta que la confirme el personal que registra." },
         { "para": "Enfermería", "texto": "Si tiene el permiso, la cambia, la da por realizada o la cancela; si no, solo la ve como tú." }
       ],
       "dudas": [

@@ -37,6 +37,10 @@ public sealed class CorreoOptions
     /// «Siempre activo» en la Web App.</summary>
     public bool RecordatorioCita { get; set; }
 
+    /// <summary>Interruptor propio de los avisos de citas externas a la familia (7 días, víspera y 2 días si sigue sin cubrir; de las 10:00 a las 18:59, hora de Madrid), además de <see cref="Activo"/>: apagado
+    /// por defecto. Es el interruptor del ENTORNO; cada centro tiene además el suyo (apagado por defecto) en «Ajustes para la familia». Exige «Siempre activo» en la Web App.</summary>
+    public bool AvisoCitaExterna { get; set; }
+
     public List<string> DireccionesPermitidas { get; set; } = [];
 
     public bool Operativo =>
@@ -49,6 +53,6 @@ public sealed class CorreoOptions
     private bool ProposalNoticeIdiomaValido => Application.Email.ProposalNoticeTemplate.Languages.Contains(Idioma);
 
     public EmailSettings ToSettings() => Operativo
-        ? new EmailSettings(true, UrlBase!, Idioma, TodosLosDestinos, [.. DireccionesPermitidas], AvisoCambioCita, RecordatorioCita)
+        ? new EmailSettings(true, UrlBase!, Idioma, TodosLosDestinos, [.. DireccionesPermitidas], AvisoCambioCita, RecordatorioCita, AvisoCitaExterna)
         : EmailSettings.Off;
 }

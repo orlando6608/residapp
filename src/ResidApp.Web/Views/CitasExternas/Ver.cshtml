@@ -52,6 +52,21 @@
             <dd class="col-sm-8">@ExternalAppointmentDisplay.Transport(appointment)</dd>
             <dt class="col-sm-4">Acompañante</dt>
             <dd class="col-sm-8">@ExternalAppointmentDisplay.Companion(appointment)</dd>
+            @if (Model.Offers is { } offers && (offers.Offers.Count > 0 || offers.RefusalCount > 0))
+            {
+                <dt class="col-sm-4">Lo que ha ofrecido la familia</dt>
+                <dd class="col-sm-8">
+                    @foreach (var offer in offers.Offers)
+                    {
+                        <div>@(offer.Scope == ExternalArrangementScope.Transporte ? "Transporte" : "Acompañamiento"): @(offer.Name ?? "un familiar") <span class="badge text-bg-warning">Ofrecido, sin confirmar</span></div>
+                    }
+                    @if (offers.RefusalCount > 0)
+                    {
+                        <div class="text-body-secondary">@offers.RefusalCount @(offers.RefusalCount == 1 ? "persona de la familia ha dicho" : "personas de la familia han dicho") que no @(offers.RefusalCount == 1 ? "puede" : "pueden").</div>
+                    }
+                    <div class="small text-body-secondary">El personal marca el transporte o el acompañante como confirmado cuando lo ha comprobado con la familia.</div>
+                </dd>
+            }
             <dt class="col-sm-4">Qué preparar</dt>
             <dd class="col-sm-8">@(preparation ?? "Nada indicado")</dd>
             <dt class="col-sm-4">Qué ve la familia</dt>

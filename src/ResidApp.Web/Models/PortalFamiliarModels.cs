@@ -31,20 +31,30 @@ public static class ExternalAppointmentFamilyDisplay
 
     public static string Day(DateOnly day) => $"{ExternalAppointmentCalendarDisplay.DayShort(day)} {ExternalAppointmentDisplay.Date(day)}";
 
-    /// <summary>«Falta transporte», «falta acompañante» o ambos; null si está todo resuelto.</summary>
+    /// <summary>«Falta transporte», «falta acompañante» o ambos; null si está todo resuelto o alguien de la familia ya se ha encargado (para la familia, un encargo cuenta como cubierto).</summary>
     public static string? Missing(ExternalAppointmentForFamily appointment) =>
-        (appointment.TransportState, appointment.CompanionState) switch
+        (appointment.TransportState == ExternalArrangementState.Pendiente && appointment.TransportHolder == ExternalFamilyHolder.Nobody,
+         appointment.CompanionState == ExternalArrangementState.Pendiente && appointment.CompanionHolder == ExternalFamilyHolder.Nobody) switch
         {
-            (ExternalArrangementState.Pendiente, ExternalArrangementState.Pendiente) => "Falta transporte y acompañante",
-            (ExternalArrangementState.Pendiente, _) => "Falta transporte",
-            (_, ExternalArrangementState.Pendiente) => "Falta acompañante",
+            (true, true) => "Falta transporte y acompañante",
+            (true, false) => "Falta transporte",
+            (false, true) => "Falta acompañante",
             _ => null,
         };
 
     public static string Transport(ExternalAppointmentForFamily appointment) =>
-        EnumDisplay.Label(appointment.TransportMode) + (appointment.TransportMode == ExternalTransportMode.SinDeterminar ? "" : appointment.TransportState == ExternalArrangementState.Confirmado ? " (confirmado)" : " (pendiente)");
+        EnumDisplay.Label(appointment.TransportMode) + (appointment.TransportMode == ExternalTransportMode.SinDeterminar ? "" : appointment.TransportState == ExternalArrangementState.Confirmado ? " (confirmado)" : Holder(appointment.TransportHolder));
 
     public static string Companion(ExternalAppointmentForFamily appointment) =>
         EnumDisplay.Label(appointment.CompanionMode) + (appointment.CompanionMode is ExternalCompanionMode.SinDeterminar or ExternalCompanionMode.NoNecesita ? ""
-            : appointment.CompanionState == ExternalArrangementState.Confirmado ? " (confirmado)" : " (pendiente)");
+            : appointment.CompanionState == ExternalArrangementState.Confirmado ? " (confirmado)" : Holder(appointment.CompanionHolder));
+
+    /// <summary>Quién se ha encargado, sin nombre: «te encargas tú» o «lo hará un familiar»; si nadie, «pendiente».</summary>
+    private static string Holder(ExternalFamilyHolder holder) => holder switch
+    {
+        ExternalFamilyHolder.You => " (te encargas tú, pendiente de confirmar por el centro)",
+        ExternalFamilyHolder.Another => " (lo hará un familiar, pendiente de confirmar por el centro)",
+        _ => " (pendiente)",
+    };
+
 }

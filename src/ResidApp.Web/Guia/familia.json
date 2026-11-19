@@ -1,6 +1,6 @@
 {
   "perfil": "Familiar",
-  "proposito": "El Portal Familiar es la parte de ResidApp para las familias. Te deja leer las novedades que el equipo asistencial decide publicar sobre tu residente, reservar o solicitar citas con el equipo y, si el centro lo abre, ver las citas de tu residente fuera del centro. No es un canal urgente y no hay chat: lo urgente se resuelve siempre por teléfono con el centro.",
+  "proposito": "El Portal Familiar es la parte de ResidApp para las familias. Te deja leer las novedades que el equipo asistencial decide publicar sobre tu residente, reservar o solicitar citas con el equipo y, si el centro lo abre, ver las citas de tu residente fuera del centro y ofrecerte a llevarlo o acompañarlo. No es un canal urgente y no hay chat: lo urgente se resuelve siempre por teléfono con el centro.",
   "rutina": [
     "Entras con tu usuario y tu contraseña. Si solo tienes un residente, llegas directamente a su pantalla.",
     "Lees las novedades nuevas (llevan la etiqueta «Nueva») y, si el centro lo ha elegido, el resumen diario o semanal.",
@@ -14,7 +14,8 @@
     "Reservar una cita directamente o solicitarla, según cómo lo tenga organizado el centro.",
     "Reprogramar o cancelar tus citas hasta la antelación mínima que fije el centro.",
     "Responder a una propuesta de cita: aceptarla, pedir otro horario o cancelar la solicitud.",
-    "Ver las citas de tu residente fuera del centro (pruebas, consultas, tratamientos) de hoy a los próximos 90 días, si el centro las ha abierto a las familias."
+    "Ver las citas de tu residente fuera del centro (pruebas, consultas, tratamientos) de hoy a los próximos 90 días, si el centro las ha abierto a las familias.",
+    "En una cita fuera del centro, ofrecerte a llevar o acompañar («Me encargo yo»), soltarlo («Ya no puedo») o decir que no puedes («No puedo»)."
   ],
   "conPermiso": [],
   "nunca": [
@@ -22,7 +23,7 @@
     "Ver la foto de identificación del residente ni los nombres de los profesionales.",
     "Ver datos de otros familiares ni las citas que ha reservado otra persona.",
     "Escribir al equipo (no hay chat) ni elegir un profesional concreto para una cita.",
-    "Cambiar o confirmar desde el portal una cita fuera del centro, ni ver su nota «al terminar», el motivo de una cancelación ni quién se encarga del transporte.",
+    "Cambiar, confirmar o cancelar desde el portal una cita fuera del centro (tu «Me encargo yo» es un ofrecimiento, no una confirmación), ni ver su nota «al terminar», el motivo de una cancelación ni el nombre de otro familiar que se ha encargado.",
     "Usar el portal para algo urgente: para eso, el teléfono del centro."
   ],
   "revisadoPara": "0.4.0",
@@ -314,7 +315,7 @@
       "antes": [
         "Estar viendo a tu residente (ver FAM-01).",
         "Saber que esta parte la abre el centro: si no ves el botón **Citas fuera del centro**, el centro no la ha abierto todavía o ha decidido que no se muestre para tu residente. El portal no dice cuál de las dos cosas es.",
-        "Saber que aquí solo ves las citas: no se pueden cambiar ni confirmar desde el portal."
+        "Saber que no puedes cambiar, confirmar ni cancelar la cita desde el portal: para eso, llama por teléfono al centro. Lo que sí puedes hacer es ofrecerte a llevar o acompañar (ver FAM-10)."
       ],
       "pasos": [
         { "texto": "Abre a tu residente y pulsa **Citas fuera del centro**.", "botones": ["Citas fuera del centro"] },
@@ -329,12 +330,84 @@
         { "p": "No veo el botón «Citas fuera del centro».", "r": "El centro no ha abierto esta parte a las familias, o ha decidido que no se muestre para tu residente. Si necesitas saber de una cita, llama por teléfono al centro." },
         { "p": "«No hay citas que mostrar.»", "r": "No hay citas de los próximos 90 días que el centro haya decidido enseñar a las familias. No significa que no haya ninguna." },
         { "p": "Veo «Consulta fuera del centro» sin la especialidad.", "r": "Es así a propósito: el centro puede decidir que la especialidad no se muestre. Para saber más, llama por teléfono al centro." },
-        { "p": "Quiero decir que yo llevo a mi residente, o que no puedo.", "r": "Por ahora no se puede desde el portal. Llama por teléfono al centro." }
+        { "p": "Quiero decir que yo llevo a mi residente, o que no puedo.", "r": "Abre la cita y usa «Me encargo yo» o «No puedo» (ver FAM-10)." }
       ],
       "rutas": ["PortalFamiliar/Residente", "PortalFamiliar/CitasFuera", "PortalFamiliar/CitasFueraMes", "PortalFamiliar/CitaFuera"],
       "mensajes": [
         "No hay citas que mostrar.",
         "Esta información la ve quien está autorizado a acompañar a"
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-10",
+      "pregunta": "¿Cómo me ofrezco a llevar o acompañar a mi residente a una cita fuera del centro, o digo que no puedo?",
+      "palabras": ["me encargo yo", "ya no puedo", "no puedo", "llevar", "acompañar", "transporte", "acompañante", "ofrecerme", "soltar"],
+      "permisos": [],
+      "antes": [
+        "Estar viendo a tu residente y tener abierta su cita fuera del centro (ver FAM-09).",
+        "Que el transporte o el acompañante sea cosa de la familia y siga pendiente: si el centro ya lo ha dejado resuelto, o lo lleva el centro o una ambulancia, no salen los botones.",
+        "Saber que, si pulsas «Me encargo yo», el personal del centro verá tu nombre y los demás familiares solo verán que lo hará un familiar. Es un aviso para el centro, no una confirmación, y no sustituye al teléfono: el centro lo confirmará por su cuenta."
+      ],
+      "pasos": [
+        { "texto": "Abre la cita (ver FAM-09). En «¿Puedes ayudar?», lee el texto que va junto a los botones.", "campos": ["¿Puedes ayudar?"] },
+        { "texto": "Para llevarlo, pulsa **Me encargo yo del transporte**; para acompañarlo, **Me encargo yo del acompañamiento**. Si otra persona de la familia pulsó antes, verás «Ya se ha encargado… otra persona de la familia».", "botones": ["Me encargo yo"] },
+        { "texto": "Si después no puedes, pulsa **Ya no puedo encargarme** de esa parte para soltarla.", "botones": ["Ya no puedo encargarme"] },
+        { "texto": "Si no puedes ayudar con esa cita, pulsa **No puedo**. Si cambia, pulsa **Quitar el «No puedo»**. («No puedo» se oculta en cuanto te encargas de algo.)", "botones": ["No puedo", "Quitar el «No puedo»"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Verás «Anotado: …» y, junto a Transporte o Acompañante, «te encargas tú, pendiente de confirmar por el centro». Los demás familiares verán «lo hará un familiar»." },
+        { "para": "Administración", "texto": "Ve en la ficha de la cita «Ofrecido, sin confirmar» con el nombre de la persona (también la Enfermería con permiso de citas), y en el Inicio «Ofrecido por un familiar, sin confirmar». La parte sigue pendiente hasta que la confirme el personal." }
+      ],
+      "dudas": [
+        { "p": "«Ya se ha encargado… otra persona de la familia.»", "r": "Otra persona pulsó antes y se quedó esa parte. Si necesitas decir algo, llama por teléfono al centro." },
+        { "p": "«Esto ya no se puede cambiar desde aquí: el centro lo ha dejado resuelto o la cita ha cambiado.»", "r": "El personal ya confirmó esa parte, o la cita cambió de día o de modo. Mira la cita de nuevo; si lo necesitas, llama por teléfono al centro." },
+        { "p": "Me había encargado y ahora dice que «ya no cuenta».", "r": "La cita cambió (otro día, o el centro se encarga ahora). Tu ofrecimiento no cuenta; si puedes, vuelve a ofrecerte." },
+        { "p": "He soltado el encargo, pero el centro ya lo había comprobado conmigo.", "r": "Avisa por teléfono al centro: soltarlo en el portal no se lo dice al personal." },
+        { "p": "¿Pulsar «Me encargo yo» me obliga a algo?", "r": "No es un contrato ni una confirmación: es un aviso. Si no puedes, pulsa «Ya no puedo encargarme». El centro no te llamará solo por esto." }
+      ],
+      "rutas": ["PortalFamiliar/CitaFuera", "PortalFamiliar/CitaFueraAccion"],
+      "mensajes": [
+        "Ya se ha encargado ",
+        "Es un aviso para el centro: no sustituye al teléfono",
+        "Anotado: has dicho que no puedes. Si cambia, puedes volver atrás.",
+        "Anotado: vuelves a estar disponible.",
+        "Esto ya no se puede cambiar desde aquí: el centro lo ha dejado resuelto o la cita ha cambiado."
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-11",
+      "pregunta": "¿Cómo sé qué correos recibiré sobre las citas fuera del centro y cómo dejo de recibirlos?",
+      "palabras": ["correo", "aviso", "citas fuera del centro", "7 días", "víspera", "2 días", "baja", "dejar de recibir"],
+      "permisos": [],
+      "antes": [
+        "Que el centro haya encendido los avisos por correo de las citas fuera del centro: si no, no llega ninguno.",
+        "Tener una dirección de correo confirmada con la Administración del centro."
+      ],
+      "pasos": [
+        { "texto": "A los 7 días de una cita y la víspera puedes recibir «Tienes un aviso sobre una cita en ResidApp». No dice qué cita es ni de qué: entra en ResidApp y mira **Citas fuera del centro** (ver FAM-09).", "botones": ["Citas fuera del centro"] },
+        { "texto": "A los 2 días puedes recibir «Una cita en ResidApp todavía necesita ayuda», solo si falta algo (transporte o acompañante) que la familia puede cubrir y nadie se ha ofrecido todavía. Abre la cita y mira si puedes ayudar (ver FAM-10)." },
+        { "texto": "Si ya te has ofrecido a una cita, a 7 días y la víspera el aviso va solo a ti (y a nadie más); si nadie se ha ofrecido, llega a todas las personas autorizadas, un correo a cada una." },
+        { "texto": "Para dejar de recibir estos avisos, díselo a la Administración del centro: te da de baja (vale para todos tus residentes). Puede volver a darte de alta." }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Los correos salen de no-responder@avisos.residapp.es; si no los ves, mira el correo no deseado. No se pueden responder y no sustituyen al teléfono." },
+        { "para": "Administración", "texto": "Da de baja o de alta a la persona en «Avisos por correo de las personas de la familia», dentro de «Lo que ve la familia» del residente." }
+      ],
+      "dudas": [
+        { "p": "El correo no dice qué cita es.", "r": "Es a propósito, para proteger tu privacidad: el correo solo avisa de que hay algo en ResidApp. Los detalles los ves al entrar." },
+        { "p": "He recibido «Una cita en ResidApp todavía necesita ayuda» y no puedo.", "r": "Abre la cita y pulsa «No puedo»: dejarás de recibir ese aviso para esa cita." },
+        { "p": "No me llega ningún correo.", "r": "Puede que el centro no los haya encendido, que tu dirección no esté confirmada, que te hayan dado de baja o que no haya nada por cubrir. Mira también el correo no deseado." }
+      ],
+      "rutas": ["PortalFamiliar/CitasFuera", "PortalFamiliar/CitaFuera"],
+      "mensajes": [
+        "Tienes un aviso sobre una cita en ResidApp",
+        "Una cita en ResidApp todavía necesita ayuda",
+        "Si no quieres recibir estos avisos, díselo a la Administración del centro.",
+        "no-responder@avisos.residapp.es"
       ],
       "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }

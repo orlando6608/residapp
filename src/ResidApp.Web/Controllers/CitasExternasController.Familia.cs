@@ -38,7 +38,8 @@ public sealed partial class CitasExternasController
             return RedirectToAction(nameof(Index));
         }
 
-        return View(new ExternalFamilyCenterViewModel(state.Value!, null));
+        var mail = await familySettings.ReadMailAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ct);
+        return View(new ExternalFamilyCenterViewModel(state.Value!, null, mail.Ok ? mail.Value : null));
     }
 
     [HttpPost]
@@ -69,6 +70,55 @@ public sealed partial class CitasExternasController
         return RedirectToAction(nameof(AjustesFamilia));
     }
 
+    /// <summary>Los avisos por correo de citas externas del centro (PR 6; script 0105): solo Administración, apagados por defecto; encender pide una confirmación y que las familias vean las citas.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AjustesCorreo(int version, bool encender, bool informada, CancellationToken ct)
+    {
+        if (Scope() is not { Profile: SystemProfile.Administracion } scope)
+        {
+            TempData["Error"] = FamilyCenterAdminMessage;
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await familySettings.SetMailAsync(new SetExternalMailCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), version, encender, informada), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = encender ? "Los avisos por correo de citas externas quedan encendidos." : "Los avisos por correo de citas externas quedan apagados.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code switch
+            {
+                ApplicationFailureCode.Conflict when result.Error.Message.StartsWith("Primero", StringComparison.Ordinal) => result.Error.Message,
+                ApplicationFailureCode.Conflict => FamilyConflictMessage,
+                ApplicationFailureCode.InvalidInput => "Para encender los avisos por correo tienes que marcar la confirmación.",
+                _ => result.Error.Message,
+            };
+        }
+
+        return RedirectToAction(nameof(AjustesFamilia));
+    }
+
+    /// <summary>Dar de baja (o de alta otra vez) a una persona de la familia de los avisos por correo de citas externas (PR 6): lo registra Administración.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> FamiliaCorreo(Guid residenteId, Guid familiarId, int version, bool baja, CancellationToken ct)
+    {
+        if (Scope() is not { Profile: SystemProfile.Administracion } scope)
+        {
+            TempData["Error"] = FamilyCenterAdminMessage;
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await familySettings.SetFamilyMemberMailAsync(
+            new SetExternalFamilyMemberMailCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), familiarId, version, baja), ct);
+        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
+            ? (baja ? "Esa persona deja de recibir los avisos por correo de citas externas." : "Esa persona vuelve a recibir los avisos por correo de citas externas.")
+            : result.Error!.Code == ApplicationFailureCode.Conflict ? FamilyConflictMessage : result.Error.Message;
+        return RedirectToAction(nameof(FamiliaResidente), new { residenteId });
+    }
+
     [HttpGet]
     public async Task<IActionResult> FamiliaResidente(Guid residenteId, CancellationToken ct)
     {
@@ -84,7 +134,10 @@ public sealed partial class CitasExternasController
             return RedirectToAction(nameof(Index));
         }
 
-        return View(new ExternalFamilyResidentViewModel(residenteId, state.Value!, scope.Profile != SystemProfile.Medicina, null));
+        var members = scope.Profile == SystemProfile.Administracion
+            ? await familySettings.ListFamilyMembersAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), ct)
+            : null;
+        return View(new ExternalFamilyResidentViewModel(residenteId, state.Value!, scope.Profile != SystemProfile.Medicina, null, members is { Ok: true } ? members.Value : null));
     }
 
     [HttpPost]

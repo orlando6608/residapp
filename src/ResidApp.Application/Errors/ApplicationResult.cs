@@ -121,6 +121,7 @@ public static class ApplicationResultRunner
         ["EXTERNAL_APPOINTMENT_REVISION_CONFLICT"] = (ApplicationFailureCode.Conflict, "Otra persona ha cambiado esta cita: vuelve a cargarla y revisa los cambios."),
         ["EXTERNAL_APPOINTMENT_VERSION_INVALID"] = (ApplicationFailureCode.Conflict, "Otra persona ha cambiado esta cita: vuelve a cargarla y revisa los cambios."),
         ["EXTERNAL_APPOINTMENT_CLOSED"] = (ApplicationFailureCode.Conflict, "La cita ya está cerrada (realizada, no se acudió o cancelada) y no se puede cambiar."),
+        ["EXTERNAL_APPOINTMENT_MAIL_NEEDS_FAMILY"] = (ApplicationFailureCode.Conflict, "Primero abre las citas externas a las familias: sin eso no hay a quién avisar por correo."),
     };
 
     /// <summary>Anonimizar a un familiar (script 0087): cada fallo dice qué pasa y qué hacer. Los triggers de la base de datos lanzan los mismos códigos.</summary>

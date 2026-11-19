@@ -782,7 +782,7 @@
         { "para": "Tú", "texto": "Verás «Cita externa registrada.» (o «Cita externa guardada.», «Estado de la cita guardado.», «Cita externa cancelada.») y la ficha de la cita, con «Falta algo» mientras el transporte o el acompañante estén pendientes y «Cubierta» cuando estén resueltos." },
         { "para": "Administración", "texto": "Mientras falte transporte o acompañante en una cita de los próximos 7 días, le sale un aviso en su Inicio, con el residente y el día, sin la especialidad ni el lugar." },
         { "para": "Medicina", "texto": "Ve la cita en su lista y en la ficha del residente, pero no la cambia." },
-        { "para": "Familia", "texto": "Solo la ve si el centro ha abierto las citas externas a las familias y la de ese residente no está restringida. Tú puedes restringirla para un residente de tus unidades sin este permiso (ver ENF-25)." },
+        { "para": "Familia", "texto": "Solo la ve si el centro ha abierto las citas externas a las familias y la de ese residente no está restringida. Si el transporte o el acompañante son de la familia, puede ofrecerse con «Me encargo yo» (ver FAM-10): con este permiso ves su nombre en la ficha («Ofrecido, sin confirmar»); sin él, ves «un familiar». La parte sigue pendiente hasta que alguien con el permiso la confirme. Tú puedes restringirla para un residente de tus unidades sin este permiso (ver ENF-25)." },
         { "para": "Tú", "texto": "Para ver las citas por días, usa las pestañas **Mes** y **Semana** de la lista: cada cita lleva una marca con palabra («Cubierta», «Falta transporte», «Por confirmar», «Por cerrar»…). Con «Mostrar solo las que tienen algo sin cubrir» y **Aplicar** ves solo las que necesitan algo." }
       ],
       "dudas": [
@@ -865,7 +865,7 @@
       ],
       "despues": [
         { "para": "Tú", "texto": "Verás «La familia ya no ve las citas externas de esta persona.» o «La familia vuelve a ver las citas externas de esta persona.». Queda guardado quién lo cambió y cuándo, sin ningún texto escrito." },
-        { "para": "Familia", "texto": "El botón «Citas fuera del centro» desaparece (o vuelve) en su pantalla del residente al momento. Lo que ya vio antes no se puede deshacer." },
+        { "para": "Familia", "texto": "El botón «Citas fuera del centro» desaparece (o vuelve) en su pantalla del residente al momento, con lo que también deja de poder ofrecerse a llevar o acompañar (ver FAM-10). Lo que ya vio antes no se puede deshacer." },
         { "para": "Administración", "texto": "Puede hacer lo mismo con cualquier residente del centro y es quien abre o cierra esta parte para todo el centro. Medicina ve el estado, pero no lo cambia." }
       ],
       "dudas": [

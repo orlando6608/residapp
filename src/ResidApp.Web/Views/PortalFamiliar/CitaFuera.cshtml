@@ -1,6 +1,7 @@
+@using ResidApp.Domain.Appointments
 @using ResidApp.Web.Models
 @model PortalFamiliarCitaFueraViewModel
-@* Detalle de una cita fuera del centro para la familia (PR 5, solo ver). El título de la pestaña es genérico: ningún dato de la cita. Sin botones de acción (eso es el PR 6). *@
+@* Detalle de una cita fuera del centro para la familia (PR 5; PR 6: «Me encargo yo», «Ya no puedo» y «No puedo»). El título de la pestaña es genérico: ningún dato de la cita. *@
 @{
     var resident = Model.Resident;
     var appointment = Model.Appointment;
@@ -18,6 +19,15 @@
 </nav>
 
 <h1 class="h3">@ExternalAppointmentFamilyDisplay.Title(appointment)</h1>
+
+@if (TempData["Mensaje"] is string message)
+{
+    <div class="alert alert-success" role="status">@message</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-warning" role="alert">@error</div>
+}
 
 @if (appointment.Cancelled)
 {
@@ -57,6 +67,58 @@
         </dl>
     </div>
 </div>
+
+@if (!appointment.Cancelled && (appointment.FamilyCanAct(ExternalArrangementScope.Transporte) || appointment.FamilyCanAct(ExternalArrangementScope.Acompanante)))
+{
+    <section class="card mb-3" aria-labelledby="ayuda-titulo">
+        <div class="card-body">
+            <h2 class="h5" id="ayuda-titulo">¿Puedes ayudar?</h2>
+            <p class="small text-body-secondary">
+                Si pulsas «Me encargo yo», el personal del centro verá tu nombre. Otros familiares solo verán que lo hará un familiar. El centro no te llamará solo por esto: las citas no son un canal urgente.
+                Es un aviso para el centro y no sustituye al teléfono: el centro lo confirmará por su cuenta.
+            </p>
+            @foreach (var scope in new[] { ExternalArrangementScope.Transporte, ExternalArrangementScope.Acompanante })
+            {
+                var part = scope == ExternalArrangementScope.Transporte ? "del transporte" : "del acompañamiento";
+                @if (appointment.LapsedOf(scope))
+                {
+                    <p class="alert alert-warning py-2" role="status">Te habías encargado @part, pero la cita ha cambiado y ya no cuenta. Si puedes, vuelve a ofrecerte.</p>
+                }
+                @if (appointment.CanTake(scope))
+                {
+                    <form method="post" asp-action="CitaFueraAccion" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id" class="mb-2">
+                        <input type="hidden" name="ambito" value="@scope" />
+                        <input type="hidden" name="accion" value="@FamilyArrangementAction.Take" />
+                        <button type="submit" class="btn btn-primary btn-lg">Me encargo yo @part</button>
+                    </form>
+                }
+                else if (appointment.CanRelease(scope))
+                {
+                    <form method="post" asp-action="CitaFueraAccion" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id" class="mb-2">
+                        <input type="hidden" name="ambito" value="@scope" />
+                        <input type="hidden" name="accion" value="@FamilyArrangementAction.Release" />
+                        <button type="submit" class="btn btn-outline-secondary btn-lg">Ya no puedo encargarme @part</button>
+                    </form>
+                }
+            }
+            @if (appointment.CanRefuse)
+            {
+                <form method="post" asp-action="CitaFueraAccion" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id" class="mb-2">
+                    <input type="hidden" name="accion" value="@FamilyArrangementAction.Refuse" />
+                    <button type="submit" class="btn btn-outline-secondary btn-lg">No puedo</button>
+                </form>
+            }
+            else if (appointment.Refused)
+            {
+                <p class="mb-2">Has dicho que no puedes ayudar con esta cita.</p>
+                <form method="post" asp-action="CitaFueraAccion" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id" class="mb-2">
+                    <input type="hidden" name="accion" value="@FamilyArrangementAction.UndoRefuse" />
+                    <button type="submit" class="btn btn-outline-secondary btn-lg">Quitar el «No puedo»</button>
+                </form>
+            }
+        </div>
+    </section>
+}
 
 <p class="small text-body-secondary">
     Esta información la ve quien está autorizado a acompañar a @resident.ResidentName y solo en la medida en que él o ella lo permite. Si crees que no debería verla, avisa al centro.
