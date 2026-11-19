@@ -136,15 +136,17 @@ Condiciones:
 
 **Redacción propuesta** (para el anexo del contrato de encargado; la residencia la adopta como suya; campos entre corchetes):
 
-> **Vigilancia técnica del servicio.** [RESIDENCIA] encarga a ResidApp vigilar la disponibilidad, la seguridad y el buen funcionamiento técnico del servicio. Para ello, ResidApp (a) comprueba que las tareas automáticas de la aplicación se ejecutan y (b) cuenta cada día los errores técnicos de la aplicación por tipo de error y pantalla y, cuando el error pueda afectar a la seguridad de los datos, por centro. Estos recuentos no incluyen nombres, identificadores de residentes ni familiares, ni la hora, y los ve solo el equipo técnico de ResidApp. ResidApp los usa **únicamente** para detectar y corregir fallos y para avisar al centro afectado. ResidApp **no** los usa para medir, comparar o evaluar la actividad de personas, equipos o centros, ni con fines comerciales, ni los entrega al centro como medida del trabajo de su personal. Se borran a los [N] días.
+> **Vigilancia técnica del servicio.** [RESIDENCIA] encarga a ResidApp vigilar la disponibilidad, la seguridad y el buen funcionamiento técnico del servicio. Para ello, ResidApp (a) comprueba que las tareas automáticas de la aplicación se ejecutan y (b) cuenta cada día los errores técnicos de la aplicación por tipo de error y pantalla y, cuando el error sea un acceso denegado o un fallo inesperado, también por centro, de modo que el equipo técnico puede ver en qué pantalla y en qué centro se ha producido cada uno de esos errores. Estos recuentos no incluyen nombres, identificadores de residentes ni familiares, ni la hora, y los ve solo el equipo técnico de ResidApp. ResidApp los usa **únicamente** para detectar y corregir fallos y para avisar al centro afectado. ResidApp **no** los usa para medir, comparar o evaluar la actividad de personas, equipos o centros, ni con fines comerciales, ni los entrega al centro como medida del trabajo de su personal. Se borran a los [N] días.
 
 **Frase para el registro de actividades de ResidApp (art. 30.2.b y d):**
 
-> Vigilancia técnica del servicio por cuenta de cada centro: latido de las tareas automáticas y recuentos diarios de errores técnicos por tipo, pantalla y, para fallos de seguridad, centro. Sin datos de personas, residentes ni hora. Acceso: equipo de Plataforma. Plazo: [N] días. Medidas: lectura por procedimiento que solo devuelve recuentos; sin cruce de centro con pantalla; sin identificadores.
+> Vigilancia técnica del servicio por cuenta de cada centro: latido de las tareas automáticas y recuentos diarios de errores técnicos por tipo, pantalla y, para acceso denegado y fallo inesperado, centro. Sin datos de personas, residentes ni hora. Acceso: equipo de Plataforma, que ve para esos dos tipos el cruce de tipo, pantalla y centro, sin mínimo de casos; los conflictos de concurrencia no llevan centro. Plazo: [N] días. Medidas: lectura por procedimiento que solo devuelve recuentos; sin identificadores.
 
 **Frase para la política de privacidad para profesionales** (lenguaje llano; solo si se construye tal cual):
 
-> Para que la aplicación funcione y para poder avisarte si algo falla, ResidApp cuenta cada día cuántos errores técnicos ocurren, de qué tipo y en qué pantalla (y, si el error puede afectar a la seguridad de los datos, en qué centro). Estos recuentos no llevan tu nombre, ni el de ningún residente ni familiar, ni la hora; solo los ve el equipo técnico de ResidApp; se borran a los [N] días y no se usan para evaluar tu trabajo.
+> Para que la aplicación funcione y para poder avisarte si algo falla, ResidApp cuenta cada día cuántos errores técnicos ocurren, de qué tipo y en qué pantalla (y, si es un acceso denegado o un fallo inesperado, en qué centro; así el equipo técnico puede ver dónde ha fallado algo). Estos recuentos no llevan tu nombre, ni el de ningún residente ni familiar, ni la hora; solo los ve el equipo técnico de ResidApp; se borran a los [N] días y no se usan para evaluar tu trabajo.
+
+**Ajuste del 2026-11-19 (sesión principal, no del DPO).** Las tres redacciones se han adaptado a lo decidido por Orlando: Plataforma **sí ve el cruce** tipo × pantalla × centro, sin mínimo, para acceso denegado y fallo inesperado, y los conflictos de concurrencia no llevan centro. La redacción original decía «sin cruce de centro con pantalla»; con la decisión de Orlando ya no sería cierto y el centro que firma el encargo debe saber qué se ve. Sigue siendo una propuesta que valida una persona experta.
 
 **Nota.** [Opinión] Si la tabla fuese plenamente anónima, la frase para el personal no sería obligatoria; la recomiendo igualmente por transparencia (art. 5.1.a) y porque el riesgo de singularización en un centro pequeño no se puede descartar.
 
@@ -252,9 +254,10 @@ Además, condiciones que ya serían habituales y conviene dejar escritas: contra
 - [ ] Salud del correo y del dictado: solo configuración; sin valores.
 
 **Fase 2 (errores):**
-- [ ] ADR nuevo: la tabla queda fuera de la seguridad por filas, con acceso solo por procedimientos, sin cruce de centro y ruta.
+- [ ] ADR nuevo: la tabla queda fuera de la seguridad por filas, con acceso solo por procedimientos. Plataforma ve el cruce tipo × pantalla × centro solo para acceso denegado y fallo inesperado (decisión de Orlando, 2026-11-19; el DPO recomendaba solo totales por separado).
+- [ ] **Validación expresa del DPO real o de un abogado del cruce sin mínimo, antes de usar datos reales.**
 - [ ] Escritura por procedimiento que **deduce el centro en la base** a partir del ámbito; la aplicación no pasa centro.
-- [ ] Lectura por procedimiento que comprueba el ámbito `PLATAFORMA` vigente y devuelve solo marginales.
+- [ ] Lectura por procedimiento que comprueba el ámbito `PLATAFORMA` vigente y devuelve el cruce solo para acceso denegado y fallo inesperado; para el resto (conflictos), por firma y ruta sin centro.
 - [ ] Tabla sin ninguna columna de fecha con hora, sin identidad creciente, sin tabla temporal; día en `Europe/Madrid`.
 - [ ] Plantilla de ruta de los metadatos del punto final, con lista cerrada; «(sin ruta)» sin coincidencia. Prueba con GUID y token reales.
 - [ ] Firma con filtro de patrón y lista cerrada; «(otro)» para lo demás; sin mensaje.
@@ -310,4 +313,4 @@ Esta lectura no se ha reescrito. Orlando decidió, y la especificación ya lo re
 | R9 | Solo global, sin centro | **Igual** |
 | IA | No reabrir | Sin cambios: no se construye |
 
-**Consecuencias.** Solo el cruce se aparta de esta lectura. Orlando lo quiere porque el objetivo del registro es acotar al máximo la causa de un fallo, y lo más valioso es ver la primera aparición de un fallo raro en un centro; un mínimo la ocultaría. Por tanto: (1) el DPO real o un abogado debe validarlo expresamente antes de datos reales; (2) el mínimo de 5 queda solo para R8; (3) las tres redacciones del apartado 4 y la lista de comprobación de la fase 2 **hay que ajustarlas** solo en la parte de «sin cruce de centro y ruta» (el resto coincide con lo decidido).
+**Consecuencias.** Solo el cruce se aparta de esta lectura. Orlando lo quiere porque el objetivo del registro es acotar al máximo la causa de un fallo, y lo más valioso es ver la primera aparición de un fallo raro en un centro; un mínimo la ocultaría. Por tanto: (1) el DPO real o un abogado debe validarlo expresamente antes de datos reales; (2) el mínimo de 5 queda solo para R8; (3) las tres redacciones del apartado 4 y la lista de comprobación de la fase 2 se **ajustaron el 2026-11-19** en la parte de «sin cruce de centro y ruta» (el resto coincidía con lo decidido).
