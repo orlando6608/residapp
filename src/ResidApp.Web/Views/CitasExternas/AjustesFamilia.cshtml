@@ -1,0 +1,82 @@
+@using ResidApp.Web.Models
+@model ExternalFamilyCenterViewModel
+@* Ajustes para la familia (PR 5; script 0104): el interruptor del centro. Solo Administración. Apagado por defecto (RGPD art. 25.2). Encender pide tres confirmaciones y enseña cuántas citas se verían. *@
+@{
+    ViewData["Title"] = "Ajustes para la familia";
+    var state = Model.State;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Citas externas</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Ajustes para la familia</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Ajustes para la familia</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+@if (Model.Error is { } formError)
+{
+    <div class="alert alert-danger" role="alert">@formError</div>
+}
+
+<p>
+    Aquí decides si las familias ven en el Portal Familiar las citas de sus residentes fuera del centro. Cada familiar autorizado ve solo las de su residente, de hoy a los próximos 90 días
+    y solo las que no están ocultas. No ven la nota «al terminar», el motivo de una cancelación ni quién se encarga del transporte. Viene apagada y solo la abres tú.
+</p>
+
+@if (state.Enabled)
+{
+    <div class="alert alert-info" role="status">
+        <strong>Ahora las familias ven las citas externas.</strong>
+        Ahora mismo se verían @state.Count.Total @(state.Count.Total == 1 ? "cita abierta" : "citas abiertas") de los próximos 90 días
+        (@state.Count.Visible con especialidad y @state.Count.WithoutSpecialty sin especialidad). Las ocultas y las de residentes con la familia restringida no cuentan.
+    </div>
+
+    <form method="post" asp-action="AjustesFamilia" aria-label="Cerrar las citas externas a las familias">
+        <input type="hidden" name="version" value="@state.Number" />
+        <input type="hidden" name="encender" value="false" />
+        <p>Si las cierras, las familias dejan de verlas en el acto. Lo que ya vieron no se puede deshacer.</p>
+        <button type="submit" class="btn btn-outline-danger btn-lg">Cerrar las citas externas a las familias</button>
+    </form>
+}
+else
+{
+    <div class="alert alert-secondary" role="status">
+        <strong>Ahora las familias no ven las citas externas.</strong>
+        Si las abres, se verían @state.Count.Total @(state.Count.Total == 1 ? "cita abierta" : "citas abiertas") de los próximos 90 días
+        (@state.Count.Visible con especialidad y @state.Count.WithoutSpecialty sin especialidad), porque todas nacen visibles. Las ocultas y las de residentes con la familia restringida no cuentan.
+        <a class="alert-link" asp-action="Index">Revisa la lista</a> antes de abrir: puedes ocultar una cita, o dejarla sin especialidad, desde su ficha.
+    </div>
+
+    <form method="post" asp-action="AjustesFamilia" aria-label="Abrir las citas externas a las familias">
+        <input type="hidden" name="version" value="@state.Number" />
+        <input type="hidden" name="encender" value="true" />
+        <fieldset class="mb-3">
+            <legend class="h5">Antes de abrir, confirma estas tres cosas</legend>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="informada" name="informada" value="true" required />
+                <label class="form-check-label" for="informada">La residencia ya ha informado a los residentes y a sus familias de que las citas externas se verán en el Portal Familiar.</label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="voluntad" name="voluntad" value="true" required />
+                <label class="form-check-label" for="voluntad">La residencia tiene un procedimiento para tener en cuenta la voluntad de cada residente sobre lo que ve su familia.</label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="eipd" name="eipd" value="true" required />
+                <label class="form-check-label" for="eipd">La residencia ha actualizado su evaluación de impacto en protección de datos (EIPD, el documento donde analiza los riesgos de tratar datos de salud) con esta función.</label>
+            </div>
+        </fieldset>
+        <p class="form-text">Queda guardado quién lo abre, cuándo y con qué confirmaciones. Después podrás restringir a la familia de un residente concreto desde su ficha.</p>
+        <button type="submit" class="btn btn-primary btn-lg">Abrir las citas externas a las familias</button>
+    </form>
+}

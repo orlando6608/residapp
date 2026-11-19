@@ -603,7 +603,8 @@
         { "p": "«Aquí solo puedes ver las citas. Las registra Administración.»", "r": "Es lo normal en Medicina: no registra ni cambia citas externas." },
         { "p": "No veo una cita que me han dicho que existe.", "r": "Solo salen las de los residentes de tus unidades y de las fechas elegidas: amplía «Hasta», cambia de mes o semana, quita el filtro «Unidad» o «Mostrar solo las que tienen algo sin cubrir», o comprueba la unidad del residente." },
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó y aún nadie ha marcado si se realizó. Las cierran Administración y las Enfermerías con permiso." },
-        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva." }
+        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva." },
+        { "p": "En la ficha del residente veo «La familia de esta persona ve sus citas externas».", "r": "Es solo informativo: dice si su familia ve esas citas en el Portal Familiar. Lo cambian Administración y la Enfermería de su unidad (ver ADM-49); tú solo lo miras." }
       ],
       "rutas": ["Medicina/Index", "Medicina/Residente", "CitasExternas/Index", "CitasExternas/Mes", "CitasExternas/Semana", "CitasExternas/Ver"],
       "mensajes": [

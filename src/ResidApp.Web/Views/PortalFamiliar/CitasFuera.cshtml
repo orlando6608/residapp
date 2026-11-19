@@ -1,0 +1,67 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model PortalFamiliarCitasFueraViewModel
+@* Citas fuera del centro para la familia, solo ver (PR 5): lista por días, la vista principal y la única en el móvil. Sin datos de la cita en el título de la pestaña ni en la dirección. *@
+@{
+    var data = Model.Data;
+    var resident = data.Resident;
+    ViewData["Title"] = "Citas fuera del centro";
+    var byDay = data.Appointments.GroupBy(a => a.Date).OrderBy(g => g.Key).ToList();
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Citas fuera del centro</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas fuera del centro</h1>
+<p class="text-muted">
+    Las pruebas, consultas y tratamientos de @resident.ResidentName fuera de la residencia, de hoy a los próximos 90 días. Aquí solo las ves; no es un canal urgente:
+    si necesitas algo, llama por teléfono al centro.
+</p>
+
+<ul class="nav nav-pills mb-3 d-none d-md-flex" aria-label="Vista de las citas fuera del centro">
+    <li class="nav-item"><a class="nav-link active" aria-current="page" asp-action="CitasFuera" asp-route-linkId="@resident.LinkId">Lista</a></li>
+    <li class="nav-item"><a class="nav-link" asp-action="CitasFueraMes" asp-route-linkId="@resident.LinkId">Mes</a></li>
+</ul>
+
+@if (byDay.Count == 0)
+{
+    <div class="alert alert-secondary" role="status">No hay citas que mostrar.</div>
+}
+
+@foreach (var day in byDay)
+{
+    <section class="mb-4" aria-labelledby="dia-@day.Key.ToString("yyyyMMdd")">
+        <h2 class="h5" id="dia-@day.Key.ToString("yyyyMMdd")">@ExternalAppointmentFamilyDisplay.Day(day.Key)@(day.Key == data.Today ? " (hoy)" : "")</h2>
+        @foreach (var appointment in day)
+        {
+            var missing = ExternalAppointmentFamilyDisplay.Missing(appointment);
+            <a asp-action="CitaFuera" asp-route-linkId="@resident.LinkId" asp-route-citaId="@appointment.Id"
+               class="card text-decoration-none mb-2 border-start border-4 @(appointment.Cancelled ? "border-secondary" : "border-primary")">
+                <div class="card-body">
+                    <p class="mb-1">
+                        <strong>@ExternalAppointmentFamilyDisplay.Time(appointment)</strong>
+                        · @ExternalAppointmentFamilyDisplay.Title(appointment)
+                        @if (appointment.Cancelled)
+                        {
+                            <span class="badge text-bg-secondary">Cancelada</span>
+                        }
+                    </p>
+                    @if (!appointment.Cancelled)
+                    {
+                        <p class="small text-body-secondary mb-0">
+                            @if (appointment.Place is { } place)
+                            {
+                                <span>@place · </span>
+                            }
+                            @(missing ?? "Transporte y acompañante resueltos")
+                        </p>
+                    }
+                </div>
+            </a>
+        }
+    </section>
+}

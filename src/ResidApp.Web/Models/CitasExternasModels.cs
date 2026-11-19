@@ -170,7 +170,8 @@ public static class ExternalAppointmentDisplay
 }
 
 /// <summary>El bloque de la ficha del residente: sus citas abiertas de los próximos días, las «por cerrar» (abiertas con el día pasado) y si quien mira puede registrar.</summary>
-public sealed record ExternalAppointmentResidentBlockViewModel(Guid ResidentId, IReadOnlyList<ExternalAppointmentRecord> Open, bool CanManage, IReadOnlyList<ExternalAppointmentRecord> Overdue);
+public sealed record ExternalAppointmentResidentBlockViewModel(
+    Guid ResidentId, IReadOnlyList<ExternalAppointmentRecord> Open, bool CanManage, IReadOnlyList<ExternalAppointmentRecord> Overdue, ExternalFamilyResidentState? Family = null);
 
 /// <summary>
 /// Calendario del personal, mensual o semanal (PR 3). Items son las citas visibles entre From y To (ya filtradas por unidad y por «solo las que tienen algo sin cubrir»); Reference es el mes (su día 1)
@@ -316,3 +317,9 @@ public static class ExternalNoteDisplay
     /// <summary>Fecha y hora de una versión, en la hora del servidor (la de Madrid).</summary>
     public static string When(DateTimeOffset at) => at.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
 }
+
+/// <summary>La pantalla «Ajustes para la familia» del centro (PR 5; script 0104): si las familias ven las citas externas, cuántas verían y, al encender, las tres confirmaciones. Error es el aviso si lo marcado no vale.</summary>
+public sealed record ExternalFamilyCenterViewModel(ExternalFamilyCenterState State, string? Error);
+
+/// <summary>La pantalla del interruptor de un residente (PR 5): si su familia ve las citas externas, cuántas se abrirían o se ven, y si quien mira puede cambiarlo (Administración y Enfermería; Medicina solo mira).</summary>
+public sealed record ExternalFamilyResidentViewModel(Guid ResidentId, ExternalFamilyResidentState State, bool CanChange, string? Error);

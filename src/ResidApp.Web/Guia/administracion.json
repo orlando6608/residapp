@@ -1515,7 +1515,7 @@
         { "para": "Enfermería", "texto": "Ve la cita en su lista y en la ficha del residente. La cambia solo si le has concedido el permiso (ver ADM-14)." },
         { "para": "Medicina", "texto": "Ve la cita, pero no la cambia." },
         { "para": "Auxiliar", "texto": "Ve una vista reducida de las citas de hoy y mañana de sus residentes (hora, qué preparar, quién acompaña y cómo va), sin especialidad ni lugar." },
-        { "para": "Familia", "texto": "Todavía no ve las citas externas." },
+        { "para": "Familia", "texto": "Solo las ve si el centro ha abierto las citas externas a las familias y la de ese residente no está restringida (ver ADM-49). Según «Qué ve la familia», ve la cita entera, sin la especialidad, o nada." },
         { "para": "Tú", "texto": "Para ver las citas por días, usa las pestañas **Mes** y **Semana** de la lista. Con «Mostrar solo las que tienen algo sin cubrir» y **Aplicar** ves lo mismo que avisa el Inicio, además de las de más adelante. Una cita abierta con el día pasado sale como «Por cerrar»." }
       ],
       "dudas": [
@@ -1523,7 +1523,8 @@
         { "p": "«Otra persona ha cambiado esta cita…»", "r": "Alguien la guardó antes que tú. Te llevamos a la cita para que veas cómo está ahora y, si hace falta, repitas tu cambio." },
         { "p": "«La cita ya está cerrada…»", "r": "Una cita realizada, no acudida o cancelada ya no se cambia ni se reabre. Si fue realizada o no se acudió, pulsa **Registrar la siguiente cita** (necesita el mismo permiso) y se abre el formulario con lo principal ya puesto (ver ADM-48); si se canceló, regístrala de nuevo." },
         { "p": "«Ese cambio de estado no es posible…»", "r": "«Dar por realizada» y «No se acudió» solo se pueden marcar desde el día de la cita (el de hoy cuenta): en una cita futura, los botones no salen. Si la cita futura está equivocada, cámbiala o cancélala. Una cita confirmada por el hospital no vuelve a programada." },
-        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva; la familia no recibe avisos." },
+        { "p": "Pone «Residente suspendido».", "r": "Está ingresado en un hospital. La cita sigue viva; la familia no recibe avisos y, mientras dure, tampoco ve sus citas externas en el portal." },
+        { "p": "Con «sin especialidad», ¿qué ve la familia?", "r": "El tipo general («Consulta fuera del centro») y el lugar, sin la especialidad. El lugar y «Qué preparar» siguen viéndolos: no escribas ahí la especialidad." },
         { "p": "Doy de baja al residente.", "r": "Sus citas externas abiertas de hoy en adelante se cancelan solas y la pantalla de la baja te dice cuántas son. No se restauran al reactivarlo. La familia no recibe aviso: avísala tú." },
         { "p": "El aviso del Inicio no sale.", "r": "Solo sale si hay una cita abierta en los próximos 7 días con el transporte o el acompañante sin confirmar. Si todo está «Cubierta», no hay aviso." },
         { "p": "Sale «Citas externas por cerrar».", "r": "Son citas abiertas cuyo día ya pasó. Ábrelas y pulsa **Dar por realizada** o **No se acudió**, o **Cancelar la cita**. Salen en tu Inicio, arriba en la lista de citas y en la ficha del residente, con la marca «Por cerrar»." }
@@ -1570,6 +1571,47 @@
         "Cita externa registrada.",
         "Ya hay una siguiente cita registrada para esta.",
         "La siguiente cita solo se registra desde una cita realizada o a la que no se acudió."
+      ],
+      "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "ADM-49",
+      "pregunta": "¿Cómo abro las citas externas a las familias y cómo restrinjo a la familia de un residente?",
+      "palabras": ["citas externas", "familia", "portal familiar", "ajustes para la familia", "restringir", "ocultar", "privacidad", "abrir", "cerrar"],
+      "permisos": [],
+      "antes": [
+        "Que la residencia ya haya **informado a los residentes y a sus familias** de que las citas externas se verán en el Portal Familiar.",
+        "Que tenga un **procedimiento para tener en cuenta la voluntad de cada residente** sobre lo que ve su familia.",
+        "Que haya **actualizado su evaluación de impacto en protección de datos (EIPD)**, el documento donde analiza los riesgos de tratar datos de salud, con esta función.",
+        "Haber revisado la lista de citas: todas nacen visibles para la familia y, al abrir, pasan a verse. Se puede ocultar una cita, o dejarla «sin especialidad», desde su ficha (ver ADM-47)."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Citas externas** y pulsa **Ajustes para la familia**.", "botones": ["Citas externas", "Ajustes para la familia"] },
+        { "texto": "Lee cuántas citas abiertas de los próximos 90 días se verían, con y sin especialidad. Las ocultas y las de residentes con la familia restringida no cuentan.", "campos": ["Ajustes para la familia"] },
+        { "texto": "Marca las tres confirmaciones de «Antes de abrir, confirma estas tres cosas» y pulsa **Abrir las citas externas a las familias**.", "botones": ["Abrir las citas externas a las familias"], "campos": ["Antes de abrir, confirma estas tres cosas"] },
+        { "texto": "Para volver a cerrarlas, entra en la misma pantalla y pulsa **Cerrar las citas externas a las familias**: no pide confirmaciones y las familias dejan de verlas al momento.", "botones": ["Cerrar las citas externas a las familias"] },
+        { "texto": "Para que **no las vea la familia de un residente concreto**, abre su ficha y, en el bloque «Citas externas», pulsa **Ver o cambiar lo que ve la familia**; después, **Que su familia no vea las citas externas**.", "botones": ["Ver o cambiar lo que ve la familia", "Que su familia no vea las citas externas"], "campos": ["Citas externas"] },
+        { "texto": "Para volver a abrírselas, pulsa **Volver a abrir las citas externas a su familia**: antes dice cuántas citas se abrirían.", "botones": ["Volver a abrir las citas externas a su familia"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Las familias ya pueden ver las citas externas.» o «Las familias ya no ven las citas externas.» (y, por residente, «La familia ya no ve las citas externas de esta persona.» o «La familia vuelve a ver las citas externas de esta persona.»). Queda guardado quién lo cambió y cuándo, sin ningún texto escrito." },
+        { "para": "Familia", "texto": "Al abrir, cada familiar autorizado ve en su pantalla del residente el botón «Citas fuera del centro», solo para ver (ver FAM-09). Al cerrar o restringir, desaparece al momento; lo que ya vio no se puede deshacer." },
+        { "para": "Enfermería", "texto": "También puede restringir o volver a abrir a la familia de un residente de sus unidades, sin necesitar el permiso de registrar citas (ver ENF-25). Medicina solo lo ve." }
+      ],
+      "dudas": [
+        { "p": "«Para abrir las citas externas a las familias tienes que marcar las tres confirmaciones.»", "r": "Falta marcar alguna. Si la residencia aún no ha informado a las familias, no tiene el procedimiento de voluntad del residente o no ha actualizado su EIPD, no abras todavía." },
+        { "p": "«Otra persona ha cambiado esto mientras lo mirabas.»", "r": "Alguien lo cambió antes que tú. La pantalla muestra cómo está ahora; si hace falta, repite tu cambio." },
+        { "p": "Quiero que solo un familiar concreto no vea las citas.", "r": "El interruptor del residente es todo o nada: vale para todos sus familiares autorizados. Para uno solo, oculta una cita concreta («Qué ve la familia» → oculta) o retira a ese familiar del acceso al portal." },
+        { "p": "Un residente suspendido o de baja.", "r": "Su familia no ve ninguna cita mientras dure la suspensión, y tampoco tras la baja, sin tocar nada de lo anterior." }
+      ],
+      "rutas": ["Administracion/Index", "Administracion/Residente", "CitasExternas/Index", "CitasExternas/AjustesFamilia", "CitasExternas/FamiliaResidente"],
+      "mensajes": [
+        "Las familias ya pueden ver las citas externas.",
+        "Las familias ya no ven las citas externas.",
+        "La familia ya no ve las citas externas de esta persona.",
+        "La familia vuelve a ver las citas externas de esta persona.",
+        "Para abrir las citas externas a las familias tienes que marcar las tres confirmaciones.",
+        "Otra persona ha cambiado esto mientras lo mirabas."
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
     }

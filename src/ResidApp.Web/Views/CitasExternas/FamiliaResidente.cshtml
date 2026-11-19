@@ -1,0 +1,71 @@
+@using ResidApp.Web.Models
+@model ExternalFamilyResidentViewModel
+@* Lo que ve la familia de un residente (PR 5; script 0104): el interruptor del residente. Lo cambian Administración y la Enfermería de su unidad; Medicina solo lo mira. Es todo o nada: no distingue entre familiares. *@
+@{
+    var state = Model.State;
+    ViewData["Title"] = "Citas externas y familia: " + state.ResidentName;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index" asp-route-residenteId="@Model.ResidentId">Citas externas de @state.ResidentName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Lo que ve la familia</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas externas: lo que ve la familia de @state.ResidentName</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+@if (!state.CenterEnabled)
+{
+    <div class="alert alert-secondary" role="status">Este centro todavía no ha abierto las citas externas a las familias, así que ahora ninguna familia las ve. Cuando Administración las abra, se aplicará lo que dejes elegido aquí.</div>
+}
+
+@if (state.Restricted)
+{
+    <div class="alert alert-warning" role="status"><strong>La familia de esta persona no ve sus citas externas.</strong></div>
+    <p>
+        Desde el último cambio, ningún familiar de @state.ResidentName ve en el Portal Familiar sus citas externas, ni siquiera las que estén visibles. Si las vuelves a abrir,
+        la familia verá @state.Count.Total @(state.Count.Total == 1 ? "cita abierta" : "citas abiertas") de los próximos 90 días
+        (@state.Count.Visible con especialidad y @state.Count.WithoutSpecialty sin especialidad).
+    </p>
+}
+else
+{
+    <p><strong>La familia de esta persona ve sus citas externas</strong>@(state.CenterEnabled ? "" : " (en cuanto el centro las abra)"). Ahora mismo serían @state.Count.Total @(state.Count.Total == 1 ? "cita abierta" : "citas abiertas") de los próximos 90 días.</p>
+}
+
+<p class="text-muted">
+    Esto es todo o nada: vale para todos los familiares autorizados de esta persona. Si solo quieres que no lo vea un familiar concreto, oculta una cita desde su ficha
+    o retira a ese familiar del acceso al portal. Lo que la familia ya vio antes de una restricción no se puede deshacer.
+</p>
+
+@if (Model.CanChange)
+{
+    <form method="post" asp-action="FamiliaResidente" aria-label="@(state.Restricted ? "Volver a abrir las citas externas a la familia" : "Quitar las citas externas a la familia")">
+        <input type="hidden" name="residenteId" value="@Model.ResidentId" />
+        <input type="hidden" name="version" value="@state.Number" />
+        <input type="hidden" name="restringir" value="@(state.Restricted ? "false" : "true")" />
+        @if (state.Restricted)
+        {
+            <button type="submit" class="btn btn-primary btn-lg">Volver a abrir las citas externas a su familia</button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-outline-danger btn-lg">Que su familia no vea las citas externas</button>
+        }
+    </form>
+}
+else
+{
+    <p class="text-muted">Aquí solo puedes ver este ajuste. Lo cambian Administración y la Enfermería de la unidad de esta persona.</p>
+}

@@ -1,0 +1,64 @@
+@using ResidApp.Web.Models
+@model PortalFamiliarCitaFueraViewModel
+@* Detalle de una cita fuera del centro para la familia (PR 5, solo ver). El título de la pestaña es genérico: ningún dato de la cita. Sin botones de acción (eso es el PR 6). *@
+@{
+    var resident = Model.Resident;
+    var appointment = Model.Appointment;
+    ViewData["Title"] = "Cita fuera del centro";
+    var missing = ExternalAppointmentFamilyDisplay.Missing(appointment);
+    var preparation = ExternalAppointmentDisplay.Preparation(appointment.Preparation);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="CitasFuera" asp-route-linkId="@resident.LinkId">Citas fuera del centro</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Cita</li>
+    </ol>
+</nav>
+
+<h1 class="h3">@ExternalAppointmentFamilyDisplay.Title(appointment)</h1>
+
+@if (appointment.Cancelled)
+{
+    <div class="alert alert-secondary" role="status"><strong>Esta cita está cancelada.</strong> Si tienes dudas, llama por teléfono al centro.</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Residente</dt><dd class="col-sm-9">@resident.ResidentName</dd>
+            <dt class="col-sm-3">Día</dt><dd class="col-sm-9">@ExternalAppointmentFamilyDisplay.Day(appointment.Date)</dd>
+            <dt class="col-sm-3">Hora</dt><dd class="col-sm-9">@ExternalAppointmentFamilyDisplay.Time(appointment)</dd>
+            @if (!appointment.Cancelled)
+            {
+                @if (appointment.Place is { } place)
+                {
+                    <dt class="col-sm-3">Lugar</dt><dd class="col-sm-9">@place</dd>
+                }
+                @if (preparation is not null)
+                {
+                    <dt class="col-sm-3">Qué preparar</dt><dd class="col-sm-9">@preparation</dd>
+                }
+                <dt class="col-sm-3">Transporte</dt><dd class="col-sm-9">@ExternalAppointmentFamilyDisplay.Transport(appointment)</dd>
+                <dt class="col-sm-3">Acompañante</dt><dd class="col-sm-9">@ExternalAppointmentFamilyDisplay.Companion(appointment)</dd>
+                <dt class="col-sm-3">Estado</dt>
+                <dd class="col-sm-9">
+                    @if (missing is null)
+                    {
+                        <span class="badge text-bg-success">Transporte y acompañante resueltos</span>
+                    }
+                    else
+                    {
+                        <span class="badge text-bg-warning">@missing</span>
+                    }
+                </dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<p class="small text-body-secondary">
+    Esta información la ve quien está autorizado a acompañar a @resident.ResidentName y solo en la medida en que él o ella lo permite. Si crees que no debería verla, avisa al centro.
+</p>
+<a class="btn btn-outline-secondary" asp-action="CitasFuera" asp-route-linkId="@resident.LinkId">Volver a las citas fuera del centro</a>

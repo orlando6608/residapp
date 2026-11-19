@@ -166,7 +166,8 @@
                 <label class="form-check-label" for="visibilidad-@visibility.ToCode()">@EnumDisplay.Label(visibility)</label>
             </div>
         }
-        <p class="form-text mb-0">La familia aún no ve las citas externas: esta elección se aplicará cuando se active esa parte. Por defecto, visible.</p>
+        <p class="form-text mb-1">La familia solo ve la cita si el centro tiene abierta esta parte a las familias y la familia de esa persona no está restringida. Por defecto, visible.</p>
+        <p class="form-text mb-0">Con «sin especialidad», la familia sigue viendo el lugar y qué preparar: no escribas ahí la especialidad.</p>
     </fieldset>
 
     @if (!Model.IsNew)

@@ -1,0 +1,79 @@
+@using ResidApp.Domain.Appointments
+@using ResidApp.Web.Models
+@model PortalFamiliarCitasFueraViewModel
+@* Mes de las citas fuera del centro para la familia (PR 5). Una marca neutra por día con citas: sin tipo, especialidad ni número (DPO). El detalle está en la lista. *@
+@{
+    var data = Model.Data;
+    var resident = data.Resident;
+    ViewData["Title"] = "Citas fuera del centro: mes";
+    var reference = Model.Reference;
+    var days = data.Appointments.Select(a => a.Date).ToHashSet();
+    var gridStart = ExternalAppointmentCalendarDisplay.MondayOf(reference);
+    var gridEnd = ExternalAppointmentCalendarDisplay.MondayOf(reference.AddMonths(1).AddDays(-1)).AddDays(6);
+    var previous = reference.AddMonths(-1);
+    var next = reference.AddMonths(1);
+    var firstMonth = new DateOnly(data.Today.Year, data.Today.Month, 1);
+    var lastDay = data.Today.AddDays(ExternalFamilyRules.WindowDays);
+    var lastMonth = new DateOnly(lastDay.Year, lastDay.Month, 1);
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-linkId="@resident.LinkId">@resident.ResidentName</a></li>
+        <li class="breadcrumb-item"><a asp-action="CitasFuera" asp-route-linkId="@resident.LinkId">Citas fuera del centro</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Mes</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"citas"' />Citas fuera del centro</h1>
+
+<ul class="nav nav-pills mb-3" aria-label="Vista de las citas fuera del centro">
+    <li class="nav-item"><a class="nav-link" asp-action="CitasFuera" asp-route-linkId="@resident.LinkId">Lista</a></li>
+    <li class="nav-item"><a class="nav-link active" aria-current="page" asp-action="CitasFueraMes" asp-route-linkId="@resident.LinkId">Mes</a></li>
+</ul>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    @if (reference > firstMonth)
+    {
+        <a class="btn btn-outline-secondary" asp-action="CitasFueraMes" asp-route-linkId="@resident.LinkId" asp-route-anio="@previous.Year" asp-route-mes="@previous.Month" aria-label="Mes anterior">‹ Mes anterior</a>
+    }
+    <h2 class="h5 mb-0 flex-grow-1 text-center">@ExternalAppointmentCalendarDisplay.MonthTitle(reference)</h2>
+    @if (reference < lastMonth)
+    {
+        <a class="btn btn-outline-secondary" asp-action="CitasFueraMes" asp-route-linkId="@resident.LinkId" asp-route-anio="@next.Year" asp-route-mes="@next.Month" aria-label="Mes siguiente">Mes siguiente ›</a>
+    }
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered text-center mb-3">
+        <caption class="visually-hidden">@ExternalAppointmentCalendarDisplay.MonthTitle(reference): los días con alguna cita fuera del centro</caption>
+        <thead>
+            <tr>
+                @foreach (var label in new[] { "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" })
+                {
+                    <th scope="col">@label</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (var weekStart = gridStart; weekStart <= gridEnd; weekStart = weekStart.AddDays(7))
+            {
+                <tr>
+                    @for (var i = 0; i < 7; i++)
+                    {
+                        var day = weekStart.AddDays(i);
+                        var inMonth = day.Month == reference.Month;
+                        <td class="@(inMonth ? "" : "bg-body-secondary text-body-secondary") @(day == data.Today ? "border-primary border-2" : "")" style="height: 3.5rem;">
+                            <div class="small">@day.Day</div>
+                            @if (inMonth && days.Contains(day))
+                            {
+                                <span aria-hidden="true">●</span><span class="visually-hidden">Hay una cita ese día</span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<p class="small text-body-secondary">● marca un día con alguna cita fuera del centro. Para ver cuál es, mira la <a asp-action="CitasFuera" asp-route-linkId="@resident.LinkId">lista</a>.</p>

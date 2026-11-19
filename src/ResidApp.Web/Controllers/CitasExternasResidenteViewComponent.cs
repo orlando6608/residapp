@@ -11,7 +11,8 @@ namespace ResidApp.Web.Controllers;
 /// El bloque «Citas externas» de la ficha de un residente (script 0101), común a Administración, Enfermería y Medicina: sus próximas citas abiertas y, a quien puede registrar, el botón. Lee con el
 /// mismo caso de uso que la lista; si no se puede leer, no dibuja nada (la ficha sigue funcionando sin el bloque).
 /// </summary>
-public sealed class CitasExternasResidenteViewComponent(ExternalAppointmentsApplicationService appointments) : ViewComponent
+public sealed class CitasExternasResidenteViewComponent(
+    ExternalAppointmentsApplicationService appointments, ExternalAppointmentFamilySettingsApplicationService familySettings) : ViewComponent
 {
     private const int Days = 60;
 
@@ -32,6 +33,8 @@ public sealed class CitasExternasResidenteViewComponent(ExternalAppointmentsAppl
 
         var open = result.Value!.Appointments.Where(a => ExternalAppointmentRules.IsOpen(a.Status)).ToList();
         var overdue = await appointments.ListOverdueAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId));
-        return View(new ExternalAppointmentResidentBlockViewModel(residenteId, open, result.Value.CanManage, overdue.Ok ? overdue.Value! : []));
+        // Lo que ve la familia de esta persona; si no se puede leer, el bloque sigue sin esa línea.
+        var family = await familySettings.ReadResidentAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId));
+        return View(new ExternalAppointmentResidentBlockViewModel(residenteId, open, result.Value.CanManage, overdue.Ok ? overdue.Value! : [], family.Ok ? family.Value : null));
     }
 }

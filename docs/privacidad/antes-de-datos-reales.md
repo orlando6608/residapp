@@ -21,6 +21,7 @@ o Calidad de proceso, **recuérdale esta lista antes** de seguir. No la des por 
 | Respuestas de CJ a Dirección y traslados: finalidad del motivo, lista de peticiones, constancia de consulta, Calidad sin nombres | `0079` | Más abajo, apartado 5 |
 | Landings en castellano y catalán, dominios propios y Portal Familiar en dos idiomas (aún sin construir) | — | Más abajo, apartado 6 |
 | Citas externas de los residentes (pruebas, consultas y tratamientos fuera del centro): esquema y reglas, sin pantallas | `0101` | Más abajo, apartado 14 |
+| Citas externas: la familia las ve (solo ver), con un interruptor por centro y otro por residente | `0104` | Más abajo, apartado 14 (PR 5) |
 
 ## 1. Que una persona valide los borradores
 
@@ -230,6 +231,32 @@ Un registro de las citas del residente **fuera del centro** (pruebas, consultas,
 **A verificar** (no confirmado en texto literal): que `sw.js` no guarde respuestas del calendario en el dispositivo (PR 3); la terminología de `es_tutor_legal` frente a la Ley 8/2021; la regla 11 del Reglamento (UE) 2017/745 (un calendario no ayuda a decidir tratamientos, pero lo confirma una persona experta); y la Llei 12/2007.
 
 **Límites conocidos del PR 1:** (1) la cita no guarda la unidad: se calcula con la ubicación vigente del residente, así que un traslado de unidad mueve su visibilidad, y un residente dado de baja deja de ser visible para Enfermería y Medicina (Administración sigue viéndolo); (2) el resumen previo de la baja que ve Administración todavía no cuenta las citas externas que se cancelarán (se añade con las pantallas del PR 2); (3) el texto de «qué preparar» y del motivo es de una línea, pero ninguna regla de la base impide escribir en él un dato clínico: lo único que lo frena es la ayuda visible junto al campo, que llega con las pantallas.
+
+### 14.1 PR 5 (`0104`): la familia solo ve (2026-11-19; plan del apartado 10 de `docs/tareas/alta-prioridad/pendientes-citas-externas.md` con la lectura del DPO del 2026-11-18; borrador)
+
+Desde este PR, si el centro lo abre, cada familiar autorizado ve en el Portal Familiar las citas de su residente: **solo ver**, sin botones de acción ni correos (llegan en el PR 6). Nace **apagado** en cada centro y, hasta que alguien lo restrinja, abierto para cada residente (art. 25.2). Con datos inventados no hay nada que validar todavía; con familias reales, sí.
+
+**Qué hace para proteger los datos** (lo prueban `CitasExternasFamiliaTests`, `ExternalAppointmentFamilyViewTests` y `PortalFamiliarFlowTests`):
+
+- **Una sola regla de visibilidad**, evaluada en cada lectura y sin caché en memoria: la familia ve una cita solo si el centro está encendido, el residente no está restringido y la cita no es «oculta». Sin fila de configuración, apagado. Si la consulta falla, no sale nada.
+- **El nivel se aplica en el servidor, no en la pantalla:** de una cita «sin especialidad» la especialidad ni siquiera sale de la base (una prueba recorre todas las especialidades). La familia nunca recibe la nota «al terminar», el motivo de cancelar, quién se encarga del transporte, el historial ni quién registró la cita (una prueba fija las propiedades del modelo). Las realizadas y las «no se acudió» no se ven nunca; las canceladas, sin motivo, hasta su día; la lista llega a 90 días.
+- **Un vínculo ajeno, un interruptor apagado, una cita oculta y una cita inexistente dan el mismo 404**, así que la dirección directa no distingue. Las pantallas llevan `Cache-Control: no-store`; ningún dato de la cita va en el título de la pestaña, en la dirección ni en un `aria-label`; el mes solo marca los días, sin decir cuál es la cita. El `sw.js` solo guarda ficheros estáticos y deja pasar las navegaciones por la red (comprobado en el código).
+- **Encender el centro** lo hace Administración tras tres confirmaciones (la residencia informó a residentes y familias, tiene el procedimiento de voluntad del residente y actualizó su EIPD) y con el recuento de las citas que se verían; **el interruptor del residente** lo cambian Administración y la Enfermería de su unidad (sin el permiso de gestionar citas). Todos los cambios son filas de solo añadir (nadie las modifica ni las borra) y se auditan con solo identificadores, sin texto libre.
+
+**Riesgos que deben constar por escrito en la EIPD del centro y que valida la persona experta:**
+
+1. **El interruptor del residente es todo o nada:** no distingue entre familiares. «A mi hija no se lo cuentes» solo se resuelve ocultando una cita concreta o retirando a ese familiar del acceso. Queda abierta la decisión de un nivel por familiar (Orlando, CJ y el DPO real).
+2. Al encender el centro, las citas ya registradas (todas nacieron visibles) pasan a verse; por eso la confirmación con recuento.
+3. Que el botón «Citas fuera del centro» aparezca o desaparezca dice algo: si se restringe a un residente, un familiar atento lo deduce. Aceptado.
+4. La frecuencia de las marcas del mes y el patrón semanal pueden delatar un tratamiento aunque no salga la especialidad; el lugar y «qué preparar» son texto libre de una línea y pueden repetirla. El límite de 90 días lo reduce.
+5. Lo que un familiar ya vio antes de una restricción no se puede deshacer.
+6. La decisión de que la familia vea siempre la especialidad de una cita visible (apartamiento del DPO, apartado 14) consta por escrito en la EIPD con responsable y fecha.
+7. Las lecturas de la familia no se auditan (decisión general del portal).
+8. **La frase de la pantalla** «Esta información la ve quien está autorizado a acompañar a [nombre] y solo en la medida en que él o ella lo permite» solo es cierta si el centro tiene de verdad el procedimiento de voluntad del residente. Administración lo confirma al encender, pero nadie lo comprueba: lo valida la persona experta.
+
+**Decide la persona experta (con Orlando y CJ):** si encender el interruptor del centro debe hacerlo Dirección y no Administración; si el nivel «sin especialidad» debe bajar a «Cita fuera del centro» (es un cambio de una línea); si hace falta un nivel por familiar; y el plazo de conservación de las filas de los interruptores (sin decidir, como el del historial de módulos).
+
+**Para el PR 6, anotado desde ya:** con el interruptor del residente apagado, desaparecen las tareas «Me encargo yo» y no salen correos, comprobándolo otra vez al enviar; y `AccessibleLinks` no mira que la cuenta del familiar esté activa, cosa que importa al enviar correos.
 
 ## 15. Acceso excepcional del equipo técnico a datos de un centro (pendiente heredado de la matriz de permisos del prototipo, sección 14, que está en la etiqueta `legado-cloudflare-final`; borrador de `dpo-residapp` del 2026-11-18)
 

@@ -17,7 +17,8 @@ namespace ResidApp.Web.Controllers;
 /// </summary>
 [Route("Familia")]
 public sealed partial class PortalFamiliarController(
-    FamilyPortalApplicationService service, FamilyAppointmentsApplicationService appointments, FamilyAppointmentRequestsApplicationService requests) : Controller
+    FamilyPortalApplicationService service, FamilyAppointmentsApplicationService appointments, FamilyAppointmentRequestsApplicationService requests,
+    FamilyExternalAppointmentsApplicationService externals) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(bool elegir, CancellationToken ct)
@@ -65,7 +66,9 @@ public sealed partial class PortalFamiliarController(
         };
         var home = result.Value!;
         var communications = type is null ? home.Communications : home.Communications.Where(c => c.Type == type && c.Kind != FamilyPortalCommunicationKind.Withdrawn).ToList();
-        return View(new PortalFamiliarResidenteViewModel(home, type, communications));
+        // El enlace «Citas fuera del centro» sale si el centro las abrió y el residente no está restringido, haya o no citas. Si no se puede saber, no sale.
+        var externalAvailable = await externals.IsAvailableAsync(Query(scope), linkId, ct);
+        return View(new PortalFamiliarResidenteViewModel(home, type, communications, externalAvailable is { Ok: true, Value: true }));
     }
 
     [HttpGet("Residente/{linkId:guid}/Comunicado/{comunicadoId:guid}")]

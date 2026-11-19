@@ -29,11 +29,15 @@ public class AislamientoPortalFamiliarTests
 {
     private sealed record Actor(string Name, string Subject, Guid LinkId, bool SameResident);
 
-    private sealed record World(Setup Owner, Actor Titular, Guid CommunicationId, Guid RequestId, Guid AppointmentId, Actor Relative, Actor Neighbor);
+    private sealed record World(Setup Owner, Actor Titular, Guid CommunicationId, Guid RequestId, Guid AppointmentId, Actor Relative, Actor Neighbor, Guid ExternalId);
 
     private static FamilyPortalApplicationService PortalOf(Actor actor) => PortalFamiliarTests.Portal(actor.Subject);
 
     private static FamilyAppointmentsApplicationService AppointmentsOf(Actor actor) => CitasTests.Family(actor.Subject);
+
+    private static FamilyExternalAppointmentsApplicationService ExternalsOf(Actor actor) => new(
+        new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedBarreraSessionIdentityProvider(actor.Subject),
+        new SqlFamilyExternalAppointments(TestDatabase.ConnectionFactory), TimeProvider.System);
 
     private static FamilyAppointmentRequestsApplicationService RequestsOf(Actor actor) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedBarreraSessionIdentityProvider(actor.Subject),
@@ -127,6 +131,34 @@ public class AislamientoPortalFamiliarTests
             Denied(await AppointmentsOf(a).CancelAsync(query, w.Titular.LinkId, w.AppointmentId));
             await ForeignIdAsync(id => AppointmentsOf(a).CancelAsync(query, a.LinkId, id), w.AppointmentId);
         },
+        // Citas externas (PR 5): son del residente, así que otro familiar del MISMO residente, con su propio vínculo, puede leerlas igual que la titular (como un comunicado);
+        // con el vínculo ajeno, o la familia de otro residente, no.
+        ["IFamilyExternalAppointments.IsAvailableAsync"] = async (w, a) =>
+        {
+            var available = await ExternalsOf(a).IsAvailableAsync(await QueryAsync(a.Subject), w.Titular.LinkId);
+            Assert.True(available.Ok, available.Error?.Message);
+            Assert.False(available.Value, "El vínculo de otra familia no debe dar acceso a las citas externas.");
+        },
+        ["IFamilyExternalAppointments.ListAsync"] = async (w, a) =>
+        {
+            var query = await QueryAsync(a.Subject);
+            Denied(await ExternalsOf(a).ListAsync(query, w.Titular.LinkId));
+            var own = await ExternalsOf(a).ListAsync(query, a.LinkId);
+            if (own.Ok && !a.SameResident)
+            {
+                Assert.DoesNotContain(own.Value!.Appointments, appointment => appointment.Id == w.ExternalId);
+            }
+        },
+        ["IFamilyExternalAppointments.FindAsync"] = async (w, a) =>
+        {
+            var query = await QueryAsync(a.Subject);
+            Denied(await ExternalsOf(a).FindAsync(query, w.Titular.LinkId, w.ExternalId));
+            if (!a.SameResident)
+            {
+                await ForeignIdAsync(id => ExternalsOf(a).FindAsync(query, a.LinkId, id), w.ExternalId);
+            }
+        },
+
         ["IFamilyAppointments.ReadAppointmentAsync"] = async (w, a) =>
         {
             var query = await QueryAsync(a.Subject);
@@ -186,10 +218,25 @@ public class AislamientoPortalFamiliarTests
         await ChangeAsync(owner.Admin, owner.ResidentId, relativeLink, FamilyAuthorizationChange.Activar, 1);
         var neighbor = await CitasSolicitudesTests.OtherResidentFamilyAsync(owner, "Residente Barrera Vecino");
 
+        // Una cita externa visible de la titular, con el centro abierto a las familias.
+        var staffScopes = new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory);
+        var staffSession = new FixedBarreraSessionIdentityProvider(owner.Admin.ExternalSubject);
+        var externalDay = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow).AddDays(5);
+        var external = await new ExternalAppointmentsApplicationService(staffScopes, staffSession, new SqlExternalAppointmentRepository(TestDatabase.ConnectionFactory), TimeProvider.System)
+            .RegisterAsync(new RegisterExternalAppointmentCommand(
+                owner.Admin.ProfileScopeId, owner.Admin.CenterId, owner.ResidentId,
+                new ExternalAppointment(externalDay, new TimeOnly(9, 0), ExternalAppointmentType.Consulta, ExternalAppointmentSpecialty.Cardiologia, "Hospital Barrera",
+                    ExternalTransportMode.SinDeterminar, ExternalArrangementState.Pendiente, ExternalCompanionMode.SinDeterminar, ExternalArrangementState.Pendiente, null, ExternalFamilyVisibility.Visible)));
+        Assert.True(external.Ok, external.Error?.Message);
+        var opened = await new ExternalAppointmentFamilySettingsApplicationService(staffScopes, staffSession, new SqlExternalAppointmentRepository(TestDatabase.ConnectionFactory), TimeProvider.System)
+            .SetCenterAsync(new SetExternalFamilyCenterCommand(owner.Admin.ProfileScopeId, owner.Admin.CenterId, 0, true, true, true, true));
+        Assert.True(opened.Ok, opened.Error?.Message);
+        Assert.True((await ExternalsOf(titular).FindAsync(query, owner.LinkId, external.Value)).Ok);
+
         return new World(
             owner, titular, communicationId, second.Id, appointmentId,
             new Actor("otro familiar del mismo residente", relativeSubject, relativeLink, true),
-            new Actor("la familia de otro residente", neighbor.Subject, neighbor.LinkId, false));
+            new Actor("la familia de otro residente", neighbor.Subject, neighbor.LinkId, false), external.Value);
     }
 
     /// <summary>Todo lo de la titular que una operación ajena podría tocar, para comprobar que no cambia.</summary>
