@@ -1,6 +1,6 @@
 # La aplicación en catalán y castellano: traspaso
 
-**Estado a 2026-11-19: propuesta de Orlando, sin ADR ni código. Espera la respuesta de CJ al documento `docs/pendientes-cj/app-catalan-castellano-cj.html` (PR #338, 9 preguntas).** Mientras CJ no conteste y el DPO no lea el alcance nuevo, no se construye nada. CJ puede tardar varios días: este documento deja hecho lo que no depende de él.
+**Estado a 2026-11-20: propuesta de Orlando, sin ADR ni código. CJ contestó las 9 preguntas del documento `docs/pendientes-cj/app-catalan-castellano-cj.html` (bajadas el 2026-11-20; resumen en el apartado 3 bis).** Falta la lectura del DPO sobre el alcance nuevo y las decisiones de Orlando (apartado 6); mientras tanto no se construye nada.
 
 ## 1. Qué se quiere (Orlando, conversación del 2026-11-19)
 
@@ -48,6 +48,24 @@ Además de las vistas: textos en capas internas (`ApplicationResult` y los error
 6. **Consulta a `dpo-residapp` antes de tocar el ADR** (regla de `CLAUDE.md`), con las preguntas del apartado 4. Su borrador va en `docs/privacidad/` y lo valida una persona.
 7. Reescribe el ADR 0013 (o escribe uno nuevo y marca el 0013 como sustituido en lo que cambie) y actualiza `docs/INDICE.md` y la landing (`docs/tareas/futuro/landing-textos-borrador.md`, fila Q9, y `pendientes-landing.md`).
 8. Plan de construcción en PR pequeños (apartado 5) y consulta a `doc-usuario-residapp` y a `qa-revisor-residapp` en cada bloque.
+
+## 3 bis. Respuestas de CJ (bajadas el 2026-11-20) y aclaración de Orlando
+
+Las respuestas viven en el servidor (`respuestas-cj-local/app-catalan-castellano-cj.respuestas.json`, ignorada por git); aquí solo lo que decide cada una, sin sus comentarios.
+
+| Pregunta | Respuesta de CJ | Qué implica |
+|---|---|---|
+| 1.1 | La forma oficial por defecto, con una lista de excepciones que se le irán pidiendo | El glosario parte de la forma oficial (TERMCAT, DEMCAT) |
+| 1.2 | Se traduce la parte genérica y se deja el nombre propio («Índex de Barthel») | Regla para Barthel y las demás escalas con nombre de persona |
+| 1.3 | Dio una lista de siglas y términos que se dicen siempre igual | Arranque del glosario de lo que no se traduce: **léela en el fichero local** (no se copia aquí) |
+| 2.1 | Revisa él y busca además a personas del centro de distintos perfiles | Quién revisa las pantallas; falta decidir si hay traductor externo (apartado 6, punto 1) |
+| 3.1 | Las mismas personas que revisan las pantallas | Quién revisa el Manual y las guías |
+| 3.2 | Solo las plantillas de PDF con texto clínico o legal | Alcance de su revisión de PDF |
+| 3.3 | Es aceptable un informe en catalán con notas en castellano | Sin aviso de idioma mixto por su parte (el DPO lo confirma, apartado 4, punto 4) |
+| 4.1 | No lo sabe; da su impresión por perfiles (en el comentario) | No cambia lo propuesto |
+| 4.2 | Medicina, Administración y Dirección primero | Orden de las áreas del personal (apartado 5, orden orientativo) |
+
+**Aclaración de Orlando (2026-11-20) sobre la 4.2:** el comentario de CJ de que no sacaría una versión incompleta se refiere a **producción**, no al estado actual de desarrollo. CJ **está de acuerdo con el plan por fases**: en desarrollo se entrega por áreas completas; a producción no sale con áreas a medias.
 
 ## 4. Preguntas ya preparadas para `dpo-residapp`
 
