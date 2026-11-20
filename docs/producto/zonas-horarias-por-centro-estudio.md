@@ -1,6 +1,6 @@
 # Zonas horarias por centro: estudio de implantación
 
-**Estado: F0 construida (2026-11-20, PR de F0); F1 a F4 sin construir.** Decisión de F1 (Orlando, 2026-11-20, pregunta A): al corregir la zona de un centro con franjas o citas futuras, Plataforma ve cuántas se ven afectadas y confirma; las franjas se regeneran a la hora nueva y las citas ya reservadas (en UTC) no se tocan. Responde a la petición de Orlando: que cada centro tenga su zona horaria, elegida al crearlo, entre las que define Plataforma. Sustituye a la nota «Una sola zona para toda la aplicación» de `docs/prompts-ia/avisos-abiertos.md`. No cambia ningún valor clínico: la zona solo decide **cómo se ven las horas y qué es «hoy»** en cada centro.
+**Estado: F0 (PR #370) y F1 construidas (2026-11-21); F2 a F4 sin construir.** Decisión de F1 (Orlando, 2026-11-20, pregunta A): al corregir la zona de un centro con franjas o citas futuras, Plataforma ve cuántas se ven afectadas y confirma; las franjas se regeneran a la hora nueva y las citas ya reservadas (en UTC) no se tocan. Responde a la petición de Orlando: que cada centro tenga su zona horaria, elegida al crearlo, entre las que define Plataforma. Sustituye a la nota «Una sola zona para toda la aplicación» de `docs/prompts-ia/avisos-abiertos.md`. No cambia ningún valor clínico: la zona solo decide **cómo se ven las horas y qué es «hoy»** en cada centro.
 
 ## 1. Decisiones de Orlando (2026-11-20, de una en una)
 
@@ -48,6 +48,15 @@
 ### 3.4 Servidor
 
 - Cuando el último `TimeZoneInfo.Local` desaparezca, la zona del servidor **deja de importar**. La comprobación de arranque (`ServerTimeZone.Verify`) pasa a comprobar que **las tres zonas del catálogo existen en el servidor** (en Linux hace falta la base de datos de zonas, `tzdata`: a verificar en la imagen de la Web App) y deja de exigir Madrid. El paso de CI «Fijar la zona horaria de la Web App» puede quedarse mientras no se cierre la fase 0.
+
+### 3.5 Cómo se construyó F1 (2026-11-21)
+
+- **Script `0109`.** Tabla catálogo `zonas_horarias` (Madrid activa; **Canarias dada de alta pero inactiva** hasta que F2 y F3 estén hechas: si no, un centro de Canarias vería sus pantallas a su hora y recibiría los avisos con la de la península) y tabla de solo añadir `zonas_centro`, como `modulos_centro`: **sin fila, un centro usa Madrid** (los centros existentes no se tocan ni se rellenan); al corregir un centro sin fila se anota antes su fila de alta con Madrid. La zona se guarda como fila 1 al crear el centro (motivo `ALTA`) y las correcciones llevan un motivo de lista cerrada (`ERROR_DE_ALTA`, `CAMBIO_DE_UBICACION`) y los recuentos confirmados. Seguridad por filas, permisos e inmutabilidad igual que `modulos_centro`; el centro reservado de Plataforma no puede tener fila (trigger).
+- **Recuento de lo afectado.** `citas` y `citas_franjas` solo las ve el centro propio (seguridad por filas), así que Plataforma lo cuenta con el procedimiento `recuento_citas_centro` (dos números; solo lo ejecuta el usuario de la aplicación, tras comprobar que quien pide es Plataforma).
+- **La zona de cada petición.** Un middleware (`CenterTimeMiddleware`) fija `CenterTime` con la zona del centro del ámbito activo, leída de SQL contra la cuenta de la sesión (la cookie no basta) y con una caché de 30 segundos; un cambio de zona la vacía en el servidor que lo hace. Un fallo de lectura se registra y usa Madrid.
+- **Pantallas.** Selector «Zona horaria del centro» al crear el centro y sección «Zona horaria» en la pantalla del centro de Plataforma (corregir con motivo, ver lo afectado, casilla de confirmación e historia). La Administración no puede.
+- **Pendiente de F2 (lo señaló el DPO):** los procesos de fondo sin ámbito (rol `residapp_tareas`) no pueden leer la zona por la seguridad por filas; y revisar todas las comparaciones de fecha dentro de SQL contra el día UTC.
+- **Preguntas abiertas que deja F1:** (a) tras un `CAMBIO_DE_UBICACION`, las horas anteriores al traslado se leerían en la zona nueva (con `numero` y `cambiado_en` se podría usar la zona vigente en cada momento); (b) un informe firmado no debe cambiar de hora al reimprimirse tras una corrección de zona (el PDF de derivación imprime la hora de la firma en la zona del centro): comprobarlo con ingeniería y CJ.
 
 ## 4. Qué puede salir mal
 

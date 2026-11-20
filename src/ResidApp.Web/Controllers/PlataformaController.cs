@@ -7,6 +7,7 @@ using ResidApp.Domain.Modules;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
+using ResidApp.Domain.Platform;
 
 namespace ResidApp.Web.Controllers;
 
@@ -14,7 +15,7 @@ namespace ResidApp.Web.Controllers;
 /// Perfil de plataforma (script 0026): lista de centros y alta de un centro con su primera unidad y su primer administrador.
 /// Ninguna pantalla muestra residentes ni contenido clínico. Traduce a PlatformApplicationService; la autorización no vive aquí.
 /// </summary>
-public sealed partial class PlataformaController(PlatformApplicationService service, IModuleSettings moduleSettings, TimeProvider clock, DocumentosCatalogo documents) : Controller
+public sealed partial class PlataformaController(PlatformApplicationService service, IModuleSettings moduleSettings, TimeProvider clock, DocumentosCatalogo documents, CenterZoneCache zoneCache) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -37,15 +38,20 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
         return View(result.Value ?? []);
     }
 
-    public IActionResult NuevoCentro()
+    public async Task<IActionResult> NuevoCentro(CancellationToken ct)
     {
-        if (ActiveProfileScopeCookie.Read(Request) is null)
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
         {
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(NuevoCentro)) });
         }
 
-        return View(new NewCenterViewModel(new NewCenterFormModel { OperacionId = Guid.NewGuid() }));
+        return View(new NewCenterViewModel(new NewCenterFormModel { OperacionId = Guid.NewGuid() }, await ZonesAsync(activeScope, ct)));
     }
+
+    /// <summary>Las zonas horarias que se ofrecen. Si no se pueden leer, la lista sale vacía y el alta no se puede enviar (la zona es obligatoria).</summary>
+    private async Task<IReadOnlyList<CenterTimeZone>> ZonesAsync(ActiveProfileScopeCookieValue activeScope, CancellationToken ct) =>
+        (await service.ListTimeZonesAsync(Query(activeScope), ct)).Value ?? [];
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -76,7 +82,7 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
         {
             var result = await service.CreateCenterAsync(new CreateCenterCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, null, form.NombreCentro,
-                null, form.NombreUnidad, form.IdentificadorAdministrador, form.NombreAdministrador, logo), ct);
+                null, form.NombreUnidad, form.IdentificadorAdministrador, form.NombreAdministrador, logo, form.ZonaHoraria), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Centro creado. Para que su administrador pueda entrar, pulsa «Administraciones y unidades» en ese centro y luego «Crear invitación de acceso o de recuperación».";
@@ -93,7 +99,7 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
             });
         }
 
-        return View(new NewCenterViewModel(form));
+        return View(new NewCenterViewModel(form, await ZonesAsync(activeScope, ct)));
     }
 
     /// <summary>CJ, 2026-10-07 (administracion-ambito-familiares-cargos, 1.1): un centro con sus unidades y sus Administraciones, para marcar la
@@ -115,6 +121,13 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
 
         var modules = await service.ListCenterModulesAsync(new PlatformCenterQuery(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId)), ct);
+        var zone = await service.GetCenterTimeZoneAsync(new PlatformCenterQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId)), ct);
+        if (zone.Ok)
+        {
+            ViewData["Zona"] = new PlatformCenterTimeZoneViewModel(centroId, zone.Value!, await ZonesAsync(activeScope, ct));
+        }
+
         ViewData["Modulos"] = new PlatformCenterModulesViewModel(
             centroId, modules.Value ?? [], CenterModules.All.Where(m => m.UsesThirdParty && !moduleSettings.IsThirdPartyConfigured(m.Code)).Select(m => m.Code).ToHashSet(),
             CenterModuleRules.TodayInMadrid(clock.GetUtcNow()));
@@ -137,6 +150,38 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
             ? (principal ? "Marcada como Administración principal." : "Ya no es Administración principal.")
             : (result.Error!.Code == ApplicationFailureCode.Conflict ? "Ese perfil ya estaba así. Revisa el centro." : result.Error.Message);
         return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
+    /// <summary>Script 0109: corrige la zona horaria de un centro. Solo Plataforma, con un motivo de lista cerrada y habiendo visto (y confirmado) lo que se ve afectado.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CambiarZona(CenterTimeZoneFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        if (!form.Confirmo)
+        {
+            TempData["Error"] = "Marca que has visto lo que se ve afectado para confirmar el cambio de zona.";
+            return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
+        }
+
+        var result = await service.ChangeCenterTimeZoneAsync(new ChangeCenterTimeZoneCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(form.CentroId), form.ZonaHoraria, form.Motivo,
+            new CenterTimeZoneImpact(form.FranjasVistas, form.CitasVistas)), ct);
+        if (result.Ok)
+        {
+            // Este servidor deja de usar la zona vieja enseguida; otro servidor, en cuanto caduque su caché (30 segundos).
+            zoneCache.Clear();
+        }
+
+        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
+            ? "Zona horaria cambiada. Queda en la auditoría del centro. Las pantallas del centro ya muestran las horas en la zona nueva."
+            : result.Error!.Message;
+        return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
     }
 
     /// <summary>ADR 0015: activa o renueva un módulo en un centro, a petición del centro. Las condiciones de la ficha se marcan una a una y han de estar todas.</summary>

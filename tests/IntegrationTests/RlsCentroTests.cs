@@ -440,6 +440,45 @@ public sealed class RlsCentroTests
         return center;
     }
 
+    // ---- Zona horaria por centro (script 0109) ----
+
+    private static Task InsertZoneAsync(SqlConnection connection, Guid centerId, int number, string zone, string reason, Guid changedBy, string profile) =>
+        connection.ExecuteAsync("""
+            INSERT INTO dbo.zonas_centro (id, centro_id, numero, zona_codigo, motivo_codigo, franjas_afectadas, citas_afectadas, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @centerId, @number, @zone, @reason, 0, 0, @changedBy, @profile, SYSUTCDATETIME())
+            """, new { centerId, number, zone, reason, changedBy, profile });
+
+    [Fact]
+    public async Task La_zona_del_centro_la_ve_cada_centro_la_suya_y_Plataforma_todas_pero_solo_Plataforma_las_escribe_y_nunca_las_cambia()
+    {
+        var a = await SeedCenterWithResidentAsync();
+        var b = await SeedCenterWithResidentAsync();
+        var operatorScope = await SeedPlatformOperatorAsync();
+        var centerA = a.Profile.CenterId.Value;
+        var centerB = b.Profile.CenterId.Value;
+
+        using var asOperator = await OpenLimitedAsync(operatorScope.Scope);
+        await InsertZoneAsync(asOperator, centerA, 1, "Europe/Madrid", "ALTA", operatorScope.AccountId, "PLATAFORMA");
+        await InsertZoneAsync(asOperator, centerB, 1, "Europe/Madrid", "ALTA", operatorScope.AccountId, "PLATAFORMA");
+        await InsertZoneAsync(asOperator, centerA, 2, "Atlantic/Canary", "ERROR_DE_ALTA", operatorScope.AccountId, "PLATAFORMA");
+
+        // El centro lee su zona (la aplicación la usa en cada petición para mostrar sus horas) y no la de otro; sin ámbito, nada.
+        using var asAdminA = await OpenLimitedAsync(ScopeOf(a.Profile));
+        Assert.Equal(2, await CountAsync(asAdminA, "zonas_centro", centerA));
+        Assert.Equal(0, await CountAsync(asAdminA, "zonas_centro", centerB));
+        Assert.Equal(1, await CountAsync(asOperator, "zonas_centro", centerB));
+        using var withoutScope = await OpenLimitedAsync(null);
+        Assert.Equal(0, await CountAsync(withoutScope, "zonas_centro", centerA));
+
+        // La Administración del centro no cambia su zona, ni firmando como ella misma ni como Plataforma; Plataforma no firma con la cuenta de otra persona.
+        await Assert.ThrowsAsync<SqlException>(() => InsertZoneAsync(asAdminA, centerA, 3, "Europe/Madrid", "ERROR_DE_ALTA", a.Profile.AccountId.Value, "ADMINISTRACION"));
+        await Assert.ThrowsAsync<SqlException>(() => InsertZoneAsync(asAdminA, centerA, 3, "Europe/Madrid", "ERROR_DE_ALTA", a.Profile.AccountId.Value, "PLATAFORMA"));
+        await Assert.ThrowsAsync<SqlException>(() => InsertZoneAsync(asOperator, centerA, 3, "Europe/Madrid", "ERROR_DE_ALTA", a.Profile.AccountId.Value, "PLATAFORMA"));
+        // El usuario de la aplicación no actualiza ni borra, aunque la fila sea de su centro.
+        await Assert.ThrowsAsync<SqlException>(() => asAdminA.ExecuteAsync("UPDATE dbo.zonas_centro SET zona_codigo = 'Europe/Madrid' WHERE centro_id = @centerA", new { centerA }));
+        await Assert.ThrowsAsync<SqlException>(() => asOperator.ExecuteAsync("DELETE FROM dbo.zonas_centro WHERE centro_id = @centerA", new { centerA }));
+    }
+
     // ---- Módulos opcionales por centro (script 0098) ----
 
     private static Task InsertModuleAsync(SqlConnection connection, Guid centerId, int number, bool enable, Guid changedBy, string profile) =>

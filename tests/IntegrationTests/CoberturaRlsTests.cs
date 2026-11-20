@@ -25,6 +25,7 @@ public sealed class CoberturaRlsTests
         ["ambitos_perfil"] = Diseno,
         ["scripts_aplicados"] = Diseno,
         ["entorno_bd"] = Diseno,
+        ["zonas_horarias"] = Diseno, // Script 0109: el catálogo de zonas no es de ningún centro (sin centro_id); solo lo escriben los scripts (DENY de escritura) y no tiene datos personales.
         ["sysdiagrams"] = Diseno,
     };
 
@@ -107,6 +108,10 @@ public sealed class CoberturaRlsTests
             ["modulos_centro|FILTER|"] = "fn_centro_o_plataforma",
             ["modulos_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
             ["modulos_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+            // Script 0109: igual que los módulos; el centro lee su zona para mostrar sus horas, Plataforma las de todos y solo ella las escribe.
+            ["zonas_centro|FILTER|"] = "fn_centro_o_plataforma",
+            ["zonas_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
+            ["zonas_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
         };
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var rows = (await connection.QueryAsync<(string Table, string Type, string Operation, string Definition)>("""

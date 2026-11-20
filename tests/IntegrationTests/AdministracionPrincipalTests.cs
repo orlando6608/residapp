@@ -161,7 +161,8 @@ public class AdministracionPrincipalTests
     private static PlatformApplicationService BuildPlatform(string subject) => new(
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedPrincipalSessionIdentityProvider(subject),
         new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
-        new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
+        new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
+        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
 
     [Fact]
     public async Task ElSoporte_CreaElCentroConSuPrimeraAdministracionPrincipal_LaMarcaYAnadeUnidades()

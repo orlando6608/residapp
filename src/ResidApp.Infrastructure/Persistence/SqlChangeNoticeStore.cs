@@ -107,7 +107,7 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
             RecipientSql,
             new
             {
-                row.AccountId, CenterId = notice.CenterId.Value, Today = DateOnly.FromDateTime(now.LocalDateTime).ToDateTime(TimeOnly.MinValue), row.LinkId,
+                row.AccountId, CenterId = notice.CenterId.Value, Today = DateOnly.FromDateTime(CenterTime.Local(now).DateTime).ToDateTime(TimeOnly.MinValue), row.LinkId,
             }, cancellationToken: ct));
         if (recipient is null)
         {

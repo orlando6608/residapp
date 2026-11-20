@@ -37,7 +37,11 @@ public sealed record ChangeCenterModuleCommand(
 
 public sealed record CreateCenterCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? CodigoCentro, string? NombreCentro, string? CodigoUnidad,
-    string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador, byte[]? Logo = null);
+    string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador, byte[]? Logo = null, string? ZonaHoraria = null);
+
+/// <summary>Corrige la zona horaria de un centro (script 0109). «Confirmado» es lo que Plataforma vio afectado y confirmó; si al guardar es otra cosa, se pide confirmar de nuevo.</summary>
+public sealed record ChangeCenterTimeZoneCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, string? ZonaHoraria, CenterTimeZoneChangeReason? Motivo, CenterTimeZoneImpact Confirmado);
 
 /// <summary>
 /// Fachada del perfil de plataforma (script 0026; 0047): lista de centros, alta de un centro con su primera unidad y su primer
@@ -46,8 +50,33 @@ public sealed record CreateCenterCommand(
 /// </summary>
 public sealed class PlatformApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IPlatformCenterDirectory directory,
-    IPlatformCenterRepository centers, IAccessInvitationRepository invitations, ICenterModuleRepository modules, TimeProvider clock)
+    IPlatformCenterRepository centers, IAccessInvitationRepository invitations, ICenterModuleRepository modules, TimeProvider clock,
+    ICenterTimeZoneDirectory timeZoneCatalog, ICenterTimeZoneRepository timeZones)
 {
+    /// <summary>Las zonas horarias que Plataforma ofrece al crear un centro o corregir la suyo.</summary>
+    public Task<ApplicationResult<IReadOnlyList<CenterTimeZone>>> ListTimeZonesAsync(PlatformQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync<IReadOnlyList<CenterTimeZone>>(async () =>
+        {
+            await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return await timeZoneCatalog.ListCatalogAsync(ct);
+        });
+
+    /// <summary>La zona de un centro, su historia y lo que afectaría cambiarla ahora.</summary>
+    public Task<ApplicationResult<CenterTimeZoneState>> GetCenterTimeZoneAsync(PlatformCenterQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await timeZones.GetAsync(await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct), query.CentroDestinoId, ct));
+
+    /// <summary>Solo Plataforma corrige la zona de un centro, con un motivo de una lista cerrada y habiendo visto lo que se ve afectado; queda en la auditoría.</summary>
+    public Task<ApplicationResult<bool>> ChangeCenterTimeZoneAsync(ChangeCenterTimeZoneCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            var zone = CenterTimeZoneRules.ValidateZone(command.ZonaHoraria, await timeZoneCatalog.ListCatalogAsync(ct));
+            var reason = CenterTimeZoneRules.ValidateReason(command.Motivo);
+            await timeZones.ChangeAsync(access, command.CentroDestinoId, zone, reason, command.Confirmado, ct);
+            return true;
+        });
+
     /// <summary>ADR 0015: solo Plataforma enciende y apaga un módulo de un centro, a petición del centro. La fila y su auditoría (sin datos) se escriben en una transacción.</summary>
     public Task<ApplicationResult<string>> ChangeCenterModuleAsync(ChangeCenterModuleCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
@@ -150,7 +179,8 @@ public sealed class PlatformApplicationService(
                 centerCodeGenerated ? ExchangeText.UnitCode(command.NombreCentro ?? "") : command.CodigoCentro, command.NombreCentro,
                 string.IsNullOrWhiteSpace(command.CodigoUnidad) ? ExchangeText.UnitCode(command.NombreUnidad ?? "") : command.CodigoUnidad,
                 command.NombreUnidad, command.IdentificadorAdministrador, command.NombreAdministrador, command.Logo, centerCodeGenerated);
-            return await centers.CreateCenterAsync(access, command.OperacionId, data, ct);
+            var zone = CenterTimeZoneRules.ValidateZone(command.ZonaHoraria ?? CenterTimeZoneRules.DefaultZoneCode, await timeZoneCatalog.ListCatalogAsync(ct));
+            return await centers.CreateCenterAsync(access, command.OperacionId, data with { ZoneCode = zone }, ct);
         });
 
     public Task<ApplicationResult<PlatformCenterDetail>> FindCenterAsync(PlatformCenterQuery query, CancellationToken ct = default) =>

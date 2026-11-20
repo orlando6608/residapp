@@ -90,6 +90,11 @@ builder.Services.AddScoped<IPlatformCenterRepository, SqlPlatformCenterRepositor
 // Módulos opcionales por centro (ADR 0015, script 0098). Modulos:ActivarTodos solo se admite en desarrollo (ver ModuleOptions.Validate).
 builder.Services.Configure<ModuleOptions>(builder.Configuration.GetSection(ModuleOptions.Section));
 builder.Services.AddScoped<ICenterModuleRepository, SqlCenterModuleRepository>();
+// Zona horaria por centro (script 0109): el catálogo y la zona del ámbito activo, y la corrección por Plataforma.
+builder.Services.AddSingleton<CenterZoneCache>();
+builder.Services.AddScoped<SqlCenterTimeZones>();
+builder.Services.AddScoped<ICenterTimeZoneDirectory>(sp => sp.GetRequiredService<SqlCenterTimeZones>());
+builder.Services.AddScoped<ICenterTimeZoneRepository>(sp => sp.GetRequiredService<SqlCenterTimeZones>());
 builder.Services.AddScoped<IModuleSettings, ModuleSettings>();
 builder.Services.AddScoped<IEnvironmentMarker, SqlEnvironmentMarker>();
 builder.Services.AddScoped<CenterModuleAccess>();
@@ -519,6 +524,8 @@ app.UseAuthentication();
 // Después de autenticar: la política del dictado limita por cuenta y necesita saber quién es (las de acceso, por IP, no).
 app.UseRateLimiter();
 app.UseAuthorization();
+// La zona horaria del centro del ámbito activo para toda la petición (CenterTime): vistas, casos de uso y repositorios muestran y calculan con ella.
+app.UseMiddleware<CenterTimeMiddleware>();
 
 // Con la política global, los estáticos (CSS, JS, manifest.json, sw.js, flujo-de-trabajo.html) también pedirían sesión.
 app.MapStaticAssets().Add(endpoint => endpoint.Metadata.Add(new AllowAnonymousAttribute()));

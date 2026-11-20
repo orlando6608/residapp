@@ -51,6 +51,7 @@ public static class AdministrativeAudit
         ("CENTER_LOGO_REMOVE", AuditCategory.Estructura),
         ("CENTER_MODULE_ENABLE", AuditCategory.Estructura),
         ("CENTER_MODULE_DISABLE", AuditCategory.Estructura),
+        ("CENTER_TIMEZONE_CHANGE", AuditCategory.Estructura),
         ("UNIT_CREATE", AuditCategory.Estructura),
         ("UNIT_RENAME", AuditCategory.Estructura),
         ("UNIT_ACTIVATE", AuditCategory.Estructura),

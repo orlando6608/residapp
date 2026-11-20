@@ -111,6 +111,21 @@ public static class ApplicationResultRunner
         ["MODULE_DEPENDENCY_MISSING"] = (ApplicationFailureCode.Conflict, "Falta activar antes un módulo del que este depende."),
     };
 
+    /// <summary>Zona horaria por centro (script 0109): cada fallo dice qué pasa. Los triggers de la base de datos lanzan CENTER_TIMEZONE_*.</summary>
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> CenterTimeZoneFailures = new()
+    {
+        ["CENTER_TIMEZONE_INVALID"] = (ApplicationFailureCode.InvalidInput, "Elige una zona horaria de la lista."),
+        ["CENTER_TIMEZONE_REASON_INVALID"] = (ApplicationFailureCode.InvalidInput, "Elige el motivo del cambio de zona horaria."),
+        ["CENTER_TIMEZONE_CENTER_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "El centro no existe, o es el de Plataforma, que usa siempre la hora de la península: su zona no se cambia."),
+        ["CENTER_TIMEZONE_CONFLICT"] = (ApplicationFailureCode.Conflict,
+            "El centro ya tiene esa zona horaria, o alguien la ha cambiado mientras tanto: vuelve a cargar la pantalla."),
+        ["CENTER_TIMEZONE_SEQUENCE_INVALID"] = (ApplicationFailureCode.Conflict,
+            "El centro ya tiene esa zona horaria, o alguien la ha cambiado mientras tanto: vuelve a cargar la pantalla."),
+        ["CENTER_TIMEZONE_IMPACT_CHANGED"] = (ApplicationFailureCode.Conflict,
+            "Han cambiado las franjas o las citas afectadas desde que las viste: revisa los números y confirma otra vez."),
+    };
+
     /// <summary>Citas externas de los residentes (script 0101): cada fallo dice qué pasa. Los triggers de la base de datos lanzan los mismos códigos. Una cita que no existe o que
     /// no está en el ámbito de quien la pide dan el mismo error (acceso denegado), sin distinguirlas.</summary>
     private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> ExternalAppointmentFailures = new()
@@ -201,6 +216,11 @@ public static class ApplicationResultRunner
         if (ModuleFailures.TryGetValue(message, out var module))
         {
             return new ApplicationFailure(module.Code, module.Text);
+        }
+
+        if (CenterTimeZoneFailures.TryGetValue(message, out var timeZone))
+        {
+            return new ApplicationFailure(timeZone.Code, timeZone.Text);
         }
 
         if (PositionFailures.TryGetValue(message, out var position))
