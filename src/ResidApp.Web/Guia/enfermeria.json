@@ -903,7 +903,7 @@
       "despues": [
         { "para": "Tú", "texto": "Verás «Residente trasladado.» y cuántos episodios abiertos pasaron a la unidad de destino. El cambio queda en el historial de ubicación de la ficha; reenviar el formulario no lo repite." },
         { "para": "Enfermería", "texto": "La Enfermería de la unidad de origen deja de ver los episodios abiertos del residente, que pasan a la unidad de destino. Los episodios cerrados no cambian de unidad." },
-        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela aunque lo hubiera creado otra persona, y quien lo creó ve en la ficha del residente un aviso con la fecha. El basal se rehace en la unidad de destino." },
+        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela aunque lo hubiera creado otra persona, y quien lo creó ve en la ficha del residente un aviso con la fecha, si sigue viendo al residente (si el traslado lo saca de su ámbito, no abre la ficha y no lo ve). El basal se rehace en la unidad de destino." },
         { "para": "Administración", "texto": "El traslado queda en la auditoría con el perfil Enfermería y la cuenta que lo hizo." }
       ],
       "dudas": [

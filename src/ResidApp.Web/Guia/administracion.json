@@ -683,8 +683,8 @@
         { "texto": "Pulsa **Trasladar**.", "botones": ["Trasladar"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad. Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino. Quien lo creó ve un aviso con la fecha de la cancelación." },
-        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino. Quien lo creó ve un aviso con la fecha de la cancelación." },
+        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad. Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino. Quien lo creó ve un aviso con la fecha de la cancelación, si sigue viendo al residente." },
+        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino. Quien lo creó ve un aviso con la fecha de la cancelación, si sigue viendo al residente." },
         { "para": "Administración", "texto": "Verás un aviso con cuántos episodios abiertos pasaron. El cambio queda en el historial de ubicación de la ficha y en la auditoría; reenviar el formulario no lo repite. Enfermería también puede trasladar si le concedes el permiso (ver ADM-14 y ENF-26): su traslado queda igual en la auditoría, con el perfil Enfermería." }
       ],
       "dudas": [

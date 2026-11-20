@@ -36,7 +36,7 @@ Hasta ahora solo Administración trasladaba a un residente de unidad, habitació
 | 6 | Origen y destino en el ámbito de la cuenta; respetar la restricción por residente; mismo centro | **Hecho** (prueba de origen y de destino fuera de ámbito; la restricción por residente la aplica la consulta de evidencia de siempre, sin prueba propia) |
 | 7 | La auditoría de Administración muestra quién trasladó y con qué perfil | **Comprobado leyendo** (`Auditoria.cshtml` muestra cuenta y perfil) |
 | 8 | Enfermería ve solo que existe un borrador, nunca su contenido | **Hecho** (el formulario no lo muestra; el aviso solo da la fecha) |
-| 9 | Recomendado: aviso a quien creó el borrador cancelado, en su ficha del residente | **Hecho**: solo esa cuenta, 14 días (plazo elegido por ingeniería, no por el DPO), sin contenido ni autor |
+| 9 | Recomendado: aviso a quien creó el borrador cancelado, en su ficha del residente | **Hecho**: solo esa cuenta, 14 días (plazo elegido por ingeniería, no por el DPO), sin contenido ni autor; **solo si el creador sigue viendo al residente** (si el traslado lo saca de su ámbito, no abre la ficha y no ve el aviso: lo aceptó Orlando el 2026-11-20, con prueba) |
 
 ## Documentos y validaciones pendientes (de una persona)
 
