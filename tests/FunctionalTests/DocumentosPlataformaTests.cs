@@ -77,8 +77,11 @@ public class DocumentosPlataformaTests(WebAppFactory factory) : IClassFixture<We
     {
         var client = await LoginAsync(platform: true);
 
-        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/Plataforma"));
+        // La entrada está en el inicio, junto a la de Centros, y no dentro de la pantalla de Centros.
+        var home = WebUtility.HtmlDecode(await client.GetStringAsync("/"));
         Assert.Contains("href=\"/Plataforma/Documentos\"", home);
+        Assert.Contains("href=\"/Plataforma\"", home);
+        Assert.DoesNotContain("/Plataforma/Documentos", WebUtility.HtmlDecode(await client.GetStringAsync("/Plataforma")));
 
         var page = WebUtility.HtmlDecode(await client.GetStringAsync("/Plataforma/Documentos"));
         Assert.NotEmpty(Catalogo.All);
@@ -87,6 +90,12 @@ public class DocumentosPlataformaTests(WebAppFactory factory) : IClassFixture<We
             Assert.Contains(document.Titulo, page);
             Assert.Contains($"href=\"/Plataforma/Documento/{document.Id}\"", page);
         }
+    }
+
+    [Fact]
+    public void La_guia_de_implementacion_es_de_desarrollo_y_no_se_publica_en_Documentos()
+    {
+        Assert.DoesNotContain(Catalogo.All, d => d.Id.Contains("implementacion", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -112,6 +121,7 @@ public class DocumentosPlataformaTests(WebAppFactory factory) : IClassFixture<We
         var client = await LoginAsync(platform: false);
         var document = Catalogo.All[0];
 
+        Assert.DoesNotContain("/Plataforma/Documentos", WebUtility.HtmlDecode(await client.GetStringAsync("/")));
         var list = WebUtility.HtmlDecode(await client.GetStringAsync("/Plataforma/Documentos"));
         Assert.Contains("No tienes acceso a esta pantalla.", list);
         Assert.DoesNotContain(document.Titulo, list);
