@@ -215,7 +215,7 @@ public static class HealthBackgroundDisplay
         {
             lines.Add(source);
         }
-        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {CenterTime.Local(record.ModifiedAt):dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
             "Esta ficha no se revisa de forma periódica. Contrastar con la hoja de tratamiento oficial del centro y con el residente o su familia.");
         return lines;
     }
@@ -232,7 +232,7 @@ public static class HealthBackgroundDisplay
         : $"Intolerancia o efecto adverso: {item.Name} ({item.Reaction})";
 
     public static string LastModified(AllergyRecord record) =>
-        $"Última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        $"Última modificación el {CenterTime.Local(record.ModifiedAt):dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
         "Esta ficha no se revisa de forma periódica: se actualiza cuando ocurre algo.";
 
     public static string? Source(HealthBackgroundSource? source) => source is { } value ? $"Fuente: {EnumDisplay.Label(value).ToLowerInvariant()}." : null;
@@ -253,7 +253,7 @@ public static class HealthBackgroundDisplay
         $"{(item.Type == ConditionItemType.Enfermedad ? "Enfermedad" : "Intervención")}: {item.Name}{(item.Year is { } year ? $" ({year})" : "")}";
 
     public static string ConditionsLastModified(ConditionRecord record) =>
-        $"Última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        $"Última modificación el {CenterTime.Local(record.ModifiedAt):dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
         "Esta ficha no se revisa de forma periódica: se actualiza cuando ocurre algo.";
 
     /// <summary>Lo que dice el informe de derivación sobre las enfermedades e intervenciones: la lista completa (CJ: «no importa que crezca»), con la misma cautela que las
@@ -275,7 +275,7 @@ public static class HealthBackgroundDisplay
         {
             lines.Add(source);
         }
-        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {CenterTime.Local(record.ModifiedAt):dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
             "Esta ficha no se revisa de forma periódica. Contrastar con la documentación clínica del centro y con el residente o su familia.");
         return lines;
     }
@@ -299,7 +299,7 @@ public static class HealthBackgroundDisplay
     public static string MedicationLine(MedicationItem item) => $"{item.Name}, {item.Dose}, {item.Schedule}";
 
     public static string MedicationLastModified(MedicationRecord record) =>
-        $"Última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        $"Última modificación el {CenterTime.Local(record.ModifiedAt):dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
         "Esta ficha no se revisa de forma periódica: se actualiza cuando ocurre algo. No sustituye a la receta electrónica ni a la hoja de tratamiento oficial del centro.";
 
     /// <summary>Lo que dice el informe de derivación sobre la medicación habitual: la lista completa (nombre, dosis y pauta), con la cautela de que es una copia y no sustituye a la
@@ -321,7 +321,7 @@ public static class HealthBackgroundDisplay
         {
             lines.Add(source);
         }
-        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {record.ModifiedAt.ToLocalTime():dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
+        lines.Add($"Registrado en la ficha del residente (versión {record.Version}); última modificación el {CenterTime.Local(record.ModifiedAt):dd'/'MM'/'yyyy HH':'mm} por {SystemProfileDisplay.Label(record.ModifiedByProfile)}. " +
             "Esta ficha no se revisa de forma periódica. Contrastar con la receta electrónica o la hoja de tratamiento oficial del centro y con el residente o su familia.");
         return lines;
     }

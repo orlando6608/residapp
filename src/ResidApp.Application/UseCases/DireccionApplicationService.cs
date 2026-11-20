@@ -46,7 +46,7 @@ public sealed class DireccionApplicationService(
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
             var episodes = await directory.ListOpenEpisodesAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            var now = DateTime.Now;
+            var now = CenterTime.Now;
             return info.Units.Select(unit =>
             {
                 var own = episodes.Where(e => e.UnitId == unit.Id).ToList();
@@ -94,7 +94,7 @@ public sealed class DireccionApplicationService(
                 return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, ct: ct);
             }
 
-            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(start, end, TimeZoneInfo.Local);
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(start, end, CenterTime.Zone);
             return await directory.ListReferralsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
         });
 
@@ -147,7 +147,7 @@ public sealed class DireccionApplicationService(
 
             // El periodo son días de la hora local del servidor (la misma con la que se muestran las fechas) y las fechas se
             // guardan en UTC.
-            var zone = TimeZoneInfo.Local;
+            var zone = CenterTime.Zone;
             var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, zone);
             var facts = await directory.ListIndicatorFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             return SupervisionIndicatorRules.Aggregate(facts, info, query.From, query.To, zone);
@@ -172,7 +172,7 @@ public sealed class DireccionApplicationService(
                 await directory.AuditDirectionViewAsync(query.AmbitoPerfilId, query.CentroId, "DIRECTION_QUALITY_VIEW", ct);
             }
 
-            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, CenterTime.Zone);
             var facts = await directory.ListMilestoneFactsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
             var effective = await deadlines.GetEffectiveAsync(query.CentroId, ct);
             // CJ (3.1 de medicina-alergias-y-plazos-cj): cada hito se mide con el plazo que valía cuando empezó, y los cambios de plazos que caen
@@ -201,7 +201,7 @@ public sealed class DireccionApplicationService(
                 await directory.AuditDirectionViewAsync(query.AmbitoPerfilId, query.CentroId, "TRANSFER_HISTORY_REVIEW", ct);
             }
 
-            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, CenterTime.Zone);
             return await directory.ListTransferHistoryRequestsAsync(query.AmbitoPerfilId, query.CentroId, fromUtc, toExclusiveUtc, ct);
         });
 

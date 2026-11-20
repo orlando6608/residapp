@@ -54,7 +54,7 @@ else
                             @EnumDisplay.Label(resident.DocumentedSex) · última unidad: @resident.LastUnitName
                         </p>
                         <p class="mb-1 small">
-                            Baja el @resident.DischargedAt.ToLocalTime().ToString("dd/MM/yyyy"): <strong>@EnumDisplay.Label(resident.Reason)</strong>@(resident.ReasonText is null ? "" : " · " + resident.ReasonText)
+                            Baja el @CenterTime.Local(resident.DischargedAt).ToString("dd/MM/yyyy"): <strong>@EnumDisplay.Label(resident.Reason)</strong>@(resident.ReasonText is null ? "" : " · " + resident.ReasonText)
                         </p>
                         @{ var retention = ResidentDischarge.RetentionStatus(resident.RetainUntil, Model.Today); }
                         <p class="mb-0 small text-body-secondary">

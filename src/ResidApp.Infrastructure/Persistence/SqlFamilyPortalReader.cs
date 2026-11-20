@@ -110,7 +110,7 @@ public sealed class SqlFamilyPortalReader(SqlConnectionFactory connections) : IF
         IReadOnlyList<FamilyPortalCommunication> communications, FamilyCommunicationScheduleSettings schedule, DateTimeOffset now)
     {
         var (start, end) = FamilyCommunicationSchedule.LastClosedSummaryPeriod(
-            schedule.SummaryFrequency, schedule.PublicationTime, TimeZoneInfo.Local, now);
+            schedule.SummaryFrequency, schedule.PublicationTime, CenterTime.Zone, now);
         var items = communications
             .Where(c => c.Kind != FamilyPortalCommunicationKind.Withdrawn && c.PublishedAt > start && c.PublishedAt <= end)
             .OrderBy(c => c.PublishedAt).ToList();

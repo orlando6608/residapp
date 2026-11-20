@@ -17,8 +17,8 @@ public class AdministracionAuditoriaTests
 {
     private static ListAdministrativeAuditQuery Query(
         SeededProfile admin, DateOnly? from = null, DateOnly? to = null, string? action = null, AccountId? account = null) =>
-        new(admin.ProfileScopeId, admin.CenterId, from ?? DateOnly.FromDateTime(DateTime.Today).AddDays(-1),
-            to ?? DateOnly.FromDateTime(DateTime.Today).AddDays(1), action, account);
+        new(admin.ProfileScopeId, admin.CenterId, from ?? CenterTime.Today.AddDays(-1),
+            to ?? CenterTime.Today.AddDays(1), action, account);
 
     private static async Task<AuditPage> ListAsync(SeededProfile admin, ListAdministrativeAuditQuery? query = null) =>
         (await BuildEstructura(admin.ExternalSubject).ListAuditAsync(query ?? Query(admin))).Value!;
@@ -113,7 +113,7 @@ public class AdministracionAuditoriaTests
 
         var byAction = await ListAsync(admin, Query(admin, action: "ACCOUNT_CREATE"));
         var byAccount = await ListAsync(admin, Query(admin, account: ana));
-        var longAgo = DateOnly.FromDateTime(DateTime.Today).AddDays(-60);
+        var longAgo = CenterTime.Today.AddDays(-60);
         var oldPeriod = await ListAsync(admin, Query(admin, longAgo, longAgo.AddDays(5)));
 
         Assert.Equal(2, byAction.Entries.Count);
@@ -130,7 +130,7 @@ public class AdministracionAuditoriaTests
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var service = BuildEstructura(admin.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var reversed = await service.ListAuditAsync(Query(admin, today, today.AddDays(-1)));
         var tooLong = await service.ListAuditAsync(Query(admin, today.AddDays(-400), today));

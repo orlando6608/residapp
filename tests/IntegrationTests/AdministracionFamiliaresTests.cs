@@ -14,7 +14,7 @@ namespace ResidApp.IntegrationTests;
 /// acceso y contacto urgente. Cada prueba crea su propio centro.</summary>
 public class AdministracionFamiliaresTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+    private static readonly DateOnly Today = CenterTime.Today;
 
     private static AddFamilyMemberCommand Add(
         SeededProfile seed, ResidentId residentId, Guid? operationId = null, string name = "Lucía Pérez", string phone = "600 123 456") =>

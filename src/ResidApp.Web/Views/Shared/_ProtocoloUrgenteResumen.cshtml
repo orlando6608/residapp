@@ -9,7 +9,7 @@
         <h2 class="h5 card-title">Protocolo urgente de @UrgentProtocolDisplay.Profile(Model.Profile)</h2>
         <p class="mb-2">
             Activado @(Model.ActivatedByCurrentAccount ? "por ti" : $"por otro profesional de {UrgentProtocolDisplay.Profile(Model.Profile)}")
-            el @Model.ActivatedAt.ToLocalTime().ToString("g").
+            el @CenterTime.Local(Model.ActivatedAt).ToString("g").
         </p>
         @if (Model.ActivationNote is not null)
         {
@@ -28,11 +28,11 @@
                         <p class="mb-1">
                             <strong>@UrgentProtocolDisplay.Label(registro.Type)</strong> ·
                             @(registro.ByCurrentAccount ? "tú" : "otro profesional") ·
-                            @registro.RecordedAt.ToLocalTime().ToString("g")
+                            @CenterTime.Local(registro.RecordedAt).ToString("g")
                         </p>
                         @if (registro.Type == UrgentProtocolEntryType.Contacto)
                         {
-                            <p class="mb-0">@registro.Service, contactado el @registro.ContactedAt!.Value.ToLocalTime().ToString("dd/MM/yyyy 'a las' HH:mm")</p>
+                            <p class="mb-0">@registro.Service, contactado el @CenterTime.Local(registro.ContactedAt!.Value).ToString("dd/MM/yyyy 'a las' HH:mm")</p>
                             @if (registro.Text is not null)
                             {
                                 <p class="mb-0" style="white-space: pre-line">Nota: @registro.Text</p>

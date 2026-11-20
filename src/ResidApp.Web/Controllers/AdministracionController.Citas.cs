@@ -13,7 +13,7 @@ namespace ResidApp.Web.Controllers;
 /// la agenda del centro. Las horas se escriben y se muestran en la hora del servidor.</summary>
 public sealed partial class AdministracionController
 {
-    private static TimeZoneInfo CitasZone => TimeZoneInfo.Local;
+    private static TimeZoneInfo CitasZone => CenterTime.Zone;
 
     public async Task<IActionResult> Citas(CancellationToken ct)
     {
@@ -151,7 +151,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(AgendaCitas)) });
         }
 
-        var monday = MondayOf(semana ?? DateOnly.FromDateTime(DateTime.Today));
+        var monday = MondayOf(semana ?? CenterTime.Today);
         var from = LocalToOffset(monday.ToDateTime(TimeOnly.MinValue))!.Value;
         var result = await appointmentService.ListAgendaAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), from, from.AddDays(7), ct);
         if (!result.Ok)

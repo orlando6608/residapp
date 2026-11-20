@@ -22,7 +22,7 @@
 <h1 class="h3">@title</h1>
 @if (item.Kind == FamilyPortalCommunicationKind.Withdrawn)
 {
-    <p class="text-muted">Novedad publicada el @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+    <p class="text-muted">Novedad publicada el @CenterTime.Local(item.PublishedAt).ToString("dd/MM/yyyy HH:mm")</p>
     <div class="alert alert-secondary" role="status">
         Esta novedad ya no está disponible. Si tienes dudas, llama por teléfono al centro.
     </div>
@@ -35,19 +35,19 @@ else
             <span class="badge text-bg-dark">Corrección</span>
         }
         <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Type)</span>
-        · @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
+        · @CenterTime.Local(item.PublishedAt).ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
     </p>
     @if (item.Corrects is { } corrects)
     {
         <p class="small text-body-secondary">
-            Corrige la novedad publicada el @corrects.OriginalPublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm").
+            Corrige la novedad publicada el @CenterTime.Local(corrects.OriginalPublishedAt).ToString("dd/MM/yyyy HH:mm").
             <a asp-action="Comunicado" asp-route-linkId="@Model.Resident.LinkId" asp-route-comunicadoId="@corrects.OriginalId">Ver la novedad original</a>
         </p>
     }
     @foreach (var correction in Model.Correcciones)
     {
         <div class="alert alert-warning" role="status">
-            <strong>Esta novedad tiene una corrección</strong> publicada el @correction.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm").
+            <strong>Esta novedad tiene una corrección</strong> publicada el @CenterTime.Local(correction.PublishedAt).ToString("dd/MM/yyyy HH:mm").
             <a class="alert-link" asp-action="Comunicado" asp-route-linkId="@Model.Resident.LinkId" asp-route-comunicadoId="@correction.Id">Ver la corrección</a>
         </div>
     }

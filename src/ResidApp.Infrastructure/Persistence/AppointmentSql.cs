@@ -18,7 +18,7 @@ internal static class AppointmentSql
     internal const string OperationIndex = "UX_citas_operacion";
 
     /// <summary>La zona en que se entienden las horas de las franjas: la del servidor, como el horario de los comunicados.</summary>
-    internal static TimeZoneInfo Zone => TimeZoneInfo.Local;
+    internal static TimeZoneInfo Zone => CenterTime.Zone;
 
     internal sealed record Settings(AppointmentServiceSettings Value, int Version);
 

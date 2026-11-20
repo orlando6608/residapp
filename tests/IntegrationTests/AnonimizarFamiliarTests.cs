@@ -15,7 +15,7 @@ namespace ResidApp.IntegrationTests;
 /// correo, revoca sus autorizaciones y cierra su acceso al portal, solo con la Administración principal y sin tocar la cuenta si tiene perfiles en otros centros.</summary>
 public class AnonimizarFamiliarTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+    private static readonly DateOnly Today = CenterTime.Today;
 
     private sealed record Setup(SeededProfile Admin, ResidentId ResidentId, Guid LinkId, string Subject);
 

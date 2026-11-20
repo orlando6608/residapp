@@ -202,7 +202,7 @@ public class PlataformaCentrosTests
         var direccion = await new DireccionApplicationService(
                 scopes, new SqlSupervisionDirectory(TestDatabase.ConnectionFactory), session, new SqlEnfermeriaResidentDirectory(TestDatabase.ConnectionFactory),
                 new SqlProcessDeadlineRepository(TestDatabase.ConnectionFactory))
-            .ListPendingAsync(new ListSupervisionPendingQuery(op.ProfileScopeId, op.CenterId, DateOnly.FromDateTime(DateTime.Today)));
+            .ListPendingAsync(new ListSupervisionPendingQuery(op.ProfileScopeId, op.CenterId, CenterTime.Today));
 
         foreach (var error in new[] { administracion.Error, estructura.Error, usuarios.Error, enfermeria.Error, medicina.Error, direccion.Error })
         {

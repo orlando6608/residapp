@@ -84,7 +84,7 @@ else
             <h2 class="h5 card-title">Resumen de la valoración</h2>
             <p class="text-muted">
                 Último guardado @(evento.Assessment!.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
-                el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g"). Al cerrar, la valoración ya no se puede modificar.
+                el @CenterTime.Local(evento.Assessment.LastUpdatedAt).ToString("g"). Al cerrar, la valoración ya no se puede modificar.
             </p>
             <dl class="row mb-0">
                 @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content!.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
@@ -120,7 +120,7 @@ else
                 <ul class="mb-0">
                     @foreach (var accion in seguimiento.Actions.Where(a => a.Type == FollowUpActionType.Actuacion))
                     {
-                        <li style="white-space: pre-line">@accion.RecordedAt.ToLocalTime().ToString("g"): @accion.Text</li>
+                        <li style="white-space: pre-line">@CenterTime.Local(accion.RecordedAt).ToString("g"): @accion.Text</li>
                     }
                 </ul>
             }

@@ -37,7 +37,7 @@ usuario cuando encajen:
   - **La zona solo está puesta a mano en Azure.** `WEBSITE_TIME_ZONE` no está en `.github/workflows/ci-cd.yml` ni en ningún otro fichero del
     repositorio. Un entorno nuevo, otra región o una Web App recreada arrancaría en UTC sin que nada avise, y las horas saldrían 1 o 2 horas
     desplazadas.
-  - **Toda la app depende de `TimeZoneInfo.Local`.** `DateTime.Today` aparece en al menos 20 sitios de Application y Web (turnos, planificación,
+  - **(Resuelto en F0, 2026-11-20: `CenterTime`; una prueba de arquitectura prohíbe la hora local del servidor.) Toda la app dependía de `TimeZoneInfo.Local`.** `DateTime.Today` aparece en al menos 20 sitios de Application y Web (turnos, planificación,
     portal familiar, citas, Dirección) y `.ToLocalTime()` en 57 ficheros de vistas y código. Solo el horario de los comunicados, los indicadores
     de Dirección y las citas pasan una zona explícita (`FamilyCommunicationSchedule`, `SupervisionIndicatorRules`, `AppointmentSlots`).
   - **Los tests no cubren la zona de producción.** Las pruebas unitarias de esos tres usan Europe/Madrid explícito, pero `HorarioComunicadosTests` y

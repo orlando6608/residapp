@@ -17,7 +17,7 @@ namespace ResidApp.IntegrationTests;
 /// vigente) y qué comunicados ve (publicados y dentro de su ventana). Cada prueba crea su propio centro.</summary>
 public class PortalFamiliarTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+    private static readonly DateOnly Today = CenterTime.Today;
 
     internal sealed record Setup(SeededProfile Admin, SeededProfile Nurse, ResidentId ResidentId, Guid LinkId, string Subject);
 

@@ -22,7 +22,7 @@
 else
 {
     <p class="text-muted">
-        Versión @Model.Baseline.VersionNumber · firmado el @Model.Baseline.SignedAt.ToLocalTime().ToString("g")
+        Versión @Model.Baseline.VersionNumber · firmado el @CenterTime.Local(Model.Baseline.SignedAt).ToString("g")
     </p>
 
     <div class="card mb-3">

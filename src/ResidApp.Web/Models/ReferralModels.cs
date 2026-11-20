@@ -67,7 +67,7 @@ public sealed class IntentoLlamadaFormModel
     public string? Nota { get; set; }
 
     public DateTimeOffset? LlamadoEnOffset =>
-        LlamadoEn is { } value ? new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Local)) : null;
+        LlamadoEn is { } value ? CenterTime.FromLocal(value) : null;
 }
 
 /// <summary>ENF-12/MED-14: la pantalla de derivación: el evento, el formulario y, si se pidió, la vista previa
@@ -114,7 +114,7 @@ public static class ReferralDisplay
         "antes tiene que constar al menos un intento de llamada (salvo que el residente no tenga contacto urgente).";
 
     public static string FileName(DateTimeOffset signedAt) =>
-        $"informe-derivacion-{signedAt.ToLocalTime():yyyyMMdd-HHmm}.pdf";
+        $"informe-derivacion-{CenterTime.Local(signedAt):yyyyMMdd-HHmm}.pdf";
 
     public static string Sex(DocumentedSexCode sex) => sex switch
     {
@@ -291,5 +291,5 @@ public static class ReferralReportBuilder
         }
     }
 
-    private static string Time(DateTimeOffset at) => at.ToLocalTime().ToString("dd'/'MM'/'yyyy HH':'mm");
+    private static string Time(DateTimeOffset at) => CenterTime.Local(at).ToString("dd'/'MM'/'yyyy HH':'mm");
 }

@@ -23,7 +23,7 @@
 <div class="card mb-3">
     <div class="card-body">
         <h2 class="h6 card-title">Baja</h2>
-        <p class="mb-0">@EnumDisplay.Label(resident.Reason) · @resident.DischargedAt.ToLocalTime().ToString("dd/MM/yyyy") · última unidad: @resident.LastUnitName</p>
+        <p class="mb-0">@EnumDisplay.Label(resident.Reason) · @CenterTime.Local(resident.DischargedAt).ToString("dd/MM/yyyy") · última unidad: @resident.LastUnitName</p>
     </div>
 </div>
 

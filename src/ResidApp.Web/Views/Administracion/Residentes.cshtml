@@ -89,7 +89,7 @@ else
                             @AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today) años · @EnumDisplay.Label(resident.DocumentedSex)
                         </p>
                         <p class="text-body-secondary mb-0">@resident.LocationLabel</p>
-                        <p class="text-body-secondary small mb-0">Alta el @resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                        <p class="text-body-secondary small mb-0">Alta el @CenterTime.Local(resident.AdmittedAt).ToString("dd/MM/yyyy")</p>
                     </div>
                     <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
                 </div>
@@ -121,7 +121,7 @@ else
                         <td class="text-end">@AdministrativeResidentDisplay.Age(resident.BirthDate, Model.Today)</td>
                         <td>@EnumDisplay.Label(resident.DocumentedSex)</td>
                         <td>@resident.LocationLabel</td>
-                        <td>@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td>@CenterTime.Local(resident.AdmittedAt).ToString("dd/MM/yyyy")</td>
                     </tr>
                 }
             </tbody>

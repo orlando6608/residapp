@@ -85,7 +85,7 @@ public sealed class FotoResidenteController(ResidentPhotoApplicationService phot
             {
                 error = result.Error!.Code switch
                 {
-                    ApplicationFailureCode.InvalidInput when form.FechaConsentimiento > DateOnly.FromDateTime(DateTime.Today) =>
+                    ApplicationFailureCode.InvalidInput when form.FechaConsentimiento > CenterTime.Today =>
                         "La fecha de la firma no puede ser posterior a hoy.",
                     ApplicationFailureCode.InvalidInput => TooLarge,
                     ApplicationFailureCode.Conflict => "Está anotado que no quiere foto: quita la marca antes, solo si ha firmado un consentimiento nuevo.",

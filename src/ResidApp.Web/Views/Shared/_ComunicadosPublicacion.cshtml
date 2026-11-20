@@ -29,18 +29,18 @@ else
                 <p class="text-muted mb-2">
                     @(communication.UnitName ?? "Sin unidad") ·
                     <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(communication.Type)</span>
-                    · Preparado el @communication.PreparedAt.ToLocalTime().ToString("g") ·
+                    · Preparado el @CenterTime.Local(communication.PreparedAt).ToString("g") ·
                     @if (communication.PublishedEarlyAt is { } early)
                     {
-                        <span class="badge text-bg-success">Publicado antes de su hora, el @early.ToLocalTime().ToString("g")</span>
+                        <span class="badge text-bg-success">Publicado antes de su hora, el @CenterTime.Local(early).ToString("g")</span>
                     }
                     else if (item.Published)
                     {
-                        <span class="badge text-bg-success">Publicado el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                        <span class="badge text-bg-success">Publicado el @CenterTime.Local(item.ScheduledAt).ToString("g")</span>
                     }
                     else
                     {
-                        <span class="badge text-bg-info">Se publica el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                        <span class="badge text-bg-info">Se publica el @CenterTime.Local(item.ScheduledAt).ToString("g")</span>
                     }
                 </p>
                 <p class="mb-2" style="white-space: pre-line">@communication.Text</p>
@@ -50,7 +50,7 @@ else
                         <p class="text-muted small mb-1">
                             <span class="badge text-bg-dark">Corrección publicada</span>
                             <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(corrective.Type)</span>
-                            · el @corrective.PublishedAt.ToLocalTime().ToString("g")
+                            · el @CenterTime.Local(corrective.PublishedAt).ToString("g")
                         </p>
                         <p class="mb-0" style="white-space: pre-line">@corrective.Text</p>
                     </div>
@@ -58,7 +58,7 @@ else
                 @if (communication.Withdrawal is { } withdrawal)
                 {
                     <div class="alert alert-secondary mb-2" role="status">
-                        <strong>Retirado</strong> el @withdrawal.WithdrawnAt.ToLocalTime().ToString("g"). La familia ve que el contenido ya no está
+                        <strong>Retirado</strong> el @CenterTime.Local(withdrawal.WithdrawnAt).ToString("g"). La familia ve que el contenido ya no está
                         disponible. Motivo (solo lo ve el personal): @withdrawal.Reason
                     </div>
                 }

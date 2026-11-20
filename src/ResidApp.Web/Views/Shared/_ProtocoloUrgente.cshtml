@@ -8,7 +8,7 @@
     var actuacion = Model.FormFor(UrgentProtocolEntryType.Actuacion);
     var evolucion = Model.FormFor(UrgentProtocolEntryType.Evolucion);
     var contacto = Model.FormFor(UrgentProtocolEntryType.Contacto);
-    var horaContacto = (contacto.ContactadoEn ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm");
+    var horaContacto = (contacto.ContactadoEn ?? CenterTime.Now).ToString("yyyy-MM-ddTHH:mm");
 }
 
 <h1 class="h3">Protocolo urgente — @evento.ResidentDisplayName</h1>
@@ -85,7 +85,7 @@
 @if (evento.Referral is not null)
 {
     var llamada = Model.Call;
-    var horaLlamada = (llamada.LlamadoEn ?? DateTime.Now).ToString("yyyy-MM-ddTHH:mm");
+    var horaLlamada = (llamada.LlamadoEn ?? CenterTime.Now).ToString("yyyy-MM-ddTHH:mm");
     var contactosUrgentes = evento.Referral.EmergencyContacts;
     // Precargado con el primer contacto designado (editable: se puede llamar a otra persona); se guarda como texto.
     var aQuien = llamada.Contacto ?? (contactosUrgentes.Count == 0 ? null : EmergencyContactDisplay.WhoIsCalled(contactosUrgentes[0]));

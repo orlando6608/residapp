@@ -19,13 +19,13 @@ else
                 <h2 class="h5 card-title">@item.ResidentDisplayName</h2>
                 <p class="mb-1">
                     <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, false)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
-                    · @(item.UnitName ?? "Sin unidad") · activado el @item.ActivatedAt.ToLocalTime().ToString("g")
+                    · @(item.UnitName ?? "Sin unidad") · activado el @CenterTime.Local(item.ActivatedAt).ToString("g")
                     (@ElapsedTimeDisplay.Since(item.ActivatedAt))
                 </p>
                 <p class="text-muted mb-0">
                     @if (item.LastEntryType is { } tipo)
                     {
-                        <span>Último registro: @UrgentProtocolDisplay.Label(tipo), @item.LastEntryAt!.Value.ToLocalTime().ToString("g")</span>
+                        <span>Último registro: @UrgentProtocolDisplay.Label(tipo), @CenterTime.Local(item.LastEntryAt!.Value).ToString("g")</span>
                     }
                     else
                     {

@@ -93,7 +93,7 @@ public static class ResidentHistoryDisplay
 
     public static string Baseline(ClinicalEventContext context) => context.BaselineVersionNumber is null
         ? "Sin basal firmado"
-        : $"Basal versión {context.BaselineVersionNumber}, firmado el {context.BaselineSignedAt!.Value.ToLocalTime():g}";
+        : $"Basal versión {context.BaselineVersionNumber}, firmado el {CenterTime.Local(context.BaselineSignedAt!.Value):g}";
 }
 
 /// <summary>Línea temporal del residente (HIS-02, MED-24), vista común a Enfermería y Medicina. Entries null
@@ -218,7 +218,7 @@ public static class TimelineDisplay
                 break;
             case TimelineEntry.UrgentProtocolEntryRecorded p:
                 fields.Add(("Servicio", p.Service));
-                fields.Add(("Hora del contacto", p.ContactedAt?.ToLocalTime().ToString("g")));
+                fields.Add(("Hora del contacto", p.ContactedAt is { } contactedAt ? CenterTime.Local(contactedAt).ToString("g") : null));
                 fields.Add(("Texto", p.Text));
                 break;
             case TimelineEntry.ReferralSigned r:
@@ -226,7 +226,7 @@ public static class TimelineDisplay
                 break;
             case TimelineEntry.FamilyCallAttempted c:
                 fields.Add(("A quién", c.Contact));
-                fields.Add(("Hora de la llamada", c.CalledAt.ToLocalTime().ToString("g")));
+                fields.Add(("Hora de la llamada", CenterTime.Local(c.CalledAt).ToString("g")));
                 fields.Add(("Resultado", ReferralDisplay.Label(c.Result)));
                 fields.Add(("Nota", c.Note));
                 break;

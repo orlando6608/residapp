@@ -24,11 +24,11 @@
     <span class="badge @ClinicalEventStatusDisplay.BadgeClass(evento.Status, false)">@ClinicalEventStatusDisplay.Label(evento.Status)</span>
     @if (escalado is null)
     {
-        <span>· evento propio de Medicina, observado el @evento.OccurredAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(evento.OccurredAt))</span>
+        <span>· evento propio de Medicina, observado el @CenterTime.Local(evento.OccurredAt).ToString("g") (@ElapsedTimeDisplay.Since(evento.OccurredAt))</span>
     }
     else
     {
-        <span>· escalado el @escalado.EscalatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(escalado.EscalatedAt))</span>
+        <span>· escalado el @CenterTime.Local(escalado.EscalatedAt).ToString("g") (@ElapsedTimeDisplay.Since(escalado.EscalatedAt))</span>
     }
 </p>
 
@@ -101,7 +101,7 @@
         {
             <p class="mb-2">
                 Iniciada @(medico.StartedByCurrentAccount == true ? "por ti" : "por otro profesional de Medicina")
-                el @medico.StartedAt.Value.ToLocalTime().ToString("g").
+                el @CenterTime.Local(medico.StartedAt.Value).ToString("g").
             </p>
             @if (medico.Assessment is null)
             {
@@ -112,7 +112,7 @@
                 var content = medico.Assessment.Content;
                 <p class="text-muted">
                     Último guardado @(medico.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
-                    el @medico.Assessment.LastUpdatedAt.ToLocalTime().ToString("g").
+                    el @CenterTime.Local(medico.Assessment.LastUpdatedAt).ToString("g").
                 </p>
                 <dl class="row mb-0">
                     @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", content.FindingsAndExamination), ("Valoración", content.Assessment), ("Actuaciones", content.Actions) })
@@ -154,7 +154,7 @@
                         }
                         <p class="mb-0 mt-1" style="white-space: pre-line">@indicacion.Text</p>
                         <p class="text-muted mb-0">
-                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion) · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")
+                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion) · emitida el @CenterTime.Local(indicacion.IssuedAt).ToString("g")
                         </p>
                         @if (indicacion.Incident is not null)
                         {
@@ -184,7 +184,7 @@
             </p>
             <p class="text-muted mb-0">
                 Iniciado @(seguimientoMedico.Tracking.StartedByCurrentAccount ? "por ti" : "por otro profesional de Medicina")
-                el @seguimientoMedico.Tracking.StartedAt.ToLocalTime().ToString("g") ·
+                el @CenterTime.Local(seguimientoMedico.Tracking.StartedAt).ToString("g") ·
                 @seguimientoMedico.Tracking.Actions.Count @(seguimientoMedico.Tracking.Actions.Count == 1 ? "acción registrada" : "acciones registradas")
             </p>
         </div>

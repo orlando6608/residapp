@@ -486,7 +486,7 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
         var morningId = OptionId(WebUtility.HtmlDecode(planPage), morningName);
         var afternoonId = OptionId(WebUtility.HtmlDecode(planPage), afternoonName);
         Assert.True(teamId != "" && morningId != "" && afternoonId != "", $"opciones: [{teamId}] [{morningId}] [{afternoonId}]");
-        var day = DateTime.Today.AddDays(3).ToString("yyyy-MM-dd");
+        var day = CenterTime.Today.AddDays(3).ToString("yyyy-MM-dd");
         var secondBatch = Guid.NewGuid().ToString();
         List<KeyValuePair<string, string>> Form(string shiftId, string? justification = null, string? seen = null, bool second = false)
         {

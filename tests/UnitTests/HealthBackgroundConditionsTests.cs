@@ -28,9 +28,9 @@ public class HealthBackgroundConditionsTests
         Assert.Null(new ConditionItem(ConditionItemType.Intervencion, "Intervención Beta", null).Year);
         Assert.Equal(1999, new ConditionItem(ConditionItemType.Intervencion, "Intervención Beta", 1999).Year);
         Assert.Equal(ConditionItem.MinYear, new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", ConditionItem.MinYear).Year);
-        Assert.Equal(DateTime.Now.Year, new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", DateTime.Now.Year).Year);
+        Assert.Equal(CenterTime.Now.Year, new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", CenterTime.Now.Year).Year);
 
-        Assert.Throws<DomainValidationException>(() => new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", DateTime.Now.Year + 1));
+        Assert.Throws<DomainValidationException>(() => new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", CenterTime.Now.Year + 1));
         Assert.Throws<DomainValidationException>(() => new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", ConditionItem.MinYear - 1));
         Assert.Throws<DomainValidationException>(() => new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", 0));
         Assert.Throws<DomainValidationException>(() => new ConditionItem(ConditionItemType.Enfermedad, "Enfermedad Alfa", -2001));

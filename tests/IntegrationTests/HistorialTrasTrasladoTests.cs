@@ -304,7 +304,7 @@ public class HistorialTrasTrasladoTests
                 """, new { center = s.NurseDestination.CenterId.Value, account = s.NurseDestination.AccountId.Value, scope = s.NurseDestination.ProfileScopeId, resident = s.Resident.Value });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         ReadSupervisionIndicatorsQuery Query(SeededProfile who, bool opening) => new(who.ProfileScopeId, who.CenterId, today, today, opening);
         var seen = await BuildDireccion(direccion.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(direccion, true));
         var filtered = await BuildDireccion(direccion.ExternalSubject).ReadTransferHistoryRequestsAsync(Query(direccion, false));

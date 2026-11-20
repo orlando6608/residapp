@@ -34,7 +34,7 @@ else
                 <p class="text-muted mb-2">
                     @(item.UnitName ?? "Sin unidad") ·
                     <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, false)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
-                    · @(item.Reason is null ? "observado por Medicina" : "escalado") el @item.ReceivedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.ReceivedAt))
+                    · @(item.Reason is null ? "observado por Medicina" : "escalado") el @CenterTime.Local(item.ReceivedAt).ToString("g") (@ElapsedTimeDisplay.Since(item.ReceivedAt))
                 </p>
                 @if (item.Reason is null)
                 {

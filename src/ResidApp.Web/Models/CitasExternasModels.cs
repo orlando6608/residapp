@@ -316,7 +316,7 @@ public static class ExternalNoteDisplay
     public static string Next(ExternalNoteVersion version, DateOnly appointmentDate) => Next(new ExternalNextVisit(version.NextDate, version.NextMonths), appointmentDate);
 
     /// <summary>Fecha y hora de una versión, en la hora del servidor (la de Madrid).</summary>
-    public static string When(DateTimeOffset at) => at.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+    public static string When(DateTimeOffset at) => CenterTime.Local(at).ToString("dd/MM/yyyy HH:mm");
 }
 
 /// <summary>La pantalla «Ajustes para la familia» del centro (PR 5; script 0104): si las familias ven las citas externas, cuántas verían y, al encender, las tres confirmaciones. Error es el aviso si lo marcado no vale.</summary>

@@ -12,7 +12,7 @@
         <h2 class="h5 card-title">Derivación a Urgencias</h2>
         <p class="mb-2">
             Informe firmado por @(derivacion.SignedByCurrentAccount ? "ti" : $"otro profesional de {UrgentProtocolDisplay.Profile(derivacion.Profile)}")
-            el @derivacion.SignedAt.ToLocalTime().ToString("g").
+            el @CenterTime.Local(derivacion.SignedAt).ToString("g").
         </p>
         <p class="mb-2" style="white-space: pre-line"><strong>Motivo:</strong> @derivacion.Reason</p>
         @if (derivacion.Communications is not null)
@@ -44,7 +44,7 @@
                     <li class="mb-2">
                         <p class="mb-0">
                             <strong>@ReferralDisplay.Label(llamada.Result)</strong> · @llamada.Contact ·
-                            llamada el @llamada.CalledAt.ToLocalTime().ToString("g") ·
+                            llamada el @CenterTime.Local(llamada.CalledAt).ToString("g") ·
                             registrada por @(llamada.ByCurrentAccount ? "ti" : "otro profesional")
                         </p>
                         @if (llamada.Note is not null)

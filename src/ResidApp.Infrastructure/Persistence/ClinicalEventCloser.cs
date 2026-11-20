@@ -149,7 +149,7 @@ internal static class ClinicalEventCloser
                 var communicationId = Guid.NewGuid();
                 // La hora de publicación se fija ahora con el horario que tenga el centro (script 0051): cambiarlo después no mueve este comunicado.
                 var scheduledAt = FamilyCommunicationSchedule.ScheduledAt(
-                    occurredAt, await SqlFamilyCommunicationScheduleRepository.ReadEffectiveAsync(connection, transaction, input.CenterId, ct), TimeZoneInfo.Local);
+                    occurredAt, await SqlFamilyCommunicationScheduleRepository.ReadEffectiveAsync(connection, transaction, input.CenterId, ct), CenterTime.Zone);
                 await connection.ExecuteAsync(new CommandDefinition("""
                     INSERT INTO dbo.comunicaciones_familiares
                         (id, evento_id, residente_id, centro_id, tipo_codigo, texto, preparado_por_cuenta_id, preparado_en, publicacion_programada_en)

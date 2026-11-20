@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Infrastructure.Persistence;
 using static ResidApp.FunctionalTests.ResidentsFlowTests;
+using ResidApp.Shared;
 
 namespace ResidApp.FunctionalTests;
 
@@ -121,7 +122,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Esto aún no se ha publicado.", now.AddHours(-1), now.AddHours(20));
         // Uno publicado dentro del último periodo cerrado del resumen semanal (el centro está en el horario de CJ: semanal, corte el domingo a las 19:00).
         var summaryEnd = FamilyCommunicationSchedule.LastClosedSummaryPeriod(
-            FamilyCommunicationSummaryFrequency.Semanal, FamilyCommunicationScheduleSettings.Default.PublicationTime, TimeZoneInfo.Local, DateTimeOffset.UtcNow).End;
+            FamilyCommunicationSummaryFrequency.Semanal, FamilyCommunicationScheduleSettings.Default.PublicationTime, CenterTime.Zone, DateTimeOffset.UtcNow).End;
         await AddCommunicationAsync(nurse, seed.Nurse, residentId, "Contado en el resumen de la semana.", summaryEnd.UtcDateTime.AddHours(-30), summaryEnd.UtcDateTime.AddHours(-2));
         var foreign = await AddCommunicationAsync(nurse, seed.Nurse, foreignResidentId, "Comunicado de un residente ajeno.", now.AddHours(-30), now.AddHours(-5));
 
@@ -369,7 +370,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var otherSlots = await BodyAsync(await family.GetAsync($"{citasUrl}/Nueva?equipo=Medico&modalidad=Presencial"));
         var start = DateTimeOffset.Parse(fields["inicio"]);
 
-        var agenda = await BodyAsync(await admin.GetAsync($"/Administracion/AgendaCitas?semana={start.ToLocalTime():yyyy-MM-dd}"));
+        var agenda = await BodyAsync(await admin.GetAsync($"/Administracion/AgendaCitas?semana={CenterTime.Local(start):yyyy-MM-dd}"));
         var cancelWithoutReason = await PostAsync(admin, "/Administracion/CancelarCita", $"/Administracion/CancelarCita?citaId={appointmentId}", new()
         {
             ["Form.CitaId"] = appointmentId.ToString(), ["Form.Motivo"] = "",
@@ -537,7 +538,7 @@ public class PortalFamiliarFlowTests(WebAppFactory factory) : IClassFixture<WebA
         var acceptedAgain = await PostAsync(family, $"{secondUrl}/Aceptar", secondUrl, new());
         var appointmentId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.citas WHERE residente_id = @residentId", new { residentId = Guid.Parse(residentId) });
         var start = DateTimeOffset.Parse(secondSlot);
-        var agenda = await BodyAsync(await admin.GetAsync($"/Administracion/AgendaCitas?semana={start.ToLocalTime():yyyy-MM-dd}"));
+        var agenda = await BodyAsync(await admin.GetAsync($"/Administracion/AgendaCitas?semana={CenterTime.Local(start):yyyy-MM-dd}"));
         var requestAfter = await BodyAsync(await family.GetAsync(secondUrl));
 
         Assert.DoesNotContain("Solicitar una cita", homeInDirect);

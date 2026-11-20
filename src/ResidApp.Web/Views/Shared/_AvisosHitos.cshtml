@@ -19,11 +19,11 @@
                     · @item.UnitName · @ProcessMilestoneDisplay.Label(item.Milestone)@(item.Priority ? " (prioritario)" : "") ·
                     @if (item.Status == MilestoneStatus.FueraDePlazo)
                     {
-                        <strong>Plazo pasado desde las @due.ToLocalTime().ToString("g")</strong>
+                        <strong>Plazo pasado desde las @CenterTime.Local(due).ToString("g")</strong>
                     }
                     else
                     {
-                        <strong>Vence a las @due.ToLocalTime().ToString("g")</strong>
+                        <strong>Vence a las @CenterTime.Local(due).ToString("g")</strong>
                     }
                 </li>
             }

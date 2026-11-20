@@ -166,7 +166,7 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var form = new BarthelFormModel
         {
             ResidenteId = residenteId,
-            FechaValoracion = barthel.AssessmentDate ?? DateOnly.FromDateTime(DateTime.Today),
+            FechaValoracion = barthel.AssessmentDate ?? CenterTime.Today,
             Opciones = barthel.Items.ToDictionary(i => i.ItemCode.ToCode(), i => i.SelectedOptionCode),
         };
         return View(form);

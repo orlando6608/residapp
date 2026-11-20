@@ -81,7 +81,7 @@
                             </p>
                             <p class="mb-1">@BaselineReasonDisplay.Label(version.ReasonCode) · Barthel @version.BarthelTotal / 100</p>
                             <p class="text-body-secondary small mb-0">
-                                Firmado el @version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)
+                                Firmado el @CenterTime.Local(version.SignedAt).ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)
                                 @if (version.ReplacesVersionNumber is { } anterior)
                                 {
                                     <span>· sustituye a la versión @anterior</span>
@@ -122,7 +122,7 @@
                                 }
                             </td>
                             <td>@BaselineReasonDisplay.Label(version.ReasonCode)</td>
-                            <td>@version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)</td>
+                            <td>@CenterTime.Local(version.SignedAt).ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)</td>
                             <td>@version.BarthelTotal / 100</td>
                             <td>@(version.ReplacesVersionNumber is { } previous ? $"Versión {previous}" : "—")</td>
                             <td>

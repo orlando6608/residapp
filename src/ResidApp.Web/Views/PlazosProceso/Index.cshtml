@@ -105,7 +105,7 @@ else
                         → @ProcessMilestoneDisplay.Term(change.New.Normal) / @ProcessMilestoneDisplay.Term(change.New.Priority)
                     </div>
                     <div class="small text-body-secondary">
-                        @change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Dirección Clínica@(change.ChangedByCurrentAccount ? " · tú" : "")
+                        @CenterTime.Local(change.ChangedAt).ToString("dd/MM/yyyy HH:mm") · Dirección Clínica@(change.ChangedByCurrentAccount ? " · tú" : "")
                     </div>
                 </li>
             }

@@ -11,7 +11,7 @@
         <h2 class="h5 card-title">Observación original</h2>
         <p class="text-muted">
             @(esPropio ? "Observada" : "Registrada") por @SystemProfileDisplay.Label(evento.AuthorProfile)
-            el @evento.OccurredAt.ToLocalTime().ToString("g"). No es editable.
+            el @CenterTime.Local(evento.OccurredAt).ToString("g"). No es editable.
         </p>
         @if (esPropio)
         {
@@ -104,7 +104,7 @@
                 <ul class="mb-0">
                     @foreach (var accion in seguimiento.Actions)
                     {
-                        <li style="white-space: pre-line">@accion.RecordedAt.ToLocalTime().ToString("g") · @FollowUpDisplay.Label(accion.Type)@(accion.Type switch
+                        <li style="white-space: pre-line">@CenterTime.Local(accion.RecordedAt).ToString("g") · @FollowUpDisplay.Label(accion.Type)@(accion.Type switch
                             {
                                 FollowUpActionType.Reprogramacion => $": {FollowUpDisplay.Plan(accion.DueDate, accion.DueTime, accion.Criterion)} ({accion.Text})",
                                 FollowUpActionType.Transferencia => $": a {accion.IncomingTeam}{(accion.Text is null ? "" : $" ({accion.Text})")}",

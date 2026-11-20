@@ -78,7 +78,7 @@ public sealed class ReferralReportPdfRenderer : IReferralReportPdfRenderer
                     : $"{Profile(signature.Profile)} (cuenta {signature.SignerSubject})";
                 column.Item().Text(
                     $"Firmado por {signer} " +
-                    $"el {signature.SignedAt.ToLocalTime():dd'/'MM'/'yyyy} a las {signature.SignedAt.ToLocalTime():HH':'mm}.");
+                    $"el {CenterTime.Local(signature.SignedAt):dd'/'MM'/'yyyy} a las {CenterTime.Local(signature.SignedAt):HH':'mm}.");
                 column.Item().Text($"Huella SHA-256 del contenido: {signature.ContentHash}");
             });
         }))

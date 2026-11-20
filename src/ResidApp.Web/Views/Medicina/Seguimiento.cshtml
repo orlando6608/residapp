@@ -27,7 +27,7 @@
 <p class="text-muted">
     Equipo responsable: Medicina de @(evento.UnitName ?? "la unidad") ·
     iniciado @(seguimiento.StartedByCurrentAccount ? "por ti" : "por otro profesional de Medicina")
-    el @seguimiento.StartedAt.ToLocalTime().ToString("g") ·
+    el @CenterTime.Local(seguimiento.StartedAt).ToString("g") ·
     <a asp-action="Escalado" asp-route-eventoId="@evento.EventId">Ver el evento y las valoraciones</a>
 </p>
 
@@ -60,7 +60,7 @@
     <div class="alert alert-warning">
         <p class="mb-2">
             <strong>Transferencia sin recepción confirmada:</strong> al equipo o turno «@pendiente.IncomingTeam»,
-            el @pendiente.RecordedAt.ToLocalTime().ToString("g"). Confirmarla es opcional: el seguimiento sigue visible y trazable igualmente.
+            el @CenterTime.Local(pendiente.RecordedAt).ToString("g"). Confirmarla es opcional: el seguimiento sigue visible y trazable igualmente.
             @if (pendiente.Text is not null)
             {
                 <br /><span style="white-space: pre-line">Nota: @pendiente.Text</span>
@@ -92,7 +92,7 @@
                         <p class="mb-1">
                             <strong>@MedicalFollowUpDisplay.Label(accion.Type)</strong> ·
                             @(accion.ByCurrentAccount ? "tú" : "otro profesional de Medicina") ·
-                            @accion.RecordedAt.ToLocalTime().ToString("g")
+                            @CenterTime.Local(accion.RecordedAt).ToString("g")
                         </p>
                         @switch (accion.Type)
                         {

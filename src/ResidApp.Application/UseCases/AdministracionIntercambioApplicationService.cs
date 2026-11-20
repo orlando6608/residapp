@@ -62,7 +62,7 @@ public sealed class AdministracionIntercambioApplicationService(
     AdministrationAccessResolver access, ITableFileReader reader, IExchangeDirectory directory, IExchangeRepository repository,
     AdministracionEstructuraApplicationService estructura, CreateResident createResident)
 {
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+    private static DateOnly Today => CenterTime.Today;
 
     public Task<ApplicationResult<ImportAnalysis>> AnalyzeImportAsync(
         AdministracionQuery query, ExchangeEntity entity, byte[] file, ExchangeMappingInput? input, CancellationToken ct = default) =>

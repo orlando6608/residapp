@@ -32,7 +32,7 @@
 @if (Model.Suspension is { } suspension)
 {
     <div class="alert alert-warning" role="status">
-        <p class="fw-semibold mb-1">Suspendido por ingreso hospitalario desde el @suspension.Since.ToLocalTime().ToString("dd/MM/yyyy")</p>
+        <p class="fw-semibold mb-1">Suspendido por ingreso hospitalario desde el @CenterTime.Local(suspension.Since).ToString("dd/MM/yyyy")</p>
         <p class="mb-2">No se puede actuar sobre este residente (cambios, eventos, constantes, basales ni comunicados a familias) hasta que se reanude.@(suspension.Note is null ? "" : " Nota: " + suspension.Note)</p>
         <form asp-action="Reanudar" asp-route-residenteId="@resident.ResidentId.Value" method="post">
             <button type="submit" class="btn btn-outline-dark">Reanudar atención</button>
@@ -53,7 +53,7 @@
             <dt class="col-sm-4">Ubicación actual</dt>
             <dd class="col-sm-8">@resident.LocationLabel</dd>
             <dt class="col-sm-4">Fecha de alta</dt>
-            <dd class="col-sm-8">@resident.AdmittedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+            <dd class="col-sm-8">@CenterTime.Local(resident.AdmittedAt).ToString("dd/MM/yyyy HH:mm")</dd>
             @if (resident.AdmissionDate is { } admissionDate)
             {
                 <dt class="col-sm-4">Fecha de ingreso</dt>
@@ -217,7 +217,7 @@
                 <li class="list-group-item">
                     <div class="fw-semibold">@former.DisplayName <span class="text-body-secondary fw-normal">(@former.Relationship)</span></div>
                     <div class="small text-body-secondary">
-                        Vinculado el @former.LinkedAt.ToLocalTime().ToString("dd/MM/yyyy") · desvinculado el @former.UnlinkedAt.ToLocalTime().ToString("dd/MM/yyyy")
+                        Vinculado el @CenterTime.Local(former.LinkedAt).ToString("dd/MM/yyyy") · desvinculado el @CenterTime.Local(former.UnlinkedAt).ToString("dd/MM/yyyy")
                     </div>
                     <div class="small">Motivo: @former.Reason</div>
                 </li>
@@ -266,7 +266,7 @@
             @foreach (var designation in Model.Detail.EmergencyContacts)
             {
                 <li class="list-group-item">
-                    @designation.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración ·
+                    @CenterTime.Local(designation.At).ToString("dd/MM/yyyy HH:mm") · Administración ·
                     @(designation.Action switch
                     {
                         "AGREGAR" => "Contacto urgente añadido: " + designation.DisplayName,
@@ -294,8 +294,8 @@
                     <div class="text-body-secondary small">@location.RoomName@(location.PlaceName is null ? "" : $" · {location.PlaceName}")</div>
                 }
                 <div class="small">
-                    Desde el @location.From.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
-                    · @(location.Until is { } until ? $"hasta el {until.ToLocalTime():dd/MM/yyyy HH:mm}" : "vigente")
+                    Desde el @CenterTime.Local(location.From).ToString("dd/MM/yyyy HH:mm")
+                    · @(location.Until is { } until ? $"hasta el {CenterTime.Local(until):dd/MM/yyyy HH:mm}" : "vigente")
                 </div>
                 <div class="text-body-secondary small">Registrado por @SystemProfileDisplay.Label(location.RecordedBy)</div>
             </li>
@@ -323,8 +323,8 @@
                                 <div class="text-muted small fw-normal">@location.RoomName@(location.PlaceName is null ? "" : $" · {location.PlaceName}")</div>
                             }
                         </th>
-                        <td>@location.From.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@(location.Until is { } until ? until.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "Vigente")</td>
+                        <td>@CenterTime.Local(location.From).ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(location.Until is { } until ? CenterTime.Local(until).ToString("dd/MM/yyyy HH:mm") : "Vigente")</td>
                         <td>@SystemProfileDisplay.Label(location.RecordedBy)</td>
                     </tr>
                 }
@@ -345,7 +345,7 @@
             @foreach (var correction in Model.Detail.Corrections)
             {
                 <li class="list-group-item">
-                    <span class="fw-semibold">@correction.CorrectedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración</span>
+                    <span class="fw-semibold">@CenterTime.Local(correction.CorrectedAt).ToString("dd/MM/yyyy HH:mm") · Administración</span>
                     <div>Antes: @AdministrativeResidentDisplay.Identity(correction.Before)</div>
                     <div>Después: @AdministrativeResidentDisplay.Identity(correction.After)</div>
                     <div>Motivo: @correction.Reason</div>

@@ -284,7 +284,7 @@ public class AdministracionTurnosTests
         await service.ChangeTeamMemberAsync(Member(admin, teamId, nurse, true));
 
         var page = (await BuildEstructura(admin.ExternalSubject).ListAuditAsync(new ListAdministrativeAuditQuery(
-            admin.ProfileScopeId, admin.CenterId, DateOnly.FromDateTime(DateTime.Today).AddDays(-1), DateOnly.FromDateTime(DateTime.Today).AddDays(1)))).Value!;
+            admin.ProfileScopeId, admin.CenterId, CenterTime.Today.AddDays(-1), CenterTime.Today.AddDays(1)))).Value!;
 
         Assert.Contains(page.Entries, e => e.Action == "SHIFT_CREATE");
         Assert.Contains(page.Entries, e => e.Action == "TEAM_CREATE" && e.UnitName is not null);

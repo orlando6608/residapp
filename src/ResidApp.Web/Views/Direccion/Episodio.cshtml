@@ -50,7 +50,7 @@
             <dt class="col-sm-3">Origen</dt>
             <dd class="col-sm-9">@EnumDisplay.Label(episode.Origin)</dd>
             <dt class="col-sm-3">Registro</dt>
-            <dd class="col-sm-9">@episode.ReceivedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(episode.ReceivedAt))</dd>
+            <dd class="col-sm-9">@CenterTime.Local(episode.ReceivedAt).ToString("g") (@ElapsedTimeDisplay.Since(episode.ReceivedAt))</dd>
             <dt class="col-sm-3">Equipo responsable</dt>
             <dd class="col-sm-9">El de la unidad.</dd>
             @if (episode.HasFollowUp)
@@ -58,7 +58,7 @@
                 <dt class="col-sm-3">Seguimiento</dt>
                 <dd class="col-sm-9">
                     @(episode.FollowUpDue is { } due ? $"Fecha prevista {due:d}" : "Sin fecha prevista (por criterio)")
-                    @if (episode.FollowUpDue < DateOnly.FromDateTime(DateTime.Today))
+                    @if (episode.FollowUpDue < CenterTime.Today)
                     {
                         <span class="badge text-bg-warning">Pendiente</span>
                     }
@@ -79,7 +79,7 @@
     {
         <li class="list-group-item">
             <strong>@SupervisionDisplay.Label(milestone.Kind)</strong>
-            · @milestone.At.ToLocalTime().ToString("g")
+            · @CenterTime.Local(milestone.At).ToString("g")
             @if (milestone.Profile is { } profile)
             {
                 <span class="text-muted">· @SystemProfileDisplay.Label(profile)</span>

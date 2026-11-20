@@ -59,7 +59,7 @@
             <ul class="mb-2">
                 @foreach (var change in changes.OrderBy(c => c.ChangedAt))
                 {
-                    <li>@change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy"): @ProcessMilestoneDisplay.Label(change.Milestone), @ProcessMilestoneDisplay.ChangeSummary(change).</li>
+                    <li>@CenterTime.Local(change.ChangedAt).ToString("dd/MM/yyyy"): @ProcessMilestoneDisplay.Label(change.Milestone), @ProcessMilestoneDisplay.ChangeSummary(change).</li>
                 }
             </ul>
             <p class="mb-0">

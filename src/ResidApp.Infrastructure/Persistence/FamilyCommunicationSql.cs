@@ -1,3 +1,5 @@
+using ResidApp.Shared;
+
 namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>El contenido vigente de un comunicado a la familia (script 0049): el de su última corrección o, si no tiene ninguna, el original
@@ -15,7 +17,7 @@ internal static class FamilyCommunicationSql
     public static DateTimeOffset ScheduledAt(DateTime preparedAtUtc, DateTime? storedUtc) => storedUtc is { } stored
         ? new DateTimeOffset(DateTime.SpecifyKind(stored, DateTimeKind.Utc))
         : Domain.Enfermeria.FamilyCommunicationSchedule.ScheduledAt(
-            new DateTimeOffset(DateTime.SpecifyKind(preparedAtUtc, DateTimeKind.Utc)), TimeZoneInfo.Local);
+            new DateTimeOffset(DateTime.SpecifyKind(preparedAtUtc, DateTimeKind.Utc)), CenterTime.Zone);
 
     /// <summary>Cuántas correcciones tiene: la versión vigente (0 es el original).</summary>
     public const string Version =

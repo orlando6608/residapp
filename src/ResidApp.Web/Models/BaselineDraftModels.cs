@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Catalogs;
+using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
 
@@ -29,7 +30,7 @@ public sealed class CreateBaselineDraftFormModel
 
     [Required(ErrorMessage = "Indica la fecha de la información.")]
     [Display(Name = "Fecha de la información")]
-    public DateOnly? FechaInformacionComun { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly? FechaInformacionComun { get; set; } = CenterTime.Today;
 
     [Required]
     public Guid OperacionId { get; set; }
@@ -141,7 +142,7 @@ public sealed class BarthelFormModel
 
     [Required(ErrorMessage = "Indica la fecha de la valoración.")]
     [Display(Name = "Fecha de la valoración")]
-    public DateOnly? FechaValoracion { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly? FechaValoracion { get; set; } = CenterTime.Today;
 
     public Dictionary<string, string> Opciones { get; set; } = new();
 }

@@ -90,7 +90,7 @@
                 @if (Model.EmailConfirmedAt is { } confirmedAt)
                 {
                     <div class="alert alert-success py-2 mt-2 mb-2" role="status">
-                        La dirección actual está confirmada desde el @confirmedAt.ToLocalTime().ToString("dd/MM/yyyy"). Si la cambias o la borras, la confirmación se quita.
+                        La dirección actual está confirmada desde el @CenterTime.Local(confirmedAt).ToString("dd/MM/yyyy"). Si la cambias o la borras, la confirmación se quita.
                     </div>
                 }
                 else if (editing && !string.IsNullOrWhiteSpace(Model.Form.Correo))

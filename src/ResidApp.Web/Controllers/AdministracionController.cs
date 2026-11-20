@@ -86,7 +86,7 @@ public sealed partial class AdministracionController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var result = await service.ListResidentsAsync(Query(activeScope), ct);
         if (!result.Ok)
         {
@@ -129,7 +129,7 @@ public sealed partial class AdministracionController(
 
         var suspension = await statuses.FindSuspensionAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct);
         var photo = await photos.ReadEditorAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), ct);
-        return View(new AdministrativeResidentViewModel(result.Value!, DateOnly.FromDateTime(DateTime.Today), suspension.Value, photo.Value));
+        return View(new AdministrativeResidentViewModel(result.Value!, CenterTime.Today, suspension.Value, photo.Value));
     }
 
     public async Task<IActionResult> CorregirIdentidad(Guid residenteId, CancellationToken ct)
@@ -485,7 +485,7 @@ public sealed partial class AdministracionController(
             ViewData["EstadoInvitacion"] = await InvitationStatusAsync(
                 activeScope, portalAccount, Url.Action(nameof(AutorizacionFamiliar), new { residenteId, vinculoId })!, invitations, ct);
         }
-        return View(new FamilyAuthorizationViewModel(detail!.Resident, member, DateOnly.FromDateTime(DateTime.Today),
+        return View(new FamilyAuthorizationViewModel(detail!.Resident, member, CenterTime.Today,
             new FamilyAuthorizationFormModel
             {
                 ResidenteId = residenteId,
@@ -542,7 +542,7 @@ public sealed partial class AdministracionController(
         }
 
         form.CambiosEsperados = member.AuthorizationChanges.Count;
-        return View(new FamilyAuthorizationViewModel(detail!.Resident, member, DateOnly.FromDateTime(DateTime.Today), form));
+        return View(new FamilyAuthorizationViewModel(detail!.Resident, member, CenterTime.Today, form));
     }
 
     /// <summary>Portal Familiar (0052): da al familiar acceso al portal con su propia cuenta; la autorización se gestiona aparte.</summary>
@@ -998,7 +998,7 @@ public sealed partial class AdministracionController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var period = filtro.Period();
         var (from, to) = period.Resolve(today);
         var accounts = (await service.ListAccountsAsync(Query(activeScope), ct)).Value ?? [];

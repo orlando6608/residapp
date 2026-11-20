@@ -55,7 +55,7 @@ else
                         </ul>
                         @if (account.LiveInvitationExpiresAt is { } expires)
                         {
-                            <div class="small">Tiene una invitación sin usar hasta el @expires.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</div>
+                            <div class="small">Tiene una invitación sin usar hasta el @CenterTime.Local(expires).ToString("dd/MM/yyyy HH:mm").</div>
                         }
                     </div>
                     <div class="d-flex flex-wrap gap-2">

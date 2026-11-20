@@ -87,7 +87,7 @@ else
                         → @change.New.PublicationTime.ToString("HH:mm"), @change.New.MarginMinutes min y resumen @ResumenLabel(change.New.SummaryFrequency)
                     </div>
                     <div class="small text-body-secondary">
-                        @change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · Administración@(change.ChangedByCurrentAccount ? " · tú" : "")
+                        @CenterTime.Local(change.ChangedAt).ToString("dd/MM/yyyy HH:mm") · Administración@(change.ChangedByCurrentAccount ? " · tú" : "")
                     </div>
                 </li>
             }

@@ -43,7 +43,7 @@ else
                     {
                         <span class="badge text-bg-danger">Vencida</span>
                     }
-                    <span class="text-muted">@(item.UnitName ?? "Sin unidad") · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")</span>
+                    <span class="text-muted">@(item.UnitName ?? "Sin unidad") · emitida el @CenterTime.Local(indicacion.IssuedAt).ToString("g")</span>
                 </p>
                 <p class="mb-1" style="white-space: pre-line">@indicacion.Text</p>
                 <p class="text-muted mb-0">@FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion)</p>

@@ -25,7 +25,7 @@
 <p class="text-muted">
     Equipo responsable: Enfermería de @(evento.UnitName ?? "la unidad") ·
     iniciado @(seguimiento.StartedByCurrentAccount ? "por ti" : "por otro profesional de Enfermería")
-    el @seguimiento.StartedAt.ToLocalTime().ToString("g") ·
+    el @CenterTime.Local(seguimiento.StartedAt).ToString("g") ·
     <a asp-action="DetalleCambio" asp-route-eventoId="@evento.EventId">Ver el evento y la valoración</a>
 </p>
 
@@ -62,7 +62,7 @@
     <div class="alert alert-warning">
         <p class="mb-2">
             <strong>Transferencia pendiente de recepción:</strong> al equipo o turno «@pendiente.IncomingTeam»,
-            el @pendiente.RecordedAt.ToLocalTime().ToString("g").
+            el @CenterTime.Local(pendiente.RecordedAt).ToString("g").
             @if (pendiente.Text is not null)
             {
                 <br /><span style="white-space: pre-line">Nota: @pendiente.Text</span>
@@ -94,7 +94,7 @@
                         <p class="mb-1">
                             <strong>@FollowUpDisplay.Label(accion.Type)</strong> ·
                             @(accion.ByCurrentAccount ? "tú" : "otro profesional de Enfermería") ·
-                            @accion.RecordedAt.ToLocalTime().ToString("g")
+                            @CenterTime.Local(accion.RecordedAt).ToString("g")
                         </p>
                         @switch (accion.Type)
                         {

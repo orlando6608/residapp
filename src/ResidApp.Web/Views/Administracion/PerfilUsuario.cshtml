@@ -30,10 +30,10 @@
 
 <h1 class="h3">@profileLabel · @name</h1>
 <p class="text-muted">
-    Concedido el @profile.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") por @profile.GrantedBy.
+    Concedido el @CenterTime.Local(profile.GrantedAt).ToString("dd/MM/yyyy HH:mm") por @profile.GrantedBy.
     @if (profile.RevokedAt is { } revokedAt)
     {
-        @:Revocado el @revokedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") por @profile.RevokedBy: ya no da acceso a nada.
+        @:Revocado el @CenterTime.Local(revokedAt).ToString("dd/MM/yyyy HH:mm") por @profile.RevokedBy: ya no da acceso a nada.
     }
 </p>
 @if (TempData["Mensaje"] is string mensaje)
@@ -92,7 +92,7 @@
                 <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <span>
                         <strong>@unit.Name</strong>
-                        <span class="text-muted">· desde el @unit.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @unit.GrantedBy</span>
+                        <span class="text-muted">· desde el @CenterTime.Local(unit.GrantedAt).ToString("dd/MM/yyyy HH:mm") · @unit.GrantedBy</span>
                     </span>
                     @if (Model.CanChange && activeUnits.Count > 1 && Model.Manages(unit.TargetId))
                     {
@@ -150,7 +150,7 @@
                     <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <span>
                             <strong>@resident.Name</strong>
-                            <span class="text-muted">· desde el @resident.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @resident.GrantedBy</span>
+                            <span class="text-muted">· desde el @CenterTime.Local(resident.GrantedAt).ToString("dd/MM/yyyy HH:mm") · @resident.GrantedBy</span>
                         </span>
                         @if (Model.CanChange)
                         {
@@ -216,7 +216,7 @@
                         }
                         else
                         {
-                            <span class="text-muted">· desde el @grant.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @grant.GrantedBy</span>
+                            <span class="text-muted">· desde el @CenterTime.Local(grant.GrantedAt).ToString("dd/MM/yyyy HH:mm") · @grant.GrantedBy</span>
                         }
                     </span>
                     @if (Model.CanChange)
@@ -245,8 +245,8 @@
             @foreach (var (kind, grant) in revoked)
             {
                 <li class="list-group-item">
-                    @kind <strong>@grant.Name</strong>: concedido el @grant.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @grant.GrantedBy;
-                    revocado el @grant.RevokedAt!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @grant.RevokedBy
+                    @kind <strong>@grant.Name</strong>: concedido el @CenterTime.Local(grant.GrantedAt).ToString("dd/MM/yyyy HH:mm") · @grant.GrantedBy;
+                    revocado el @CenterTime.Local(grant.RevokedAt!.Value).ToString("dd/MM/yyyy HH:mm") · @grant.RevokedBy
                 </li>
             }
         </ul>

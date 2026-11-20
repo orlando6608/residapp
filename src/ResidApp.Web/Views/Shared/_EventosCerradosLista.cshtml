@@ -26,8 +26,8 @@
                                 }
                             </p>
                             <p class="text-body-secondary small mb-1">
-                                Registrado el @item.OccurredAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(item.AuthorProfile) ·
-                                cerrado el @item.ClosedAt.ToLocalTime().ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)
+                                Registrado el @CenterTime.Local(item.OccurredAt).ToString("g") por @SystemProfileDisplay.Label(item.AuthorProfile) ·
+                                cerrado el @CenterTime.Local(item.ClosedAt).ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)
                             </p>
                             <p class="text-body-secondary small mb-0">@ResidentHistoryDisplay.Context(item.Context)</p>
                         </div>
@@ -52,7 +52,7 @@
                     @foreach (var item in Model.Events)
                     {
                         <tr>
-                            <td>@item.OccurredAt.ToLocalTime().ToString("g")</td>
+                            <td>@CenterTime.Local(item.OccurredAt).ToString("g")</td>
                             <td>
                                 @if (item.Classification == ResidApp.Domain.Auxiliar.DailyChangeClassification.Prioritario)
                                 {
@@ -66,7 +66,7 @@
                             </td>
                             <td>@SystemProfileDisplay.Label(item.AuthorProfile)</td>
                             <td>@ResidentHistoryDisplay.Context(item.Context)</td>
-                            <td>@item.ClosedAt.ToLocalTime().ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)</td>
+                            <td>@CenterTime.Local(item.ClosedAt).ToString("g") por @ResidentHistoryDisplay.ClosedBy(item)</td>
                             <td>
                                 @if (Model.DetailAction is not null)
                                 {
