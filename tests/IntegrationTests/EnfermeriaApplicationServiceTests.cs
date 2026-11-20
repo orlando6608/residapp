@@ -436,8 +436,9 @@ public class EnfermeriaApplicationServiceTests
     }
 
     internal static StartFollowUpCommand StartFollowUpCommand(
-        SeededProfile seed, Guid eventId, int revision, DateOnly? dueDate = null, string? criterion = "Si reaparece la tos.") =>
-        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, "Vigilar tolerancia.");
+        SeededProfile seed, Guid eventId, int revision, DateOnly? dueDate = null, string? criterion = "Si reaparece la tos.",
+        TimeOnly? dueTime = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, "Vigilar tolerancia.", dueTime);
 
     internal static async Task<PendingChangeDetail> DetailAsync(SeededProfile seed, Guid eventId) =>
         (await BuildService(seed.ExternalSubject).FindPendingChangeDetailAsync(
@@ -473,6 +474,59 @@ public class EnfermeriaApplicationServiceTests
         // La valoración no se edita durante el seguimiento: lo nuevo son actuaciones del seguimiento.
         var save = await service.SaveNursingAssessmentAsync(SaveCommand(enfermera, eventId, detail.Revision));
         Assert.Equal(ApplicationFailureCode.Conflict, save.Error!.Code);
+    }
+
+    [Fact]
+    public async Task StartFollowUp_ConHora_LaGuardaYLaLeenLasBandejasYElDetalle()
+    {
+        var (enfermera, companera, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+
+        var started = await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, new DateOnly(2030, 1, 15), null, new TimeOnly(18, 30)));
+
+        Assert.True(started.Ok);
+        var item = Assert.Single(await FollowUpsAsync(companera));
+        Assert.Equal(new DateOnly(2030, 1, 15), item.DueDate);
+        Assert.Equal(new TimeOnly(18, 30), item.DueTime);
+        var detail = (await DetailAsync(companera, eventId)).FollowUp!;
+        Assert.Equal(new TimeOnly(18, 30), detail.DueTime);
+        Assert.Equal(new DateOnly(2030, 1, 15), detail.DueDate);
+    }
+
+    [Fact]
+    public async Task StartFollowUp_HoraSinFecha_EsInvalido()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+
+        var result = await BuildService(enfermera.ExternalSubject).StartFollowUpAsync(
+            StartFollowUpCommand(enfermera, eventId, revision, null, "Si reaparece la tos.", new TimeOnly(9, 0)));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+    }
+
+    [Fact]
+    public async Task ReprogramarSeguimiento_ConHora_SustituyeAlPlanYSinHoraLaQuita()
+    {
+        var (enfermera, _, eventId) = await SeedOwnEventAsync();
+        var revision = await StartAndSaveAsync(enfermera, eventId);
+        var service = BuildService(enfermera.ExternalSubject);
+        revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, new DateOnly(2030, 1, 15), null, new TimeOnly(8, 0)))).Value;
+
+        revision = (await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Reprogramacion,
+            "Persiste la tos.", new DateOnly(2030, 2, 1), HoraPrevista: new TimeOnly(20, 15)))).Value;
+        var reprogrammed = (await DetailAsync(enfermera, eventId)).FollowUp!;
+        Assert.Equal(new DateOnly(2030, 2, 1), reprogrammed.DueDate);
+        Assert.Equal(new TimeOnly(20, 15), reprogrammed.DueTime);
+
+        await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, eventId, revision, FollowUpActionType.Reprogramacion,
+            "Basta con el día.", new DateOnly(2030, 3, 1)));
+        var withoutTime = (await DetailAsync(enfermera, eventId)).FollowUp!;
+        Assert.Equal(new DateOnly(2030, 3, 1), withoutTime.DueDate);
+        Assert.Null(withoutTime.DueTime);
     }
 
     [Fact]

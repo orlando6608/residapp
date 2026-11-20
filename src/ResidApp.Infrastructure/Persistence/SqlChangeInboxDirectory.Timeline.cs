@@ -137,7 +137,7 @@ public sealed partial class SqlChangeInboxDirectory
                     Utc(r.RecordedAt), r.EventId, EnumCode.ParseCode<SystemProfile>(r.ProfileCode), r.Text, r.Reason) { AuthorName = r.AuthorName }));
 
             foreach (var i in await connection.QueryAsync<TimelineIndicationRow>(new CommandDefinition("""
-                SELECT evento_id AS EventId, texto AS [Text], fecha_prevista AS DueDate, criterio AS Criterion,
+                SELECT evento_id AS EventId, texto AS [Text], fecha_prevista AS DueDate, hora_prevista AS DueTime, criterio AS Criterion,
                        informacion_adicional AS AdditionalInformation, emitida_en AS IssuedAt, leida_en AS ReadAt,
                        resuelta_en AS ResolvedAt, estado_codigo AS StatusCode, incidencia AS Incident
                   FROM dbo.indicaciones_medicas WHERE evento_id IN @EventIds
@@ -145,7 +145,7 @@ public sealed partial class SqlChangeInboxDirectory
             {
                 entries.Add(new TimelineEntry.IndicationIssued(
                     Utc(i.IssuedAt), i.EventId, i.Text, i.DueDate is null ? null : DateOnly.FromDateTime(i.DueDate.Value), i.Criterion,
-                    i.AdditionalInformation));
+                    i.AdditionalInformation, TimeOf(i.DueTime)));
                 if (i.ReadAt is { } readAt)
                 {
                     entries.Add(new TimelineEntry.IndicationRead(Utc(readAt), i.EventId, i.Text));
@@ -234,11 +234,11 @@ public sealed partial class SqlChangeInboxDirectory
         object parameters, CancellationToken ct)
     {
         var starts = await connection.QueryAsync<TimelineFollowUpRow>(new CommandDefinition($"""
-            SELECT evento_id AS EventId, fecha_prevista AS DueDate, criterio AS Criterion, {notesColumn} AS Notes, iniciado_en AS StartedAt
+            SELECT evento_id AS EventId, fecha_prevista AS DueDate, hora_prevista AS DueTime, criterio AS Criterion, {notesColumn} AS Notes, iniciado_en AS StartedAt
               FROM dbo.{followUpTable} WHERE evento_id IN @EventIds
             """, parameters, cancellationToken: ct));
         var actions = await connection.QueryAsync<TimelineFollowUpActionRow>(new CommandDefinition($"""
-            SELECT s.evento_id AS EventId, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate,
+            SELECT s.evento_id AS EventId, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.hora_prevista AS DueTime,
                    a.criterio AS Criterion, a.equipo_entrante AS IncomingTeam, a.registrado_en AS RecordedAt
               FROM dbo.{actionTable} a
               JOIN dbo.{followUpTable} s ON s.id = a.seguimiento_id
@@ -246,10 +246,10 @@ public sealed partial class SqlChangeInboxDirectory
             """, parameters, cancellationToken: ct));
         return starts
             .Select(s => (TimelineEntry)new TimelineEntry.FollowUpStarted(
-                Utc(s.StartedAt), s.EventId, profile, ToDate(s.DueDate), s.Criterion, s.Notes))
+                Utc(s.StartedAt), s.EventId, profile, ToDate(s.DueDate), s.Criterion, s.Notes, TimeOf(s.DueTime)))
             .Concat(actions.Select(a => new TimelineEntry.FollowUpActionRecorded(
                 Utc(a.RecordedAt), a.EventId, profile, EnumCode.ParseCode<FollowUpActionType>(a.TypeCode), a.Text, ToDate(a.DueDate),
-                a.Criterion, a.IncomingTeam)));
+                a.Criterion, a.IncomingTeam, TimeOf(a.DueTime))));
     }
 
     private const string VitalSignColumns = """
@@ -282,13 +282,13 @@ public sealed partial class SqlChangeInboxDirectory
     private sealed record TimelineRectificationRow(Guid EventId, string ProfileCode, string Text, string Reason, DateTime RecordedAt, string? AuthorName);
 
     private sealed record TimelineIndicationRow(
-        Guid EventId, string Text, DateTime? DueDate, string? Criterion, string? AdditionalInformation, DateTime IssuedAt,
+        Guid EventId, string Text, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string? AdditionalInformation, DateTime IssuedAt,
         DateTime? ReadAt, DateTime? ResolvedAt, string StatusCode, string? Incident);
 
-    private sealed record TimelineFollowUpRow(Guid EventId, DateTime? DueDate, string? Criterion, string? Notes, DateTime StartedAt);
+    private sealed record TimelineFollowUpRow(Guid EventId, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string? Notes, DateTime StartedAt);
 
     private sealed record TimelineFollowUpActionRow(
-        Guid EventId, string TypeCode, string? Text, DateTime? DueDate, string? Criterion, string? IncomingTeam, DateTime RecordedAt);
+        Guid EventId, string TypeCode, string? Text, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string? IncomingTeam, DateTime RecordedAt);
 
     private sealed record TimelineProtocolRow(Guid Id, Guid EventId, string ProfileCode, string? Note, DateTime ActivatedAt);
 

@@ -48,6 +48,12 @@
                 <span asp-validation-for="Form.FechaPrevista" class="text-danger"></span>
             </div>
             <div class="mb-3">
+                <label asp-for="Form.HoraPrevista" class="form-label"></label>
+                <input asp-for="Form.HoraPrevista" type="time" class="form-control form-control-lg" style="max-width: 260px;" aria-describedby="ayuda-hora" />
+                <div id="ayuda-hora" class="form-text">Es una hora orientativa y necesita una fecha. Con hora, la indicación figura como «Vencida» cuando pasa esa hora; sin hora, al día siguiente de la fecha.</div>
+                <span asp-validation-for="Form.HoraPrevista" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
                 <label asp-for="Form.Criterio" class="form-label"></label>
                 <textarea asp-for="Form.Criterio" class="form-control" rows="2"></textarea>
                 <div class="form-text">Por ejemplo, cuándo o en qué situación aplicarla.</div>

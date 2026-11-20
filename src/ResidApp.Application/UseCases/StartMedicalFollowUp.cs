@@ -8,7 +8,7 @@ namespace ResidApp.Application.UseCases;
 
 public sealed record StartMedicalFollowUpCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision,
-    DateOnly? FechaPrevista, string? Criterio, string? Objetivo);
+    DateOnly? FechaPrevista, string? Criterio, string? Objetivo, TimeOnly? HoraPrevista = null);
 
 /// <summary>MED-10 "iniciar seguimiento médico", una de las salidas de la conducta médica: fecha prevista o
 /// criterio y objetivo. Exige la valoración médica guardada; un solo seguimiento médico por evento. El equipo
@@ -20,7 +20,7 @@ public sealed class StartMedicalFollowUp(
     public Task<ApplicationResult<int>> ExecuteAsync(StartMedicalFollowUpCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            var followUp = new MedicalFollowUp(new FollowUpPlan(command.FechaPrevista, command.Criterio), command.Objetivo);
+            var followUp = new MedicalFollowUp(new FollowUpPlan(command.FechaPrevista, command.Criterio, command.HoraPrevista), command.Objetivo);
 
             var scope = await MedicinaScope.RequireAsync(scopes, session, directory, command.AmbitoPerfilId, command.CentroId, command.EventoId, ct);
             return await repository.StartFollowUpAsync(

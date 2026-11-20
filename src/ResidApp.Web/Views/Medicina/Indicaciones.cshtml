@@ -46,7 +46,7 @@ else
                     <span class="text-muted">@(item.UnitName ?? "Sin unidad") · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")</span>
                 </p>
                 <p class="mb-1" style="white-space: pre-line">@indicacion.Text</p>
-                <p class="text-muted mb-0">@FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion)</p>
+                <p class="text-muted mb-0">@FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion)</p>
                 @if (indicacion.Incident is not null)
                 {
                     <p class="mb-0 mt-1" style="white-space: pre-line"><strong>Incidencia:</strong> @indicacion.Incident</p>

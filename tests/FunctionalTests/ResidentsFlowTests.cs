@@ -453,15 +453,26 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["Form.Valoracion"] = "Posible infección respiratoria.", ["Form.Actuaciones"] = "Se solicita radiografía.",
         });
         var indicationPage = await doctor.GetStringAsync($"/Medicina/Indicacion?eventoId={eventId}");
+        // La hora prevista es opcional pero necesita fecha: sin ella el formulario lo dice y no se guarda nada.
+        var timeWithoutDate = await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
+        {
+            ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.", ["Form.HoraPrevista"] = "18:30",
+        });
+        Assert.Contains("Para indicar una hora hay que indicar también la fecha.", timeWithoutDate);
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.indicaciones_medicas WHERE evento_id = @eventId", new { eventId }));
         await PostAsync(doctor, "/Medicina/Indicacion", indicationPage, new()
         {
             ["Form.EventoId"] = eventId.ToString(), ["Form.Revision"] = (await RevisionAsync()).ToString(), ["Form.Texto"] = "Control de SpO2 cada 4 horas.",
-            ["Form.Criterio"] = "Si baja de 90 %, avisar.",
+            ["Form.Criterio"] = "Si baja de 90 %, avisar.", ["Form.FechaPrevista"] = "2030-01-15", ["Form.HoraPrevista"] = "18:30",
         });
         Assert.Equal("CON_INDICACION_PENDIENTE", await connection.ExecuteScalarAsync<string>("SELECT estado_codigo FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
         // Guía de pruebas 2, prueba 5: junto al residente consta el estado del evento, aparte del de cada indicación («Pendiente de lectura»).
         var afterIndication = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Escalado?eventoId={eventId}"));
         Assert.Contains("Con indicación pendiente</span>", afterIndication);
+        // La hora prevista consta junto a la fecha («a las 18:30»), también para Enfermería.
+        Assert.Contains("Revisar el 15/01/2030 a las 18:30 · Si baja de 90 %, avisar.", afterIndication);
+        Assert.Contains("Revisar el 15/01/2030 a las 18:30", WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Indicaciones")));
 
         // Medicina ve el bloqueo y, si fuerza el envío, el mensaje.
         var blockedPage = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Cerrar?eventoId={eventId}"));

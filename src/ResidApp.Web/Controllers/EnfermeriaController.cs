@@ -52,7 +52,7 @@ public sealed class EnfermeriaController(
         return View(new EnfermeriaInicioViewModel(
             ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
-            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
+            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate, s.DueTime)) : 0,
             comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0,
             indicaciones.Ok ? indicaciones.Value!.Count : 0,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
@@ -868,7 +868,7 @@ public sealed class EnfermeriaController(
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.StartFollowUpAsync(new StartFollowUpCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision,
-            form.FechaPrevista, form.Criterio, form.IndicacionesContinuidad), ct);
+            form.FechaPrevista, form.Criterio, form.IndicacionesContinuidad, form.HoraPrevista), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = "Seguimiento iniciado.";
@@ -991,7 +991,7 @@ public sealed class EnfermeriaController(
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.RecordFollowUpActionAsync(new RecordFollowUpActionCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
-            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntranteId, form.TransferenciaId), ct);
+            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntranteId, form.TransferenciaId, form.HoraPrevista), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = form.Tipo switch

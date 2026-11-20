@@ -277,3 +277,11 @@ Repite estos pasos antes de dar un bloque por cerrado:
   fichero y lee de él el token, la revisión y el `OperacionId`. En la prueba en Azure del evento propio, una
   captura en variable salió vacía y la indicación se envió sin revisión: la app la rechazó sin guardar nada,
   pero hubo que repetirla.
+
+- **Dapper con registros posicionales (`record Fila(...)`): la columna nueva va en el mismo sitio que en el `SELECT`.** Dapper empareja el
+  constructor por el orden y el tipo de las columnas, no solo por el nombre: al añadir `hora_prevista` (script `0106`) al final del registro y a
+  mitad del `SELECT`, la lectura de supervisión fallaba y cuatro pruebas de integración se caían con un `NullReferenceException` lejos del
+  origen. Pon el campo nuevo del registro justo donde sale la columna.
+- **Un `UPDATE` legal que reescribe una columna protegida por `TR_im_guard`** (por ejemplo `indicaciones_medicas`) se prueba con el cambio de
+  estado válido más la columna tocada: la guardia debe rechazarlo, y el mismo cambio sin tocarla debe pasar (`MedicinaApplicationServiceTests`).
+- **No lances `dotnet test` mientras hay otra suite en marcha en segundo plano**: reconstruye los mismos `bin` y da fallos falsos.

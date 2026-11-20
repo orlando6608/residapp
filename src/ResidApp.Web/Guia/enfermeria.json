@@ -267,7 +267,7 @@
     {
       "codigo": "ENF-09",
       "pregunta": "¿Cómo hago un seguimiento y lo resuelvo?",
-      "palabras": ["seguimiento", "actuación", "reprogramar", "resolver", "fecha prevista", "criterio"],
+      "palabras": ["seguimiento", "actuación", "reprogramar", "resolver", "fecha prevista", "hora prevista", "criterio"],
       "permisos": [],
       "antes": [
         "Tener la valoración guardada y estar en la decisión asistencial (ver ENF-06).",
@@ -275,12 +275,12 @@
       ],
       "pasos": [
         { "texto": "En la decisión asistencial, pulsa **Iniciar seguimiento**.", "botones": ["Iniciar seguimiento"] },
-        { "texto": "Indica una «Fecha prevista de revisión», un «Criterio de revisión» (por ejemplo, la situación que haría revisarlo antes) o ambos, y, si quieres, «Indicaciones de continuidad». Pulsa **Iniciar seguimiento**.", "campos": ["Fecha prevista de revisión", "Criterio de revisión", "Indicaciones de continuidad"] },
-        { "texto": "El evento pasa a la tarjeta **Seguimientos**. Ábrelo y usa **Registrar actuación** (escribe la «Actuación») o **Reprogramar** (nueva fecha o criterio, y una «Justificación»).", "botones": ["Registrar actuación", "Reprogramar"], "campos": ["Actuación", "Nueva fecha prevista", "Nuevo criterio", "Justificación"] },
+        { "texto": "Indica una «Fecha prevista de revisión» (y, si quieres, una «Hora prevista (opcional)»), un «Criterio de revisión» (por ejemplo, la situación que haría revisarlo antes) o ambos, y, si quieres, «Indicaciones de continuidad». Pulsa **Iniciar seguimiento**.", "campos": ["Fecha prevista de revisión", "Hora prevista (opcional)", "Criterio de revisión", "Indicaciones de continuidad"] },
+        { "texto": "El evento pasa a la tarjeta **Seguimientos**. Ábrelo y usa **Registrar actuación** (escribe la «Actuación») o **Reprogramar** (nueva fecha, con su hora si quieres, o criterio, y una «Justificación»).", "botones": ["Registrar actuación", "Reprogramar"], "campos": ["Actuación", "Nueva fecha prevista", "Nueva hora prevista (opcional)", "Nuevo criterio", "Justificación"] },
         { "texto": "Cuando ya no haga falta seguir, pulsa **Resolver**: vuelves a la decisión asistencial, donde cierras el evento o lo escalas.", "botones": ["Resolver"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "La bandeja «Seguimientos» es común a la unidad y muestra la próxima revisión, la última actuación y si hay una transferencia pendiente. Si la fecha prevista pasa, consta como **Pendiente**, pero sigue abierto: nunca se cierra ni se oculta solo. Uno que solo tiene criterio no vence. La valoración no se modifica durante el seguimiento." }
+        { "para": "Enfermería", "texto": "La bandeja «Seguimientos» es común a la unidad y muestra la próxima revisión, la última actuación y si hay una transferencia pendiente. Si la fecha prevista pasa, consta como **Pendiente**, pero sigue abierto: nunca se cierra ni se oculta solo. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha: con hora, pasa a **Pendiente** cuando pasa esa hora (hora de Madrid); sin hora, al día siguiente de la fecha. Uno que solo tiene criterio no vence. La valoración no se modifica durante el seguimiento." }
       ],
       "dudas": [
         { "p": "«Revisa los datos: indica una fecha prevista o un criterio de revisión. Para iniciar un seguimiento hace falta una valoración guardada.»", "r": "Rellena la fecha o el criterio, o guarda antes la valoración (ENF-05)." },

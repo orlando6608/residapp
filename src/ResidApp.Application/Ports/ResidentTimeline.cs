@@ -44,7 +44,7 @@ public abstract record TimelineEntry(DateTimeOffset At, Guid? EventId, SystemPro
     public sealed record Escalated(DateTimeOffset At, Guid? EventId, string Reason) : TimelineEntry(At, EventId, SystemProfile.Enfermeria);
 
     public sealed record IndicationIssued(
-        DateTimeOffset At, Guid? EventId, string Text, DateOnly? DueDate, string? Criterion, string? AdditionalInformation)
+        DateTimeOffset At, Guid? EventId, string Text, DateOnly? DueDate, string? Criterion, string? AdditionalInformation, TimeOnly? DueTime = null)
         : TimelineEntry(At, EventId, SystemProfile.Medicina);
 
     public sealed record IndicationRead(DateTimeOffset At, Guid? EventId, string Text) : TimelineEntry(At, EventId, SystemProfile.Enfermeria);
@@ -54,12 +54,12 @@ public abstract record TimelineEntry(DateTimeOffset At, Guid? EventId, SystemPro
 
     /// <summary>Seguimiento de Enfermería (Notes = indicaciones de continuidad) o médico (Notes = objetivo).</summary>
     public sealed record FollowUpStarted(
-        DateTimeOffset At, Guid? EventId, SystemProfile? Profile, DateOnly? DueDate, string? Criterion, string? Notes)
+        DateTimeOffset At, Guid? EventId, SystemProfile? Profile, DateOnly? DueDate, string? Criterion, string? Notes, TimeOnly? DueTime = null)
         : TimelineEntry(At, EventId, Profile);
 
     public sealed record FollowUpActionRecorded(
         DateTimeOffset At, Guid? EventId, SystemProfile? Profile, FollowUpActionType Type, string? Text, DateOnly? DueDate,
-        string? Criterion, string? IncomingTeam) : TimelineEntry(At, EventId, Profile);
+        string? Criterion, string? IncomingTeam, TimeOnly? DueTime = null) : TimelineEntry(At, EventId, Profile);
 
     public sealed record UrgentProtocolActivated(DateTimeOffset At, Guid? EventId, SystemProfile? Profile, string? Note)
         : TimelineEntry(At, EventId, Profile);

@@ -194,7 +194,7 @@ public static class TimelineDisplay
                 break;
             case TimelineEntry.IndicationIssued i:
                 fields.Add(("Indicación", i.Text));
-                fields.Add(("Fecha prevista o criterio", FollowUpDisplay.Plan(i.DueDate, i.Criterion)));
+                fields.Add(("Fecha prevista o criterio", FollowUpDisplay.Plan(i.DueDate, i.DueTime, i.Criterion)));
                 fields.Add(("Información adicional", i.AdditionalInformation));
                 break;
             case TimelineEntry.IndicationRead r:
@@ -205,12 +205,12 @@ public static class TimelineDisplay
                 fields.Add(("Incidencia", r.Incident));
                 break;
             case TimelineEntry.FollowUpStarted f:
-                fields.Add(("Fecha prevista o criterio", FollowUpDisplay.Plan(f.DueDate, f.Criterion)));
+                fields.Add(("Fecha prevista o criterio", FollowUpDisplay.Plan(f.DueDate, f.DueTime, f.Criterion)));
                 fields.Add((f.Profile == SystemProfile.Medicina ? "Objetivo" : "Indicaciones de continuidad", f.Notes));
                 break;
             case TimelineEntry.FollowUpActionRecorded a:
                 fields.Add(("Texto", a.Text));
-                fields.Add(("Nueva fecha o criterio", FollowUpDisplay.Plan(a.DueDate, a.Criterion)));
+                fields.Add(("Nueva fecha o criterio", FollowUpDisplay.Plan(a.DueDate, a.DueTime, a.Criterion)));
                 fields.Add(("Equipo o turno entrante", a.IncomingTeam));
                 break;
             case TimelineEntry.UrgentProtocolActivated p:

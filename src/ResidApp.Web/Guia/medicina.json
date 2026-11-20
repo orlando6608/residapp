@@ -151,7 +151,7 @@
     {
       "codigo": "MED-05",
       "pregunta": "¿Cómo elijo la conducta y doy una indicación a Enfermería?",
-      "palabras": ["conducta médica", "indicación", "indicaciones", "enfermería", "fecha prevista", "criterio"],
+      "palabras": ["conducta médica", "indicación", "indicaciones", "enfermería", "fecha prevista", "hora prevista", "criterio"],
       "permisos": [],
       "antes": [
         "Tener guardada la valoración médica (ver MED-04).",
@@ -160,9 +160,9 @@
       "pasos": [
         { "texto": "En el detalle del evento, pulsa **Pasar a conducta médica**. (Atajo: si todavía estás en la pantalla de la valoración y el evento sigue «En valoración médica», **Guardar e indicar a Enfermería** la guarda y abre directamente el formulario de la indicación: sigue en el paso 3.)", "botones": ["Pasar a conducta médica", "Guardar e indicar a Enfermería"] },
         { "texto": "Elige **Registrar indicaciones a Enfermería** (si ya hay alguna, será «Registrar otra indicación»).", "botones": ["Registrar indicaciones a Enfermería", "Registrar otra indicación"] },
-        { "texto": "Escribe la «Indicación», una «Fecha prevista», un «Criterio» o ambos, y, si hace falta, «Información adicional».", "campos": ["Indicación", "Fecha prevista", "Criterio", "Información adicional"] },
+        { "texto": "Escribe la «Indicación», una «Fecha prevista» (y, si quieres, una «Hora prevista (opcional)», orientativa), un «Criterio» o ambos, y, si hace falta, «Información adicional».", "campos": ["Indicación", "Fecha prevista", "Hora prevista (opcional)", "Criterio", "Información adicional"] },
         { "texto": "Pulsa **Registrar indicación** para guardarla e ir al detalle del evento, o **Registrar y añadir otra** para guardarla y seguir con otra indicación en un formulario en blanco.", "botones": ["Registrar indicación", "Registrar y añadir otra"] },
-        { "texto": "Para ver cómo van, abre la tarjeta **Indicaciones**: cada una está «Pendiente de lectura», «Leída, pendiente de realizar», «Realizada» o «No realizada (con incidencia)», y marca «Vencida» si pasó su fecha sin realizarse.", "botones": ["Indicaciones"], "campos": ["Pendiente de lectura", "Leída, pendiente de realizar", "Realizada", "No realizada (con incidencia)", "Vencida"] }
+        { "texto": "Para ver cómo van, abre la tarjeta **Indicaciones**: cada una está «Pendiente de lectura», «Leída, pendiente de realizar», «Realizada» o «No realizada (con incidencia)», y marca «Vencida» si pasó su hora prevista (o el día de su fecha, si no tiene hora) sin realizarse.", "botones": ["Indicaciones"], "campos": ["Pendiente de lectura", "Leída, pendiente de realizar", "Realizada", "No realizada (con incidencia)", "Vencida"] }
       ],
       "despues": [
         { "para": "Enfermería", "texto": "La ve en su bandeja de indicaciones: primero confirma la lectura y después registra si la realizó o describe la incidencia." },
@@ -195,14 +195,14 @@
       ],
       "pasos": [
         { "texto": "En **Conducta médica**, pulsa **Iniciar seguimiento médico**.", "botones": ["Iniciar seguimiento médico"] },
-        { "texto": "Escribe el «Objetivo del seguimiento» (qué esperas antes de decidir) y una «Fecha prevista de revisión», un «Criterio de revisión» o ambos. Pulsa **Iniciar seguimiento médico**.", "campos": ["Objetivo del seguimiento", "Fecha prevista de revisión", "Criterio de revisión"] },
-        { "texto": "El evento pasa a la tarjeta **Seguimientos**. Ábrelo y usa **Registrar revisión** (escribe la «Revisión») o **Reprogramar** (nueva fecha o criterio, y una «Justificación»).", "botones": ["Registrar revisión", "Reprogramar"], "campos": ["Revisión", "Nueva fecha prevista", "Nuevo criterio", "Justificación"] },
+        { "texto": "Escribe el «Objetivo del seguimiento» (qué esperas antes de decidir) y una «Fecha prevista de revisión» (y, si quieres, una «Hora prevista (opcional)»), un «Criterio de revisión» o ambos. Pulsa **Iniciar seguimiento médico**.", "campos": ["Objetivo del seguimiento", "Fecha prevista de revisión", "Hora prevista (opcional)", "Criterio de revisión"] },
+        { "texto": "El evento pasa a la tarjeta **Seguimientos**. Ábrelo y usa **Registrar revisión** (escribe la «Revisión») o **Reprogramar** (nueva fecha, con su hora si quieres, o criterio, y una «Justificación»).", "botones": ["Registrar revisión", "Reprogramar"], "campos": ["Revisión", "Nueva fecha prevista", "Nueva hora prevista (opcional)", "Nuevo criterio", "Justificación"] },
         { "texto": "Al terminar tu turno, en «Al terminar tu turno» decide: **Transferir** (elige el «Equipo entrante» y escribe la «Nota de continuidad») o **Conservar** (nota opcional).", "botones": ["Transferir", "Conservar"], "campos": ["Al terminar tu turno", "Equipo entrante", "Nota de continuidad"] },
         { "texto": "Quien recibe la transferencia puede pulsar **Confirmar recepción** (es opcional).", "botones": ["Confirmar recepción"] },
         { "texto": "Para terminar el seguimiento, pulsa **Resolver**: vuelves a la conducta, donde cierras el evento o registras una indicación.", "botones": ["Resolver"] }
       ],
       "despues": [
-        { "para": "Medicina", "texto": "El evento queda «En seguimiento médico» en la bandeja de la unidad, con el objetivo, la próxima revisión, la última actuación y quién lo lleva. Si la fecha prevista pasa, consta como **Pendiente** pero sigue abierto." },
+        { "para": "Medicina", "texto": "El evento queda «En seguimiento médico» en la bandeja de la unidad, con el objetivo, la próxima revisión, la última actuación y quién lo lleva. Si la fecha prevista pasa, consta como **Pendiente** pero sigue abierto. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha: con hora, pasa a **Pendiente** cuando pasa esa hora (hora de Madrid); sin hora, al día siguiente de la fecha." },
         { "para": "Enfermería", "texto": "Ve el seguimiento en solo lectura en el detalle del evento." }
       ],
       "dudas": [

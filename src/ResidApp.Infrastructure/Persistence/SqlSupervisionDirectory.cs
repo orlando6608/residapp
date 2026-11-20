@@ -47,6 +47,7 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                     THEN 1 ELSE 0 END AS BIT) AS Escalated,
                CAST(CASE WHEN ea.estado_codigo IN ('EN_SEGUIMIENTO', 'EN_SEGUIMIENTO_MEDICO') THEN 1 ELSE 0 END AS BIT) AS HasFollowUp,
                COALESCE(nurse_follow_up.DueDate, medical_follow_up.DueDate) AS FollowUpDue,
+               COALESCE(nurse_follow_up.DueTime, medical_follow_up.DueTime) AS FollowUpDueTime,
                CAST(CASE WHEN ea.estado_codigo IN ('PROTOCOLO_URGENTE', 'PROTOCOLO_URGENTE_MEDICO') THEN 1 ELSE 0 END AS BIT)
                    AS HasUrgentProtocol,
                (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
@@ -54,15 +55,17 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
                  WHERE i.evento_id = ea.id AND i.estado_codigo = 'NO_REALIZADA') AS IndicationsNotDone
         {ScopedEventsFrom}
-          OUTER APPLY (SELECT CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate
+          OUTER APPLY (SELECT CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate,
+                              CASE WHEN reschedule.id IS NULL THEN seg.hora_prevista ELSE reschedule.hora_prevista END AS DueTime
                          FROM dbo.seguimientos seg
-                         OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista FROM dbo.seguimiento_acciones a
+                         OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.hora_prevista FROM dbo.seguimiento_acciones a
                                        WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'REPROGRAMACION'
                                        ORDER BY a.registrado_en DESC) reschedule
                         WHERE seg.evento_id = ea.id AND ea.estado_codigo = 'EN_SEGUIMIENTO') nurse_follow_up
-          OUTER APPLY (SELECT CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate
+          OUTER APPLY (SELECT CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate,
+                              CASE WHEN reschedule.id IS NULL THEN seg.hora_prevista ELSE reschedule.hora_prevista END AS DueTime
                          FROM dbo.seguimientos_medicos seg
-                         OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista FROM dbo.seguimiento_medico_acciones a
+                         OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.hora_prevista FROM dbo.seguimiento_medico_acciones a
                                        WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'REPROGRAMACION'
                                        ORDER BY a.registrado_en DESC) reschedule
                         WHERE seg.evento_id = ea.id AND ea.estado_codigo = 'EN_SEGUIMIENTO_MEDICO') medical_follow_up
@@ -478,13 +481,13 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         EnumCode.ParseCode<ClinicalEventOrigin>(r.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(r.ClassificationCode),
         EnumCode.ParseCode<ClinicalEventStatus>(r.StatusCode), Utc(r.ReceivedAt), r.Escalated, r.HasFollowUp,
         r.FollowUpDue is null ? null : DateOnly.FromDateTime(r.FollowUpDue.Value), r.HasUrgentProtocol,
-        r.IndicationsPending, r.IndicationsNotDone);
+        r.IndicationsPending, r.IndicationsNotDone, r.FollowUpDueTime is { } time ? TimeOnly.FromTimeSpan(time) : null);
 
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
 
     private sealed record EpisodeRow(
         Guid EventId, Guid ResidentId, string ResidentDisplayName, Guid UnitId, string UnitName, string OriginCode,
-        string ClassificationCode, string StatusCode, DateTime ReceivedAt, bool Escalated, bool HasFollowUp, DateTime? FollowUpDue,
+        string ClassificationCode, string StatusCode, DateTime ReceivedAt, bool Escalated, bool HasFollowUp, DateTime? FollowUpDue, TimeSpan? FollowUpDueTime,
         bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone);
 
     private sealed record ReferralRow(

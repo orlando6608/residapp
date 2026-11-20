@@ -49,7 +49,7 @@ public sealed class MedicinaController(
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura),
             lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada),
             seguimientos.Ok ? seguimientos.Value!.Count : 0,
-            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate)) : 0,
+            seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate, s.DueTime)) : 0,
             protocolos.Ok ? protocolos.Value!.Count : 0, avisos.Ok ? avisos.Value : null,
             comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0));
     }
@@ -716,7 +716,7 @@ public sealed class MedicinaController(
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.StartMedicalFollowUpAsync(new StartMedicalFollowUpCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision,
-            form.FechaPrevista, form.Criterio, form.Objetivo), ct);
+            form.FechaPrevista, form.Criterio, form.Objetivo, form.HoraPrevista), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = "Seguimiento médico iniciado.";
@@ -791,7 +791,7 @@ public sealed class MedicinaController(
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.RecordMedicalFollowUpActionAsync(new RecordMedicalFollowUpActionCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision, form.Tipo,
-            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntranteId, form.TransferenciaId), ct);
+            form.Texto, form.FechaPrevista, form.Criterio, form.EquipoEntranteId, form.TransferenciaId, form.HoraPrevista), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = form.Tipo switch
@@ -853,7 +853,7 @@ public sealed class MedicinaController(
         var activeScope = ActiveProfileScopeCookie.Read(Request)!;
         var result = await service.RegisterMedicalIndicationAsync(new RegisterMedicalIndicationCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.EventoId, form.Revision,
-            form.Texto, form.FechaPrevista, form.Criterio, form.InformacionAdicional), ct);
+            form.Texto, form.FechaPrevista, form.Criterio, form.InformacionAdicional, form.HoraPrevista), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = detail.Status == ClinicalEventStatus.EnSeguimientoMedico
