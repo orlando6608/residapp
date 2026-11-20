@@ -1730,6 +1730,60 @@
     <p class="pista">Si el aviso por correo está activado y el familiar tiene correo con la dirección confirmada (Administración la confirma leyéndosela a la persona, desde la ficha del familiar; sin confirmar no se envía nada, y tampoco se manda después aunque se confirme más tarde), al proponer un horario le llega un correo genérico con un enlace a ResidApp. Si además está activado el aviso de cambio, a los pocos minutos de que Administración reprograme o cancele una cita confirmada, quien la reservó recibe otro correo genérico (sin día, hora ni motivo) si tiene la dirección confirmada y acceso al portal. Los correos salen de no-responder@avisos.residapp.es y pueden acabar en el correo no deseado: al confirmar la dirección, pide a la persona que la añada a sus contactos. Los avisos están apagados por defecto y son un complemento: avisa siempre a la familia por teléfono. Si además está activado el recordatorio, el día antes de una cita confirmada (entre las 10:00 y las 18:59) quien la reservó recibe un correo genérico («Tienes una cita mañana»), sin hora ni detalles, con las mismas condiciones de dirección confirmada y acceso al portal; si Administración cambia o cancela la cita después, puede llegar también el aviso de cambio.</p>
     <h3 class="sub">Las citas fuera del centro</h3>
     <p class="prose">Son las pruebas, consultas y tratamientos del residente fuera de la residencia. Es una parte del Portal Familiar que cada centro abre cuando está preparado: viene cerrada, y también los correos de aviso.</p>
+    <div class="diagrama">
+      <svg viewBox="0 0 1120 420" style="min-width: 960px" role="img" aria-labelledby="d-citasfuera-t d-citasfuera-d">
+        <title id="d-citasfuera-t">Citas fuera del centro: el personal registra, la familia se ofrece, el personal confirma y Enfermería anota al terminar</title>
+        <desc id="d-citasfuera-d">Tres franjas: Administración o Enfermería con permiso, Familia y Enfermería. El personal registra la cita; la familia la ve, si el centro ha abierto las citas fuera del centro, y se ofrece con «Me encargo yo» o dice «No puedo», que es un ofrecimiento y no una confirmación. El personal lo comprueba con la familia y confirma, y la cita queda cubierta. Si el centro ha encendido los correos, la familia recibe avisos genéricos a los 7 días, la víspera y a los 2 días si todavía falta algo. Cuando la cita se ha realizado, Enfermería anota al terminar qué cambia para el centro y la siguiente cita prevista.</desc>
+        <defs>
+          <marker id="d-citasfuera-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-citasfuera-pi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="punta info" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="d-citasfuera-pb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="punta bloq" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="lane-adm" x="0" y="0" width="1120" height="150"/>
+        <text class="lane-label adm" x="14" y="26">Administración o Enfermería con permiso</text>
+        <rect class="lane-fam" x="0" y="150" width="1120" height="150"/>
+        <text class="lane-label fam" x="14" y="176">Familia</text>
+        <line class="sep" x1="0" y1="150" x2="1120" y2="150"/>
+        <rect class="lane-enf" x="0" y="300" width="1120" height="120"/>
+        <text class="lane-label enf" x="14" y="326">Enfermería</text>
+        <line class="sep" x1="0" y1="300" x2="1120" y2="300"/>
+        <path class="flecha info" d="M195,120 V238 H288" marker-end="url(#d-citasfuera-pi)"/>
+        <text class="et info" x="203" y="196">si el centro</text>
+        <text class="et info" x="203" y="211">las ha abierto</text>
+        <path class="flecha" d="M420,238 H448" marker-end="url(#d-citasfuera-p)"/>
+        <path class="flecha info" d="M580,238 H650 V122" marker-end="url(#d-citasfuera-pi)"/>
+        <text class="et info" x="590" y="178" text-anchor="start">ofrecido, sin confirmar</text>
+        <path class="flecha rel" d="M740,88 H835 V204" marker-end="url(#d-citasfuera-p)"/>
+        <text class="et nota" x="843" y="140">si el centro los enciende</text>
+        <path class="flecha info" d="M700,120 V322 H995 V344" marker-end="url(#d-citasfuera-pi)"/>
+        <text class="et info" x="708" y="316">cuando la cita se ha realizado</text>
+        <rect class="box adm" x="130" y="56" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="195" y="76.7" text-anchor="middle">Registra la cita</text>
+          <text class="bt det" x="195" y="93.4" text-anchor="middle">día, lugar y</text>
+          <text class="bt det" x="195" y="109.4" text-anchor="middle">quién la lleva</text>
+        <rect class="box fam" x="290" y="206" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="355" y="226.7" text-anchor="middle">La familia la ve</text>
+          <text class="bt det" x="355" y="243.4" text-anchor="middle">de hoy a 90 días</text>
+          <text class="bt det" x="355" y="259.4" text-anchor="middle">si el centro abrió</text>
+        <rect class="box fam imp" x="450" y="206" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="515" y="226.7" text-anchor="middle">Me encargo yo ★</text>
+          <text class="bt det" x="515" y="243.4" text-anchor="middle">o «No puedo»: es un</text>
+          <text class="bt det" x="515" y="259.4" text-anchor="middle">ofrecimiento</text>
+        <rect class="box adm" x="610" y="56" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="675" y="76.7" text-anchor="middle">Confirma</text>
+          <text class="bt det" x="675" y="93.4" text-anchor="middle">lo comprueba con la</text>
+          <text class="bt det" x="675" y="109.4" text-anchor="middle">familia: «Cubierta»</text>
+        <rect class="box fam" x="770" y="206" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="835" y="226.7" text-anchor="middle">Correos</text>
+          <text class="bt det" x="835" y="243.4" text-anchor="middle">7 días, víspera y</text>
+          <text class="bt det" x="835" y="259.4" text-anchor="middle">2 días, si falta</text>
+        <rect class="box enf" x="930" y="346" width="130" height="64" rx="8"/>
+          <text class="bt tit" x="995" y="366.7" text-anchor="middle">Al terminar</text>
+          <text class="bt det" x="995" y="383.4" text-anchor="middle">nota para el centro</text>
+          <text class="bt det" x="995" y="399.4" text-anchor="middle">y siguiente cita</text>
+      </svg>
+    </div>
+    <p class="pista">«Me encargo yo» es un aviso para el centro, no una confirmación: hasta que el personal lo comprueba con la familia, la cita no está «Cubierta». Los correos son opcionales y los enciende cada centro (paso 5).</p>
     <ol class="pasos">
       <li class="adm">
         <div class="paso-cab"><span class="n">1</span><strong>Registrar la cita</strong><span class="perfil adm">Administración o Enfermería con permiso</span></div>

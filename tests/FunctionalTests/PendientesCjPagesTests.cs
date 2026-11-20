@@ -44,10 +44,10 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "index", "preguntas", "pruebas",
 
         "pruebas-1-auxiliar-enfermeria", "pruebas-2-medicina-indicaciones", "pruebas-3-basal-barthel", "pruebas-4-direccion",
-        "pruebas-5-administracion", "pruebas-6-comunicados-portal", "pruebas-7-citas", "pruebas-8-aislamiento",
+        "pruebas-5-administracion", "pruebas-6-comunicados-portal", "pruebas-7-citas", "pruebas-8-aislamiento", "pruebas-9-citas-externas",
         "pruebas-1-auxiliar-enfermeria-flujo", "pruebas-2-medicina-indicaciones-flujo", "pruebas-3-basal-barthel-flujo",
         "pruebas-4-direccion-flujo", "pruebas-5-administracion-flujo", "pruebas-6-comunicados-portal-flujo", "pruebas-7-citas-flujo",
-        "pruebas-8-aislamiento-flujo",
+        "pruebas-8-aislamiento-flujo", "pruebas-9-citas-externas-flujo",
         "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
         "modulos-por-centro-aviso-cj", "medicina-alergias-y-plazos-cj", "citas-externas-modulo-cj", "guia-cumplimiento-datos-cj", "app-catalan-castellano-cj", "orlando", "orlando/dominio-y-correo", "orlando/aviso-correo-decisiones", "orlando/guia-pruebas-dictado",
     ];
@@ -224,6 +224,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     [InlineData("pruebas-6-comunicados-portal")]
     [InlineData("pruebas-7-citas")]
     [InlineData("pruebas-8-aislamiento")]
+    [InlineData("pruebas-9-citas-externas")]
     public async Task LasGuiasDePruebas_LlevanArribaLosEnlacesAPruebasYALaAplicacion(string document)
     {
         var page = await (await LoggedInAsync()).GetStringAsync($"/pendientes-cj/{document}.html");

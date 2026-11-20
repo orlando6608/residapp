@@ -156,6 +156,7 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
     [InlineData("pruebas-6-comunicados-portal")]
     [InlineData("pruebas-7-citas")]
     [InlineData("pruebas-8-aislamiento")]
+    [InlineData("pruebas-9-citas-externas")]
     public async Task CadaDocumento_TieneSuFicheroDeNotas_QueSoloSeSirveConLaClave(string document)
     {
         var url = $"/pendientes-cj/{document}.notas.json";
