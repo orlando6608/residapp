@@ -133,7 +133,7 @@
             @foreach (var entry in member.AuthorizationChanges)
             {
                 <li class="list-group-item">
-                    <span class="fw-semibold">@entry.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @EnumDisplay.Label(entry.Status)</span>
+                    <span class="fw-semibold">@CenterTime.Local(entry.At).ToString("dd/MM/yyyy HH:mm") · @EnumDisplay.Label(entry.Status)</span>
                     @if (entry.ValidUntil is { } until)
                     {
                         <span>hasta el @until.ToString("dd/MM/yyyy")</span>

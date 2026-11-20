@@ -230,7 +230,7 @@ public sealed class AdministracionEstructuraApplicationService(
             }
 
             var (grant, _) = await access.ResolveAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, TimeZoneInfo.Local);
+            var (fromUtc, toExclusiveUtc) = SupervisionIndicatorRules.UtcBounds(query.From, query.To, CenterTime.Zone);
             return await audit.ListAsync(grant, new AdministrativeAuditQuery(fromUtc, toExclusiveUtc, query.Accion, query.Cuenta), ct);
         });
 }

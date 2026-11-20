@@ -43,7 +43,7 @@
         <h2 class="h5 card-title">Resumen de la valoración médica</h2>
         <p class="text-muted">
             Último guardado @(valoracion.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
-            el @valoracion.LastUpdatedAt.ToLocalTime().ToString("g"). Al cerrar, la valoración médica ya no se puede modificar.
+            el @CenterTime.Local(valoracion.LastUpdatedAt).ToString("g"). Al cerrar, la valoración médica ya no se puede modificar.
         </p>
         <dl class="row mb-0">
             @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", content.FindingsAndExamination), ("Valoración", content.Assessment), ("Actuaciones", content.Actions) })

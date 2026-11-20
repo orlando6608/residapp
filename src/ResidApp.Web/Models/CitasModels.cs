@@ -63,18 +63,18 @@ public static class AppointmentDisplay
     /// <summary>Un instante en la hora del servidor, como «lunes 12/10/2026 10:30».</summary>
     public static string When(DateTimeOffset at)
     {
-        var local = TimeZoneInfo.ConvertTime(at, TimeZoneInfo.Local);
+        var local = TimeZoneInfo.ConvertTime(at, CenterTime.Zone);
         return $"{Day(local.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)local.DayOfWeek).ToLowerInvariant()} {local:dd/MM/yyyy HH:mm}";
     }
 
     /// <summary>El día de un instante en la hora del servidor, como «lunes 12/10/2026».</summary>
     public static string DayHeading(DateTimeOffset at)
     {
-        var local = TimeZoneInfo.ConvertTime(at, TimeZoneInfo.Local);
+        var local = TimeZoneInfo.ConvertTime(at, CenterTime.Zone);
         return $"{Day(local.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)local.DayOfWeek).ToLowerInvariant()} {local:dd/MM/yyyy}";
     }
 
-    public static string Time(DateTimeOffset at) => TimeZoneInfo.ConvertTime(at, TimeZoneInfo.Local).ToString("HH:mm");
+    public static string Time(DateTimeOffset at) => TimeZoneInfo.ConvertTime(at, CenterTime.Zone).ToString("HH:mm");
 
     /// <summary>La clave de una modalidad habilitada en el formulario: «MEDICO:PRESENCIAL».</summary>
     public static string Key(AppointmentTeam team, AppointmentModality modality) => $"{team.ToCode()}:{modality.ToCode()}";

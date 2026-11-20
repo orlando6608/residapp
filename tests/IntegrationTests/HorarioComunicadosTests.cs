@@ -113,11 +113,11 @@ public class HorarioComunicadosTests
             new ListPendingFamilyCommunicationsCommand(enfermera.ProfileScopeId, enfermera.CenterId))).Value!;
 
         Assert.Equal(
-            FamilyCommunicationSchedule.ScheduledAt(firstSummary.Communication.PreparedAt, FamilyCommunicationScheduleSettings.Default, TimeZoneInfo.Local),
+            FamilyCommunicationSchedule.ScheduledAt(firstSummary.Communication.PreparedAt, FamilyCommunicationScheduleSettings.Default, CenterTime.Zone),
             firstSummary.ScheduledAt);
         Assert.Equal(
             FamilyCommunicationSchedule.ScheduledAt(
-                secondSummary.Communication.PreparedAt, new FamilyCommunicationScheduleSettings(new TimeOnly(20, 30), TimeSpan.Zero), TimeZoneInfo.Local),
+                secondSummary.Communication.PreparedAt, new FamilyCommunicationScheduleSettings(new TimeOnly(20, 30), TimeSpan.Zero), CenterTime.Zone),
             secondSummary.ScheduledAt);
         Assert.Equal(firstSummary.ScheduledAt, afterChange.Single(c => c.CommunicationId == first).ScheduledAt);
         Assert.Equal(secondSummary.ScheduledAt, afterChange.Single(c => c.CommunicationId == second).ScheduledAt);

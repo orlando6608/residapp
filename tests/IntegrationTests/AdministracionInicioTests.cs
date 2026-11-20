@@ -19,14 +19,14 @@ namespace ResidApp.IntegrationTests;
 /// lecturas de eventos_auditoria llevan NOLOCK (lección de la suite).</summary>
 public class AdministracionInicioTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+    private static readonly DateOnly Today = CenterTime.Today;
 
     private static readonly AppointmentModalitySetting[] AllModalities =
         [.. Enum.GetValues<AppointmentTeam>().SelectMany(team => Enum.GetValues<AppointmentModality>().Select(m => new AppointmentModalitySetting(team, m)))];
 
     private static AccountAdministrationAccess AccessOf(SeededProfile profile) => new(profile.ProfileScopeId, profile.AccountId, profile.CenterId);
 
-    private static AdministrationOverviewPeriod NowPeriod() => AdministrationOverviewApplicationService.PeriodAt(DateTimeOffset.UtcNow, TimeZoneInfo.Local);
+    private static AdministrationOverviewPeriod NowPeriod() => AdministrationOverviewApplicationService.PeriodAt(DateTimeOffset.UtcNow, CenterTime.Zone);
 
     private static Task<AdministrationOverview> OverviewAsync(SeededProfile admin, AdministrationOverviewPeriod? period = null) =>
         new SqlAdministrationOverview(TestDatabase.ConnectionFactory).ReadAsync(AccessOf(admin), period ?? NowPeriod());

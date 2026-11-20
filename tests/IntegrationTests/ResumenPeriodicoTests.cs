@@ -28,7 +28,7 @@ public class ResumenPeriodicoTests
 
     private static (DateTimeOffset Start, DateTimeOffset End) Period(FamilyCommunicationSummaryFrequency frequency) =>
         FamilyCommunicationSchedule.LastClosedSummaryPeriod(
-            frequency, FamilyCommunicationScheduleSettings.Default.PublicationTime, TimeZoneInfo.Local, DateTimeOffset.UtcNow);
+            frequency, FamilyCommunicationScheduleSettings.Default.PublicationTime, CenterTime.Zone, DateTimeOffset.UtcNow);
 
     /// <summary>Un comunicado publicado a la hora indicada (su hora programada), preparado un día antes.</summary>
     private static Task<Guid> PublishedAtAsync(Setup setup, string text, DateTimeOffset at, FamilyCommunicationType type = FamilyCommunicationType.Ordinaria) =>

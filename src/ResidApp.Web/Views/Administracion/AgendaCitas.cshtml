@@ -84,7 +84,7 @@ else
                     @foreach (var change in appointment.Changes)
                     {
                         <li>
-                            @AppointmentDisplay.Label(change.Action) el @change.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            @AppointmentDisplay.Label(change.Action) el @CenterTime.Local(change.At).ToString("dd/MM/yyyy HH:mm")
                             · @(change.FromDischarge ? "sistema, a causa de la baja del residente" : change.ActorProfile == ResidApp.Shared.SystemProfile.Familiar ? "familia" : "Administración")
                             @if (change.PreviousStartsAt is { } previous && change.NewStartsAt is { } next)
                             {

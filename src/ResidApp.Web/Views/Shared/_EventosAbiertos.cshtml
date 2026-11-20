@@ -41,7 +41,7 @@
                                 </p>
                                 <p class="mb-1">@ResidentHistoryDisplay.Summary(item)</p>
                                 <p class="text-muted small mb-0">
-                                    @item.OccurredAt.ToLocalTime().ToString("g") · registrado por @SystemProfileDisplay.Label(item.AuthorProfile)
+                                    @CenterTime.Local(item.OccurredAt).ToString("g") · registrado por @SystemProfileDisplay.Label(item.AuthorProfile)
                                 </p>
                             </div>
                             <a asp-action="@detailAction" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle</a>

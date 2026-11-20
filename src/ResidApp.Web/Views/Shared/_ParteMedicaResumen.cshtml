@@ -17,7 +17,7 @@
         {
             <p class="text-muted mb-0">
                 @(medico.StartedAt is { } iniciada
-                    ? $"Iniciada por Medicina el {iniciada.ToLocalTime():g}. Medicina todavía no ha guardado su valoración."
+                    ? $"Iniciada por Medicina el {CenterTime.Local(iniciada):g}. Medicina todavía no ha guardado su valoración."
                     : "Medicina todavía no ha empezado su valoración.")
             </p>
         }
@@ -25,8 +25,8 @@
         {
             var content = medico.Assessment.Content;
             <p class="text-muted">
-                Iniciada por Medicina el @medico.StartedAt?.ToLocalTime().ToString("g"). Último guardado el
-                @medico.Assessment.LastUpdatedAt.ToLocalTime().ToString("g"). Es de solo lectura para Enfermería.
+                Iniciada por Medicina el @(medico.StartedAt is { } startedAt ? CenterTime.Local(startedAt).ToString("g") : null). Último guardado el
+                @CenterTime.Local(medico.Assessment.LastUpdatedAt).ToString("g"). Es de solo lectura para Enfermería.
             </p>
             <dl class="row mb-0">
                 @foreach (var (etiqueta, texto) in new[] { ("Hallazgos y exploración", content.FindingsAndExamination), ("Valoración", content.Assessment), ("Actuaciones", content.Actions) })
@@ -65,7 +65,7 @@
                         }
                         <p class="mb-0 mt-1" style="white-space: pre-line">@indicacion.Text</p>
                         <p class="text-muted mb-0">
-                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion) · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")
+                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion) · emitida el @CenterTime.Local(indicacion.IssuedAt).ToString("g")
                         </p>
                         @if (indicacion.AdditionalInformation is not null)
                         {
@@ -98,7 +98,7 @@
             <p class="mb-1" style="white-space: pre-line"><strong>Objetivo:</strong> @seguimientoMedico.Objective</p>
             <p class="mb-1">Plan: @FollowUpDisplay.Plan(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.DueTime, seguimientoMedico.Tracking.Criterion)</p>
             <p class="text-muted mb-0">
-                Iniciado por Medicina el @seguimientoMedico.Tracking.StartedAt.ToLocalTime().ToString("g") ·
+                Iniciado por Medicina el @CenterTime.Local(seguimientoMedico.Tracking.StartedAt).ToString("g") ·
                 @seguimientoMedico.Tracking.Actions.Count @(seguimientoMedico.Tracking.Actions.Count == 1 ? "acción registrada" : "acciones registradas")
             </p>
         </div>

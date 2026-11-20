@@ -63,7 +63,7 @@ public class DireccionSupervisionTests
         Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalated, revision))).Ok);
         revision = await StartAndSaveAsync(enfermera, followUp);
         var startedFollowUp = await service.StartFollowUpAsync(new StartFollowUpCommand(
-            enfermera.ProfileScopeId, enfermera.CenterId, followUp, revision, DateOnly.FromDateTime(DateTime.Today).AddDays(-3), null, "Vigilar."));
+            enfermera.ProfileScopeId, enfermera.CenterId, followUp, revision, CenterTime.Today.AddDays(-3), null, "Vigilar."));
         Assert.True(startedFollowUp.Ok, startedFollowUp.Error?.Message);
 
         var panel = await BuildDireccion(direccion.ExternalSubject).ReadPanelAsync(Query(direccion));
@@ -89,7 +89,7 @@ public class DireccionSupervisionTests
         var revision = await StartAndSaveAsync(enfermera, escalated);
         Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, escalated, revision))).Ok);
         var dir = BuildDireccion(direccion.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var all = (await dir.ListPendingAsync(new ListSupervisionPendingQuery(direccion.ProfileScopeId, direccion.CenterId, today))).Value!;
         var onlyEscalated = (await dir.ListPendingAsync(new ListSupervisionPendingQuery(
@@ -186,7 +186,7 @@ public class DireccionSupervisionTests
         var (_, otraEnfermera, otroResidente) = await SeedCenterAsync();
         await RegisterAsync(otraEnfermera, otroResidente, "Tos productiva.");
         var dir = BuildDireccion(direccion.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var result = await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today));
         var yesterday = (await dir.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
@@ -248,7 +248,7 @@ public class DireccionSupervisionTests
     {
         var (direccion, enfermera, residentId) = await SeedCenterAsync();
         var service = BuildService(enfermera.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         async Task<(Guid EventId, int Revision)> FollowUpAsync(string text, DateOnly due)
         {
             var id = await RegisterAsync(enfermera, residentId, text);
@@ -298,7 +298,7 @@ public class DireccionSupervisionTests
             FamilyCommunicationDecision.Preparar, FamilyCommunicationType.Relevante, "Ha sido trasladado a Urgencias."));
         Assert.True(closing.Ok, closing.Error?.Message);
         var dir = BuildDireccion(direccion.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var onlyOpen = (await dir.ListReferralsAsync(Query(direccion))).Value!;
         var withClosed = (await dir.ListReferralsAsync(Query(direccion), today, today)).Value!;
@@ -343,7 +343,7 @@ public class DireccionSupervisionTests
         Assert.True((await BuildService(otraEnfermera.ExternalSubject).ActivateUrgentProtocolAsync(
             ActivateCommand(otraEnfermera, foreign, await StartAndSaveAsync(otraEnfermera, foreign)))).Ok);
         var dir = BuildDireccion(direccion.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var result = await dir.ReadProcessQualityAsync(new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today));
         var asNurse = await BuildDireccion(enfermera.ExternalSubject).ReadProcessQualityAsync(
@@ -394,7 +394,7 @@ public class DireccionSupervisionTests
         var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
         Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
         var dir = BuildDireccion(direccion.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var query = new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today);
 
         var before = (await dir.ReadProcessQualityAsync(query)).Value!.Total;
@@ -420,7 +420,7 @@ public class DireccionSupervisionTests
         var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
         Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
         var dir = BuildDireccion(direccion.ExternalSubject);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var query = new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today);
 
         var before = (await dir.ReadProcessQualityAsync(query)).Value!;
@@ -449,7 +449,7 @@ public class DireccionSupervisionTests
     {
         var (direccion, _, _) = await SeedCenterAsync();
         var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, direccion.CenterId, direccion.UnitId);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var directory = new SqlSupervisionDirectory(TestDatabase.ConnectionFactory);
         var from = DateTime.UtcNow.AddDays(-1);
         var to = DateTime.UtcNow.AddMinutes(5);
@@ -498,7 +498,7 @@ public class DireccionSupervisionTests
         Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
         var from = DateTime.UtcNow.AddDays(-1);
         var to = DateTime.UtcNow.AddMinutes(5);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var directionFacts = await new SqlSupervisionDirectory(TestDatabase.ConnectionFactory).ListMilestoneFactsAsync(direccion.ProfileScopeId, direccion.CenterId, from, to);
         var nurseFacts = await new SqlChangeInboxDirectory(TestDatabase.ConnectionFactory).ListMilestoneFactsAsync(enfermera.ProfileScopeId, enfermera.CenterId, from, to);
@@ -519,7 +519,7 @@ public class DireccionSupervisionTests
     {
         var (direccion, _, _) = await SeedCenterAsync();
         var sinPermiso = await SeedFixture.AddProfileToCenterAsync(SystemProfile.DireccionClinica, direccion.CenterId, direccion.UnitId);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var service = BuildDireccion(direccion.ExternalSubject);
         ReadSupervisionIndicatorsQuery Query(SeededProfile who, bool opening) => new(who.ProfileScopeId, who.CenterId, today, today, opening);
         Task<int> CountAsync(SeededProfile who, string action) => ScalarAsync<int>(
@@ -553,7 +553,7 @@ public class DireccionSupervisionTests
     public async Task Calidad_RevocarYVolverAConcederElPermiso_LoCortaYLoDevuelve()
     {
         var (direccion, _, _) = await SeedCenterAsync();
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var query = new ReadSupervisionIndicatorsQuery(direccion.ProfileScopeId, direccion.CenterId, today, today);
 
         await Connection(c => c.ExecuteAsync(
@@ -583,7 +583,7 @@ public class DireccionSupervisionTests
     public async Task Indicadores_OtrosPerfilesNoEntran_YUnPeriodoImposibleSeRechaza()
     {
         var (direccion, enfermera, _) = await SeedCenterAsync();
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
 
         var asNurse = await BuildDireccion(enfermera.ExternalSubject).ReadIndicatorsAsync(
             new ReadSupervisionIndicatorsQuery(enfermera.ProfileScopeId, enfermera.CenterId, today, today));

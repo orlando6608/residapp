@@ -996,7 +996,7 @@ public class MedicinaApplicationServiceTests
         var (_, _, medica, eventId) = await SeedEscalatedAsync();
         var service = BuildMedicina(medica.ExternalSubject);
         var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(
-            medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), DateOnly.FromDateTime(DateTime.Today).AddDays(1)))).Value;
+            medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), CenterTime.Today.AddDays(1)))).Value;
         var teamId = await TransferTeamData.CreateAsync(medica, "Guardia de tarde");
         var outsider = await SeedFixture.CreateProfileAsync(SystemProfile.Medicina);
         Guid?[] invalid =
@@ -1036,7 +1036,7 @@ public class MedicinaApplicationServiceTests
         var companero = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, medica.CenterId, medica.UnitId);
         var service = BuildMedicina(medica.ExternalSubject);
         var other = BuildMedicina(companero.ExternalSubject);
-        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var yesterday = CenterTime.Today.AddDays(-1);
         var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), yesterday))).Value;
 
         revision = (await service.RecordMedicalFollowUpActionAsync(FollowUpAction(medica, eventId, revision, FollowUpActionType.Actuacion, "Radiografía pendiente de informe."))).Value;
@@ -1092,7 +1092,7 @@ public class MedicinaApplicationServiceTests
         var companero = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, medica.CenterId, medica.UnitId);
         var service = BuildMedicina(medica.ExternalSubject);
         var other = BuildMedicina(companero.ExternalSubject);
-        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var yesterday = CenterTime.Today.AddDays(-1);
         var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), yesterday))).Value;
         var team = await TransferTeamData.CreateAsync(medica, "Guardia con miembros");
         await TransferTeamData.AddMemberAsync(team, medica, medica);
@@ -1111,7 +1111,7 @@ public class MedicinaApplicationServiceTests
     {
         var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
         var service = BuildMedicina(medica.ExternalSubject);
-        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var yesterday = CenterTime.Today.AddDays(-1);
         var revision = (await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, await StartAndSaveMedicalAsync(medica, eventId), yesterday, null))).Value;
 
         var overdue = Assert.Single((await ListFollowUpsAsync(medica)).Value!);

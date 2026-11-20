@@ -40,7 +40,7 @@ else
                 </p>
                 <p class="mb-1">Motivo: @item.Reason</p>
                 <p class="text-muted mb-0">
-                    @(item.UnitName ?? "Sin unidad") · Escalado el @item.EscalatedAt.ToLocalTime().ToString("g")
+                    @(item.UnitName ?? "Sin unidad") · Escalado el @CenterTime.Local(item.EscalatedAt).ToString("g")
                 </p>
             </div>
         </a>

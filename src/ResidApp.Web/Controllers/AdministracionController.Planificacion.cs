@@ -25,7 +25,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var from = desde ?? DateOnly.FromDateTime(DateTime.Today);
+        var from = desde ?? CenterTime.Today;
         var to = from.AddDays(ScheduleWindowDays - 1);
         var units = await AdministratorUnitsAsync(activeScope, ct);
         var unit = unidad is { } id && units.Any(u => u.UnitId.Value == id) ? UnitId.From(id) : (UnitId?)null;
@@ -47,7 +47,7 @@ public sealed partial class AdministracionController
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(PlanificarTurno)) });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         return View(await PlanViewAsync(activeScope, new PlanFormModel
         {
             OperacionId = Guid.NewGuid(),
@@ -202,7 +202,7 @@ public sealed partial class AdministracionController
         }
 
         var result = await turnos.RetireScheduleSeriesAsync(new RetireScheduleSeriesCommand(
-            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), loteId, desde ?? DateOnly.FromDateTime(DateTime.Today)), ct);
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), loteId, desde ?? CenterTime.Today), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = $"Serie retirada: {result.Value} {(result.Value == 1 ? "fecha" : "fechas")} desde esa fecha.";

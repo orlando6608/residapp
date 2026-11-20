@@ -16,18 +16,18 @@ public sealed class FamilyPortalApplicationService(
 {
     public Task<ApplicationResult<IReadOnlyList<FamilyPortalResident>>> ListResidentsAsync(FamilyPortalQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
-            await reader.ListResidentsAsync(await AccessAsync(query, ct), DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow, ct));
+            await reader.ListResidentsAsync(await AccessAsync(query, ct), CenterTime.Today, DateTimeOffset.UtcNow, ct));
 
     public Task<ApplicationResult<FamilyPortalResidentHome>> ReadResidentAsync(FamilyPortalQuery query, Guid linkId, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
-            await reader.ReadResidentAsync(await AccessAsync(query, ct), linkId, DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow, ct)
+            await reader.ReadResidentAsync(await AccessAsync(query, ct), linkId, CenterTime.Today, DateTimeOffset.UtcNow, ct)
             ?? throw new AccessDeniedException());
 
     public Task<ApplicationResult<FamilyPortalCommunicationDetail>> ReadCommunicationAsync(
         FamilyPortalQuery query, Guid linkId, Guid communicationId, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
             await reader.ReadCommunicationAsync(
-                await AccessAsync(query, ct), linkId, communicationId, DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow, ct)
+                await AccessAsync(query, ct), linkId, communicationId, CenterTime.Today, DateTimeOffset.UtcNow, ct)
             ?? throw new AccessDeniedException());
 
     private async Task<FamilyPortalAccess> AccessAsync(FamilyPortalQuery query, CancellationToken ct)

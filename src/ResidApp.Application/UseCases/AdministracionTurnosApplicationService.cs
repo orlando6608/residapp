@@ -144,7 +144,7 @@ public sealed class AdministracionTurnosApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var dates = SchedulePlan.ValidateDates(command.Fechas, DateOnly.FromDateTime(DateTime.Today));
+            var dates = SchedulePlan.ValidateDates(command.Fechas, CenterTime.Today);
             return await schedulePlanWriter.PreviewAsync(grant, command.EquipoId, command.TurnoId, dates, ct);
         });
 
@@ -153,7 +153,7 @@ public sealed class AdministracionTurnosApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            var dates = SchedulePlan.ValidateDates(command.Fechas, DateOnly.FromDateTime(DateTime.Today));
+            var dates = SchedulePlan.ValidateDates(command.Fechas, CenterTime.Today);
             var justification = SchedulePlan.ValidateJustification(command.Justificacion);
             return await schedulePlanWriter.PlanAsync(grant, command.LoteId, command.EquipoId, command.TurnoId, dates, justification, ct);
         });
@@ -162,7 +162,7 @@ public sealed class AdministracionTurnosApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            await schedulePlanWriter.RetireAsync(grant, command.PlanificacionId, DateOnly.FromDateTime(DateTime.Today), ct);
+            await schedulePlanWriter.RetireAsync(grant, command.PlanificacionId, CenterTime.Today, ct);
             return true;
         });
 
@@ -178,6 +178,6 @@ public sealed class AdministracionTurnosApplicationService(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (grant, _) = await access.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
-            return await schedulePlanWriter.RetireSeriesAsync(grant, command.LoteId, command.Desde, DateOnly.FromDateTime(DateTime.Today), ct);
+            return await schedulePlanWriter.RetireSeriesAsync(grant, command.LoteId, command.Desde, CenterTime.Today, ct);
         });
 }

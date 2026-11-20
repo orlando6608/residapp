@@ -23,7 +23,7 @@ else
                     <p class="fw-semibold mb-1">@ClinicalTraceabilityDisplay.Action(entry.Action)</p>
                     <p class="mb-1 small">@ClinicalTraceabilityDisplay.Resource(entry.ResourceType)@(entry.UnitName is null ? "" : $" · {entry.UnitName}")</p>
                     <p class="text-body-secondary small mb-0">
-                        @entry.OccurredAt.ToLocalTime().ToString("g") · @(entry.ActorName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(entry.ActorProfile))
+                        @CenterTime.Local(entry.OccurredAt).ToString("g") · @(entry.ActorName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(entry.ActorProfile))
                         @if (ClinicalTraceabilityDisplay.Purpose(entry.Purpose) is { } purpose)
                         {
                             <br /><span>Finalidad: @purpose</span>
@@ -53,7 +53,7 @@ else
                 @foreach (var entry in Model.Entries)
                 {
                     <tr>
-                        <td>@entry.OccurredAt.ToLocalTime().ToString("g")</td>
+                        <td>@CenterTime.Local(entry.OccurredAt).ToString("g")</td>
                         <td>@(entry.ActorName ?? "Cuenta sin nombre registrado")</td>
                         <td>@SystemProfileDisplay.Label(entry.ActorProfile)</td>
                         <td>@(entry.UnitName ?? "—")</td>

@@ -46,8 +46,8 @@
                 }
             </h2>
             <p class="text-muted">
-                Lo que el equipo ha publicado entre el @summary.PeriodStart.ToLocalTime().ToString("dd/MM/yyyy HH:mm") y el
-                @summary.PeriodEnd.ToLocalTime().ToString("dd/MM/yyyy HH:mm"), todo junto. Son las mismas novedades de más abajo.
+                Lo que el equipo ha publicado entre el @CenterTime.Local(summary.PeriodStart).ToString("dd/MM/yyyy HH:mm") y el
+                @CenterTime.Local(summary.PeriodEnd).ToString("dd/MM/yyyy HH:mm"), todo junto. Son las mismas novedades de más abajo.
             </p>
             <ul class="list-unstyled mb-0">
                 @foreach (var item in summary.Items)
@@ -59,7 +59,7 @@
                                 <span class="badge text-bg-dark">Corrección</span>
                             }
                             <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Type)</span>
-                            · @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
+                            · @CenterTime.Local(item.PublishedAt).ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
                         </p>
                         <p class="mb-0" style="white-space: pre-line">@item.Text</p>
                     </li>
@@ -95,7 +95,7 @@ else
         {
             <div class="card mb-3 border-start border-4 border-secondary bg-body-tertiary">
                 <div class="card-body">
-                    <p class="text-muted mb-1">Novedad publicada el @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                    <p class="text-muted mb-1">Novedad publicada el @CenterTime.Local(item.PublishedAt).ToString("dd/MM/yyyy HH:mm")</p>
                     <p class="card-text mb-0">Esta novedad ya no está disponible. Si tienes dudas, llama por teléfono al centro.</p>
                 </div>
             </div>
@@ -115,7 +115,7 @@ else
                         <span class="badge text-bg-dark">Corrección</span>
                     }
                     <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Type)</span>
-                    · @item.PublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
+                    · @CenterTime.Local(item.PublishedAt).ToString("dd/MM/yyyy HH:mm") · @FamilyCommunicationChoice.VisibleAuthor
                 </p>
                 @if (corrected.Contains(item.Id))
                 {
@@ -123,7 +123,7 @@ else
                 }
                 @if (item.Corrects is { } corrects)
                 {
-                    <p class="small text-body-secondary mb-1">Corrige la novedad publicada el @corrects.OriginalPublishedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</p>
+                    <p class="small text-body-secondary mb-1">Corrige la novedad publicada el @CenterTime.Local(corrects.OriginalPublishedAt).ToString("dd/MM/yyyy HH:mm").</p>
                 }
                 <p class="card-text mb-0" style="white-space: pre-line">@item.Text</p>
             </div>

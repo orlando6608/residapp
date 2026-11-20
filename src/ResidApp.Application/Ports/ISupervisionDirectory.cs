@@ -292,7 +292,7 @@ public static class SupervisionPendingRules
         episode.HasFollowUp && FollowUpPlan.IsOverdue(episode.FollowUpDue, episode.FollowUpDueTime, now);
 
     public static bool Matches(SupervisionPendingType type, SupervisionEpisode episode, DateOnly today) =>
-        Matches(type, episode, today.ToDateTime(TimeOnly.FromDateTime(DateTime.Now)));
+        Matches(type, episode, today.ToDateTime(TimeOnly.FromDateTime(CenterTime.Now)));
 
     public static bool Matches(SupervisionPendingType type, SupervisionEpisode episode, DateTime now) => type switch
     {

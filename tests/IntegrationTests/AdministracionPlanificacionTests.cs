@@ -14,7 +14,7 @@ namespace ResidApp.IntegrationTests;
 /// turno para varias fechas, con aviso de solapamientos que Administración decide. Cada prueba crea su propio centro.</summary>
 public class AdministracionPlanificacionTests
 {
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Today);
+    private static readonly DateOnly Today = CenterTime.Today;
 
     private sealed record World(
         SeededProfile Admin, AdministracionTurnosApplicationService Service, SeededProfile Nurse1, SeededProfile Nurse2,

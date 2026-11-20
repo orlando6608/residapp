@@ -51,7 +51,7 @@ public sealed class ResidentPhotoApplicationService(
     public Task<ApplicationResult<bool>> SetAsync(SetResidentPhotoCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            var consent = ResidentPhotoConsent.Validate(command.Firmante, command.FechaConsentimiento, DateOnly.FromDateTime(DateTime.Today));
+            var consent = ResidentPhotoConsent.Validate(command.Firmante, command.FechaConsentimiento, CenterTime.Today);
             var content = ResidentPhoto.Normalize(command.Foto);
             var target = await RequireEditorAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             await photos.SetAsync(target, content, consent, ct);

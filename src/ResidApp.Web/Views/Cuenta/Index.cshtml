@@ -174,7 +174,7 @@
                                     <div>
                                         <div><strong>@passkey.Nombre</strong></div>
                                         <div class="small text-body-secondary">
-                                            Añadida el @passkey.CreadaUtc.ToLocalTime().ToString(formato)@(passkey.Sincronizada ? " · se copia a otros dispositivos tuyos con la cuenta de tu móvil (iCloud o Google)" : "")
+                                            Añadida el @CenterTime.Local(passkey.CreadaUtc).ToString(formato)@(passkey.Sincronizada ? " · se copia a otros dispositivos tuyos con la cuenta de tu móvil (iCloud o Google)" : "")
                                         </div>
                                     </div>
                                     <form asp-controller="Cuenta" asp-action="QuitarPasskey" method="post">
@@ -242,9 +242,9 @@
                     {
                         <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <div>
-                                <div>Empezó el <strong>@sesion.CreadaUtc.ToLocalTime().ToString(formato)</strong></div>
+                                <div>Empezó el <strong>@CenterTime.Local(sesion.CreadaUtc).ToString(formato)</strong></div>
                                 <div class="small text-body-secondary">
-                                    Última actividad @sesion.UltimaActividadUtc.ToLocalTime().ToString(formato) · IP @(sesion.Ip ?? "—")
+                                    Última actividad @CenterTime.Local(sesion.UltimaActividadUtc).ToString(formato) · IP @(sesion.Ip ?? "—")
                                 </div>
                             </div>
                             @if (sesion.EsActual)
@@ -294,7 +294,7 @@
                             @foreach (var acceso in Model.Accesos)
                             {
                                 <tr>
-                                    <td>@acceso.OcurridoUtc.ToLocalTime().ToString(formato)</td>
+                                    <td>@CenterTime.Local(acceso.OcurridoUtc).ToString(formato)</td>
                                     <td>
                                         @acceso.Descripcion
                                         @if (acceso.EsFallo)

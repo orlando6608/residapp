@@ -482,7 +482,7 @@ public class AvisoCambioCitaTests
                 await ChangeAsync(setup.Admin, setup.ResidentId, setup.LinkId, FamilyAuthorizationChange.Revocar, 2, "Deja de estar autorizado.");
                 break;
             case "autorizacionCaducada":
-                await RenewAuthorizationAsync(setup, DateOnly.FromDateTime(DateTime.Today).AddDays(-1));
+                await RenewAuthorizationAsync(setup, CenterTime.Today.AddDays(-1));
                 break;
         }
 
@@ -500,7 +500,7 @@ public class AvisoCambioCitaTests
         var sender = new FakeEmailSender();
         var notice = Notice(sender, Active());
         Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
-        await RenewAuthorizationAsync(setup, DateOnly.FromDateTime(DateTime.Today));
+        await RenewAuthorizationAsync(setup, CenterTime.Today);
 
         await ProcessAsync(notice);
 

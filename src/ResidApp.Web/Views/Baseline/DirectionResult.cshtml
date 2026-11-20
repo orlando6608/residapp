@@ -40,9 +40,9 @@
             {
                 <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <div>
-                        <strong>Evento registrado el @informe.EventRegisteredAt.ToLocalTime().ToString("g")</strong>
+                        <strong>Evento registrado el @CenterTime.Local(informe.EventRegisteredAt).ToString("g")</strong>
                         <div class="text-body-secondary small">
-                            Informe firmado el @informe.SignedAt.ToLocalTime().ToString("g") por @(informe.SignerName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(informe.SignerProfile))
+                            Informe firmado el @CenterTime.Local(informe.SignedAt).ToString("g") por @(informe.SignerName ?? "Cuenta sin nombre registrado") (@SystemProfileDisplay.Label(informe.SignerProfile))
                         </div>
                     </div>
                     <a asp-controller="Baseline" asp-action="InformeDerivacion" asp-route-residenteId="@Model.ResidenteId" asp-route-eventoId="@informe.EventId"
@@ -151,7 +151,7 @@ else
 {
     <p class="text-body-secondary">
         Finalidad declarada: <strong>@EnumDisplay.Label(declaracion.Purpose)</strong>. Vale hasta las
-        <strong>@declaracion.ExpiresAt.ToLocalTime().ToString("HH:mm")</strong> para este residente; cada consulta queda en la auditoría.
+        <strong>@CenterTime.Local(declaracion.ExpiresAt).ToString("HH:mm")</strong> para este residente; cada consulta queda en la auditoría.
     </p>
 }
 <div class="d-grid d-md-flex gap-2">

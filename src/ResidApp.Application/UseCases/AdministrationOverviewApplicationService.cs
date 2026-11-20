@@ -6,7 +6,7 @@ namespace ResidApp.Application.UseCases;
 
 /// <summary>
 /// El inicio de Administración (ADM-01, historia 10): lo que hay que atender, solo con cifras. Hoy es el día natural de la zona del centro
-/// (<see cref="TimeZoneInfo.Local"/>, verificada al arrancar); los límites del día y de los próximos días salen de ahí.
+/// (<see cref="CenterTime.Zone"/>, verificada al arrancar); los límites del día y de los próximos días salen de ahí.
 /// </summary>
 public sealed class AdministrationOverviewApplicationService(AdministrationAccessResolver administrationAccess, IAdministrationOverviewReader reader)
 {
@@ -14,7 +14,7 @@ public sealed class AdministrationOverviewApplicationService(AdministrationAcces
         ApplicationResultRunner.RunAsync(async () =>
         {
             var (access, _) = await administrationAccess.ResolveAsync(profileScopeId, centerId, ct);
-            return await reader.ReadAsync(access, PeriodAt(DateTimeOffset.UtcNow, TimeZoneInfo.Local), ct);
+            return await reader.ReadAsync(access, PeriodAt(DateTimeOffset.UtcNow, CenterTime.Zone), ct);
         });
 
     /// <summary>El día natural de <paramref name="now"/> en <paramref name="zone"/> y los límites UTC de hoy y de los próximos días.</summary>

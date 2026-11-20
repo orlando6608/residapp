@@ -27,7 +27,7 @@ public sealed partial class AdministracionController
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(new DischargedResidentsViewModel(result.Value ?? [], DateOnly.FromDateTime(DateTime.Today)));
+        return View(new DischargedResidentsViewModel(result.Value ?? [], CenterTime.Today));
     }
 
     public async Task<IActionResult> DarDeBaja(Guid residenteId, CancellationToken ct)

@@ -57,7 +57,7 @@ public sealed class FamilyAppointmentRequestsApplicationService(
                 ? true
                 : throw new AccessDeniedException());
 
-    private static DateOnly Today() => DateOnly.FromDateTime(DateTime.Today);
+    private static DateOnly Today() => CenterTime.Today;
 
     private async Task<FamilyPortalAccess> AccessAsync(FamilyPortalQuery query, CancellationToken ct)
     {

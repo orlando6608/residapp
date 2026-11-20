@@ -114,7 +114,7 @@ public sealed record ConditionItem
     {
         name = VitalSigns.Normalize(name);
         if (!Enum.IsDefined(type) || name is null || name.Length > MaxNameLength || name.Any(HealthBackground.IsLineBreakOrControl)
-            || (year is { } y && (y < MinYear || y > DateTime.Now.Year)))
+            || (year is { } y && (y < MinYear || y > CenterTime.Now.Year)))
         {
             throw new DomainValidationException(HealthBackground.InvalidCode);
         }

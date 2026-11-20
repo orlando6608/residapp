@@ -19,7 +19,7 @@
         <h2 class="h5 card-title">Cierre</h2>
         <p class="mb-2">
             Cerrado @autor
-            el @cierre.ClosedAt.ToLocalTime().ToString("g"). Comunicación familiar:
+            el @CenterTime.Local(cierre.ClosedAt).ToString("g"). Comunicación familiar:
             <strong>@FamilyCommunicationDisplay.Label(cierre.Decision)</strong>.
         </p>
         @if (cierre.Communication is { } comunicacion)

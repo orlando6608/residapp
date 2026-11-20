@@ -23,7 +23,7 @@
     @(evento.UnitName ?? "Sin unidad") ·
     <span class="badge @(esPrioritario ? "text-bg-danger" : "text-bg-secondary")">@(esPrioritario ? "Prioritario" : "Ordinario")</span>
     <span class="badge @ClinicalEventStatusDisplay.BadgeClass(evento.Status, esPrioritario)">@ClinicalEventStatusDisplay.Label(evento.Status)</span>
-    · @(esPropio ? "Observado" : "Registrado") por @SystemProfileDisplay.Label(evento.AuthorProfile) el @evento.OccurredAt.ToLocalTime().ToString("g")
+    · @(esPropio ? "Observado" : "Registrado") por @SystemProfileDisplay.Label(evento.AuthorProfile) el @CenterTime.Local(evento.OccurredAt).ToString("g")
     (@ElapsedTimeDisplay.Since(evento.OccurredAt))
 </p>
 
@@ -165,7 +165,7 @@
         {
             <p class="mb-2">
                 Valoración iniciada @(evento.AssessmentStartedByCurrentAccount == true ? "por ti" : "por otro profesional de Enfermería")
-                el @evento.AssessmentStartedAt?.ToLocalTime().ToString("g").
+                el @(evento.AssessmentStartedAt is { } startedAt ? CenterTime.Local(startedAt).ToString("g") : null).
             </p>
             @if (evento.Assessment is null)
             {
@@ -177,7 +177,7 @@
                 <partial name="_AvisosConstantes" model="VitalSignReferenceRanges.Evaluate(content.Vitals, evento.ReferenceRanges)" />
                 <p class="text-muted">
                     Último guardado @(evento.Assessment.LastUpdatedByCurrentAccount ? "tuyo" : "de otro profesional")
-                    el @evento.Assessment.LastUpdatedAt.ToLocalTime().ToString("g").
+                    el @CenterTime.Local(evento.Assessment.LastUpdatedAt).ToString("g").
                 </p>
                 <dl class="row mb-0">
                     @foreach (var (etiqueta, texto) in new[] { ("Hallazgos", content.Findings), ("Valoración", content.Assessment), ("Actuaciones", content.Actions), ("Comunicaciones", content.Communications), ("Resultado", content.Outcome) })
@@ -210,7 +210,7 @@
             <h2 class="h5 card-title">Escalado a Medicina</h2>
             <p class="mb-2">
                 Escalado @(escalado.EscalatedByCurrentAccount ? "por ti" : "por otro profesional de Enfermería")
-                el @escalado.EscalatedAt.ToLocalTime().ToString("g"). El desenlace del evento corresponde ahora a Medicina. Si Medicina te indica algo,
+                el @CenterTime.Local(escalado.EscalatedAt).ToString("g"). El desenlace del evento corresponde ahora a Medicina. Si Medicina te indica algo,
                 no lo cierra hasta que lo cumplas: entonces lo cierras tú.
             </p>
             <p class="fw-semibold mb-1">Motivo</p>

@@ -103,7 +103,7 @@ else
                                 }
                             </p>
                             <p class="text-body-secondary small mb-0">
-                                @item.UnitName · registrado el @item.ReceivedAt.ToLocalTime().ToString("g") (hace @ElapsedTimeDisplay.Since(item.ReceivedAt))
+                                @item.UnitName · registrado el @CenterTime.Local(item.ReceivedAt).ToString("g") (hace @ElapsedTimeDisplay.Since(item.ReceivedAt))
                             </p>
                         </div>
                         <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
@@ -143,7 +143,7 @@ else
                                     <span class="badge text-bg-danger">Indicación no realizada</span>
                                 }
                             </td>
-                            <td>@item.ReceivedAt.ToLocalTime().ToString("g")</td>
+                            <td>@CenterTime.Local(item.ReceivedAt).ToString("g")</td>
                             <td>@ElapsedTimeDisplay.Since(item.ReceivedAt)</td>
                             <td>
                                 <a asp-action="Episodio" asp-route-eventoId="@item.EventId" class="btn btn-outline-primary btn-sm">Ver detalle operativo</a>

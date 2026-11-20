@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ResidApp.Infrastructure.Persistence;
+using ResidApp.Shared;
 
 namespace ResidApp.FunctionalTests;
 
@@ -1678,7 +1679,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             if (consent)
             {
                 form.Add(new StringContent("Representante"), "Form.Firmante");
-                form.Add(new StringContent(signedOn.Length > 0 ? signedOn : DateTime.Today.ToString("yyyy-MM-dd")), "Form.FechaConsentimiento");
+                form.Add(new StringContent(signedOn.Length > 0 ? signedOn : CenterTime.Today.ToString("yyyy-MM-dd")), "Form.FechaConsentimiento");
             }
             var file = new ByteArrayContent([0xFF, 0xD8, .. Segment(0xE1, [.. "Exif\0\0GPS 40.4168 N"u8]), .. image]);
             file.Headers.ContentType = new("image/jpeg");
@@ -1687,7 +1688,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         }
 
         var withoutConsent = await SaveAsync(consent: false);
-        var futureConsent = await SaveAsync(consent: true, signedOn: DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"));
+        var futureConsent = await SaveAsync(consent: true, signedOn: CenterTime.Today.AddDays(1).ToString("yyyy-MM-dd"));
         var saved = await SaveAsync(consent: true);
         var list = WebUtility.HtmlDecode(await nurse.GetStringAsync("/Enfermeria/Residentes"));
         var photoUrl = Regex.Match(list, $"/FotoResidente/Ver\\?residenteId={residentId}&v=\\d+").Value;
@@ -1712,7 +1713,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Indica quién firmó el consentimiento y la fecha de la firma para guardar la foto.", withoutConsent);
         Assert.Contains("La fecha de la firma no puede ser posterior a hoy.", futureConsent);
         Assert.Contains("Foto guardada.", saved);
-        Assert.Contains($"Consentimiento firmado por su representante el {DateTime.Today:dd/MM/yyyy}.", saved);
+        Assert.Contains($"Consentimiento firmado por su representante el {CenterTime.Today:dd/MM/yyyy}.", saved);
         Assert.Contains("Poner, cambiar y quitar la foto del residente", WebUtility.HtmlDecode(profilePage));
         Assert.Contains("pídeselo a Administración", nurseRecordWithoutPermission);
         Assert.DoesNotContain("Guardar foto", nurseRecordWithoutPermission);
@@ -1849,7 +1850,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         var futureYear = await PostAsync(new()
         {
             ["Form.VersionVista"] = "0", ["Form.Estado"] = "CON_ENTRADAS",
-            ["Form.Filas[0].Tipo"] = "ENFERMEDAD", ["Form.Filas[0].Nombre"] = "Enfermedad Alfa", ["Form.Filas[0].Anio"] = (DateTime.Now.Year + 1).ToString(),
+            ["Form.Filas[0].Tipo"] = "ENFERMEDAD", ["Form.Filas[0].Nombre"] = "Enfermedad Alfa", ["Form.Filas[0].Anio"] = (CenterTime.Now.Year + 1).ToString(),
         });
         var wordYear = await PostAsync(new()
         {

@@ -2,7 +2,7 @@
 @using ResidApp.Web.Models
 @model TimelineListModel
 @* Hitos agrupados por día. Sin DetailAction (lectura auditada de Dirección) no hay enlaces a eventos ni al PDF: son pantallas de otros perfiles. *@
-    @foreach (var day in Model.Entries.GroupBy(e => e.At.ToLocalTime().Date))
+    @foreach (var day in Model.Entries.GroupBy(e => CenterTime.Local(e.At).Date))
     {
         <section class="mb-4" aria-label="@day.Key.ToString("dddd, d 'de' MMMM 'de' yyyy")">
             <h2 class="h6 text-uppercase text-muted border-bottom pb-1">@day.Key.ToString("dddd, d 'de' MMMM 'de' yyyy")</h2>
@@ -12,7 +12,7 @@
                     <li class="list-group-item px-0">
                         <div class="d-flex flex-wrap justify-content-between gap-2">
                             <div>
-                                <strong>@entry.At.ToLocalTime().ToString("HH:mm")</strong>
+                                <strong>@CenterTime.Local(entry.At).ToString("HH:mm")</strong>
                                 <span class="ms-2">@TimelineDisplay.Title(entry)</span>
                                 @if (entry.Profile is { } profile)
                                 {

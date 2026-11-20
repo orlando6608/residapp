@@ -40,18 +40,18 @@ else
                 <p class="text-muted mb-2">
                     @(item.UnitName ?? "Sin unidad") ·
                     <span class="badge text-bg-light border">@FamilyCommunicationDisplay.Label(item.Communication.Type)</span>
-                    · Preparada el @item.Communication.PreparedAt.ToLocalTime().ToString("g") ·
+                    · Preparada el @CenterTime.Local(item.Communication.PreparedAt).ToString("g") ·
                     @if (item.PublishedEarlyAt is { } early)
                     {
-                        <span class="badge text-bg-success">Publicada antes de su hora, el @early.ToLocalTime().ToString("g")</span>
+                        <span class="badge text-bg-success">Publicada antes de su hora, el @CenterTime.Local(early).ToString("g")</span>
                     }
                     else if (published)
                     {
-                        <span class="badge text-bg-success">Publicada el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                        <span class="badge text-bg-success">Publicada el @CenterTime.Local(item.ScheduledAt).ToString("g")</span>
                     }
                     else
                     {
-                        <span class="badge text-bg-info">Se publica el @item.ScheduledAt.ToLocalTime().ToString("g")</span>
+                        <span class="badge text-bg-info">Se publica el @CenterTime.Local(item.ScheduledAt).ToString("g")</span>
                     }
                 </p>
                 <p class="mb-2" style="white-space: pre-line">@item.Communication.Text</p>

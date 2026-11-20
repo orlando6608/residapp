@@ -12,5 +12,5 @@ else
          aria-valuemin="0" aria-valuemax="100" style="height: 0.5rem">
         <div class="progress-bar bg-secondary" style="width: @(Model.BarthelTotal)%"></div>
     </div>
-    <p class="text-muted mb-0">Firmado el @Model.SignedAt.ToLocalTime().ToString("g")</p>
+    <p class="text-muted mb-0">Firmado el @CenterTime.Local(Model.SignedAt).ToString("g")</p>
 }

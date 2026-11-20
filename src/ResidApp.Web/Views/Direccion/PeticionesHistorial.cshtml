@@ -72,7 +72,7 @@
                     @foreach (var request in page.Requests)
                     {
                         <tr>
-                            <td class="text-nowrap">@request.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-nowrap">@CenterTime.Local(request.RequestedAt).ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@(request.AccountName ?? "Cuenta sin nombre") <span class="text-body-secondary">· @SystemProfileDisplay.Label(request.Profile)</span></td>
                             <td>@request.ResidentName</td>
                             <td>@request.UnitName</td>
@@ -90,7 +90,7 @@
                 <li class="card mb-2">
                     <div class="card-body">
                         <p class="mb-1 fw-semibold">@request.ResidentName <span class="fw-normal text-body-secondary">· @request.UnitName</span></p>
-                        <p class="mb-1 small">@request.RequestedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @(request.AccountName ?? "Cuenta sin nombre") · @SystemProfileDisplay.Label(request.Profile)</p>
+                        <p class="mb-1 small">@CenterTime.Local(request.RequestedAt).ToString("dd/MM/yyyy HH:mm") · @(request.AccountName ?? "Cuenta sin nombre") · @SystemProfileDisplay.Label(request.Profile)</p>
                         <p class="mb-1">@request.Reason</p>
                         <p class="mb-0 small text-body-secondary">Lecturas: @(request.Reads is { } reads ? reads.ToString() : "sin dato")</p>
                     </div>

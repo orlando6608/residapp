@@ -72,7 +72,7 @@ else
         }
         else
         {
-            foreach (var day in slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, TimeZoneInfo.Local).Date))
+            foreach (var day in slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, CenterTime.Zone).Date))
             {
                 <div class="mb-3">
                     <p class="mb-1 fw-semibold">@AppointmentDisplay.DayHeading(day.First().StartsAt)</p>

@@ -202,7 +202,7 @@ public sealed class DireccionController(
         }
 
         var centerId = CenterId.From(activeScope.CenterId);
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var scope = await service.ReadScopeAsync(new SupervisionQuery(activeScope.ProfileScopeId, centerId), ct);
         var list = await service.ListPendingAsync(new ListSupervisionPendingQuery(
             activeScope.ProfileScopeId, centerId, today, filtro.Tipo, filtro.Unidad), ct);
@@ -240,7 +240,7 @@ public sealed class DireccionController(
             return View(new SupervisionReferralsViewModel(open.Value!));
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var (from, to) = filtro.Period.Resolve(today);
         if (filtro.Period.Validate(today) is { } invalid)
         {
@@ -324,12 +324,12 @@ public sealed class DireccionController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var (from, to) = filtro.Resolve(today);
         if (filtro.Validate(today) is { } invalid)
         {
             ModelState.AddModelError(string.Empty, invalid);
-            return View(new SupervisionIndicatorsViewModel(from, to, null, DateTime.Now));
+            return View(new SupervisionIndicatorsViewModel(from, to, null, CenterTime.Now));
         }
 
         var result = await service.ReadIndicatorsAsync(new ReadSupervisionIndicatorsQuery(
@@ -344,7 +344,7 @@ public sealed class DireccionController(
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(new SupervisionIndicatorsViewModel(from, to, result.Value, DateTime.Now));
+        return View(new SupervisionIndicatorsViewModel(from, to, result.Value, CenterTime.Now));
     }
 
     /// <summary>DIR-11: revisión de calidad de proceso del periodo, solo lectura: hitos medidos y fuera de plazo por unidad, sin lista de
@@ -359,7 +359,7 @@ public sealed class DireccionController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var (from, to) = filtro.Resolve(today);
         if (filtro.Validate(today) is { } invalid)
         {
@@ -396,7 +396,7 @@ public sealed class DireccionController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Request.Path + Request.QueryString });
         }
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
+        var today = CenterTime.Today;
         var (from, to) = filtro.Resolve(today);
         if (filtro.Validate(today) is { } invalid)
         {

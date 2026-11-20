@@ -111,12 +111,12 @@
                         {
                             <li class="list-group-item">
                                 <div class="fw-semibold">@(change.Enabled ? "Activado" : "Apagado: " + ModuleDisplay.Reason(change.DisableReason!.Value))</div>
-                                <div class="small text-body-secondary">Registrado el @change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                <div class="small text-body-secondary">Registrado el @CenterTime.Local(change.ChangedAt).ToString("dd/MM/yyyy HH:mm")</div>
                                 @if (change.Enabled)
                                 {
                                     <div class="small">Vigencia @change.ValidFrom?.ToString("dd/MM/yyyy") – @change.ValidUntil?.ToString("dd/MM/yyyy") · anexo <code>@change.AnnexReference</code> v<code>@change.AnnexVersion</code></div>
                                 }
-                                <div class="small">Petición del centro: @change.RequestReceivedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @ModuleDisplay.Channel(change.Channel) · <code>@change.RequestReference</code></div>
+                                <div class="small">Petición del centro: @CenterTime.Local(change.RequestReceivedAt).ToString("dd/MM/yyyy HH:mm") · @ModuleDisplay.Channel(change.Channel) · <code>@change.RequestReference</code></div>
                             </li>
                         }
                     </ul>
@@ -135,7 +135,7 @@
                                 @foreach (var change in view.History)
                                 {
                                     <tr>
-                                        <td>@change.ChangedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@CenterTime.Local(change.ChangedAt).ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>@(change.Enabled ? "Activado" : "Apagado: " + ModuleDisplay.Reason(change.DisableReason!.Value))</td>
                                         <td>
                                             @if (change.Enabled)
@@ -147,7 +147,7 @@
                                                 @:—
                                             }
                                         </td>
-                                        <td>Recibida el @change.RequestReceivedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @ModuleDisplay.Channel(change.Channel) · <code>@change.RequestReference</code></td>
+                                        <td>Recibida el @CenterTime.Local(change.RequestReceivedAt).ToString("dd/MM/yyyy HH:mm") · @ModuleDisplay.Channel(change.Channel) · <code>@change.RequestReference</code></td>
                                     </tr>
                                 }
                             </tbody>

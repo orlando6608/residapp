@@ -1,6 +1,6 @@
 # Zonas horarias por centro: estudio de implantación
 
-**Estado: estudio, nada construido (2026-11-20).** Responde a la petición de Orlando: que cada centro tenga su zona horaria, elegida al crearlo, entre las que define Plataforma. Sustituye a la nota «Una sola zona para toda la aplicación» de `docs/prompts-ia/avisos-abiertos.md`. No cambia ningún valor clínico: la zona solo decide **cómo se ven las horas y qué es «hoy»** en cada centro.
+**Estado: F0 construida (2026-11-20, PR de F0); F1 a F4 sin construir.** Decisión de F1 (Orlando, 2026-11-20, pregunta A): al corregir la zona de un centro con franjas o citas futuras, Plataforma ve cuántas se ven afectadas y confirma; las franjas se regeneran a la hora nueva y las citas ya reservadas (en UTC) no se tocan. Responde a la petición de Orlando: que cada centro tenga su zona horaria, elegida al crearlo, entre las que define Plataforma. Sustituye a la nota «Una sola zona para toda la aplicación» de `docs/prompts-ia/avisos-abiertos.md`. No cambia ningún valor clínico: la zona solo decide **cómo se ven las horas y qué es «hoy»** en cada centro.
 
 ## 1. Decisiones de Orlando (2026-11-20, de una en una)
 
@@ -35,8 +35,8 @@
 
 ### 3.2 Un único sitio donde se pregunta «¿qué hora es en este centro?»
 
-- Un servicio `ICenterTime` (nombre provisional) que, dado el **ámbito activo** de la sesión, devuelve la zona del centro y sabe: convertir un instante a hora del centro, dar «hoy» en el centro y dar los límites de un día en UTC. La zona de cada centro se guarda en memoria unos minutos (cambia casi nunca).
-- **Se acaba con `TimeZoneInfo.Local`, `ToLocalTime()` y `DateTime.Today`** salvo en los dos sitios que son de Plataforma/Madrid. Es la parte más grande del trabajo, pero es mecánica.
+- **Como se construyó en F0:** una clase estática `CenterTime` en `ResidApp.Shared` con la zona **de la petición en curso** (`AsyncLocal`, como la cultura): `Zone`, `Local(instante)`, `FromLocal(hora de un formulario)`, `Today`, `TodayAt(instante)` y `Now`; `CenterTime.Use(zona)` la fija y la restaura. Sin fijar, es Madrid. Se eligió esto en lugar de un servicio inyectado (`ICenterTime`) porque la hora se pregunta desde vistas, modelos estáticos, casos de uso y repositorios, y un servicio habría obligado a cambiar decenas de constructores sin ganar nada. **En F1**, un middleware fijará la zona con la del centro del ámbito activo verificado, y los procesos de fondo (F2) la fijarán centro a centro.
+- **Se acaba con `TimeZoneInfo.Local`, `ToLocalTime()` y `DateTime.Today`** salvo en los dos sitios que son de Plataforma/Madrid. Es la parte más grande del trabajo, pero es mecánica. **Hecho en F0:** 105 ficheros de `src` y 21 de pruebas, sin cambiar ninguna hora para los centros actuales.
 - **Vistas:** un ayudante de formato único (por ejemplo, `Hora.Local(at)`) en lugar de `ToLocalTime()` repartido por 70 ficheros, de modo que la zona nunca se escriba en una vista.
 - **Etiqueta de la zona:** cuando la zona del centro no es la de la península, las pantallas con horas la rotulan una vez (por ejemplo, «hora de Canarias»), para que nadie las lea como hora de Madrid. Aplica a cuentas que trabajan en varios centros y a familias que ven el centro desde otro país.
 

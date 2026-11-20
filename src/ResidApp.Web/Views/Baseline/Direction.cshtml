@@ -69,7 +69,7 @@
                 <div class="alert alert-info" role="status">
                     Ya has declarado la finalidad del acceso para este residente
                     (<strong>@EnumDisplay.Label(declaracion.Purpose)</strong>) y vale hasta las
-                    <strong>@declaracion.ExpiresAt.ToLocalTime().ToString("HH:mm")</strong>. No hace falta repetirla; cada consulta
+                    <strong>@CenterTime.Local(declaracion.ExpiresAt).ToString("HH:mm")</strong>. No hace falta repetirla; cada consulta
                     sigue quedando en la auditoría.
                 </div>
             }

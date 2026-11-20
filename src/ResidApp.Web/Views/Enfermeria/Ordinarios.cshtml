@@ -92,7 +92,7 @@ else if (Model.Items.Count > 0)
                             <span class="text-body-secondary small">hace @ElapsedTimeDisplay.Since(item.OccurredAt) · @(item.UnitName ?? "Sin unidad")</span>
                         </p>
                         <p class="mb-1">@(item.Origin == ClinicalEventOrigin.EventoEnfermeria ? $"Evento observado por Enfermería: {EventExcerpt(item.Observation)}" : string.Join(", ", item.Areas.Select(DailyChangeAreaDisplay.Label)))</p>
-                        <p class="text-body-secondary small mb-0">@SystemProfileDisplay.Label(item.AuthorProfile) · @item.OccurredAt.ToLocalTime().ToString("g")</p>
+                        <p class="text-body-secondary small mb-0">@SystemProfileDisplay.Label(item.AuthorProfile) · @CenterTime.Local(item.OccurredAt).ToString("g")</p>
                     </div>
                     <span class="fs-3 text-body-secondary" aria-hidden="true">›</span>
                 </div>
@@ -121,7 +121,7 @@ else if (Model.Items.Count > 0)
                         <td>@(item.UnitName ?? "Sin unidad")</td>
                         <td>@(item.Origin == ClinicalEventOrigin.EventoEnfermeria ? $"Evento observado por Enfermería: {EventExcerpt(item.Observation)}" : string.Join(", ", item.Areas.Select(DailyChangeAreaDisplay.Label)))</td>
                         <td>@SystemProfileDisplay.Label(item.AuthorProfile)</td>
-                        <td>@item.OccurredAt.ToLocalTime().ToString("g")</td>
+                        <td>@CenterTime.Local(item.OccurredAt).ToString("g")</td>
                         <td>@ElapsedTimeDisplay.Since(item.OccurredAt)</td>
                         <td><span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, prioritario: false)">@ClinicalEventStatusDisplay.Label(item.Status)</span></td>
                         <td>

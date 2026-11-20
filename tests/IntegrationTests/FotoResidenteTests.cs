@@ -32,7 +32,7 @@ public class FotoResidenteTests
         new SqlAuthorizationEvidenceProvider(TestDatabase.ConnectionFactory), new FixedPhotoSessionIdentityProvider(profile.ExternalSubject),
         new SqlResidentPhotoRepository(TestDatabase.ConnectionFactory));
 
-    private static readonly DateOnly SignedOn = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+    private static readonly DateOnly SignedOn = CenterTime.Today.AddDays(-1);
 
     private static Task<ApplicationResult<bool>> SetAsync(
         SeededProfile profile, ResidentId residentId, byte[] photo, ResidentPhotoConsentSigner? signer = ResidentPhotoConsentSigner.Representante,
@@ -116,7 +116,7 @@ public class FotoResidenteTests
         var byAuxiliar = await SetAsync(auxiliar, residentId, PhotoWithoutExif);
         var removeByDoctor = await Service(doctor).RemoveAsync(doctor.ProfileScopeId, doctor.CenterId, residentId);
         var withoutConsent = await SetAsync(admin, residentId, PhotoWithoutExif, signer: null);
-        var futureConsent = await SetAsync(admin, residentId, PhotoWithoutExif, signedOn: DateOnly.FromDateTime(DateTime.Today).AddDays(1));
+        var futureConsent = await SetAsync(admin, residentId, PhotoWithoutExif, signedOn: CenterTime.Today.AddDays(1));
         var png = await SetAsync(admin, residentId, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
 
         Assert.Equal(ApplicationFailureCode.AccessDenied, byDoctor.Error?.Code);

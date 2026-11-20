@@ -6,6 +6,7 @@ using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
 using static ResidApp.IntegrationTests.CitasTests;
 using static ResidApp.IntegrationTests.PortalFamiliarTests;
+using ResidApp.Shared;
 
 namespace ResidApp.IntegrationTests;
 
@@ -90,7 +91,7 @@ public sealed class TareaCorreoRlsTests
             Assert.Equal("CONFIRMADA", (string)change.Status);
             var recipient = await task.QuerySingleAsync(SqlChangeNoticeStore.RecipientSql, new
             {
-                AccountId = notice.AccountId, CenterId = notice.CenterId, Today = DateTime.Today, LinkId = notice.LinkId,
+                AccountId = notice.AccountId, CenterId = notice.CenterId, Today = CenterTime.Today.ToDateTime(TimeOnly.MinValue), LinkId = notice.LinkId,
             });
             Assert.Equal(FamilyAddress, (string)recipient.Address);
             Assert.Equal(1, await task.ExecuteAsync(SqlChangeNoticeStore.ResolveSql, new

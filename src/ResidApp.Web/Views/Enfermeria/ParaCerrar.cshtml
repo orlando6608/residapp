@@ -38,7 +38,7 @@ else
                     }
                 </p>
                 <p class="mb-0 text-muted">
-                    @(item.UnitName is null ? "" : item.UnitName + " · ")cumplidas el @item.FulfilledAt.ToLocalTime().ToString("g")
+                    @(item.UnitName is null ? "" : item.UnitName + " · ")cumplidas el @CenterTime.Local(item.FulfilledAt).ToString("g")
                 </p>
             </div>
         </a>

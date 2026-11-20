@@ -152,7 +152,7 @@ public sealed class AdministracionApplicationService(
                 new AuthorizationTarget.IdentityUpdate(command.ResidenteId), ct: ct);
             var (identity, reason) = ResidentIdentityCorrection.Validate(
                 command.NombreVisible, command.FechaNacimiento, command.SexoDocumentado, command.Motivo,
-                DateOnly.FromDateTime(DateTime.Today));
+                CenterTime.Today);
             return await RequestAuthorizationContextResolver.ExecuteResidentIdentityUpdateAsync(
                 context, identities, new ResidentIdentityCorrectionPayload(identity, reason, command.ExpectedCorrections), ct);
         });
@@ -242,7 +242,7 @@ public sealed class AdministracionApplicationService(
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             return await families.ChangeAuthorizationAsync(
                 target, command.VinculoId, command.Cambio, command.ValidaHasta, command.Motivo, command.CambiosEsperados,
-                DateOnly.FromDateTime(DateTime.Today), ct);
+                CenterTime.Today, ct);
         });
 
     /// <summary>Portal Familiar (0052): da al familiar acceso al portal, con su propia cuenta. No abre su autorización.</summary>

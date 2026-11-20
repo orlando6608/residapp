@@ -1,5 +1,6 @@
 using ResidApp.Application.Email;
 using ResidApp.Application.Ports;
+using ResidApp.Shared;
 
 namespace ResidApp.Application.UseCases;
 
@@ -30,7 +31,7 @@ public sealed class ExternalNoticeService(
     /// <summary>Si <paramref name="now"/> está dentro de la franja de envío (hora de la zona de la aplicación, Europe/Madrid).</summary>
     public bool InWindow(DateTimeOffset now)
     {
-        var hour = TimeZoneInfo.ConvertTime(now, zone ?? TimeZoneInfo.Local).Hour;
+        var hour = TimeZoneInfo.ConvertTime(now, zone ?? CenterTime.Zone).Hour;
         return hour >= WindowStartHour && hour < WindowEndHour;
     }
 

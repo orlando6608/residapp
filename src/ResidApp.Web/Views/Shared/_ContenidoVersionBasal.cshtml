@@ -21,7 +21,7 @@
             <dt class="col-sm-4">Motivo</dt>
             <dd class="col-sm-8">@BaselineReasonDisplay.Label(header.ReasonCode)</dd>
             <dt class="col-sm-4">Firmado</dt>
-            <dd class="col-sm-8">@header.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(header.SignedByProfile)</dd>
+            <dd class="col-sm-8">@CenterTime.Local(header.SignedAt).ToString("g") por @SystemProfileDisplay.Label(header.SignedByProfile)</dd>
             <dt class="col-sm-4">Sustituye a</dt>
             <dd class="col-sm-8">@(header.ReplacesVersionNumber is { } previous ? $"Versión {previous}" : "—")</dd>
             <dt class="col-sm-4">Fuente de la información</dt>

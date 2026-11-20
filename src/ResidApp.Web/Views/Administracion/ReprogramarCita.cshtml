@@ -33,7 +33,7 @@ else
         <fieldset class="mb-3">
             <legend class="h6">Nuevo hueco</legend>
             <span asp-validation-for="Form.NuevoInicio" class="text-danger"></span>
-            @foreach (var day in Model.Slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, TimeZoneInfo.Local).Date))
+            @foreach (var day in Model.Slots.GroupBy(s => TimeZoneInfo.ConvertTime(s.StartsAt, CenterTime.Zone).Date))
             {
                 <div class="mb-2">
                     <div class="fw-semibold">@AppointmentDisplay.DayHeading(day.First().StartsAt)</div>

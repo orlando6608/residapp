@@ -88,7 +88,7 @@ public class CierreExcepcionalTests
 
         // Sale de los pendientes de Dirección y ya no se abre desde allí.
         var pending = (await BuildDireccion(setup.Direccion.ExternalSubject).ListPendingAsync(new ListSupervisionPendingQuery(
-            setup.Direccion.ProfileScopeId, setup.Direccion.CenterId, DateOnly.FromDateTime(DateTime.Today)))).Value!;
+            setup.Direccion.ProfileScopeId, setup.Direccion.CenterId, CenterTime.Today))).Value!;
         Assert.DoesNotContain(pending.Episodes, e => e.EventId == setup.EventId);
         Assert.Equal(ApplicationFailureCode.AccessDenied, (await BuildDireccion(setup.Direccion.ExternalSubject).FindEpisodeAsync(
             new FindSupervisionEpisodeQuery(setup.Direccion.ProfileScopeId, setup.Direccion.CenterId, setup.EventId))).Error!.Code);

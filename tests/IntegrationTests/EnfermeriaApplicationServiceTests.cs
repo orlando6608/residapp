@@ -619,11 +619,11 @@ public class EnfermeriaApplicationServiceTests
         var (enfermera, _, eventId) = await SeedOwnEventAsync();
         var revision = await StartAndSaveAsync(enfermera, eventId);
         var service = BuildService(enfermera.ExternalSubject);
-        var yesterday = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+        var yesterday = CenterTime.Today.AddDays(-1);
         revision = (await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, eventId, revision, yesterday, null))).Value;
 
         var overdue = Assert.Single(await FollowUpsAsync(enfermera));
-        Assert.True(new FollowUpPlan(overdue.DueDate, overdue.Criterion).IsOverdue(DateOnly.FromDateTime(DateTime.Today)));
+        Assert.True(new FollowUpPlan(overdue.DueDate, overdue.Criterion).IsOverdue(CenterTime.Today));
         Assert.Equal(ClinicalEventStatus.EnSeguimiento, (await DetailAsync(enfermera, eventId)).Status);
 
         var closed = await service.CloseClinicalEventAsync(CloseCommand(enfermera, eventId, revision, Guid.NewGuid()));

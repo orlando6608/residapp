@@ -230,12 +230,12 @@ public static class FollowUpDisplay
         _ => Plan(dueDate, criterion),
     };
 
-    public static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+    public static DateOnly Today => CenterTime.Today;
 
     public static bool IsOverdue(DateOnly? dueDate) => dueDate < Today;
 
     /// <summary>Con hora, vence cuando pasa esa hora (hora local del centro, Madrid); sin hora, al día siguiente.</summary>
-    public static bool IsOverdue(DateOnly? dueDate, TimeOnly? dueTime) => FollowUpPlan.IsOverdue(dueDate, dueTime, DateTime.Now);
+    public static bool IsOverdue(DateOnly? dueDate, TimeOnly? dueTime) => FollowUpPlan.IsOverdue(dueDate, dueTime, CenterTime.Now);
 }
 
 /// <summary>ENF-07B "iniciar seguimiento": fecha prevista o criterio (al menos uno; lo decide el dominio,
@@ -388,7 +388,7 @@ public sealed class ProtocoloRegistroFormModel
     public DateTime? ContactadoEn { get; set; }
 
     public DateTimeOffset? ContactadoEnOffset =>
-        ContactadoEn is { } value ? new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Local)) : null;
+        ContactadoEn is { } value ? CenterTime.FromLocal(value) : null;
 }
 
 /// <summary>ENF-11/MED-13: la activación del protocolo con el evento del que cuelga. Las vistas del protocolo

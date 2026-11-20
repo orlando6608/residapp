@@ -19,7 +19,7 @@
                     <dt class="col-sm-4">Unidades</dt>
                     <dd class="col-sm-8">@string.Join(", ", Model.Unidades)</dd>
                     <dt class="col-sm-4">Vale hasta</dt>
-                    <dd class="col-sm-8">@Model.CaducaEnUtc.ToLocalTime().ToString("dddd d 'de' MMMM, HH:mm") (una sola vez)</dd>
+                    <dd class="col-sm-8">@CenterTime.Local(Model.CaducaEnUtc).ToString("dddd d 'de' MMMM, HH:mm") (una sola vez)</dd>
                 </dl>
 
                 <div class="row g-4 align-items-center">

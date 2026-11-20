@@ -13,7 +13,7 @@
         <ul class="mb-1">
             @foreach (var correccion in amendments.Corrections)
             {
-                <li>El @correccion.CorrectedAt.ToLocalTime().ToString("g"). Motivo: @correccion.Reason</li>
+                <li>El @CenterTime.Local(correccion.CorrectedAt).ToString("g"). Motivo: @correccion.Reason</li>
             }
         </ul>
         <p class="small mb-0">Se muestra la versión corregida. La original y cada corrección están en la línea temporal del residente.</p>
@@ -27,7 +27,7 @@
         @foreach (var rectificacion in amendments.Rectifications)
         {
             <div class="border-start border-4 border-secondary ps-3 mb-2">
-                <p class="text-muted small mb-1">Añadida por su autor el @rectificacion.RecordedAt.ToLocalTime().ToString("g"). La valoración original no cambia.</p>
+                <p class="text-muted small mb-1">Añadida por su autor el @CenterTime.Local(rectificacion.RecordedAt).ToString("g"). La valoración original no cambia.</p>
                 <p class="mb-1" style="white-space: pre-line">@rectificacion.Text</p>
                 <p class="small mb-0">Motivo: @rectificacion.Reason</p>
             </div>
@@ -39,7 +39,7 @@
 {
     <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
         <a asp-action="CorregirValoracion" asp-route-eventoId="@Model.EventoId" class="btn btn-outline-primary">Corregir valoración</a>
-        <span class="small text-muted">Puedes corregirla hasta el @Model.CorrectionDeadline?.ToLocalTime().ToString("g").</span>
+        <span class="small text-muted">Puedes corregirla hasta el @(Model.CorrectionDeadline is { } deadline ? CenterTime.Local(deadline).ToString("g") : null).</span>
     </div>
 }
 else if (Model.Action == AssessmentAmendmentAction.Rectificar)

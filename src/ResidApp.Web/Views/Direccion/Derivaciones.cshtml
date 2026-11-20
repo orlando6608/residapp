@@ -80,7 +80,7 @@ else
                         <dl class="row small mb-0">
                             <dt class="col-5 fw-normal text-body-secondary">Protocolo urgente</dt>
                             <dd class="col-7 mb-1">
-                                Activado el @item.ProtocolActivatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.ProtocolActivatedAt))
+                                Activado el @CenterTime.Local(item.ProtocolActivatedAt).ToString("g") (@ElapsedTimeDisplay.Since(item.ProtocolActivatedAt))
                                 · @ProfileLabel(item.ProtocolProfile)
                             </dd>
                             <dt class="col-5 fw-normal text-body-secondary">Informe</dt>
@@ -88,7 +88,7 @@ else
                                 @if (item.ReportSigned)
                                 {
                                     <span class="badge text-bg-success">Firmado</span>
-                                    @:el @item.ReportSignedAt!.Value.ToLocalTime().ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
+                                    @:el @CenterTime.Local(item.ReportSignedAt!.Value).ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
                                     <div><a asp-controller="Baseline" asp-action="Direction" asp-route-residenteId="@item.ResidentId.Value" class="small position-relative z-3">Consultar el informe (con registro en la auditoría)</a></div>
                                 }
                                 else
@@ -104,7 +104,7 @@ else
                                 }
                                 else
                                 {
-                                    @:@item.FamilyCallAttempts · la última el @item.LastCallAt!.Value.ToLocalTime().ToString("g")
+                                    @:@item.FamilyCallAttempts · la última el @CenterTime.Local(item.LastCallAt!.Value).ToString("g")
                                 }
                             </dd>
                         </dl>
@@ -137,14 +137,14 @@ else
                         <td>@item.ResidentDisplayName</td>
                         <td>@item.UnitName</td>
                         <td>
-                            Activado el @item.ProtocolActivatedAt.ToLocalTime().ToString("g") (@ElapsedTimeDisplay.Since(item.ProtocolActivatedAt))
+                            Activado el @CenterTime.Local(item.ProtocolActivatedAt).ToString("g") (@ElapsedTimeDisplay.Since(item.ProtocolActivatedAt))
                             · @ProfileLabel(item.ProtocolProfile)
                         </td>
                         <td>
                             @if (item.ReportSigned)
                             {
                                 <span class="badge text-bg-success">Firmado</span>
-                                @:el @item.ReportSignedAt!.Value.ToLocalTime().ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
+                                @:el @CenterTime.Local(item.ReportSignedAt!.Value).ToString("g") · @ProfileLabel(item.ReportProfile!.Value)
                                 <div><a asp-controller="Baseline" asp-action="Direction" asp-route-residenteId="@item.ResidentId.Value" class="small">Consultar el informe (con registro en la auditoría)</a></div>
                             }
                             else
@@ -159,13 +159,13 @@ else
                             }
                             else
                             {
-                                @:@item.FamilyCallAttempts · la última el @item.LastCallAt!.Value.ToLocalTime().ToString("g")
+                                @:@item.FamilyCallAttempts · la última el @CenterTime.Local(item.LastCallAt!.Value).ToString("g")
                             }
                         </td>
                         <td>
                             @if (item.Closed)
                             {
-                                <span class="badge text-bg-dark">Episodio cerrado el @item.ClosedAt!.Value.ToLocalTime().ToString("g")</span>
+                                <span class="badge text-bg-dark">Episodio cerrado el @CenterTime.Local(item.ClosedAt!.Value).ToString("g")</span>
                             }
                             else
                             {

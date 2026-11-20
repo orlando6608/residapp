@@ -45,11 +45,11 @@ else
                     Equipo: Enfermería de @(item.UnitName ?? "la unidad") ·
                     @if (item.LastActionType is { } tipo)
                     {
-                        <span>Última actuación: @FollowUpDisplay.Label(tipo), @item.LastActionAt!.Value.ToLocalTime().ToString("g")</span>
+                        <span>Última actuación: @FollowUpDisplay.Label(tipo), @CenterTime.Local(item.LastActionAt!.Value).ToString("g")</span>
                     }
                     else
                     {
-                        <span>Iniciado el @item.StartedAt.ToLocalTime().ToString("g"), sin actuaciones todavía</span>
+                        <span>Iniciado el @CenterTime.Local(item.StartedAt).ToString("g"), sin actuaciones todavía</span>
                     }
                 </p>
             </div>

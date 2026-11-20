@@ -70,7 +70,7 @@ public class EstadoResidenteTests
         Assert.Equal(ResidentDischargeReason.AltaVoluntaria, discharged.Reason);
         Assert.Equal("Vuelve con su familia.", discharged.ReasonText);
         Assert.Equal(DateOnly.FromDateTime(discharged.DischargedAt.UtcDateTime).AddYears(15), discharged.RetainUntil);
-        Assert.Equal(ResidentRetentionStatus.Vigente, ResidentDischarge.RetentionStatus(discharged.RetainUntil, DateOnly.FromDateTime(DateTime.Today)));
+        Assert.Equal(ResidentRetentionStatus.Vigente, ResidentDischarge.RetentionStatus(discharged.RetainUntil, CenterTime.Today));
     }
 
     [Fact]

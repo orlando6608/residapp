@@ -251,7 +251,7 @@ public static class AdministrativeResidentDisplay
     /// <summary>Aviso por correo (ADR 0012, script 0084): si la dirección está confirmada con la familia. Sin confirmar, ResidApp no envía ningún aviso a ese correo. Solo la
     /// fecha: no se enseña qué cuenta la confirmó (dato del personal, docs/privacidad/direccion-confirmada-familia.md, riesgo 2).</summary>
     public static string EmailConfirmation(ResidentFamilyMember member) => member.EmailConfirmedAt is { } at
-        ? $"Dirección confirmada el {at.ToLocalTime():dd/MM/yyyy}."
+        ? $"Dirección confirmada el {CenterTime.Local(at):dd/MM/yyyy}."
         : "Correo sin confirmar: ResidApp no enviará avisos a esta dirección.";
 
     /// <summary>ADM-08: la autorización tal como cuenta hoy, p. ej. «Activa hasta el 31/10/2026» o «Sin autorización».</summary>

@@ -15,7 +15,7 @@
         }
         @if (Model.CaducaEnUtc is { } caduca)
         {
-            <p class="mb-2">Tiene una invitación sin usar que vale hasta el <strong>@caduca.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</strong>.
+            <p class="mb-2">Tiene una invitación sin usar que vale hasta el <strong>@CenterTime.Local(caduca).ToString("dd/MM/yyyy HH:mm")</strong>.
                 Crear otra la anula.</p>
         }
         <div class="d-flex flex-wrap gap-2">

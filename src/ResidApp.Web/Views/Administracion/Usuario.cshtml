@@ -108,10 +108,10 @@
                 {
                     <div class="small">@ProfessionalAccountDisplay.ActiveUnits(profile)</div>
                 }
-                <div class="text-body-secondary small">Concedido el @profile.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.GrantedBy</div>
+                <div class="text-body-secondary small">Concedido el @CenterTime.Local(profile.GrantedAt).ToString("dd/MM/yyyy HH:mm") · @profile.GrantedBy</div>
                 @if (profile.RevokedAt is { } revokedAt)
                 {
-                    <div class="text-body-secondary small">Revocado el @revokedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.RevokedBy</div>
+                    <div class="text-body-secondary small">Revocado el @CenterTime.Local(revokedAt).ToString("dd/MM/yyyy HH:mm") · @profile.RevokedBy</div>
                 }
                 <a asp-action="PerfilUsuario" asp-route-cuentaId="@account.AccountId.Value" asp-route-ambitoId="@profile.ProfileScopeId"
                    class="btn btn-outline-primary mt-2">@(canChange && profile.Active && ProfessionalAccount.IsGrantable(profile.Profile) ? "Gestionar" : "Ver")</a>
@@ -136,11 +136,11 @@
                     <tr>
                         <th scope="row">@SystemProfileDisplay.Label(profile.Profile)@if (profile.IsPrincipal) { <span class="badge text-bg-primary ms-1">Principal</span> }</th>
                         <td>@(profile.Active ? ProfessionalAccountDisplay.ActiveUnits(profile) : "—")</td>
-                        <td>@profile.GrantedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.GrantedBy</td>
+                        <td>@CenterTime.Local(profile.GrantedAt).ToString("dd/MM/yyyy HH:mm") · @profile.GrantedBy</td>
                         <td>
                             @if (profile.RevokedAt is { } revokedAt)
                             {
-                                @:Revocado el @revokedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @profile.RevokedBy
+                                @:Revocado el @CenterTime.Local(revokedAt).ToString("dd/MM/yyyy HH:mm") · @profile.RevokedBy
                             }
                             else
                             {

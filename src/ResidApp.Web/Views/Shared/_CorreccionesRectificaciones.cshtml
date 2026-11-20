@@ -18,27 +18,27 @@
                     @(item.Profile == SystemProfile.Medicina ? "Valoración médica" : "Valoración de Enfermería")
                     @if (item.Event is { } registered)
                     {
-                        <span class="fw-normal text-body-secondary">· evento registrado el @registered.At.ToLocalTime().ToString("g")</span>
+                        <span class="fw-normal text-body-secondary">· evento registrado el @CenterTime.Local(registered.At).ToString("g")</span>
                     }
                 </h3>
                 @if (item.Original is { } original)
                 {
                     <div class="border-start border-4 border-secondary ps-3 mb-3">
-                        <p class="fw-semibold mb-1">Original <span class="fw-normal text-body-secondary small">guardada el @original.At.ToLocalTime().ToString("g") por @TimelineDisplay.Author(original)</span></p>
+                        <p class="fw-semibold mb-1">Original <span class="fw-normal text-body-secondary small">guardada el @CenterTime.Local(original.At).ToString("g") por @TimelineDisplay.Author(original)</span></p>
                         <partial name="_CamposHito" model="original" />
                     </div>
                 }
                 @foreach (var correction in item.Corrections)
                 {
                     <div class="border-start border-4 border-warning ps-3 mb-3">
-                        <p class="fw-semibold mb-1">Corrección <span class="fw-normal text-body-secondary small">el @correction.At.ToLocalTime().ToString("g") por @TimelineDisplay.Author(correction)</span></p>
+                        <p class="fw-semibold mb-1">Corrección <span class="fw-normal text-body-secondary small">el @CenterTime.Local(correction.At).ToString("g") por @TimelineDisplay.Author(correction)</span></p>
                         <partial name="_CamposHito" model="correction" />
                     </div>
                 }
                 @foreach (var rectification in item.Rectifications)
                 {
                     <div class="border-start border-4 border-info ps-3 mb-3">
-                        <p class="fw-semibold mb-1">Rectificación <span class="fw-normal text-body-secondary small">el @rectification.At.ToLocalTime().ToString("g") por @TimelineDisplay.Author(rectification)</span></p>
+                        <p class="fw-semibold mb-1">Rectificación <span class="fw-normal text-body-secondary small">el @CenterTime.Local(rectification.At).ToString("g") por @TimelineDisplay.Author(rectification)</span></p>
                         <partial name="_CamposHito" model="rectification" />
                     </div>
                 }
@@ -64,7 +64,7 @@
                     <span class="badge @(version.IsCurrent ? "text-bg-success" : "text-bg-secondary") ms-1">@(version.IsCurrent ? "Vigente" : "Histórica")</span>
                     <div>@BaselineReasonDisplay.Label(version.ReasonCode) · Barthel @version.BarthelTotal / 100</div>
                     <div class="text-body-secondary small">
-                        Firmada el @version.SignedAt.ToLocalTime().ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)
+                        Firmada el @CenterTime.Local(version.SignedAt).ToString("g") por @SystemProfileDisplay.Label(version.SignedByProfile)
                         @(version.ReplacesVersionNumber is { } previous ? $"· sustituye a la versión {previous}" : "")
                     </div>
                 </li>

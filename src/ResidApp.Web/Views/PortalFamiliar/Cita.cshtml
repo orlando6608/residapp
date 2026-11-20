@@ -46,7 +46,7 @@
 <ul class="list-unstyled small text-body-secondary mb-3">
     @foreach (var change in appointment.Changes)
     {
-        <li>@AppointmentDisplay.Label(change.Action) el @change.At.ToLocalTime().ToString("dd/MM/yyyy HH:mm")@(change.ByCenter ? " por el centro" : "")</li>
+        <li>@AppointmentDisplay.Label(change.Action) el @CenterTime.Local(change.At).ToString("dd/MM/yyyy HH:mm")@(change.ByCenter ? " por el centro" : "")</li>
     }
 </ul>
 

@@ -2,7 +2,7 @@
 @model SeriesViewModel
 @{
     ViewData["Title"] = "Serie de turnos";
-    var today = DateOnly.FromDateTime(DateTime.Today);
+    var today = CenterTime.Today;
     var series = Model.Series;
     // Solo la primera letra en mayúscula («Miércoles, 4 de noviembre»); text-capitalize la ponía en cada palabra.
     string Day(DateOnly date) { var text = date.ToString("dddd, d 'de' MMMM 'de' yyyy"); return char.ToUpper(text[0]) + text[1..]; }

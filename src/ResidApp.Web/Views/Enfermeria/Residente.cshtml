@@ -66,5 +66,5 @@
 <partial name="_ContactoUrgente" model="new EmergencyContactCardModel(Model.EmergencyContacts)" />
 @if (Model.Photo is { } photo)
 {
-    <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(Model.Resident.ResidentId.Value, photo, DateOnly.FromDateTime(DateTime.Today), DateTimeOffset.UtcNow)" />
+    <partial name="_FotoResidenteEditar" model="new ResidentPhotoEditorViewModel(Model.Resident.ResidentId.Value, photo, CenterTime.Today, DateTimeOffset.UtcNow)" />
 }

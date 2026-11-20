@@ -117,7 +117,7 @@ else
                     → @(change.NewMin is null && change.NewMax is null ? "Sin rango" : $"{Limit(change.NewMin)} – {Limit(change.NewMax)}")
                 </div>
                 <div class="text-body-secondary small">
-                    @change.ChangedAt.ToLocalTime().ToString("g") · @SystemProfileDisplay.Label(change.ChangedByProfile)@(change.ChangedByCurrentAccount ? " (tú)" : "")
+                    @CenterTime.Local(change.ChangedAt).ToString("g") · @SystemProfileDisplay.Label(change.ChangedByProfile)@(change.ChangedByCurrentAccount ? " (tú)" : "")
                 </div>
             </li>
         }
@@ -137,7 +137,7 @@ else
                 @foreach (var change in Model.View.History)
                 {
                     <tr>
-                        <td>@change.ChangedAt.ToLocalTime().ToString("g")</td>
+                        <td>@CenterTime.Local(change.ChangedAt).ToString("g")</td>
                         <td>@VitalSignRangeDisplay.Label(change.Code)</td>
                         <td>@(change.PreviousMin is null && change.PreviousMax is null ? "Sin rango" : $"{Limit(change.PreviousMin)} – {Limit(change.PreviousMax)}")</td>
                         <td>@(change.NewMin is null && change.NewMax is null ? "Sin rango" : $"{Limit(change.NewMin)} – {Limit(change.NewMax)}")</td>
