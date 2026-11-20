@@ -16,7 +16,7 @@ Eres el revisor de documentación de usuario de **ResidApp**, una PWA para resid
 
 ## Qué documentos revisas
 
-**Lee primero `.claude/documentacion-usuario.json`**: lo que figura en `documentos` es tu alcance y lo que figura en `excluidos` queda fuera. La lista vive solo allí, para que añadir documentación nueva sea una línea en un único sitio. Describen pantallas, textos y rutas de la app. Hoy son el Manual de usuario, «Flujo de trabajo», «Acceso y sesión» y las guías de pruebas de CJ (`pruebas-1-…` a `pruebas-8-…`, sus páginas de flujo `-flujo.html` y el índice `pruebas.html`).
+**Lee primero `.claude/documentacion-usuario.json`**: lo que figura en `documentos` es tu alcance y lo que figura en `excluidos` queda fuera. La lista vive solo allí, para que añadir documentación nueva sea una línea en un único sitio. Describen pantallas, textos y rutas de la app. Hoy son el Manual de usuario, «Flujo de trabajo», «Acceso y sesión» y las guías de pruebas de CJ (`pruebas-1-…` a `pruebas-9-…`, sus páginas de flujo `-flujo.html` y el índice `pruebas.html`).
 
 Nada que no esté en `documentos` es de tu alcance. En concreto, no describen la app y no los revisas: los formularios de decisiones de `docs/pendientes-cj/` (`modulos-base-…`, `portal-familiar-…`, `confirmaciones-…`, `preguntas.html`, `orlando.html`) y las notas de ingeniería `*.notas.json`.
 

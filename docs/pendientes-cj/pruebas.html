@@ -68,11 +68,11 @@
   <header>
     <p class="eyebrow">ResidApp · Pendientes de CJ · Pruebas</p>
     <h1>Pruebas</h1>
-    <p class="meta">Revisado para ResidApp v0.5.0 · Estado a 19/11/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Revisado para ResidApp v0.5.0 · Estado a 20/11/2026 · Para CJ, responsable de producto</p>
     <p class="lead">
       Guías paso a paso para probar la aplicación de desarrollo con datos ficticios. En cada prueba se explica qué hacer y qué debería
-      ocurrir, y tú marcas si funciona, si funciona con algún problema, si no funciona o si no la has podido probar. Son 92 pruebas
-      (31 imprescindibles) repartidas en 8 guías cortas: cada una guarda sus respuestas por su cuenta.
+      ocurrir, y tú marcas si funciona, si funciona con algún problema, si no funciona o si no la has podido probar. Son 103 pruebas
+      (36 imprescindibles) repartidas en 9 guías cortas: cada una guarda sus respuestas por su cuenta.
       Lo que marcas se guarda solo en el servidor: no hay que enviar nada.
     </p>
   </header>
@@ -92,7 +92,7 @@
     <p class="lead" id="tus-cuentas">
       <strong>Tus cuentas.</strong> Todas las guías usan la «Residencia Los Almendros», el centro del Flujo de trabajo, con una cuenta por
       perfil (<code>almendros-administracion</code>, <code>almendros-enfermeria</code>…), y la guía 8 también la «Residencia Los Olmos»,
-      <code>varios-centros</code> y <code>plataforma-cj</code>; la lista está en el Manual, «Cuentas de prueba». Son solo tuyas: Orlando
+      <code>varios-centros</code> (la guía 9 también lo usa) y <code>plataforma-cj</code>; la lista está en el Manual, «Cuentas de prueba». Son solo tuyas: Orlando
       tiene las suyas, con <code>-orlando</code> en el nombre. Orlando ya las ha dado de alta todas: no hay invitaciones que abrir. Todas
       comparten la <strong>misma contraseña</strong>, que te da Orlando, y las del personal comparten también una <strong>misma clave</strong> del
       código del móvil: añádela una sola vez a tu aplicación de autenticación (por ejemplo, Google Authenticator o Microsoft Authenticator)
@@ -140,6 +140,11 @@
         <p>5 pruebas, 2 imprescindibles, y 3 preguntas abiertas sobre todas las guías · unos 15 minutos. No necesita ninguna otra guía.</p>
         <p><a class="flujo" href="pruebas-8-aislamiento-flujo.html">Flujo de la guía 8: qué perfil hace cada prueba</a></p>
       </li>
+      <li>
+        <a href="pruebas-9-citas-externas.html">Guía 9 · Citas externas de los residentes</a>
+        <p>11 pruebas, 5 imprescindibles, y 2 preguntas abiertas · unos 45 minutos. Las citas de los residentes fuera del centro: registrarlas, abrirlas a las familias, «Me encargo yo» y «No puedo», lo que confirma el personal, y cerrar la cita con la nota «Al terminar». Hay que hacerla el mismo día. Necesita la autorización de la familia activa (la guía 6 la deja así). <strong>Es nueva (20/11/2026).</strong> Una de sus preguntas finales es la confirmación de que los avisos por correo son lo que quieres.</p>
+        <p><a class="flujo" href="pruebas-9-citas-externas-flujo.html">Flujo de la guía 9: qué perfil hace cada prueba</a></p>
+      </li>
     </ul>
   </section>
 
@@ -162,7 +167,7 @@
       <li>El traslado de un residente a otro centro (solo es posible entre unidades del mismo centro) y que Enfermería traslade con un permiso específico.</li>
       <li>Que un segundo profesional aporte a un borrador de basal ajeno (lo descartaste en las aclaraciones).</li>
       <li>Rangos de referencia por residente.</li>
-      <li>Los avisos por correo de las citas (propuesta, cambio y recordatorio del día antes), los de las citas externas de los residentes (7 días, víspera y 2 días) y la casilla «Dirección confirmada con la familia» que los habilita: están apagados por defecto, los familiares de prueba no tienen correo y a CJ no le llegan correos de prueba.</li>
+      <li>El envío real de los avisos por correo de las citas (propuesta, cambio y recordatorio del día antes) y de las citas externas de los residentes (7 días, víspera y 2 días), y la casilla «Dirección confirmada con la familia» que los habilita: están apagados por defecto, los familiares de prueba no tienen correo y a CJ no le llegan correos de prueba. De los de las citas externas, la guía 9 prueba el interruptor del centro y su texto, pero no que el correo salga.</li>
       <li>El calendario de turnos con asignación de personas y bandejas personales (aplazado).</li>
     </ul>
   </section>

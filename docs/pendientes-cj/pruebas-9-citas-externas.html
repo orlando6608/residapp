@@ -1,0 +1,846 @@
+<!doctype html>
+<!--
+  Documento para CJ: guía 9 de 9 de las pruebas en el entorno de desarrollo. Se responde abriéndolo en el navegador (no hace falta
+  editar este código). Las respuestas se guardan solas en el servidor (api/respuestas/); ingeniería las lee de allí.
+  Cómo funciona: docs/pendientes-cj/README.md. Cada pregunta es una prueba con pasos; el estilo y el script son los de los demás
+  documentos (solo cambian los textos «Sin probar»/«Probada» y «completadas»).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía 9 de pruebas · Citas externas de los residentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  footer .siguiente { font-size: 0.98rem; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+
+  /* Guía de pruebas: pasos, resultado esperado y tablas de preparación */
+  .prueba-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9rem; color: var(--muted); margin: 2px 0 8px; align-items: center; }
+  .tag-imp { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 9px; font-size: 0.78rem; font-weight: 600; }
+  ol.pasos { margin: 6px 0 10px 1.3rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .esperado { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 4px; margin: 6px 0 12px; font-size: 0.95rem; }
+  .esperado strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .tabla-wrap { overflow-x: auto; }
+  table.datos { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--surface); }
+  table.datos th, table.datos td { border: 1px solid var(--rule); padding: 7px 10px; text-align: left; vertical-align: top; }
+  table.datos th { background: var(--accent-soft); font-weight: 600; }
+  .aviso { padding-left: 12px; border-left: 3px solid var(--danger); }
+  ul.lista { margin: 4px 0 4px 1.2rem; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  /* Nota de ingeniería: lo que ingeniería responde a una pregunta (fichero .notas.json del documento); solo lectura. */
+  .nota-ing { background: var(--surface); border: 1px solid var(--accent); border-left-width: 4px; padding: 8px 12px; border-radius: 4px; margin: 10px 0 0; font-size: 0.95rem; }
+  .nota-ing strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .nota-ing p { margin: 0; white-space: pre-line; }
+</style>
+</head>
+<body data-doc="pruebas-9-citas-externas" data-version="2026-11-20">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="pruebas.html">← Pruebas</a>
+      <a href="pruebas-9-citas-externas-flujo.html">Ver el flujo de esta guía</a>
+      <a href="index.html">Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Pruebas en el entorno de desarrollo · Guía 9 de 9</p>
+    <h1>Guía 9 · Citas externas de los residentes</h1>
+    <p class="meta">Revisado para ResidApp v0.5.0 · Estado a 20/11/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Las citas de los residentes fuera del centro (pruebas, consultas y tratamientos): Administración y Enfermería las registran, la familia las ve en el Portal Familiar y se ofrece a llevar o acompañar, y el personal lo confirma y anota cómo ha ido. Tú marcas en cada prueba si lo que ves coincide con lo que debería ocurrir y nos cuentas lo que no. Al final, dos preguntas abiertas: una de ellas es la confirmación de que los avisos por correo son lo que quieres.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué es</span><span>11 pruebas. 5 son imprescindibles. Y 2 preguntas abiertas.</span></div>
+    <div role="listitem"><span class="k">Dónde</span><span>En la aplicación de Azure de desarrollo, con cuentas y residentes ficticios.</span></div>
+    <div role="listitem"><span class="k">Cuánto</span><span>Unos 45 minutos; las imprescindibles, menos. Hazla <strong>el mismo día</strong>: la prueba 9 necesita una cita de hoy.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Haz la prueba y marca</strong>
+        <span>Abre la aplicación en otra pestaña, sigue los pasos y marca A, B, C o D. Añade un comentario si algo no te convence. Lo que marcas se guarda solo en el servidor: puedes cerrar y seguir otro día, también desde otro ordenador.</span></li>
+      <li><span class="step-n">2</span><strong>No hay que enviar nada</strong>
+        <span>No hay botón de guardar ni fichero que mandar: abajo verás «Guardado en el servidor» con la hora. Si cambias una respuesta, se guarda la nueva. Ingeniería recibe un aviso cuando dejas de responder un rato. No hace falta haberlo respondido todo.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre esta guía y verás lo que ya has contestado. No escribas datos personales reales en los comentarios.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section id="preparacion">
+    <h2>Antes de empezar</h2>
+    <div class="stack prose">
+      <p>
+        Esta guía te lleva por la aplicación real, en el entorno de desarrollo de Azure
+        (<code>https://app-residapp-dev.azurewebsites.net</code>), con datos ficticios. Todo lo que hagas se queda guardado en ese
+        entorno, pero no afecta a ningún residente real. Si algo sale mal, no pasa nada: apunta lo que viste en el comentario de la
+        prueba. Para los lugares y los textos de las citas, usa nombres inventados («Hospital de prueba»): nada real ni clínico.
+      </p>
+      <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
+        contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». Las cuentas ya están dadas de alta: usa
+        la contraseña que te ha dado Orlando y el código de tu aplicación de autenticación (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Esta guía cambia varias veces de cuenta y la sesión se cierra tras 30 minutos sin usarla. Si una cuenta tiene varios ámbitos, la
+        aplicación te deja elegir cuál usar.</p>
+      <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
+      <p><strong>Si te pierdes</strong>, el <a href="pruebas-9-citas-externas-flujo.html">flujo de la guía 9</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
+    </div>
+
+    <h3>Cuentas de prueba de esta guía</h3>
+    <div class="tabla-wrap"><table class="datos">
+      <thead><tr><th>Usuario (lo que escribes)</th><th>Perfil</th><th>Qué ve y qué puede hacer</th></tr></thead>
+      <tbody>
+        <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Registra y cambia las citas externas, abre o cierra las citas a las familias y los avisos por correo, restringe a la familia de un residente y da de baja de los avisos. Ve el nombre de quien se ofrece y solo la fecha prevista de la siguiente cita, no la nota «Al terminar».</td></tr>
+        <tr><td><code>almendros-elena</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Rosa Sánchez (ficticia)», con la autorización activa. Ve las citas de Rosa fuera del centro y puede ofrecerse a llevarla o acompañarla, o decir que no puede.</td></tr>
+        <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Con permiso para registrar y cambiar las citas externas (ya lo tiene). Confirma lo que ofrece la familia, marca la cita realizada y anota «Al terminar».</td></tr>
+        <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Ve las citas externas y la nota «Al terminar», sin nombres de familiares y sin poder cambiar nada.</td></tr>
+        <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Ve «Citas externas de hoy y mañana» de sus residentes asignados (Rosa es una de ellas), solo con lo que necesita para preparar la salida.</td></tr>
+        <tr><td><code>varios-centros</code></td><td>Familiar en Los Almendros</td><td>Solo en la prueba 11: una persona de la familia que <strong>no</strong> es la de Rosa. Al entrar, elige «Residencia Los Almendros (ficticia)» como Familiar.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Residentes de prueba de esta guía</h3>
+    <div class="tabla-wrap"><table class="datos">
+      <thead><tr><th>Residente</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td>Rosa Sánchez (ficticia)</td><td>Su hija tiene acceso al Portal Familiar (<code>almendros-elena</code>) y está asignada al Auxiliar. Todas las citas de la guía son suyas.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3>Cómo marcar cada prueba</h3>
+    <ul class="lista prose">
+      <li><strong>A · Funciona como esperaba.</strong> Lo que ves coincide con «Qué debería ocurrir».</li>
+      <li><strong>B · Funciona, pero con un problema.</strong> Hace lo que debe, pero algo no te convence: un texto confuso, un paso de más, algo clínicamente raro. Cuéntalo en el comentario: es lo más valioso.</li>
+      <li><strong>C · No funciona.</strong> No se puede hacer, da un error o muestra algo que no debería. Apunta qué pulsaste y qué pasó.</li>
+      <li><strong>D · No he podido probarlo.</strong> Por falta de tiempo o porque dependía de otra prueba.</li>
+    </ul>
+    <p class="prose">Las pruebas con la etiqueta <span class="tag-imp">Imprescindible</span> son las que más importan: si vas justo de tiempo, haz solo esas (5 de 11).</p>
+
+    <h3>Antes de esta guía</h3>
+    <p class="prose">La familia (<code>almendros-elena</code>) tiene que tener su autorización activa. Si hiciste la <a href="pruebas-6-comunicados-portal.html">guía 6</a>, déjala activa al terminar su prueba 12. Las citas externas vienen <strong>cerradas</strong> a las familias: la prueba 2 las abre, y la 11 las vuelve a cerrar.</p>
+
+    <h3>En qué orden hacerlas</h3>
+    <ul class="lista prose">
+      <li>Hazlas en orden y el mismo día: cada una parte de las citas que deja la anterior, y la prueba 9 necesita una cita de hoy (el botón «Dar por realizada» sale desde el día de la cita).</li>
+      <li>La prueba 8 va antes que la 9: una cita realizada desaparece de la lista del Auxiliar.</li>
+      <li>La prueba 11 deja las citas externas cerradas a las familias y los avisos apagados. Si no llegas a ella, ciérralos tú desde «Ajustes para la familia».</li>
+    </ul>
+    <p class="why">Si te saltas una prueba, marca D en la que dependa de ella. Los Almendros lo comparten otras personas: si algo no está como esperabas (un interruptor ya abierto, citas de otra vez), apunta lo que ves en el comentario.</p>
+  </section>
+
+  <section class="tema" id="tema-1">
+    <h2>Registrar las citas y abrirlas a la familia</h2>
+    <div class="stack prose">
+      <p>Con <code>almendros-administracion</code>: registras dos citas, abres las citas externas a las familias (tres confirmaciones) y enciendes los avisos por correo.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1">
+        <div class="q-head"><span class="n">1</span><h3 class="q-title" id="t-1">Administración registra dos citas externas</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-administracion</code> y, en el inicio, pulsa la tarjeta «Citas externas». Pulsa «Registrar una cita externa».</li>
+          <li><strong>Cita A, de hoy:</strong> residente «Rosa Sánchez (ficticia)», día de hoy, una hora que todavía no haya pasado (o sin hora: es opcional), tipo «Consulta», especialidad «Cardiología», lugar «Hospital de prueba (ficticio)», transporte «La familia» y acompañante «Un familiar». No marques nada como confirmado. Pulsa «Registrar la cita».</li>
+          <li><strong>Cita B, dentro de 5 días:</strong> la misma residente, tipo «Prueba», especialidad «Análisis», lugar «Centro de salud de prueba», transporte «La familia» y acompañante «Un familiar». «Registrar la cita». No escribas datos reales ni diagnósticos en «Una línea más».</li>
+          <li>Mira la lista de citas externas y el inicio de Administración.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada cita sale en la lista como «Falta algo». En el inicio de Administración, el bloque «Citas externas con algo sin cubrir» las enseña, y la de hoy lleva la marca «En 2 días o menos». Todavía no las ve la familia: el centro no las ha abierto.</div>
+        <fieldset class="choices" aria-labelledby="t-1">
+          <label class="choice"><input type="radio" name="r-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-1" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-1" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="2">
+        <div class="q-head"><span class="n">2</span><h3 class="q-title" id="t-2">Abrir las citas externas a las familias</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Con <code>almendros-administracion</code>, en la lista de citas externas, pulsa «Ajustes para la familia». Lee cuántas citas «se verían» si las abres. Si ya estaban abiertas («Ahora las familias ven las citas externas»), pulsa «Cerrar las citas externas a las familias» y vuelve a esta pantalla: Los Almendros lo comparten otras personas y puede no estar como al principio.</li>
+          <li>Pulsa «Abrir las citas externas a las familias» sin marcar nada y después con solo alguna de las tres casillas. Marca las tres y ábrelas.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin las tres casillas no deja abrir. Antes de abrir, la pantalla dice cuántas citas se verían, y la cifra cuadra con las citas abiertas de los próximos 90 días que ves en tu lista (las ocultas y las de un residente con la familia restringida no cuentan). Al abrir sale «Las familias ya pueden ver las citas externas.» y queda guardado quién las abrió, cuándo y con qué confirmaciones.</div>
+        <fieldset class="choices" aria-labelledby="t-2">
+          <label class="choice"><input type="radio" name="r-2" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-2" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-2" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-2" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="3">
+        <div class="q-head"><span class="n">3</span><h3 class="q-title" id="t-3">Encender los avisos por correo</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>En la misma pantalla, más abajo, «Avisos por correo de las citas externas»: lee el texto. Marca la casilla «La residencia ha informado a las familias…» y pulsa «Encender los avisos por correo».</li>
+          <li>Mira cómo queda la pantalla y pulsa «Apagar los avisos por correo»; vuelve a encenderlos para las pruebas siguientes.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El texto explica que el correo llega a los 7 días, la víspera y, a los 2 días, solo si todavía falta algo que pueda cubrir la familia, y que no dice cuándo, dónde ni de qué es la cita. Al encender sale «Los avisos por correo de citas externas quedan encendidos.»; al apagar, «…quedan apagados.». Si las citas externas estuvieran cerradas a las familias, la pantalla diría que hay que abrirlas primero. <strong>No llegará ningún correo:</strong> el entorno de pruebas no los envía y <code>almendros-elena</code> no tiene dirección. Aquí solo se prueban el interruptor y el texto.</div>
+        <fieldset class="choices" aria-labelledby="t-3">
+          <label class="choice"><input type="radio" name="r-3" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-3" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-3" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>La familia, en el Portal Familiar</h2>
+    <div class="stack prose">
+      <p>Con <code>almendros-elena</code>: ve las citas de Rosa fuera del centro y se ofrece a llevarla o acompañarla, o dice que no puede.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4">
+        <div class="q-head"><span class="n">4</span><h3 class="q-title" id="t-4">La familia ve sus citas fuera del centro</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-elena</code>, elige a «Rosa Sánchez (ficticia)» y pulsa «Citas fuera del centro».</li>
+          <li>Mira la lista. En una pantalla ancha, prueba también la pestaña «Mes» (en el móvil no sale). Abre la cita A.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>La lista enseña las dos citas por orden de día, la de hoy con «(hoy)». En el detalle, la familia ve el día, la hora, el lugar, el transporte («La familia (pendiente)»), el acompañante («Un familiar (pendiente)») y el estado «Falta transporte y acompañante», con el aviso de que esta información la ve quien está autorizado. <strong>Nunca</strong> ve la nota «al terminar» ni el motivo de una cancelación.</div>
+        <fieldset class="choices" aria-labelledby="t-4">
+          <label class="choice"><input type="radio" name="r-4" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-4" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-4" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="5">
+        <div class="q-head"><span class="n">5</span><h3 class="q-title" id="t-5">«Me encargo yo» y «Ya no puedo»</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>En la cita A, bajo «¿Puedes ayudar?», lee el texto y pulsa «Me encargo yo del transporte» y después «Me encargo yo del acompañamiento».</li>
+          <li>Pulsa «Ya no puedo encargarme del transporte» y vuelve a pulsar «Me encargo yo del transporte». Déjalo encargado de los dos.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada pulsación da un aviso («Anotado: te encargas del transporte. Es un aviso para el centro: no sustituye al teléfono, y el centro lo confirmará por su cuenta.»). La cita pasa a «La familia (te encargas tú, pendiente de confirmar por el centro)» y, con las dos partes, a «Transporte y acompañante resueltos». El texto junto a los botones dice que el personal verá tu nombre, que otros familiares solo verán que lo hará un familiar y que el centro no te llamará solo por esto. «Ya no puedo…» lo deja libre y avisa de que, si el centro ya lo había comprobado contigo, le llames.</div>
+        <fieldset class="choices" aria-labelledby="t-5">
+          <label class="choice"><input type="radio" name="r-5" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-5" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-5" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-5" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="6">
+        <div class="q-head"><span class="n">6</span><h3 class="q-title" id="t-6">«No puedo» y volver atrás</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>En la cita B pulsa «No puedo». Después pulsa «Quitar el «No puedo»» y vuelve a pulsar «No puedo».</li>
+          <li>Pulsa «Me encargo yo del transporte» y mira qué pasa con el «No puedo». Vuelve a decir «No puedo» y déjalo así para la prueba 7.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Aparece «Anotado: has dicho que no puedes. Si cambia, puedes volver atrás.», el texto «Has dicho que no puedes ayudar con esta cita.» y el botón «Quitar el «No puedo»». Si te encargas de algo, el «No puedo» desaparece.</div>
+        <fieldset class="choices" aria-labelledby="t-6">
+          <label class="choice"><input type="radio" name="r-6" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-6" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-6" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>El personal</h2>
+    <div class="stack prose">
+      <p>Administración, Enfermería, Medicina y el Auxiliar: qué ve cada uno de lo que ha ofrecido la familia, quién confirma y cómo se cierra la cita.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="7">
+        <div class="q-head"><span class="n">7</span><h3 class="q-title" id="t-7">El personal ve lo ofrecido y lo confirma</h3><span class="chip">Sin probar</span></div>
+        <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-administracion</code> y abre la cita A desde la lista de citas externas. Mira el apartado «Lo que ha ofrecido la familia». Abre la cita B.</li>
+          <li>Entra con <code>almendros-enfermeria</code>, abre la cita A, pulsa «Cambiar la cita», marca «El transporte está confirmado» y «El acompañante está confirmado» y pulsa «Guardar los cambios».</li>
+          <li>Vuelve con <code>almendros-elena</code> y abre la cita A.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Administración y Enfermería ven el nombre de Elena y «Ofrecido, sin confirmar» en el transporte y el acompañamiento, y la cita sigue en «Falta algo» hasta que el personal la confirma. En la cita B ven «1 persona de la familia ha dicho que no puede.», sin nombres. Tras guardar, la cita A queda «Cubierta» y Elena ve «La familia (confirmado)», «Un familiar (confirmado)» y «Transporte y acompañante resueltos».</div>
+        <fieldset class="choices" aria-labelledby="t-7">
+          <label class="choice"><input type="radio" name="r-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-7" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="8">
+        <div class="q-head"><span class="n">8</span><h3 class="q-title" id="t-8">Cada perfil ve lo suyo</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-medicina</code>, abre la tarjeta «Citas externas» del inicio y abre la cita A.</li>
+          <li>Entra con <code>almendros-auxiliar</code>, abre «Mis residentes» y pulsa «Citas externas». Hazlo <strong>antes</strong> de la prueba 9: una cita ya realizada desaparece de esta lista.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Medicina ve la cita pero no el nombre de quien se ofreció (solo «La familia (confirmado)» y «Un familiar (confirmado)») y no puede cambiar nada: «Solo puedes ver esta cita. La cambian Administración y las Enfermerías con permiso.». El Auxiliar ve «Citas externas de hoy y mañana» con la hora, la residente, «Qué preparar», «Acompaña» y «Transporte», y <strong>no</strong> ve la especialidad, el lugar ni la nota.</div>
+        <fieldset class="choices" aria-labelledby="t-8">
+          <label class="choice"><input type="radio" name="r-8" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-8" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-8" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-8" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="9">
+        <div class="q-head"><span class="n">9</span><h3 class="q-title" id="t-9">Dar por realizada y anotar al terminar</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-enfermeria</code> y abre la cita B: mira qué texto sale donde irían los botones de estado.</li>
+          <li>Abre la cita A (la de hoy) y pulsa «Dar por realizada». Después pulsa «Anotar al terminar»: elige «Hay que pedir una nueva cita», escribe una línea inventada (por ejemplo, «Recoger el informe en el hospital el viernes»; sin diagnósticos ni resultados), marca «En 6 meses» como siguiente cita prevista y pulsa «Guardar la nota».</li>
+          <li>Con <code>almendros-administracion</code> y con <code>almendros-medicina</code>, abre la cita A. Con <code>almendros-elena</code>, mira la lista de citas fuera del centro.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>En la cita B sale que «Dar por realizada» y «No se acudió» se podrán marcar desde el día de la cita, y no hay botones. La cita realizada ya no se puede cambiar. La nota «Al terminar» la ven Enfermería y Medicina; Administración solo ve «Siguiente cita prevista: en 6 meses (hacia el…)». El Auxiliar y la familia no ven la nota, y la cita de hoy deja de salir en la lista de Elena. <strong>Si haces la guía otro día,</strong> registra la cita A de la prueba 1 con la fecha de ese día.</div>
+        <fieldset class="choices" aria-labelledby="t-9">
+          <label class="choice"><input type="radio" name="r-9" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-9" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-9" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-9" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Límites y cierre</h2>
+    <div class="stack prose">
+      <p>Lo que la Administración puede cerrar, lo que otras personas no pueden abrir y cómo dejar el centro.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="10">
+        <div class="q-head"><span class="n">10</span><h3 class="q-title" id="t-10">Restringir a la familia, ocultar una cita y dar de baja de los avisos</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Entra con <code>almendros-administracion</code>, abre la ficha de «Rosa Sánchez (ficticia)» y, en el bloque «Citas externas», pulsa «Ver o cambiar lo que ve la familia». Pulsa «Que su familia no vea las citas externas», mira qué ve ahora <code>almendros-elena</code> y vuelve a pulsar «Volver a abrir las citas externas a su familia».</li>
+          <li>Abre la cita B, «Cambiar la cita», y en «Qué ve la familia» elige «Oculta para la familia»; «Guardar los cambios». Mira la lista de Elena y devuélvela a «Visible (tipo, especialidad y lugar)».</li>
+          <li>En «Lo que ve la familia» de Rosa, en «Avisos por correo de las personas de la familia», pulsa «Dar de baja de los avisos» a la hija y después «Volver a darla de alta».</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Al restringir sale «La familia ya no ve las citas externas de esta persona.» y Elena ya no ve ninguna de Rosa (la página dice «No encontramos esta página»); al volver a abrir, «La familia vuelve a ver las citas externas de esta persona.». Una cita oculta no sale en el portal. La baja de los avisos marca a la persona «Dada de baja de los avisos» (vale para todos sus residentes del centro), no enseña nunca su dirección y se puede deshacer. Restringir es todo o nada: vale para todos los familiares de esa persona.</div>
+        <fieldset class="choices" aria-labelledby="t-10">
+          <label class="choice"><input type="radio" name="r-10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-10" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-10" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+
+      <article class="q" data-q="11">
+        <div class="q-head"><span class="n">11</span><h3 class="q-title" id="t-11">Lo que no se abre, y dejarlo cerrado</h3><span class="chip">Sin probar</span></div>
+        <ol class="pasos">
+          <li>Con <code>almendros-elena</code>, copia la dirección completa de la cita B (la barra del navegador). Entra con <code>varios-centros</code>, elige «Residencia Los Almendros (ficticia)» como Familiar y pega la dirección.</li>
+          <li>Con <code>almendros-administracion</code>, en «Ajustes para la familia», pulsa «Apagar los avisos por correo» y «Cerrar las citas externas a las familias». Mira con <code>almendros-elena</code> el residente de Rosa.</li>
+        </ol>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Otra persona de la familia, que no es la de Rosa, no puede abrir su cita: sale «No encontramos esta página». Al terminar, el centro queda como las demás guías lo esperan: con los avisos apagados («Los avisos por correo de citas externas quedan apagados.») y las citas cerradas a las familias («Las familias ya no ven las citas externas.»). Elena ya no tiene el botón «Citas fuera del centro». <strong>Si dejas la guía a medias,</strong> cierra tú los dos interruptores: abiertos, la prueba 9 de la guía 6 cambia (la familia ve un botón más).</div>
+        <fieldset class="choices" aria-labelledby="t-11">
+          <label class="choice"><input type="radio" name="r-11" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
+          <label class="choice"><input type="radio" name="r-11" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-11" value="C"><span class="letter">C</span><span class="txt">No funciona.</span></label>
+          <label class="choice"><input type="radio" name="r-11" value="D"><span class="letter">D</span><span class="txt">No he podido probarlo.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Para terminar</h2>
+    <div class="stack prose">
+      <p>Dos preguntas abiertas, sobre esta guía. Las tres preguntas finales de la guía 8 siguen valiendo para todas.</p>
+    </div>
+    <div class="qs">
+      <article class="q abierta" data-q="12">
+        <div class="q-head"><span class="n">12</span><h3 class="q-title" id="t-12">Los avisos por correo de las citas externas (a los 7 días, la víspera y, a los 2 días, solo si todavía falta algo que pueda cubrir la familia; sin decir cuándo, dónde ni de qué es la cita): ¿son lo que quieres que reciba la familia? Si quieres cambiar los plazos, a quién llegan o el texto, dilo aquí.</h3><span class="chip">Pendiente</span></div>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+
+      <article class="q abierta" data-q="13">
+        <div class="q-head"><span class="n">13</span><h3 class="q-title" id="t-13">El personal ve cuántas personas de la familia han dicho «No puedo», sin nombres. Con pocos familiares se puede deducir quién fue. ¿Te parece bien así, o prefieres que el personal no lo vea?</h3><span class="chip">Pendiente</span></div>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    <p>ResidApp · Documento de trabajo para producto. Ingeniería no da ninguna prueba por buena: eres tú quien decide si cada
+    pantalla hace lo que debe. Cuando respondas, ingeniería las revisa, te consulta lo que no quede claro y corrige lo
+    que haga falta. Tus respuestas se guardan en el servidor de desarrollo, detrás de la clave de estos documentos.</p>
+    <p class="siguiente"><a href="pruebas.html">← Volver a Pruebas</a></p>
+  </footer>
+</div>
+<div class="bar" role="region" aria-label="Estado de las respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 completadas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+  </div>
+    </div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). Las respuestas se guardan solas en el servidor. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var API = "api/respuestas/" + DOC;
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;      // hay cambios que aún no están en el servidor
+  var savedAt = null;     // cuándo se guardó por última vez en el servidor
+  var ready = false;      // ya se ha leído lo que hay en el servidor: hasta entonces no se guarda nada (no se pisa lo guardado con una página vacía)
+  var failed = "";        // por qué falló el último guardado ("" si no falló)
+  var rev = 0;            // número de cambio: si cambia mientras se guarda, queda algo por guardar
+  var timer = null;
+  var saving = false;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (failed) say("error", failed);
+    else if (!ready) say("", "Comprobando lo que ya tienes guardado…");
+    else if (dirty) say("", "Guardando…");
+    else if (savedAt) say("ok", "Guardado en el servidor (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda solo.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) var abierta = q.classList.contains("abierta"); chip.textContent = done ? (abierta ? "Respondida" : "Probada") : (abierta ? "Pendiente" : "Sin probar");
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " completadas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  // Guarda en el servidor lo que hay en pantalla. Si falla, lo marcado sigue en este navegador y se reintenta solo.
+  function save() {
+    clearTimeout(timer);
+    if (!ready) return;
+    if (saving) { timer = setTimeout(save, 1000); return; }
+    var sent = rev;
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    saving = true;
+    fetch(API, { method: "PUT", headers: { "Content-Type": "application/json" }, body: json, credentials: "same-origin", keepalive: json.length < 60000 })
+      .then(function (r) {
+        if (!r.ok) throw r.status;
+        failed = "";
+        savedAt = data.guardado;
+        if (rev === sent) dirty = false; else timer = setTimeout(save, 1000);
+      })
+      .catch(function (e) {
+        failed = e === 401
+          ? "Se ha cerrado el acceso a estos documentos. Vuelve a abrirlos con la clave; lo que has marcado sigue en este navegador."
+          : "No se ha podido guardar en el servidor. Lo que marcas sigue en este navegador y se reintentará.";
+        timer = setTimeout(save, 15000);
+      })
+      .finally(function () { saving = false; store(collect()); status(); });
+  }
+
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    rev++;
+    store(refresh());
+    status();
+    clearTimeout(timer);
+    timer = setTimeout(save, 2000);
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  // Si se cierra o se cambia de pestaña con algo sin guardar, se guarda ya.
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  // Recupera lo último que se guardó en el servidor. Hasta que lo consigue (200 o 404) no se guarda nada.
+  function load() {
+    fetch(API, { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) {
+        if (r.status === 204) return null;
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        ready = true;
+        failed = "";
+        if (data && data.documento === DOC && !dirty) {
+          apply(data);
+          savedAt = data.guardado || null;
+          store(refresh());
+          if (data.cuestionario !== VERSION) {
+            say("error", "Tus respuestas son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+            return;
+          }
+        } else if (!data && !dirty && refresh().respondidas > 0) {
+          dirty = true; // respuestas de este navegador que el servidor todavía no tiene: se suben
+        }
+        if (dirty) save();
+        status();
+      })
+      .catch(function () {
+        failed = "No se han podido leer las respuestas guardadas en el servidor. No se guarda nada hasta conseguirlo; se reintenta solo.";
+        status();
+        setTimeout(load, 10000);
+      });
+  }
+
+  // Notas de ingeniería: lo que ingeniería responde a cada pregunta (<documento>.notas.json, se despliega con la aplicación). Solo lectura; sin nota, no se muestra nada.
+  function notes() {
+    fetch(DOC + ".notas.json", { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var ns = (data && data.documento === DOC && data.notas) || {};
+        questions.forEach(function (q) {
+          var t = ns[q.dataset.q];
+          if (typeof t !== "string" || !t.trim()) return;
+          var box = document.createElement("aside");
+          box.className = "nota-ing";
+          box.setAttribute("aria-label", "Nota de ingeniería");
+          var h = document.createElement("strong");
+          h.textContent = "Nota de ingeniería";
+          var p = document.createElement("p");
+          p.textContent = t.trim(); // texto plano, nunca HTML
+          box.appendChild(h);
+          box.appendChild(p);
+          q.appendChild(box);
+        });
+      })
+      .catch(function () { /* sin notas */ });
+  }
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+  if (location.protocol.indexOf("http") === 0) { load(); notes(); }
+  else say("error", "Abre este documento desde la web de ResidApp para que se guarden las respuestas.");
+})();
+</script>
+
+</body>
+</html>
