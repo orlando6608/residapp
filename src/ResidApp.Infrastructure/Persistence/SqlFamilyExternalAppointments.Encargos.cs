@@ -76,7 +76,7 @@ public sealed partial class SqlFamilyExternalAppointments
         var holder = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition(
             "SELECT vinculo_id FROM dbo.fn_citas_externas_encargos_vigentes(@Today) WHERE cita_id = @AppointmentId AND ambito_codigo = @Scope", key, transaction, cancellationToken: ct));
         var latest = await connection.QuerySingleOrDefaultAsync<ArrangementRow?>(new CommandDefinition("""
-            SELECT TOP (1) numero AS Number, accion_codigo AS Action, vinculo_id AS LinkId FROM dbo.citas_externas_encargos WITH (UPDLOCK, HOLDLOCK)
+            SELECT TOP (1) numero AS Number, accion_codigo AS Action, vinculo_id AS LinkId FROM dbo.citas_externas_encargos WITH (UPDLOCK)
              WHERE cita_id = @AppointmentId AND ambito_codigo = @Scope ORDER BY numero DESC
             """, key, transaction, cancellationToken: ct));
         var number = latest?.Number ?? 0;
@@ -162,7 +162,7 @@ public sealed partial class SqlFamilyExternalAppointments
 
     private static async Task<bool> IsRefusedAsync(SqlConnection connection, SqlTransaction transaction, Key key, CancellationToken ct) =>
         await connection.ExecuteScalarAsync<bool?>(new CommandDefinition("""
-            SELECT TOP (1) no_puede FROM dbo.citas_externas_no_puedo WITH (UPDLOCK, HOLDLOCK) WHERE cita_id = @AppointmentId AND vinculo_id = @LinkId ORDER BY numero DESC
+            SELECT TOP (1) no_puede FROM dbo.citas_externas_no_puedo WITH (UPDLOCK) WHERE cita_id = @AppointmentId AND vinculo_id = @LinkId ORDER BY numero DESC
             """, key, transaction, cancellationToken: ct)) == true;
 
     private static async Task<Guid> AddRefusalAsync(SqlConnection connection, SqlTransaction transaction, Key key, bool refuse, DateTimeOffset now, CancellationToken ct)
