@@ -295,12 +295,12 @@ public class HistorialTrasTrasladoTests
         Assert.True(declared.Ok, declared.Error?.Message);
         Assert.Single(await ClosedAsync(s.NurseDestination, s.Resident, declared.Value));
         Assert.NotNull(await Directory.FindAsync(s.NurseDestination.ProfileScopeId, s.NurseDestination.CenterId, s.ClosedEventId, transferDeclarationId: declared.Value));
-        // Una petición anterior a 0079: sin finalidad ni enlace de lecturas.
+        // Una petición anterior a 0079: sin finalidad ni enlace de lecturas. De hace segundos, no de horas: así cae dentro de «hoy» también en la primera hora tras la medianoche de Madrid.
         using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
         {
             await connection.ExecuteAsync("""
                 INSERT INTO dbo.declaraciones_historial_traslado (id, centro_id, cuenta_id, ambito_perfil_id, residente_id, motivo, creada_en, caduca_en, terminada_en)
-                VALUES (NEWID(), @center, @account, @scope, @resident, N'Texto libre de antes de 0079.', DATEADD(HOUR, -3, SYSUTCDATETIME()), DATEADD(HOUR, -2, SYSUTCDATETIME()), DATEADD(HOUR, -2, SYSUTCDATETIME()))
+                VALUES (NEWID(), @center, @account, @scope, @resident, N'Texto libre de antes de 0079.', DATEADD(SECOND, -3, SYSUTCDATETIME()), DATEADD(SECOND, -2, SYSUTCDATETIME()), DATEADD(SECOND, -2, SYSUTCDATETIME()))
                 """, new { center = s.NurseDestination.CenterId.Value, account = s.NurseDestination.AccountId.Value, scope = s.NurseDestination.ProfileScopeId, resident = s.Resident.Value });
         }
 

@@ -482,7 +482,8 @@ public class AvisoCambioCitaTests
                 await ChangeAsync(setup.Admin, setup.ResidentId, setup.LinkId, FamilyAuthorizationChange.Revocar, 2, "Deja de estar autorizado.");
                 break;
             case "autorizacionCaducada":
-                await RenewAuthorizationAsync(setup, CenterTime.Today.AddDays(-1));
+                // Dos días atrás: caducada lo mismo con el día de Madrid que con el día UTC (en la primera hora tras la medianoche de Madrid difieren).
+                await RenewAuthorizationAsync(setup, CenterTime.Today.AddDays(-2));
                 break;
         }
 

@@ -1652,6 +1652,9 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             new { nurseScope }));
     }
 
+        // El día anterior, no hoy: la base de datos comprueba que la fecha de la firma no pase del día UTC de la grabación, y en la primera hora tras la medianoche de Madrid el día de Madrid ya es el siguiente.
+    private static DateOnly SignedYesterday => CenterTime.Today.AddDays(-1);
+
     [Fact]
     public async Task FotoDelResidente_AdministracionLaPone_EnfermeriaLaVeYLaQuita_ConLaAppEntera()
     {
@@ -1679,7 +1682,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             if (consent)
             {
                 form.Add(new StringContent("Representante"), "Form.Firmante");
-                form.Add(new StringContent(signedOn.Length > 0 ? signedOn : CenterTime.Today.ToString("yyyy-MM-dd")), "Form.FechaConsentimiento");
+                form.Add(new StringContent(signedOn.Length > 0 ? signedOn : SignedYesterday.ToString("yyyy-MM-dd")), "Form.FechaConsentimiento");
             }
             var file = new ByteArrayContent([0xFF, 0xD8, .. Segment(0xE1, [.. "Exif\0\0GPS 40.4168 N"u8]), .. image]);
             file.Headers.ContentType = new("image/jpeg");
@@ -1713,7 +1716,7 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
         Assert.Contains("Indica quién firmó el consentimiento y la fecha de la firma para guardar la foto.", withoutConsent);
         Assert.Contains("La fecha de la firma no puede ser posterior a hoy.", futureConsent);
         Assert.Contains("Foto guardada.", saved);
-        Assert.Contains($"Consentimiento firmado por su representante el {CenterTime.Today:dd/MM/yyyy}.", saved);
+        Assert.Contains($"Consentimiento firmado por su representante el {SignedYesterday:dd/MM/yyyy}.", saved);
         Assert.Contains("Poner, cambiar y quitar la foto del residente", WebUtility.HtmlDecode(profilePage));
         Assert.Contains("pídeselo a Administración", nurseRecordWithoutPermission);
         Assert.DoesNotContain("Guardar foto", nurseRecordWithoutPermission);
