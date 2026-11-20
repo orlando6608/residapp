@@ -13,6 +13,8 @@
     <Content Include="..\..\docs\pendientes-cj\**\*.html" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\docs\pendientes-cj\**\*.notas.json" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\docs\pendientes-cj\orlando\**\*.respuestas.json" Link="pendientes-cj\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- Documentos de la sección «Documentos» de Plataforma (PlataformaController.Documentos): páginas generadas por tools\documentos-a-html.ps1. No van a wwwroot: no son públicas. -->
+    <Content Include="Documentos\*.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>

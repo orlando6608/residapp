@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+  Generado por tools\documentos-a-html.ps1 a partir de docs/seguridad/pulsera-nfc-guia-administracion.md. No se edita a mano: se cambia el Markdown y se vuelve a ejecutar el script.
+  Se sirve solo a Plataforma desde /Plataforma/Documento/pulsera-nfc-guia-administracion (no es un fichero estático público).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulsera NFC con PIN: guía para Administración del centro - ResidApp</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="fuente" content="docs/seguridad/pulsera-nfc-guia-administracion.md">
+<meta name="fuente-sha256" content="8d40d419e0201b225673e9e11b59589a94ab714ec553fbb757ed488a400245d3">
+<link rel="icon" href="/images/logo.svg">
+<script src="/js/tema.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f7f7; --surface: #ffffff; --ink: #1a2427; --muted: #55686c; --rule: #d3dcdd;
+    --accent: #1b5f6b; --accent-soft: #e3eff0; --danger: #b3261e; --danger-bg: #fbeceb; --ok: #22703a; --ok-bg: #e7f4ea;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-bs-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618; --surface: #172023; --ink: #e2eaeb; --muted: #9aafb2; --rule: #2a383b;
+      --accent: #72c0cb; --accent-soft: #1b2e32; --danger: #f2b8b5; --danger-bg: #2c1716; --ok: #8fd3a2; --ok-bg: #15261a;
+    }
+  }
+  :root[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618; --surface: #172023; --ink: #e2eaeb; --muted: #9aafb2; --rule: #2a383b;
+    --accent: #72c0cb; --accent-soft: #1b2e32; --danger: #f2b8b5; --danger-bg: #2c1716; --ok: #8fd3a2; --ok-bg: #15261a;
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 1040px; margin: 0 auto; padding-block: 32px 96px; display: flex; flex-direction: column; gap: 32px; }
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); scroll-margin-top: 16px; }
+  h3 { font-size: 1.15rem; margin-top: 8px; scroll-margin-top: 16px; }
+  h4 { font-size: 1.02rem; margin-top: 4px; }
+  p, ul, ol { margin: 0; }
+  code { font-family: var(--mono); font-size: 0.86em; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .marca { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 0.95rem; }
+  .marca img { width: 40px; height: 40px; flex: none; }
+  .marca strong { color: var(--ink); }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .indice { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .indice a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 0.93rem; }
+  .indice a:hover { border-color: var(--accent); }
+  .documento { display: flex; flex-direction: column; gap: 14px; }
+  .documento > p, .documento > ul, .documento > ol, .documento > blockquote { max-width: 80ch; }
+  .documento ul, .documento ol { padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; }
+  .documento li > ul, .documento li > ol { margin-top: 6px; }
+  .documento blockquote { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-left: 5px solid var(--accent); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .documento hr { width: 100%; border: 0; border-top: 1px solid var(--rule); margin: 8px 0; }
+  .tabla { overflow-x: auto; }
+  table.datos { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); font-size: 0.95rem; }
+  table.datos th, table.datos td { text-align: left; padding: 8px 12px; border: 1px solid var(--rule); vertical-align: top; }
+  table.datos thead th { background: var(--accent-soft); font-weight: 600; }
+  footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  @media (max-width: 640px) { h1 { font-size: 1.75rem; } }
+  @media print {
+    :root, :root:not([data-bs-theme="light"]), :root[data-bs-theme="dark"] {
+      color-scheme: light;
+      --bg: #ffffff; --surface: #ffffff; --ink: #1a2427; --muted: #55686c; --rule: #d3dcdd;
+      --accent: #1b5f6b; --accent-soft: #e3eff0;
+    }
+    body { padding: 0; }
+    .back, .indice { display: none; }
+    .page { padding-block: 0 24px; max-width: none; }
+    .tabla { overflow: visible; }
+    table.datos { min-width: 0; }
+    table.datos tr, .documento blockquote { break-inside: avoid; }
+    h2, h3, h4 { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="marca">
+      <img src="/images/logo.svg" alt="" width="40" height="40">
+      <span><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+    </div>
+    <nav class="back" aria-label="Navegación">
+      <a href="/Plataforma/Documentos">← Volver a Documentos</a>
+      <a href="/Plataforma">Inicio de Plataforma</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Documentos · Pulsera NFC con PIN</p>
+    <h1>Pulsera NFC con PIN: guía para Administración del centro</h1>
+    <p class="meta">Para: La Administración de un centro (borrador: la pulsera aún no existe) · Generado el 2026-11-20 desde <code>docs/seguridad/pulsera-nfc-guia-administracion.md</code></p>
+    <nav aria-label="En esta página">
+      <ul class="indice">
+        <li><a href="#que-es-en-pocas-palabras">Qué es, en pocas palabras</a></li>
+        <li><a href="#lo-que-conviene-tener-claro">Lo que conviene tener claro</a></li>
+        <li><a href="#que-hace-administracion-y-que-no">Qué hace Administración y qué no</a></li>
+        <li><a href="#dar-de-alta-una-pulsera-paso-a-paso-previsto">Dar de alta una pulsera, paso a paso (previsto)</a></li>
+        <li><a href="#si-algo-sale-mal">Si algo sale mal</a></li>
+        <li><a href="#lo-que-debe-preparar-el-centro-la-aplicacion-no-lo-hace-por-vosotros">Lo que debe preparar el centro (la aplicación no lo hace por vosotros)</a></li>
+        <li><a href="#texto-para-el-personal-borrador-del-dpo-a-validar">Texto para el personal (borrador del DPO, a validar)</a></li>
+        <li><a href="#que-falta-para-poder-usarla-con-datos-reales">Qué falta para poder usarla con datos reales</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <article class="documento">
+<p><strong>BORRADOR. Describe lo previsto: la pulsera todavía no existe en ResidApp.</strong> Cuando se construya, esta guía pasa al Manual y a la Guía por perfil (con los textos exactos de las pantallas) y se revisa con <code>doc-usuario-residapp</code>. Lo valida una persona (DPO real o abogado y, para el texto al personal, un laboralista) antes de usarla con datos reales. Base: <a href="/Plataforma/Documento/pulsera-nfc-pin-lectura-dpo"><code>docs/privacidad/pulsera-nfc-pin-lectura-dpo.md</code></a> y <a href="/Plataforma/Documento/pulsera-nfc-guia-implementacion"><code>docs/seguridad/pulsera-nfc-guia-implementacion.md</code></a>.</p>
+<h2 id="que-es-en-pocas-palabras">Qué es, en pocas palabras</h2>
+<p>Una <strong>pulsera de silicona</strong> con un chip NFC (el mismo tipo de comunicación a pocos centímetros que el pago sin contacto). La Auxiliar la acerca a una <strong>tablet compartida de la planta</strong>, escribe su <strong>PIN de 6 cifras</strong> y entra en ResidApp <strong>sin teclear usuario, contraseña ni código del móvil</strong>.</p>
+<p>Es una entrada <strong>rápida y limitada</strong>: la sesión que se abre solo permite lo que una Auxiliar necesita en planta y se cierra pronto si no se usa. Para cualquier otra cosa (cambiar su contraseña, firmar, administrar) hay que entrar como siempre.</p>
+<h2 id="lo-que-conviene-tener-claro">Lo que conviene tener claro</h2>
+<ul>
+<li><strong>Es voluntaria.</strong> Nadie está obligado a llevarla. Quien prefiera contraseña con código o passkey sigue entrando igual.</li>
+<li><strong>Está apagada por defecto.</strong> El centro la activa por escrito (lo hace Plataforma con vuestra instrucción documentada).</li>
+<li><strong>Solo para Auxiliares.</strong> No sirve para Enfermería, Medicina, Dirección, Administración ni familias.</li>
+<li><strong>Solo en tablets compartidas registradas.</strong> Antes de usarla hay que <strong>registrar cada tablet</strong> desde «Aparatos» (Administración) y marcarla como compartida. En un móvil o tablet que no esté registrada, la pulsera no se ofrece.</li>
+<li><strong>No es un control de horarios.</strong> ResidApp no guarda cuándo ni en qué tablet se acerca la pulsera, y <strong>no se puede usar para el registro de jornada, el horario, la ubicación ni el rendimiento</strong> de nadie.</li>
+</ul>
+<h2 id="que-hace-administracion-y-que-no">Qué hace Administración y qué no</h2>
+<div class="tabla"><table class="datos">
+<thead>
+<tr>
+<th>Lo hace Administración</th>
+<th>Lo hace la persona</th>
+<th>Nadie lo puede hacer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registrar las tablets compartidas</td>
+<td>Activar su pulsera en «Mi cuenta» (con su contraseña y su código del móvil)</td>
+<td>Ver o fijar el PIN de otra persona (ni siquiera Administración)</td>
+</tr>
+<tr>
+<td>Dar de alta una pulsera para una cuenta de Auxiliar</td>
+<td><strong>Elegir su PIN de 6 cifras</strong> (el único que lo conoce es quien lo elige)</td>
+<td>Prestar una pulsera «de invitado» (no existe)</td>
+</tr>
+<tr>
+<td>Retirar una pulsera (baja)</td>
+<td>Retirar su propia pulsera desde «Mi cuenta» si la pierde</td>
+<td>Ver horas ni historial de lecturas de nadie</td>
+</tr>
+<tr>
+<td>Desbloquear una pulsera bloqueada</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Reiniciar el PIN (la persona pone uno nuevo)</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>Administración ve, por pulsera: la cuenta, el estado (pendiente de activar, activa, bloqueada, retirada), la fecha de alta y <strong>el día</strong> del último uso. No ve horas.</p>
+<h2 id="dar-de-alta-una-pulsera-paso-a-paso-previsto">Dar de alta una pulsera, paso a paso (previsto)</h2>
+<ol>
+<li><strong>Registrar la tablet</strong> (una sola vez por tablet): en <strong>Aparatos</strong>, crear el registro con QR y marcarla como <strong>compartida</strong>.</li>
+<li><strong>Asociar la pulsera a la Auxiliar:</strong> en la ficha de su cuenta, dar de alta la pulsera. Queda «pendiente de activar». Entregarle la pulsera en mano.</li>
+<li><strong>La Auxiliar la activa:</strong> en «Mi cuenta» pide contraseña y código del móvil, acerca la pulsera y <strong>elige su PIN de 6 cifras</strong>. Desde ese momento está activa. Administración no ve el PIN.</li>
+<li><strong>Probar</strong> que entra desde la tablet registrada.</li>
+</ol>
+<p><strong>Consejo para el PIN que debéis dar al personal:</strong> no uses el PIN de tu tarjeta del banco ni tu fecha de nacimiento, ni cifras repetidas (000000) ni seguidas (123456). ResidApp rechaza los más obvios.</p>
+<h2 id="si-algo-sale-mal">Si algo sale mal</h2>
+<ul>
+<li><strong>Pérdida o robo de la pulsera:</strong> retirarla <strong>de inmediato</strong> (Administración desde la ficha, o la persona desde «Mi cuenta»). Al retirarla se cierran sus sesiones abiertas con pulsera. Se da de alta una nueva y la persona elige un PIN nuevo. Conviene anotar el motivo (pérdida, robo, sustitución, baja del personal o sospecha) con la lista que ofrece la pantalla; no se escribe texto libre.</li>
+<li><strong>Cinco PIN equivocados seguidos:</strong> la pulsera se <strong>bloquea</strong> y no se desbloquea sola. Administración la desbloquea y la persona elige un PIN nuevo si lo ha olvidado. Mientras tanto la persona puede entrar con su contraseña y código o con su passkey: no pierde el acceso.</li>
+<li><strong>Alguien usa la pulsera de otra:</strong> es el mayor riesgo y no se puede evitar con tecnología, porque la pulsera no reconoce a la persona. Lo reduce el centro con una <strong>norma escrita</strong> (no prestar la pulsera ni el PIN) y la propia aplicación: el nombre de quien tiene la sesión siempre se ve en pantalla, hay un botón «Soy otra persona» y cada persona ve sus últimas entradas con pulsera en «Mi cuenta» para detectar una que no hizo.</li>
+<li><strong>Se acaba el personal, cambia de centro o se suspende la cuenta:</strong> la pulsera deja de servir. Aun así, <strong>recógela y retírala</strong> para que no quede en circulación.</li>
+<li><strong>La tablet no lee la pulsera:</strong> solo funciona con <strong>Android y Chrome</strong>, con la página abierta en primer plano y la tablet con NFC activado. No funciona en iPad ni iPhone.</li>
+</ul>
+<h2 id="lo-que-debe-preparar-el-centro-la-aplicacion-no-lo-hace-por-vosotros">Lo que debe preparar el centro (la aplicación no lo hace por vosotros)</h2>
+<p>ResidApp no regula la organización del centro. Antes de activar la pulsera hace falta:</p>
+<ol>
+<li><strong>Informar al personal por escrito, antes de activarla</strong>, con el texto de abajo (el centro es quien decide y responde de esta medida). Si el centro tiene representación del personal, consultar a un laboralista cómo informarla o consultarla.</li>
+<li><strong>Una norma interna:</strong> no prestar la pulsera ni el PIN, a quién avisar si se pierde (persona o cargo), qué pasa si se usa indebidamente. Lo prudente es que una pulsera perdida <strong>no se descuente al trabajador</strong>.</li>
+<li><strong>Un inventario del lote:</strong> quién recibió las pulseras, cuántas hay sin asignar y dónde se guardan <strong>bajo llave</strong>. Una pulsera sin dar de alta no sirve a nadie, pero conviene saber dónde está.</li>
+<li><strong>Un procedimiento para altas y bajas</strong>, incluido el personal externo o de empresas de trabajo temporal.</li>
+<li><strong>Quién revisa y cada cuánto</strong> las altas, bajas y bloqueos de pulseras (decisión del centro; sin ranking por persona).</li>
+</ol>
+<h2 id="texto-para-el-personal-borrador-del-dpo-a-validar">Texto para el personal (borrador del DPO, a validar)</h2>
+<p>Lo adopta el centro como suyo. Los corchetes los rellena el centro. Hay que ofrecerlo también en catalán si se pide.</p>
+<blockquote>
+<p><strong>Pulsera con PIN para entrar en ResidApp</strong></p>
+<p><strong>[RESIDENCIA]</strong> ofrece, <strong>si tú quieres</strong>, una pulsera para entrar más rápido en las tablets compartidas de planta. Quien decide y responde de esta medida es <strong>[RESIDENCIA]</strong>; ResidApp, que presta la aplicación, trabaja siguiendo sus instrucciones.</p>
+<p><strong>Cómo funciona.</strong> Acercas la pulsera a la tablet y escribes tu PIN de 6 cifras, que solo conoces tú. Con ella se abre una sesión <strong>con menos permisos que una entrada normal</strong> (solo lo necesario para tu trabajo de planta) y se cierra enseguida si no la usas. Para otras tareas, entras como siempre.</p>
+<p><strong>Qué se guarda.</strong> Un identificador de la pulsera ligado a tu cuenta; su estado (activa, bloqueada, retirada) y las fechas; <strong>el día</strong> de su último uso; los intentos fallidos; y una versión protegida de tu PIN (nadie, ni ResidApp, puede leerlo). Cada entrada y cada fallo quedan anotados con tu cuenta, la hora, la dirección IP de la residencia y que fue con pulsera.</p>
+<p><strong>Qué no se hace.</strong> No se registra cada vez que acercas la pulsera, ni en qué tablet. <strong>No se usa para controlar tu horario, tu jornada, dónde estás ni tu rendimiento.</strong></p>
+<p><strong>Qué tienes que hacer.</strong> No prestes tu pulsera ni tu PIN. Si la pierdes, avisa a <strong>[persona o cargo]</strong> o retírala tú en «Mi cuenta».</p>
+<p><strong>Para qué.</strong> Para proteger los datos de salud de los residentes. Base jurídica: <strong>[el DPO confirma]</strong>.</p>
+<p><strong>Cuánto tiempo.</strong> <strong>[plazos]</strong>. Cuando se retira la pulsera, se borra su identificador y la fila a los <strong>[12 meses]</strong>.</p>
+<p><strong>Tus derechos.</strong> Acceso, rectificación, supresión y los demás ante <strong>[contacto]</strong>; reclamación ante <strong>[AEPD o APDCAT]</strong>.</p>
+</blockquote>
+<p><strong>A residentes y familias</strong> no hace falta una cláusula propia (no se tratan datos suyos). Una línea en la información general del centro basta: «El acceso del personal a la aplicación se protege con contraseña y código del móvil, llave de acceso o, en tablets compartidas, pulsera con PIN, y se registra».</p>
+<h2 id="que-falta-para-poder-usarla-con-datos-reales">Qué falta para poder usarla con datos reales</h2>
+<p>La pulsera todavía no está construida. Además de construirla, antes de datos reales hay que: decidir el plazo y la forma de borrar los registros de acceso, que una persona experta valide la base jurídica y la información al personal, que CJ apruebe la lista de acciones permitidas a una sesión de pulsera, y probarla con las tablets y pulseras reales del centro. Detalle en <a href="/Plataforma/Documento/pulsera-nfc-guia-implementacion"><code>docs/seguridad/pulsera-nfc-guia-implementacion.md</code></a>, apartado 9.</p>
+
+    </article>
+  </main>
+  <footer>
+    Documento de trabajo para Plataforma, no para el centro ni para las familias. Esta página se genera del fichero <code>docs/seguridad/pulsera-nfc-guia-administracion.md</code>; si hay que cambiar algo, se cambia allí.
+  </footer>
+</div>
+</body>
+</html>

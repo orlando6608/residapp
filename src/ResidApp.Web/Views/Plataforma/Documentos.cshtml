@@ -1,0 +1,47 @@
+@using ResidApp.Web.Models
+@model PlatformDocumentsViewModel
+@{
+    ViewData["Title"] = "Documentos";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Centros</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Documentos</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"documentos"' />Documentos</h1>
+<p class="text-muted">
+    Documentos de trabajo de la plataforma: diseños, guías y especificaciones que todavía no son parte de la aplicación. Solo los ve este perfil. Son
+    borradores: antes de usarlos con datos reales los valida una persona experta, y cada uno lo dice al empezar. No contienen datos de residentes ni del personal de ningún centro.
+</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+@if (ViewData.ModelState.IsValid && Model.Documents.Count == 0)
+{
+    <p class="estado-vacio">Todavía no hay documentos.</p>
+}
+
+@foreach (var (topic, index) in Model.Documents.GroupBy(d => d.Tema).Select((group, i) => (group, i)))
+{
+    <section class="mb-4" aria-labelledby="tema-@index">
+        <h2 class="h5" id="tema-@index">@topic.Key</h2>
+        <ul class="list-group">
+            @foreach (var document in topic)
+            {
+                <li class="list-group-item py-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                        <div>
+                            <div class="fw-semibold">@document.Titulo</div>
+                            <div class="small text-body-secondary">Para: @document.ParaQuien</div>
+                            <div class="mt-1">@document.Resumen</div>
+                        </div>
+                        <a asp-action="Documento" asp-route-id="@document.Id" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">Abrir<span class="visually-hidden">: @document.Titulo</span></a>
+                    </div>
+                </li>
+            }
+        </ul>
+    </section>
+}

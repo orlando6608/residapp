@@ -1,6 +1,6 @@
 {
   "perfil": "Plataforma",
-  "proposito": "Plataforma es el perfil de quien opera ResidApp, no del personal de un centro. Su trabajo es dar de alta los centros nuevos, entregar su primer acceso a la Administración de cada uno, dar soporte de accesos y activar o apagar los módulos opcionales de cada centro a petición suya. Este perfil no ve residentes ni contenido clínico.",
+  "proposito": "Plataforma es el perfil de quien opera ResidApp, no del personal de un centro. Su trabajo es dar de alta los centros nuevos, entregar su primer acceso a la Administración de cada uno, dar soporte de accesos y activar o apagar los módulos opcionales de cada centro a petición suya, y consultar los documentos de trabajo de la plataforma. Este perfil no ve residentes ni contenido clínico.",
   "rutina": [
     "Cuando un centro se incorpora: das de alta el centro con su primera unidad y su primer administrador, y le entregas la invitación en mano.",
     "Cuando una Administración pierde el acceso y no tiene otra en su centro que se lo dé: creas tú su invitación de recuperación.",
@@ -17,6 +17,7 @@
     "Marcar o quitar la marca de Administración principal, y añadir una unidad al ámbito de una Administración.",
     "Ver, suspender y reactivar las cuentas que trabajan en más de un centro, y entregarles su invitación.",
     "Activar, renovar y apagar los módulos opcionales de un centro, a petición suya, y ver su historial y los que vencen.",
+    "Consultar los documentos de trabajo de la plataforma (diseños, guías y especificaciones en borrador).",
     "Añadir y quitar tus passkeys."
   ],
   "conPermiso": [],
@@ -26,7 +27,7 @@
     "Entregarte una invitación a ti ni suspender tu propia cuenta."
   ],
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-19",
+  "revisado": "2026-11-20",
   "fichas": [
     {
       "codigo": "PLA-01",
@@ -366,6 +367,34 @@
         "El módulo ya estaba así en ese centro, o alguien lo ha cambiado mientras tanto"
       ],
       "manual": { "id": "plataforma-modulos", "titulo": "Módulos opcionales de un centro" }
+    },
+    {
+      "codigo": "PLA-11",
+      "pregunta": "¿Cómo consulto los documentos de trabajo de la plataforma?",
+      "palabras": ["documentos", "borradores", "diseños", "guías", "especificaciones"],
+      "permisos": [],
+      "antes": [
+        "Estar dentro con el perfil **Plataforma** (ver PLA-01).",
+        "Saber qué son: diseños, guías y especificaciones que todavía no son parte de la aplicación. Son borradores: antes de usarlos con datos reales los valida una persona experta, y cada uno lo dice al empezar. No llevan datos de residentes ni del personal de ningún centro."
+      ],
+      "pasos": [
+        { "texto": "En **Centros** (tu inicio), pulsa **Documentos**.", "botones": ["Centros", "Documentos"] },
+        { "texto": "Los documentos salen agrupados por tema. Cada uno dice para quién es y de qué trata." },
+        { "texto": "Pulsa **Abrir** en el que quieras: se muestra como una página aparte, con su índice. Para volver, usa «← Volver a Documentos».", "botones": ["Abrir"] }
+      ],
+      "despues": [
+        { "para": "Plataforma", "texto": "Solo este perfil ve los documentos; con otro perfil la pantalla dice «No tienes acceso a esta pantalla.»." }
+      ],
+      "dudas": [
+        { "p": "«No tienes acceso a esta pantalla.»", "r": "Tu ámbito activo no es el de Plataforma. Cambia de ámbito y vuelve a entrar." },
+        { "p": "«Todavía no hay documentos.»", "r": "La lista está vacía: aún no se ha publicado ninguno." }
+      ],
+      "rutas": ["Plataforma/Documentos", "Plataforma/Documento"],
+      "mensajes": [
+        "No tienes acceso a esta pantalla.",
+        "Todavía no hay documentos."
+      ],
+      "manual": { "id": "plataforma-documentos", "titulo": "Documentos de trabajo de la plataforma" }
     }
   ]
 }

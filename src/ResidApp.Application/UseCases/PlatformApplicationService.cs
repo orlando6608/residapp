@@ -128,6 +128,15 @@ public sealed class PlatformApplicationService(
             return true;
         });
 
+    /// <summary>Los documentos de la sección «Documentos» no tocan la base de datos: solo se comprueba, con la misma regla que el resto de operaciones, que quien pide
+    /// tiene ahora un ámbito activo de Plataforma. La cookie del ámbito no basta (no es de fiar).</summary>
+    public Task<ApplicationResult<bool>> CheckDocumentsAccessAsync(PlatformQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct);
+            return true;
+        });
+
     public Task<ApplicationResult<IReadOnlyList<PlatformCenterSummary>>> ListCentersAsync(PlatformQuery query, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () => await directory.ListAsync(await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct), ct));
 

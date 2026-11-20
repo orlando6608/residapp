@@ -307,6 +307,14 @@ Desde el script `0108`, Enfermería puede trasladar a un residente de unidad, ha
 - **Antes de datos reales, de una persona:** la base jurídica del traslado por Enfermería y por Administración (art. 9.2.h RGPD; Llei 21/2000, art. 11), una entrada nueva en el registro de actividades, un anexo en la EIPD general (visibilidad, disponibilidad e integridad), un párrafo en la información al personal (con asesoría laboral) y que el centro decida por escrito a quién concede el permiso y quién revisa los traslados.
 - **Pregunta para CJ (clínica):** si Enfermería puede cancelar, al trasladar, el borrador de basal creado por Medicina (Orlando eligió cancelar y avisar a quien lo creó, 14 días).
 
+## 17. Pulsera NFC con PIN (I5 del ADR 0007; decisiones de Orlando del 2026-11-20 y lectura de `dpo-residapp`; nada construido)
+
+Entrada rápida de la Auxiliar en tablets compartidas con pulsera NTAG 424 DNA y PIN. Lectura completa y condiciones: `docs/privacidad/pulsera-nfc-pin-lectura-dpo.md` (**admisible con condiciones; en desarrollo con datos de prueba sí, con datos reales no hasta cerrar lo de abajo**; lo valida una persona). Guías: `docs/seguridad/pulsera-nfc-guia-implementacion.md`, `docs/seguridad/pulsera-nfc-guia-administracion.md` (con el texto para el personal) y `docs/seguridad/pulsera-nfc-especificacion-compra.md`.
+
+- **Bloqueantes antes de datos reales:** plazo y vía de borrado de `eventos_acceso` (hoy inmutable y con la IP); validación de una persona (base jurídica, autoridad de control, ponderación); **laboralista** (voluntariedad, consulta a la representación del personal, pulsera perdida, exclusión del registro de jornada); texto al personal entregado antes de activar; registro de actividades, anexo de la EIPD y política de privacidad; contrato de suministro y procedimiento del centro; prueba con las tablets reales; Key Vault en producción; y que **CJ apruebe la lista blanca** de acciones de una sesión de pulsera.
+- **Decidido por Orlando:** solo se ofrece en tablets compartidas registradas (D0 a D2 del ADR 0016 antes de la pulsera); se descarta la llave FIDO2; solo Auxiliar; voluntaria y apagada por defecto.
+- **No se registra** cada lectura de la pulsera ni la tablet usada (sería un control de horarios y ubicación del personal).
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)
