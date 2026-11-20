@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Structure;
+using ResidApp.Domain.Platform;
+using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
 
@@ -17,6 +19,11 @@ public sealed class NewCenterFormModel
 
     /// <summary>El logo del centro, opcional: después lo cambia su Administración.</summary>
     public IFormFile? Logo { get; set; }
+
+    /// <summary>La zona horaria del centro, de las que ofrece Plataforma (script 0109). Se elige al crearlo; después solo Plataforma la corrige.</summary>
+    [Required(ErrorMessage = "Elige la zona horaria del centro.")]
+    [Display(Name = "Zona horaria del centro")]
+    public string? ZonaHoraria { get; set; } = CenterTimeZoneRules.DefaultZoneCode;
 
     [Required(ErrorMessage = "Escribe el nombre de la primera unidad.")]
     [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre de la unidad no puede pasar de {1} caracteres.")]
@@ -35,7 +42,7 @@ public sealed class NewCenterFormModel
     public string? NombreAdministrador { get; set; }
 }
 
-public sealed record NewCenterViewModel(NewCenterFormModel Form);
+public sealed record NewCenterViewModel(NewCenterFormModel Form, IReadOnlyList<CenterTimeZone> Zones);
 
 /// <summary>
 /// Activar, renovar o apagar un módulo de un centro (ADR 0015). Lleva siempre cuándo, cómo y con qué referencia pidió el centro el cambio (lo que prueba el plazo de apagado del anexo):
@@ -112,4 +119,37 @@ public static class ModuleDisplay
         _ when view.Last!.ValidFrom > today => $"Empieza el {view.Last.ValidFrom:dd/MM/yyyy}",
         _ => $"Vencido el {view.Last.ValidUntil:dd/MM/yyyy}",
     };
+}
+
+/// <summary>Corregir la zona horaria de un centro (script 0109). Lleva lo que Plataforma vio afectado, que el servidor vuelve a contar al guardar: si ha cambiado, pide confirmar de nuevo.</summary>
+public sealed class CenterTimeZoneFormModel
+{
+    public Guid CentroId { get; set; }
+
+    public string? ZonaHoraria { get; set; }
+
+    public CenterTimeZoneChangeReason? Motivo { get; set; }
+
+    public int FranjasVistas { get; set; }
+
+    public int CitasVistas { get; set; }
+
+    public bool Confirmo { get; set; }
+}
+
+public sealed record PlatformCenterTimeZoneViewModel(Guid CenterId, CenterTimeZoneState State, IReadOnlyList<CenterTimeZone> Zones);
+
+/// <summary>Los textos de la zona horaria del centro en pantalla: lista cerrada de motivos y su historia.</summary>
+public static class CenterTimeZoneDisplay
+{
+    public static string Reason(CenterTimeZoneChangeReason reason) => reason switch
+    {
+        CenterTimeZoneChangeReason.ErrorDeAlta => "Se eligió mal al dar de alta el centro",
+        CenterTimeZoneChangeReason.CambioDeUbicacion => "El centro ha cambiado de ubicación",
+        _ => reason.ToString(),
+    };
+
+    /// <summary>El motivo de una fila de la historia, por su código de base de datos.</summary>
+    public static string ReasonOfCode(string code) =>
+        code == "ALTA" ? "Alta del centro" : EnumCode.TryParseCode<CenterTimeZoneChangeReason>(code, out var reason) ? Reason(reason) : code;
 }

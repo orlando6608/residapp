@@ -52,7 +52,7 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
                 SqlChangeNoticeStore.RecipientSql,
                 new
                 {
-                    AccountId = request.AccountId, CenterId = centerId.Value, Today = DateOnly.FromDateTime(now.LocalDateTime).ToDateTime(TimeOnly.MinValue), request.LinkId,
+                    AccountId = request.AccountId, CenterId = centerId.Value, Today = DateOnly.FromDateTime(CenterTime.Local(now).DateTime).ToDateTime(TimeOnly.MinValue), request.LinkId,
                 }, cancellationToken: ct));
             if (recipient is null)
             {

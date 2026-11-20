@@ -53,6 +53,7 @@ public static class AuditActionDisplay
         ["CENTER_RENAME"] = "Centro renombrado",
         ["CENTER_MODULE_ENABLE"] = "Módulo activado",
         ["CENTER_MODULE_DISABLE"] = "Módulo desactivado",
+        ["CENTER_TIMEZONE_CHANGE"] = "Zona horaria del centro cambiada",
         ["CENTER_LOGO_SET"] = "Logo del centro cambiado",
         ["CENTER_LOGO_REMOVE"] = "Logo del centro quitado",
         ["UNIT_CREATE"] = "Unidad creada",

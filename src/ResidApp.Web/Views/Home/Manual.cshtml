@@ -1008,7 +1008,7 @@
     <p>
         El perfil <strong>Plataforma</strong> es de quien opera ResidApp, no del personal de un centro. Su inicio tiene una tarjeta,
         <strong>Centros</strong>, que lista los centros (nombre, código, estado y número de unidades) y permite crear uno con
-        <strong>Nuevo centro</strong>. El formulario pide el nombre del centro, el nombre de su primera unidad y su primer
+        <strong>Nuevo centro</strong>. El formulario pide el nombre del centro, su <strong>zona horaria</strong> (viene elegida «Península y Baleares (Madrid)», que hoy es la única disponible), el nombre de su primera unidad y su primer
         administrador (identificador de acceso y nombre). Opcionalmente puedes subir ya el <strong>logo del centro</strong> (PNG o JPEG, que se encuadra igual que en «Nombre y logo del centro»); después lo cambia la Administración del propio centro, no Plataforma. Los códigos del centro y de la unidad no se escriben: se generan solos a partir de los nombres (en mayúsculas, sin
         acentos y con guiones; si el del centro ya existe se añade -2, -3…), no se pueden cambiar y el del centro se ve después en la lista «Centros». Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil
         Administración y la unidad concedida. Para que pueda entrar, abre el centro (<strong>Administraciones y unidades</strong>) y pulsa
@@ -1036,6 +1036,14 @@
         soporte puede <strong>marcar o quitar la marca de Administración principal</strong> y <strong>añadir una unidad al ámbito</strong> de cualquier
         Administración del centro (por ejemplo, para recuperar una unidad que se quedó sin nadie). Cada cambio queda en la auditoría. No se ven residentes
         ni contenido clínico.
+    </p>
+    <p>
+        <strong>Zona horaria del centro.</strong> La zona decide cómo se ven las horas y qué día es «hoy» en ese centro; todo se guarda en hora universal, así que cambiarla no toca
+        ningún dato guardado. La elige quien da de alta el centro; después <strong>solo Plataforma puede corregirla</strong>, desde el detalle del centro
+        (<strong>Administraciones y unidades</strong>), en la sección <strong>Zona horaria</strong>: <strong>Corregir la zona horaria</strong> pide la «Zona nueva» y un «Motivo» de una lista
+        («Se eligió mal al dar de alta el centro» o «El centro ha cambiado de ubicación»), te enseña cuántas franjas de citas activas y citas futuras reservadas se ven afectadas, y exige marcar
+        «He visto lo que se ve afectado y confirmo el cambio de zona.» antes de <strong>Cambiar la zona horaria</strong>. La Administración no puede cambiarla; en su Auditoría aparece
+        «Zona horaria del centro cambiada». La pantalla de Plataforma usa siempre la hora de la península.
     </p>
 </section>
 

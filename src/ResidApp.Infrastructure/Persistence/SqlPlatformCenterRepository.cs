@@ -40,9 +40,10 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                    (SELECT TOP (1) unit.codigo FROM dbo.unidades unit WHERE unit.centro_id = center.id ORDER BY unit.creado_en) AS UnitCode,
                    (SELECT TOP (1) account.sujeto_externo
                       FROM dbo.ambitos_perfil profile JOIN dbo.cuentas account ON account.id = profile.cuenta_id
-                     WHERE profile.centro_id = center.id AND profile.perfil_codigo = 'ADMINISTRACION' ORDER BY profile.concedido_en) AS AdminSubject
+                     WHERE profile.centro_id = center.id AND profile.perfil_codigo = 'ADMINISTRACION' ORDER BY profile.concedido_en) AS AdminSubject,
+                   ISNULL((SELECT TOP (1) zone.zona_codigo FROM dbo.zonas_centro zone WHERE zone.centro_id = center.id ORDER BY zone.numero DESC), @DefaultZone) AS ZoneCode
               FROM dbo.centros center WHERE center.id = @Id
-            """, new { Id = operationId }, transaction, cancellationToken: ct));
+            """, new { Id = operationId, DefaultZone = CenterTimeZoneRules.DefaultZoneCode }, transaction, cancellationToken: ct));
         if (previous is not null)
         {
             // Un código generado no forma parte de lo que se compara: el primero libre puede haber cambiado desde el primer envío.
@@ -50,6 +51,7 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                    && string.Equals(previous.Name, data.CenterName, StringComparison.Ordinal)
                    && string.Equals(previous.UnitCode, data.Unit.Code, StringComparison.OrdinalIgnoreCase)
                    && string.Equals(previous.AdminSubject, data.Administrator.Subject, StringComparison.OrdinalIgnoreCase)
+                   && string.Equals(previous.ZoneCode, data.ZoneCode, StringComparison.Ordinal)
                 ? CenterId.From(operationId)
                 : throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST");
         }
@@ -102,6 +104,9 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                 ? "CENTER_CODE_TAKEN"
                 : "ACCOUNT_SUBJECT_TAKEN");
         }
+
+        // La zona horaria elegida al crear el centro (script 0109): la fila 1 de su historia.
+        await SqlCenterTimeZones.InsertCreationAsync(connection, transaction, CenterId.From(operationId), data.ZoneCode, access, occurredAt, ct);
 
         if (data.Logo is not null)
         {
@@ -219,5 +224,5 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
             Action = action, OccurredAt = occurredAt,
         }, transaction, cancellationToken: ct));
 
-    private sealed record PreviousRow(string Code, string Name, string? UnitCode, string? AdminSubject);
+    private sealed record PreviousRow(string Code, string Name, string? UnitCode, string? AdminSubject, string ZoneCode);
 }

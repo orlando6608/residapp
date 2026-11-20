@@ -112,7 +112,7 @@ public class CenterTimeTests
 
     private static readonly string[] Forbidden =
     [
-        @"TimeZoneInfo\.Local\b", @"\.ToLocalTime\(", @"\bDateTime\.Today\b", @"\bDateTime\.Now\b", @"\bDateTimeOffset\.Now\b", @"DateTimeKind\.Local\b",
+        @"TimeZoneInfo\.Local\b", @"\.ToLocalTime\(", @"\.LocalDateTime\b", @"\bDateTime\.Today\b", @"\bDateTime\.Now\b", @"\bDateTimeOffset\.Now\b", @"DateTimeKind\.Local\b",
     ];
 
     private static readonly string[] Allowed = ["CenterTime.cs", "ServerTimeZone.cs"];

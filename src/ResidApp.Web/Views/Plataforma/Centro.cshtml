@@ -92,6 +92,10 @@ else
     }
 }
 
+@if (ViewData["Zona"] is ResidApp.Web.Models.PlatformCenterTimeZoneViewModel zona)
+{
+    <partial name="_ZonaHorariaCentro" model="zona" />
+}
 @if (ViewData["Modulos"] is ResidApp.Web.Models.PlatformCenterModulesViewModel modulos)
 {
     <partial name="_ModulosCentro" model="modulos" />

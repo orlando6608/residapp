@@ -30,6 +30,17 @@
                     <input asp-for="Form.NombreCentro" class="form-control form-control-lg" autocomplete="off" />
                     <span asp-validation-for="Form.NombreCentro" class="text-danger"></span>
                 </div>
+                <div class="mb-3">
+                    <label asp-for="Form.ZonaHoraria" class="form-label"></label>
+                    <select asp-for="Form.ZonaHoraria" class="form-select form-select-lg" aria-describedby="zona-ayuda">
+                        @foreach (var zone in Model.Zones)
+                        {
+                            <option value="@zone.Code" selected="@(zone.Code == Model.Form.ZonaHoraria)">@zone.Label</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Form.ZonaHoraria" class="text-danger"></span>
+                    <div id="zona-ayuda" class="form-text">Decide cómo se ven las horas y qué día es «hoy» en ese centro. La elige quien da de alta el centro; después solo Plataforma puede corregirla.</div>
+                </div>
                 <partial name="_LogoCentroCampo" model='new ResidApp.Web.Models.LogoCentroCampoViewModel("Form.Logo", "logo-centro-fichero", "Logo del centro (opcional)")' />
                 <p class="form-text mt-0">El centro con logo propio lo ve en su encabezado en vez del de ResidApp. Después lo cambia su Administración.</p>
             </fieldset>

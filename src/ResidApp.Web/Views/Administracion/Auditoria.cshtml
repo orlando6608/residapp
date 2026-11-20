@@ -90,7 +90,7 @@
             {
                 <li class="list-group-item py-3">
                     <div class="fw-semibold">@AuditActionDisplay.Label(entry.Action)</div>
-                    <div class="text-body-secondary small">@entry.OccurredAt.LocalDateTime.ToString("g") · @entry.ActorName (@SystemProfileDisplay.Label(entry.ActorProfile))</div>
+                    <div class="text-body-secondary small">@CenterTime.Local(entry.OccurredAt).DateTime.ToString("g") · @entry.ActorName (@SystemProfileDisplay.Label(entry.ActorProfile))</div>
                     @if (entry.AffectedName is not null)
                     {
                         <div class="small">Cuenta afectada: @entry.AffectedName</div>
@@ -127,7 +127,7 @@
                     @foreach (var entry in page.Entries)
                     {
                         <tr>
-                            <td>@entry.OccurredAt.LocalDateTime.ToString("g")</td>
+                            <td>@CenterTime.Local(entry.OccurredAt).DateTime.ToString("g")</td>
                             <th scope="row">
                                 @AuditActionDisplay.Label(entry.Action)
                                 @if (entry.PositionName is not null)

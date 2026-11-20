@@ -319,6 +319,17 @@ Entrada rápida de la Auxiliar en tablets compartidas con pulsera NTAG 424 DNA y
 
 Un centro fuera de España exige un **estudio de cumplimiento propio** (normativa local, dónde se alojan los datos, transferencia internacional) que se mantiene **fuera del repositorio**, porque el repositorio es público. La zona horaria de ese centro no se activa sin ese estudio (F4 de `docs/producto/zonas-horarias-por-centro-estudio.md`). **Con datos de prueba sí; con datos reales no, hasta que lo cierre una persona experta.** No se escribe en el repositorio el nombre, el titular ni la dirección de ese centro.
 
+## 19. Zona horaria por centro (script 0109, F1; lectura de `dpo-residapp` del 2026-11-21 en `docs/privacidad/zona-horaria-centro-lectura-dpo.md`)
+
+Admisible: la zona de un centro y los recuentos de lo afectado **no son datos personales**; la cuenta del operador que la fija sí (seudónimo, como en `modulos_centro`).
+
+- **Plazo de conservación de `zonas_centro`:** sin decidir, igual que `modulos_centro`; que lo fije una persona en el mismo acto que el de los módulos.
+- **Registro de actividades de ResidApp (art. 30.2):** una línea para la zona horaria del centro y quién la fija.
+- **La zona la declara el centro al darse de alta** y Plataforma solo la ejecuta (instrucción documentada, art. 28.3.a): que conste en el alta o el contrato del centro.
+- **Nombre de la cuenta operadora:** la historia de la zona en la pantalla de Plataforma no lo muestra, pero **la auditoría de la Administración del centro sí muestra el nombre de la cuenta que hizo un cambio de Plataforma** (como en los módulos o el alta del centro; comportamiento anterior a este script). El DPO recomienda mostrar al centro «Plataforma de ResidApp» y no la cuenta: decidirlo para todos los eventos de Plataforma a la vez.
+- **A validar con ingeniería y CJ:** cómo se muestran las horas históricas tras un cambio de ubicación, y que un informe firmado no cambie de hora al reimprimirse.
+- **Una zona fuera de España no se añade al catálogo sin su propio estudio** (apartado 18).
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)

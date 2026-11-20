@@ -3,7 +3,7 @@
 @if (Model is { } cancelledAt)
 {
     <div class="alert alert-warning" role="status">
-        Tu borrador de basal de este residente se canceló por un traslado de unidad el @cancelledAt.LocalDateTime.ToString("d").
+        Tu borrador de basal de este residente se canceló por un traslado de unidad el @CenterTime.Local(cancelledAt).DateTime.ToString("d").
         El basal se rehace en la unidad de destino.
     </div>
 }
