@@ -14,13 +14,5 @@
     "titulo": "Especificación de compra",
     "paraQuien": "Quien compra las pulseras (Orlando)",
     "resumen": "Los requisitos del chip, lo que no se envía al proveedor, las preguntas para el fabricante, las cláusulas del contrato, la lista de recepción y custodia del lote y las pruebas del lote de prueba."
-  },
-  {
-    "id": "pulsera-nfc-pin-lectura-dpo",
-    "fuente": "docs/privacidad/pulsera-nfc-pin-lectura-dpo.md",
-    "tema": "Pulsera NFC con PIN",
-    "titulo": "Lectura de protección de datos y seguridad",
-    "paraQuien": "Quien valida la protección de datos (DPO real o abogado) y Orlando",
-    "resumen": "El análisis del agente de protección de datos: las decisiones de Orlando, los riesgos, las condiciones para usar la pulsera con datos reales y lo que debe validar una persona."
   }
 ]

@@ -93,9 +93,10 @@ public class DocumentosPlataformaTests(WebAppFactory factory) : IClassFixture<We
     }
 
     [Fact]
-    public void La_guia_de_implementacion_es_de_desarrollo_y_no_se_publica_en_Documentos()
+    public void Lo_de_desarrollo_y_de_validacion_no_se_publica_en_Documentos()
     {
-        Assert.DoesNotContain(Catalogo.All, d => d.Id.Contains("implementacion", StringComparison.Ordinal));
+        // La guía de implementación es de desarrollo y la lectura del DPO es de validación: ninguna es de explotación para Plataforma.
+        Assert.DoesNotContain(Catalogo.All, d => d.Id.Contains("implementacion", StringComparison.Ordinal) || d.Id.Contains("lectura-dpo", StringComparison.Ordinal));
     }
 
     [Fact]
