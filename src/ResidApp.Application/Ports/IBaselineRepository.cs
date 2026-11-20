@@ -56,6 +56,13 @@ public sealed record DirectionReferralReport(
 /// Enfermería y Medicina sin esa obligación.</summary>
 public sealed record ReadCurrentBaselineSummaryInput(CenterId CenterId, ResidentId ResidentId);
 
+/// <summary>Quién pregunta (la cuenta que creó el borrador), por qué residente y desde cuándo mira.</summary>
+public sealed record DraftCancelledNoticeInput(AccountId AccountId, CenterId CenterId, ResidentId ResidentId, DateTimeOffset Since);
+
+/// <summary>Aviso a quien creó un borrador de basal que otra persona canceló al trasladar al residente de unidad: solo cuándo. No lleva el contenido del
+/// borrador ni quién trasladó.</summary>
+public sealed record DraftCancelledNotice(DateTimeOffset CancelledAt);
+
 /// <summary>Una de las nueve áreas del basal vigente, ya deserializada a su tipo de dominio (nunca el
 /// Barthel detallado por ítem: eso está fuera del alcance de esta lectura, ver AUX-03).</summary>
 public sealed record BaselineAreaSummary(BaselineArea AreaCode, IBaselineAreaAnswer Answer, string? Observation);
@@ -130,6 +137,9 @@ public interface IBaselineRepository
     Task EndAccessDeclarationsAsync(string externalSubject, CancellationToken ct = default);
 
     Task<CurrentBaselineSummary?> ReadCurrentSummaryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
+
+    /// <summary>El borrador de esta cuenta, para este residente, que otra persona canceló al trasladarlo de unidad desde «Since», o null (traslado, script 0040).</summary>
+    Task<DraftCancelledNotice?> FindDraftCancelledByTransferAsync(DraftCancelledNoticeInput input, CancellationToken ct = default);
 
     Task<IReadOnlyList<BaselineHistoryEntry>> ReadHistoryAsync(ReadCurrentBaselineSummaryInput input, CancellationToken ct = default);
 

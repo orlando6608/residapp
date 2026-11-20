@@ -261,6 +261,7 @@ builder.Services.AddScoped<ResidentBaselineApplicationService>();
 builder.Services.AddScoped<ListAssignedResidents>();
 builder.Services.AddScoped<FindAssignedResident>();
 builder.Services.AddScoped<ReadCurrentBaseline>();
+builder.Services.AddScoped<ReadDraftCancelledNotice>();
 builder.Services.AddScoped<RegisterDailyClosure>();
 builder.Services.AddScoped<RegisterDailyChange>();
 builder.Services.AddScoped<SuggestDailyChangeFromVoice>();

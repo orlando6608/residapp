@@ -41,7 +41,7 @@
     { "termino": "Sin cambios y no valorable", "significa": "Dos de las tres formas de cerrar el turno de un residente. «Sin cambios» no necesita más; «No valorable» se marca con el motivo por el que no pudiste valorarlo. La tercera es registrar un cambio.", "ver": ["AUX-03", "AUX-04"] },
     { "termino": "Suspensión y baja de un residente", "significa": "La suspensión es por un ingreso hospitalario: nadie actúa sobre el residente y la familia deja de verlo hasta que se reanude. La baja es la salida del centro y se puede revertir con la reactivación.", "ver": ["ADM-23", "ADM-24", "ADM-25"] },
     { "termino": "Transferencia de turno", "significa": "El paso de un seguimiento al equipo del turno entrante, que lo recibe. Confirmar la recepción es opcional: el seguimiento sigue visible y trazable.", "ver": ["ENF-10", "MED-06"] },
-    { "termino": "Traslado", "significa": "Cambiar a un residente de unidad, habitación o plaza. Los episodios abiertos pasan a la unidad de destino.", "ver": ["ADM-22"] },
+    { "termino": "Traslado", "significa": "Cambiar a un residente de unidad, habitación o plaza. Lo hace Administración y, con el permiso correspondiente, Enfermería. Los episodios abiertos pasan a la unidad de destino.", "ver": ["ADM-22", "ENF-26"] },
     { "termino": "Unidad", "significa": "Una parte del centro donde viven los residentes. Los perfiles y los permisos se conceden por unidades.", "ver": ["ADM-03", "ADM-13"] }
   ]
 }

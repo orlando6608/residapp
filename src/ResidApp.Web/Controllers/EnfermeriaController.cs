@@ -22,11 +22,12 @@ namespace ResidApp.Web.Controllers;
 /// sin la derivación todavía). Traduce a EnfermeriaApplicationService; la
 /// autorización y las reglas de negocio no viven aquí.
 /// </summary>
-public sealed class EnfermeriaController(
+public sealed partial class EnfermeriaController(
     EnfermeriaApplicationService service, FindEmergencyContact findEmergencyContact, ListMilestoneWarnings milestoneWarnings,
     CorrectFamilyCommunication correctFamilyCommunication, ListEventsReadyToClose readyToClose, ResidentPhotoApplicationService photos,
     HealthBackgroundApplicationService healthBackground,
-    TransferHistoryAccess transferHistory) : Controller
+    TransferHistoryAccess transferHistory, ResidentTransferApplicationService transfers, ListActiveScopeUnits listUnits,
+    ListActiveScopeLocations listLocations, ListActiveScopePermissions listPermissions, ReadDraftCancelledNotice draftCancelledNotice) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -1149,7 +1150,9 @@ public sealed class EnfermeriaController(
         var health = await healthBackground.ReadAsync(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId, ct);
         return View(new EnfermeriaResidentDetailViewModel(findResult.Value, baselineResult.Ok ? baselineResult.Value : null,
             OpenEvents: openEvents.Ok ? openEvents.Value : null, EmergencyContacts: contact.Ok ? contact.Value : null, Photo: photo.Value,
-            HealthBackground: health.Ok ? health.Value : null));
+            HealthBackground: health.Ok ? health.Value : null, CanTransfer: await CanTransferAsync(activeScope, ct),
+            DraftCancelledByTransferAt: (await draftCancelledNotice.ExecuteAsync(
+                new ReadDraftCancelledNoticeCommand(activeScope.ProfileScopeId, centroId, findResult.Value.ResidentId), ct)).Value?.CancelledAt));
     }
 
     /// <summary>ENF-23/ENF-24 (historia 11): eventos cerrados del residente, con el basal y la ubicación de su

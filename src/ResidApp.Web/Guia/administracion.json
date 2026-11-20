@@ -432,11 +432,11 @@
     {
       "codigo": "ADM-14",
       "pregunta": "¿Cómo concedo o revoco un permiso configurable de Enfermería, Medicina o Dirección?",
-      "palabras": ["permiso", "conceder permiso", "revocar permiso", "basal", "alta de residentes", "foto", "antecedentes", "alergias", "citas externas", "rangos", "plazos", "indicadores", "lectura clínica"],
+      "palabras": ["permiso", "conceder permiso", "revocar permiso", "basal", "alta de residentes", "foto", "antecedentes", "alergias", "citas externas", "trasladar", "traslado", "rangos", "plazos", "indicadores", "lectura clínica"],
       "permisos": [],
       "antes": [
         "Ningún perfil trae estos permisos por defecto: **solo Administración los concede**. Valen en las unidades del perfil.",
-        "Ten claro qué permiso corresponde a cada perfil: **Enfermería:** «Dar de alta residentes», «Basal inicial (al alta)», «Reevaluar el basal» , «Poner, cambiar y quitar la foto del residente», «Rellenar y cambiar la ficha de antecedentes de salud» y «Registrar y cambiar las citas externas de los residentes». **Medicina:** «Basal inicial (al alta)», «Reevaluar el basal» y «Rellenar y cambiar la ficha de antecedentes de salud». **Dirección:** «Lectura clínica detallada y auditada», «Gestionar los rangos de referencia de constantes», «Gestionar los plazos de los hitos del proceso» y «Ver los indicadores y la calidad de proceso». Auxiliar, Familia, Administración y Plataforma no tienen permisos configurables."
+        "Ten claro qué permiso corresponde a cada perfil: **Enfermería:** «Dar de alta residentes», «Basal inicial (al alta)», «Reevaluar el basal» , «Poner, cambiar y quitar la foto del residente», «Rellenar y cambiar la ficha de antecedentes de salud», «Registrar y cambiar las citas externas de los residentes» y «Trasladar a un residente de unidad, habitación o plaza». **Medicina:** «Basal inicial (al alta)», «Reevaluar el basal» y «Rellenar y cambiar la ficha de antecedentes de salud». **Dirección:** «Lectura clínica detallada y auditada», «Gestionar los rangos de referencia de constantes», «Gestionar los plazos de los hitos del proceso» y «Ver los indicadores y la calidad de proceso». Auxiliar, Familia, Administración y Plataforma no tienen permisos configurables."
       ],
       "pasos": [
         { "texto": "En **Usuarios**, abre la ficha de la cuenta y pulsa **Gestionar** en su perfil.", "botones": ["Gestionar"] },
@@ -444,7 +444,7 @@
         { "texto": "Pulsa **Conceder** para darlo o **Revocar** para quitarlo.", "botones": ["Conceder", "Revocar"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual; con el de citas externas, registrar y cambiar las citas externas de los residentes (ver ADM-47)." },
+        { "para": "Enfermería", "texto": "Con «Dar de alta residentes» aparece **Alta de residente** en su inicio; con los dos permisos de basal puede crear, completar y firmar el basal; con el de la foto, ponerla o cambiarla; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual; con el de citas externas, registrar y cambiar las citas externas de los residentes (ver ADM-47); con el de trasladar, ve el botón **Trasladar** en la ficha del residente (ver ENF-26)." },
         { "para": "Medicina", "texto": "Con los permisos de basal puede crear, completar y firmar el basal; con el de antecedentes, rellenar o cambiar las alergias, las enfermedades e intervenciones y la medicación habitual." },
         { "para": "Dirección / Coordinación Clínica", "texto": "Con cada permiso se le abren la lectura clínica con finalidad declarada, los rangos, los plazos o los indicadores y la calidad de proceso." }
       ],
@@ -683,9 +683,9 @@
         { "texto": "Pulsa **Trasladar**.", "botones": ["Trasladar"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad. Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino." },
-        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino." },
-        { "para": "Administración", "texto": "Verás un aviso con cuántos episodios abiertos pasaron. El cambio queda en el historial de ubicación de la ficha y en la auditoría; reenviar el formulario no lo repite." }
+        { "para": "Enfermería", "texto": "Los episodios abiertos del residente **pasan a la unidad de destino** y la unidad de origen deja de verlos. Los episodios cerrados no cambian de unidad. Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino. Quien lo creó ve un aviso con la fecha de la cancelación, si sigue viendo al residente." },
+        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad de destino. Quien lo creó ve un aviso con la fecha de la cancelación, si sigue viendo al residente." },
+        { "para": "Administración", "texto": "Verás un aviso con cuántos episodios abiertos pasaron. El cambio queda en el historial de ubicación de la ficha y en la auditoría; reenviar el formulario no lo repite. Enfermería también puede trasladar si le concedes el permiso (ver ADM-14 y ENF-26): su traslado queda igual en la auditoría, con el perfil Enfermería." }
       ],
       "dudas": [
         { "p": "Pulsé «Trasladar» sin tocar nada más y el residente se quedó sin habitación.", "r": "El desplegable de habitación o plaza empieza en «Sin habitación ni plaza»: si no eliges una, el residente conserva la unidad, pero pierde la habitación que tenía. Vuelve a trasladarlo eligiendo la habitación o plaza." },

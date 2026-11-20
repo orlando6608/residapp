@@ -30,6 +30,8 @@
     <div class="alert alert-danger" role="alert">@error</div>
 }
 
+<partial name="_AvisoBorradorCancelado" model="Model.DraftCancelledByTransferAt" />
+
 @* Acciones arriba y, debajo, una sola columna (en móvil y en escritorio): eventos abiertos, basal, contacto urgente y foto. *@
 <div class="d-grid d-sm-flex flex-wrap gap-2 mb-3">
     <a asp-action="RegistrarEvento" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-primary btn-lg">
@@ -38,6 +40,12 @@
     <a asp-action="Historial" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
         Ver historial
     </a>
+    @if (Model.CanTransfer)
+    {
+        <a asp-action="Trasladar" asp-route-residenteId="@Model.Resident.ResidentId.Value" class="btn btn-outline-primary btn-lg">
+            Trasladar
+        </a>
+    }
 </div>
 
 <partial name="_EventosAbiertos" model="Model" />

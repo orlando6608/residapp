@@ -52,3 +52,6 @@
 
 **Sustituido el 2026-11-20 (pruebas intermitentes), tal cual estaba:**
 - Pruebas a 2026-11-20 (hora prevista y `0107`): unitarias 720; integración 987 (986 correctas en local; la que falla, de avisos de citas, en la base de pruebas acumulada: aviso abierto); funcionales 561.
+
+**Sustituido el 2026-11-20 (traslado por Enfermería), tal cual estaba (punto 5 de «Siguiente tarea»):**
+5. **Pequeños, solo si Orlando los pide:** traslado por Enfermería con permiso (cuando un centro lo pida); I5 del ADR 0007 (pulsera NFC) y los pendientes de passkeys que anotó el relevo del 28/10 (**no verificados**: contrástalos con el ADR 0007 antes de proponerlos; por ejemplo, `Acceso__PasskeyDominio` consta como `dev.residapp.es` desde el 2026-10-30, pero hay una contradicción anotada con el dominio que citan las guías de CJ); la zona horaria (ver [avisos-abiertos.md](avisos-abiertos.md)); y el reintento ante el error 1205 (decidido no hacerlo todavía).

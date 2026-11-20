@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -25,6 +26,17 @@ public sealed class SqlResidentTransferRepository(SqlConnectionFactory connectio
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         try
         {
+            // Enfermería solo con el permiso RESIDENT_TRANSFER: si Administración se lo retiró después de la comprobación del caso de uso, no pasa.
+            if (input.ActorProfile == SystemProfile.Enfermeria
+                && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                    SELECT COUNT(*) FROM dbo.permisos_perfil
+                     WHERE ambito_perfil_id = @ProfileScopeId AND centro_id = @CenterId AND permiso_codigo = @Permission AND revocado_en IS NULL
+                    """, new { input.ProfileScopeId, CenterId = target.CenterId.Value, Permission = ProfilePermissions.ResidentTransfer },
+                    transaction, cancellationToken: ct)) == 0)
+            {
+                throw new AccessDeniedException();
+            }
+
             var parameters = new { ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value, TransferId = input.OperationId };
             var previous = await connection.QuerySingleOrDefaultAsync<PreviousRow>(new CommandDefinition("""
                 SELECT residente_id AS ResidentId, unidad_destino_id AS DestinationUnitId, eventos_trasladados AS OpenEventsMoved,
@@ -91,7 +103,7 @@ public sealed class SqlResidentTransferRepository(SqlConnectionFactory connectio
             {
                 parameters.ResidentId, parameters.CenterId, parameters.TransferId, current.EpisodeId, OriginUnitId = current.UnitId,
                 DestinationUnitId = input.DestinationUnitId.Value, OriginIntervalId = current.IntervalId, NewIntervalId = newIntervalId,
-                location.BuildingId, location.FloorId, location.RoomId, location.PlaceId, AccountId = target.AccountId.Value,
+                location.BuildingId, location.FloorId, location.RoomId, location.PlaceId, AccountId = target.AccountId.Value, Profile = input.ActorProfile.ToCode(),
                 OccurredAt = occurredAt, EventCount = eventIds.Count, DraftCancelled = draftId is not null, DraftId = draftId,
                 CancellationReason = BaselineDraftCancellationReason, AuditId = Guid.NewGuid(),
             };
@@ -102,17 +114,17 @@ public sealed class SqlResidentTransferRepository(SqlConnectionFactory connectio
                     (id, residente_id, centro_id, episodio_id, unidad_id, edificio_id, planta_id, habitacion_id, plaza_id,
                      vigente_desde, modificado_en, modificado_por_cuenta_id, modificado_por_perfil)
                 VALUES (@NewIntervalId, @ResidentId, @CenterId, @EpisodeId, @DestinationUnitId, @BuildingId, @FloorId, @RoomId, @PlaceId,
-                     @OccurredAt, @OccurredAt, @AccountId, 'ADMINISTRACION');
+                     @OccurredAt, @OccurredAt, @AccountId, @Profile);
 
                 INSERT INTO dbo.traslados_residente
                     (id, residente_id, centro_id, episodio_id, unidad_origen_id, unidad_destino_id, intervalo_origen_id, intervalo_destino_id,
                      eventos_trasladados, borrador_basal_cancelado, trasladado_por_cuenta_id, trasladado_por_perfil, trasladado_en)
                 VALUES (@TransferId, @ResidentId, @CenterId, @EpisodeId, @OriginUnitId, @DestinationUnitId, @OriginIntervalId, @NewIntervalId,
-                     @EventCount, @DraftCancelled, @AccountId, 'ADMINISTRACION', @OccurredAt);
+                     @EventCount, @DraftCancelled, @AccountId, @Profile, @OccurredAt);
 
                 INSERT INTO dbo.eventos_auditoria
                     (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
-                VALUES (@AuditId, @AccountId, 'ADMINISTRACION', @CenterId, @DestinationUnitId, @ResidentId, 'RESIDENT', @ResidentId,
+                VALUES (@AuditId, @AccountId, @Profile, @CenterId, @DestinationUnitId, @ResidentId, 'RESIDENT', @ResidentId,
                      'RESIDENT_TRANSFER', @OccurredAt);
                 """, write, transaction, cancellationToken: ct));
 
@@ -134,7 +146,7 @@ public sealed class SqlResidentTransferRepository(SqlConnectionFactory connectio
                 await connection.ExecuteAsync(new CommandDefinition("""
                     UPDATE dbo.basales_borrador
                        SET estado = 'CANCELLED', cancelado_en = @OccurredAt, cancelado_por_cuenta_id = @AccountId,
-                           cancelado_por_perfil = 'ADMINISTRACION', motivo_cancelacion = @CancellationReason,
+                           cancelado_por_perfil = @Profile, motivo_cancelacion = @CancellationReason,
                            cancelado_por_traslado_id = @TransferId
                      WHERE id = @DraftId AND estado = 'ACTIVE'
                     """, write, transaction, cancellationToken: ct));

@@ -1,0 +1,22 @@
+@using ResidApp.Web.Models
+@model TransferResidentViewModel
+@{
+    ViewData["Title"] = "Trasladar residente";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Enfermería</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residentes">Residentes</a></li>
+        <li class="breadcrumb-item"><a asp-action="Residente" asp-route-residenteId="@Model.ResidentId.Value">@Model.DisplayName</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Trasladar</li>
+    </ol>
+</nav>
+
+<h1 class="h3">Trasladar residente</h1>
+<partial name="_TrasladoFormulario" model="Model" />
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

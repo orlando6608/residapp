@@ -435,6 +435,28 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
     /// ya lo permite a Auxiliar/Enfermería/Medicina sin esa obligación. Reutiliza BaselineAreaAnswerReader
     /// (el mismo parser que valida el borrador al firmar) para devolver cada área ya tipada, nunca el
     /// Barthel detallado por ítem.</summary>
+    public async Task<DraftCancelledNotice?> FindDraftCancelledByTransferAsync(DraftCancelledNoticeInput input, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        // Solo los borradores que creó esta cuenta y que canceló otra persona al trasladar al residente: quien traslada ya ve el aviso en el momento.
+        // Since va como datetime2: con el tipo datetime por defecto de Dapper se redondea a 3,3 ms y el borde exacto del plazo fallaría.
+        var noticeParameters = new DynamicParameters();
+        noticeParameters.Add("ResidentId", input.ResidentId.Value);
+        noticeParameters.Add("CenterId", input.CenterId.Value);
+        noticeParameters.Add("AccountId", input.AccountId.Value);
+        noticeParameters.Add("Since", input.Since.UtcDateTime, DbType.DateTime2);
+        var cancelledAt = await connection.QuerySingleOrDefaultAsync<DateTime?>(new CommandDefinition("""
+            SELECT TOP (1) cancelado_en
+              FROM dbo.basales_borrador
+             WHERE residente_id = @ResidentId AND centro_id = @CenterId AND creado_por_cuenta_id = @AccountId
+               AND estado = 'CANCELLED' AND cancelado_por_traslado_id IS NOT NULL AND cancelado_por_cuenta_id <> creado_por_cuenta_id
+               AND cancelado_en >= @Since
+             ORDER BY cancelado_en DESC
+            """, noticeParameters,
+            cancellationToken: ct));
+        return cancelledAt is { } at ? new DraftCancelledNotice(new DateTimeOffset(DateTime.SpecifyKind(at, DateTimeKind.Utc))) : null;
+    }
+
     public async Task<CurrentBaselineSummary?> ReadCurrentSummaryAsync(
         ReadCurrentBaselineSummaryInput input, CancellationToken ct = default)
     {

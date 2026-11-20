@@ -2015,6 +2015,74 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
     }
 
     [Fact]
+    public async Task Traslado_EnfermeriaSoloConElPermiso_ConLaAppEntera_YQuienCreoElBorradorVeElAviso()
+    {
+        // El traslado por Enfermería (script 0108): sin el permiso no hay botón ni formulario; Administración se lo concede, Enfermería traslada y todo queda con su perfil;
+        // el borrador de basal que había creado Medicina se cancela y Medicina lo ve en la ficha del residente, sin el contenido; quien trasladó no ve ese aviso.
+        var seed = await SeedAsync();
+        var admin = await LoginAsync(seed.ExternalSubject);
+        var residentId = await CreateResidentAsync(admin, seed, "Residente Traslado Enfermería");
+        var destinationId = await GrantUnitAsync(seed, "Planta traslado enfermería");
+        var nurseSubject = await GrantNursingAsync(seed);
+        var doctorSubject = await GrantMedicineAsync(seed);
+        using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
+        var (nurseAccount, nurseScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @nurseSubject", new { nurseSubject });
+        var (doctorAccount, doctorScope) = await connection.QuerySingleAsync<(Guid, Guid)>(
+            "SELECT c.id, a.id FROM dbo.cuentas c JOIN dbo.ambitos_perfil a ON a.cuenta_id = c.id WHERE c.sujeto_externo = @doctorSubject", new { doctorSubject });
+        // Las dos cuentas ven también la unidad de destino (si no, el residente dejaría de verse al trasladarlo).
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+            VALUES (NEWID(), @nurseScope, @centerId, @destinationId, SYSUTCDATETIME(), @nurseAccount),
+                   (NEWID(), @doctorScope, @centerId, @destinationId, SYSUTCDATETIME(), @doctorAccount)
+            """, new { nurseScope, doctorScope, centerId = seed.CenterId, destinationId, nurseAccount, doctorAccount });
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.basales_borrador
+                (id, residente_id, centro_id, creado_en_unidad_id, creado_por_cuenta_id, creado_por_perfil, creado_en,
+                 actualizado_por_cuenta_id, actualizado_por_perfil, actualizado_en)
+            VALUES (NEWID(), @residentId, @centerId, @unitId, @doctorAccount, 'MEDICINA', SYSUTCDATETIME(), @doctorAccount, 'MEDICINA', SYSUTCDATETIME())
+            """, new { residentId, centerId = seed.CenterId, unitId = seed.UnitId, doctorAccount });
+        var nurse = await LoginAsync(nurseSubject);
+        var doctor = await LoginAsync(doctorSubject);
+
+        var recordWithoutPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+        var formWithoutPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Trasladar?residenteId={residentId}"));
+        var profilePage = await admin.GetStringAsync($"/Administracion/PerfilUsuario?cuentaId={nurseAccount}&ambitoId={nurseScope}");
+        var granted = WebUtility.HtmlDecode(await (await admin.PostAsync("/Administracion/PermisoPerfil", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(profilePage, "__RequestVerificationToken"), ["cuentaId"] = nurseAccount.ToString(),
+            ["ambitoId"] = nurseScope.ToString(), ["permiso"] = "RESIDENT_TRANSFER", ["conceder"] = "true",
+        }))).Content.ReadAsStringAsync());
+        var recordWithPermission = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+        var page = await nurse.GetStringAsync($"/Enfermeria/Trasladar?residenteId={residentId}");
+        var moved = WebUtility.HtmlDecode(await (await nurse.PostAsync("/Enfermeria/Trasladar", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(page, "__RequestVerificationToken"),
+            ["Form.ResidenteId"] = residentId,
+            ["Form.UnidadOrigenId"] = ExtractValue(page, "Form.UnidadOrigenId"),
+            ["Form.OperacionId"] = ExtractValue(page, "Form.OperacionId"),
+            ["Form.UnidadDestinoId"] = destinationId.ToString(),
+        }))).Content.ReadAsStringAsync());
+        var doctorRecord = WebUtility.HtmlDecode(await doctor.GetStringAsync($"/Medicina/Residente?residenteId={residentId}"));
+        var nurseRecordAfter = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Enfermeria/Residente?residenteId={residentId}"));
+
+        Assert.DoesNotContain($"/Enfermeria/Trasladar?residenteId={residentId}", recordWithoutPermission);
+        Assert.Contains("No tienes permiso para trasladar residentes.", formWithoutPermission);
+        Assert.DoesNotContain("Trasladar residente", formWithoutPermission);
+        Assert.Contains("Trasladar a un residente de unidad, habitación o plaza", granted);
+        Assert.Contains($"/Enfermeria/Trasladar?residenteId={residentId}", recordWithPermission);
+        Assert.Contains("Planta traslado enfermería", WebUtility.HtmlDecode(page));
+        Assert.Contains("Residente trasladado.", moved);
+        Assert.Contains("Se canceló el borrador de basal", moved);
+        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id = @residentId AND trasladado_por_perfil = 'ENFERMERIA' AND trasladado_por_cuenta_id = @nurseAccount",
+            new { residentId, nurseAccount }));
+        Assert.Contains("Tu borrador de basal de este residente se canceló por un traslado de unidad el", doctorRecord);
+        Assert.DoesNotContain("se canceló por un traslado de unidad", nurseRecordAfter);
+        Assert.DoesNotContain("Residente trasladado.", doctorRecord);
+    }
+
+    [Fact]
     public async Task CitasExternas_AdministracionRegistra_EnfermeriaConPermiso_MedicinaSoloVe_AuxiliarNo_ConLaAppEntera()
     {
         // Citas externas, PR 2 (script 0101): Administración registra y cambia siempre; Enfermería, solo con el permiso EXTERNAL_APPOINTMENT_MANAGE que le da Administración; Medicina

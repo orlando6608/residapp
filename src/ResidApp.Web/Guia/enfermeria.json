@@ -1,6 +1,6 @@
 {
   "perfil": "Enfermeria",
-  "proposito": "Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide qué hacer: cerrar el evento, hacer seguimiento, escalarlo a Medicina o activar el protocolo urgente. Cumple las indicaciones de Medicina, deriva a Urgencias y prepara los comunicados a la familia. Con permiso, también da de alta residentes, gestiona la foto, firma el estado basal rellena la ficha de antecedentes de salud y registra las citas externas de los residentes. ResidApp no diagnostica ni decide nada clínico: registra lo que decides tú.",
+  "proposito": "Enfermería recibe lo que registra el Auxiliar y lo que observa ella misma, lo valora y decide qué hacer: cerrar el evento, hacer seguimiento, escalarlo a Medicina o activar el protocolo urgente. Cumple las indicaciones de Medicina, deriva a Urgencias y prepara los comunicados a la familia. Con permiso, también da de alta residentes, gestiona la foto, firma el estado basal rellena la ficha de antecedentes de salud registra las citas externas de los residentes y traslada residentes de unidad, habitación o plaza. ResidApp no diagnostica ni decide nada clínico: registra lo que decides tú.",
   "rutina": [
     "Entras en el **Inicio de Enfermería**: las tarjetas te dicen cuántos eventos prioritarios hay, cuántos protocolos urgentes y seguimientos abiertos, cuántas indicaciones de Medicina esperan y cuántos episodios hay para cerrar.",
     "Abres primero la bandeja prioritaria y después la de cambios ordinarios: cada evento se valora y se decide.",
@@ -25,6 +25,7 @@
     "**Poner, cambiar y quitar la foto del residente** (ver ENF-19).",
     "**Rellenar y cambiar la ficha de antecedentes de salud** (alergias e intolerancias a medicamentos, ver ENF-20; enfermedades e intervenciones, ver ENF-21; medicación habitual, ver ENF-22).",
     "**Registrar y cambiar las citas externas de los residentes** (ver ENF-23).",
+    "**Trasladar a un residente de unidad, habitación o plaza** (ver ENF-26).",
     "Estos permisos los concede Administración."
   ],
   "nunca": [
@@ -554,7 +555,7 @@
         { "p": "He dado de alta a un residente y el Auxiliar no lo ve.", "r": "No lo ve hasta que Administración se lo asigne (ver ADM-15)." },
         { "p": "«Tu ámbito activo no tiene permiso para dar de alta residentes. Si lo necesitas, pídeselo a Administración.»", "r": "Es quien concede el permiso." },
         { "p": "«Revisa los familiares: marca al menos un contacto prioritario o, si el residente no tiene contacto urgente, escribe el motivo…»", "r": "Marca un contacto prioritario o escribe el motivo; y cada familiar necesita nombre, relación y un teléfono válido." },
-        { "p": "«Esa cama ya está ocupada por otro residente. Elige otra o «Pendiente de asignar».»", "r": "Otra persona la ocupó mientras rellenabas el formulario. Elige otra cama. Para cambiarla después, el traslado lo hace Administración." }
+        { "p": "«Esa cama ya está ocupada por otro residente. Elige otra o «Pendiente de asignar».»", "r": "Otra persona la ocupó mientras rellenabas el formulario. Elige otra cama. Para cambiarla después, el traslado lo hace Administración o, si tienes el permiso de trasladar, tú (ver ENF-26)." }
       ],
       "rutas": ["Home/Index", "Residents/Create", "Residents/Confirmation"],
       "mensajes": [
@@ -592,7 +593,8 @@
         { "p": "Al crear el borrador, la app lo rechaza.", "r": "Tu ámbito no tiene el permiso que corresponde al motivo. Pídeselo a Administración, que es quien lo concede." },
         { "p": "¿Puedo anular un borrador?", "r": "Sí, antes de firmarlo: escribe el «Motivo de la cancelación» y pulsa «Cancelar borrador»." },
         { "p": "«No tienes un borrador activo para este residente.»", "r": "No hay borrador, o ya se firmó o se canceló. Vuelve a la ficha y créalo de nuevo." },
-        { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." }
+        { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." },
+        { "p": "La ficha dice que mi borrador de basal se canceló por un traslado de unidad.", "r": "Alguien trasladó al residente de unidad mientras el borrador seguía a medias, y un borrador no pasa de una unidad a otra. Crea el basal de nuevo en la unidad de destino." }
       ],
       "rutas": ["Enfermeria/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign", "EnfermeriaBasal/CrearBorrador", "EnfermeriaBasal/CancelarBorrador"],
       "mensajes": [
@@ -881,6 +883,47 @@
         "Solo Administración y la Enfermería de la unidad de esta persona pueden cambiar lo que ve su familia."
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "ENF-26",
+      "pregunta": "¿Cómo traslado a un residente de unidad, habitación o plaza?",
+      "palabras": ["trasladar", "traslado", "cambio de unidad", "cambio de habitación", "cambio de cama", "permiso"],
+      "permisos": ["RESIDENT_TRANSFER"],
+      "concede": "Administración",
+      "antes": [
+        "Tener el permiso **Trasladar a un residente de unidad, habitación o plaza** en tu ámbito. Viene apagado: lo concede Administración (ver ADM-14). Sin él, el botón no sale en la ficha.",
+        "Que el residente y la unidad de destino sean de tu ámbito, en el mismo centro.",
+        "Saber que este permiso **no** da baja, suspensión ni corrección de identidad: eso sigue siendo de Administración."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Trasladar**. Ves su ubicación actual.", "botones": ["Trasladar"] },
+        { "texto": "Elige la «Unidad de destino» y, si quieres, la «Habitación o plaza en la unidad (opcional)». Si no eliges ninguna, queda «Sin habitación ni plaza» y el residente pierde la que tenía. Las plazas ocupadas no se ofrecen.", "campos": ["Unidad de destino", "Habitación o plaza en la unidad (opcional)"] },
+        { "texto": "Pulsa **Trasladar**.", "botones": ["Trasladar"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Residente trasladado.» y cuántos episodios abiertos pasaron a la unidad de destino. El cambio queda en el historial de ubicación de la ficha; reenviar el formulario no lo repite." },
+        { "para": "Enfermería", "texto": "La Enfermería de la unidad de origen deja de ver los episodios abiertos del residente, que pasan a la unidad de destino. Los episodios cerrados no cambian de unidad." },
+        { "para": "Medicina", "texto": "Si tenía un borrador de basal a medias, el borrador se cancela aunque lo hubiera creado otra persona, y quien lo creó ve en la ficha del residente un aviso con la fecha, si sigue viendo al residente (si el traslado lo saca de su ámbito, no abre la ficha y no lo ve). El basal se rehace en la unidad de destino." },
+        { "para": "Administración", "texto": "El traslado queda en la auditoría con el perfil Enfermería y la cuenta que lo hizo." }
+      ],
+      "dudas": [
+        { "p": "No veo el botón «Trasladar».", "r": "Tu ámbito no tiene el permiso de trasladar. Pídeselo a Administración, que es quien lo concede." },
+        { "p": "«No tienes permiso para trasladar residentes. Pídeselo a Administración.»", "r": "Has abierto la pantalla de traslado sin el permiso. Pídeselo a Administración." },
+        { "p": "Pulsé «Trasladar» sin tocar nada más y el residente se quedó sin habitación.", "r": "El desplegable de habitación o plaza empieza en «Sin habitación ni plaza»: si no eliges una, el residente conserva la unidad, pero pierde la habitación que tenía. Vuelve a trasladarlo eligiendo la habitación o plaza." },
+        { "p": "«Tu ámbito activo no tiene ninguna unidad a la que trasladar.»", "r": "Solo puedes trasladar a unidades de tu ámbito: pide a Administración que te añada la unidad." },
+        { "p": "«Revisa el destino: tiene que ser una unidad activa de tu ámbito, con una habitación o plaza disponibles de esa unidad, y algo tiene que cambiar.»", "r": "Elige otra unidad, habitación o plaza, o comprueba que no es la actual." },
+        { "p": "«El residente ya no está donde lo veías, esa plaza está ocupada o el traslado ya se hizo.»", "r": "Revisa la ficha y vuelve a intentarlo." }
+      ],
+      "rutas": ["Enfermeria/Residente", "Enfermeria/Trasladar"],
+      "mensajes": [
+        "Residente trasladado.",
+        "No tienes permiso para trasladar residentes. Pídeselo a Administración.",
+        "Revisa el destino: tiene que ser una unidad activa de tu ámbito",
+        "El residente ya no está donde lo veías, esa plaza está ocupada o el traslado ya se hizo.",
+        "Tu ámbito activo no tiene ninguna unidad a la que trasladar."
+      ],
+      "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" },
+      "flujo": { "id": "estancia", "titulo": "La estancia cambia: traslado, ingreso y baja" }
     }
   ]
 }

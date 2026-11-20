@@ -239,9 +239,11 @@ public sealed record FamilyAnonymizationPreview(
 }
 
 /// <summary>Traslado del residente (script 0040). ExpectedUnitId es la unidad en la que estaba al abrir el formulario; OperationId
-/// es el identificador del traslado, así que un reenvío no lo repite. Sin habitación ni plaza, queda sin ellas.</summary>
+/// es el identificador del traslado, así que un reenvío no lo repite. Sin habitación ni plaza, queda sin ellas. ActorProfile es el perfil con el que se
+/// traslada (Administración o Enfermería con permiso): es el que queda en la ubicación, el traslado, la auditoría y la cancelación del borrador.
+/// ProfileScopeId es el ámbito de perfil con el que se traslada: el repositorio vuelve a comprobar con él, dentro de la transacción, el permiso de Enfermería.</summary>
 public sealed record TransferResidentInput(
-    AdministrativeResidentTarget Target, Guid OperationId, UnitId ExpectedUnitId, UnitId DestinationUnitId, Guid? RoomId, Guid? PlaceId);
+    AdministrativeResidentTarget Target, SystemProfile ActorProfile, Guid ProfileScopeId, Guid OperationId, UnitId ExpectedUnitId, UnitId DestinationUnitId, Guid? RoomId, Guid? PlaceId);
 
 /// <summary>Qué hizo el traslado: cuántos eventos abiertos pasaron a la unidad de destino y si se canceló un borrador de basal.</summary>
 public sealed record TransferResidentResult(int OpenEventsMoved, bool BaselineDraftCancelled);
