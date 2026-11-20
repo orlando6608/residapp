@@ -439,6 +439,12 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
     {
         using var connection = await connections.OpenAsync(ct);
         // Solo los borradores que creó esta cuenta y que canceló otra persona al trasladar al residente: quien traslada ya ve el aviso en el momento.
+        // Since va como datetime2: con el tipo datetime por defecto de Dapper se redondea a 3,3 ms y el borde exacto del plazo fallaría.
+        var noticeParameters = new DynamicParameters();
+        noticeParameters.Add("ResidentId", input.ResidentId.Value);
+        noticeParameters.Add("CenterId", input.CenterId.Value);
+        noticeParameters.Add("AccountId", input.AccountId.Value);
+        noticeParameters.Add("Since", input.Since.UtcDateTime, DbType.DateTime2);
         var cancelledAt = await connection.QuerySingleOrDefaultAsync<DateTime?>(new CommandDefinition("""
             SELECT TOP (1) cancelado_en
               FROM dbo.basales_borrador
@@ -446,7 +452,7 @@ public sealed class SqlBaselineRepository(SqlConnectionFactory connections) : IB
                AND estado = 'CANCELLED' AND cancelado_por_traslado_id IS NOT NULL AND cancelado_por_cuenta_id <> creado_por_cuenta_id
                AND cancelado_en >= @Since
              ORDER BY cancelado_en DESC
-            """, new { ResidentId = input.ResidentId.Value, CenterId = input.CenterId.Value, AccountId = input.AccountId.Value, Since = input.Since.UtcDateTime },
+            """, noticeParameters,
             cancellationToken: ct));
         return cancelledAt is { } at ? new DraftCancelledNotice(new DateTimeOffset(DateTime.SpecifyKind(at, DateTimeKind.Utc))) : null;
     }

@@ -299,6 +299,121 @@ public class TrasladoResidenteTests
         var dayAfter = new FixedClock(DateTimeOffset.UtcNow.AddDays(ReadDraftCancelledNotice.DaysShown + 1));
         Assert.NotNull((await BuildNotice(doctor.ExternalSubject, lastDay).ExecuteAsync(command)).Value);
         Assert.Null((await BuildNotice(doctor.ExternalSubject, dayAfter).ExecuteAsync(command)).Value);
+        // El borde exacto: el día catorce justo todavía se ve y un minuto después ya no.
+        var cancelledAt = forCreator.Value!.CancelledAt;
+        Assert.NotNull((await BuildNotice(doctor.ExternalSubject, new FixedClock(cancelledAt.AddDays(ReadDraftCancelledNotice.DaysShown))).ExecuteAsync(command)).Value);
+        Assert.Null((await BuildNotice(doctor.ExternalSubject, new FixedClock(cancelledAt.AddDays(ReadDraftCancelledNotice.DaysShown).AddMinutes(1))).ExecuteAsync(command)).Value);
+    }
+
+    [Fact]
+    public async Task Trasladar_EnfermeriaConUnaSolaUnidad_CambiaDeHabitacionYPlaza_SinCancelarElBorradorNiMoverEventos_NiAvisar()
+    {
+        // El uso más normal de una enfermera con una sola unidad: la misma unidad, otra habitación y plaza. No cambia de unidad, así que no mueve eventos ni
+        // cancela el borrador, y quien lo creó no recibe ningún aviso.
+        var (admin, origin, _, resident, nurseOrigin, _) = await SeedAsync();
+        var estructura = AdministracionResidentesTests.BuildEstructura(admin.ExternalSubject);
+        var roomId = (await estructura.CreateRoomAsync(new CreateRoomCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), origin, "Habitación 7"))).Value;
+        var placeId = (await estructura.CreatePlaceAsync(new CreatePlaceCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), roomId, "Cama A"))).Value;
+        var doctor = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, admin.CenterId, origin);
+        var nurse = await NurseWithTransferAsync(admin, origin);
+        var eventId = await RegisterEventAsync(nurseOrigin, resident);
+        var draftId = Guid.NewGuid();
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.basales_borrador
+                    (id, residente_id, centro_id, creado_en_unidad_id, creado_por_cuenta_id, creado_por_perfil, creado_en,
+                     actualizado_por_cuenta_id, actualizado_por_perfil, actualizado_en)
+                VALUES (@draftId, @residentId, @centerId, @unitId, @accountId, 'MEDICINA', SYSUTCDATETIME(), @accountId, 'MEDICINA', SYSUTCDATETIME())
+                """, new { draftId, residentId = resident.Value, centerId = admin.CenterId.Value, unitId = origin.Value, accountId = doctor.AccountId.Value });
+        }
+
+        var result = await Build(nurse.ExternalSubject).TransferAsync(new TransferResidentCommand(
+            nurse.ProfileScopeId, nurse.CenterId, resident, origin, origin, roomId, placeId, Guid.NewGuid()));
+
+        Assert.True(result.Ok, result.Error?.Message);
+        Assert.Equal(new TransferResidentResult(0, false), result.Value);
+        Assert.Equal("ACTIVE", await QueryAsync<string>("SELECT estado FROM dbo.basales_borrador WHERE id = @draftId", new { draftId }));
+        Assert.Equal(origin.Value, await QueryAsync<Guid>("SELECT unidad_id FROM dbo.eventos_asistenciales WHERE id = @eventId", new { eventId }));
+        Assert.Equal(1, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @id AND vigente_hasta IS NULL AND habitacion_id = @roomId AND plaza_id = @placeId AND modificado_por_perfil = 'ENFERMERIA'",
+            new { id = resident.Value, roomId, placeId }));
+        Assert.Equal(1, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id = @id AND unidad_origen_id = @unit AND unidad_destino_id = @unit AND trasladado_por_perfil = 'ENFERMERIA'",
+            new { id = resident.Value, unit = origin.Value }));
+        Assert.Null((await BuildNotice(doctor.ExternalSubject).ExecuteAsync(new ReadDraftCancelledNoticeCommand(doctor.ProfileScopeId, doctor.CenterId, resident))).Value);
+    }
+
+    [Fact]
+    public async Task Trasladar_AUnaPlazaOcupada_OAUnaHabitacionDeOtraUnidad_NoTraslada()
+    {
+        var (admin, origin, destination, resident, _, _) = await SeedAsync();
+        var other = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente Plaza Ocupada Integración");
+        var estructura = AdministracionResidentesTests.BuildEstructura(admin.ExternalSubject);
+        var roomId = (await estructura.CreateRoomAsync(new CreateRoomCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), origin, "Habitación 8"))).Value;
+        var placeId = (await estructura.CreatePlaceAsync(new CreatePlaceCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), roomId, "Cama B"))).Value;
+        var foreignRoomId = (await estructura.CreateRoomAsync(new CreateRoomCommand(admin.ProfileScopeId, admin.CenterId, Guid.NewGuid(), destination, "Habitación 9"))).Value;
+        var nurse = await NurseWithTransferAsync(admin, origin, destination);
+        Assert.True((await Build(nurse.ExternalSubject).TransferAsync(new TransferResidentCommand(
+            nurse.ProfileScopeId, nurse.CenterId, other, origin, origin, roomId, placeId, Guid.NewGuid()))).Ok);
+
+        var occupied = await Build(nurse.ExternalSubject).TransferAsync(new TransferResidentCommand(
+            nurse.ProfileScopeId, nurse.CenterId, resident, origin, origin, roomId, placeId, Guid.NewGuid()));
+        var wrongUnit = await Build(nurse.ExternalSubject).TransferAsync(new TransferResidentCommand(
+            nurse.ProfileScopeId, nurse.CenterId, resident, origin, origin, foreignRoomId, null, Guid.NewGuid()));
+
+        Assert.False(occupied.Ok);
+        Assert.False(wrongUnit.Ok);
+        Assert.Equal(0, await QueryAsync<int>("SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id = @id", new { id = resident.Value }));
+        Assert.Equal(origin.Value, await QueryAsync<Guid>(
+            "SELECT unidad_id FROM dbo.intervalos_ubicacion_residente WHERE residente_id = @id AND vigente_hasta IS NULL", new { id = resident.Value }));
+    }
+
+    [Fact]
+    public async Task Trasladar_ResidenteDeBaja_OAUnaUnidadInactiva_EsAccesoDenegado_YNoEscribeNada()
+    {
+        var (admin, origin, destination, resident, _, _) = await SeedAsync();
+        var gone = await AdministracionResidentesTests.CreateResidentAsync(admin, "Residente De Baja Traslado");
+        var nurse = await NurseWithTransferAsync(admin, origin, destination);
+        Assert.True((await EstadoResidenteTests.Build(admin.ExternalSubject).DischargeAsync(new DischargeResidentCommand(
+            admin.ProfileScopeId, admin.CenterId, gone, Guid.NewGuid(), ResidentDischargeReason.Fallecimiento, null))).Ok);
+
+        var discharged = await Build(nurse.ExternalSubject).TransferAsync(Transfer(nurse, gone, origin, destination));
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("UPDATE dbo.unidades SET estado = 'INACTIVE' WHERE id = @unit", new { unit = destination.Value });
+        }
+        var inactiveByNurse = await Build(nurse.ExternalSubject).TransferAsync(Transfer(nurse, resident, origin, destination));
+        var inactiveByAdmin = await Build(admin.ExternalSubject).TransferAsync(Transfer(admin, resident, origin, destination));
+
+        Assert.Equal(ApplicationFailureCode.AccessDenied, discharged.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, inactiveByNurse.Error!.Code);
+        Assert.Equal(ApplicationFailureCode.AccessDenied, inactiveByAdmin.Error!.Code);
+        Assert.Equal(0, await QueryAsync<int>(
+            "SELECT COUNT(*) FROM dbo.traslados_residente WHERE residente_id IN (@id, @gone)", new { id = resident.Value, gone = gone.Value }));
+    }
+
+    [Fact]
+    public async Task ElAviso_SiElTrasladoSacaAlResidenteDelAmbitoDelCreador_NoSePuedeLeer()
+    {
+        // Decisión de Orlando (2026-11-20): el aviso llega solo si quien creó el borrador sigue viendo al residente; si no, no abre la ficha y no hay aviso.
+        var (admin, origin, destination, resident, _, _) = await SeedAsync();
+        var doctor = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, admin.CenterId, origin);
+        var nurse = await NurseWithTransferAsync(admin, origin, destination);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.basales_borrador
+                    (id, residente_id, centro_id, creado_en_unidad_id, creado_por_cuenta_id, creado_por_perfil, creado_en,
+                     actualizado_por_cuenta_id, actualizado_por_perfil, actualizado_en)
+                VALUES (NEWID(), @residentId, @centerId, @unitId, @accountId, 'MEDICINA', SYSUTCDATETIME(), @accountId, 'MEDICINA', SYSUTCDATETIME())
+                """, new { residentId = resident.Value, centerId = admin.CenterId.Value, unitId = origin.Value, accountId = doctor.AccountId.Value });
+        }
+
+        Assert.True((await Build(nurse.ExternalSubject).TransferAsync(Transfer(nurse, resident, origin, destination))).Ok);
+
+        var notice = await BuildNotice(doctor.ExternalSubject).ExecuteAsync(new ReadDraftCancelledNoticeCommand(doctor.ProfileScopeId, doctor.CenterId, resident));
+        Assert.Equal(ApplicationFailureCode.AccessDenied, notice.Error!.Code);
     }
 
     [Fact]

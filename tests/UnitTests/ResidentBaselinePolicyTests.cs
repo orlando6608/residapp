@@ -31,6 +31,38 @@ public class ResidentBaselinePolicyTests
 
     private static AuthorizationDecision.Allowed AssertAllowed(AuthorizationDecision decision) => Assert.IsType<AuthorizationDecision.Allowed>(decision);
 
+    // --- Traslado del residente (ResidentTransfer y ResidentTransferDestination; script 0108) ---------------------
+
+    [Fact]
+    public void Traslado_SoloAdministracion_YEnfermeriaConElPermiso()
+    {
+        AuthorizationDecision Decide(SystemProfile profile, ResidentBaselineAction action, params ResidentBaselinePermission[] permissions) =>
+            ResidentBaselinePolicy.Authorize(new ResidentBaselineAuthorizationRequest(
+                action, Subject(profile, Scope(profile, permissions)), Center, Unit,
+                action == ResidentBaselineAction.ResidentTransferDestination ? null : TargetResident));
+
+        foreach (var action in new[] { ResidentBaselineAction.ResidentTransfer, ResidentBaselineAction.ResidentTransferDestination })
+        {
+            AssertAllowed(Decide(SystemProfile.Administracion, action));
+            AssertAllowed(Decide(SystemProfile.Enfermeria, action, ResidentBaselinePermission.ResidentTransfer));
+            Assert.Equal(AuthorizationDenialReason.PermissionRequired, AssertDenied(Decide(SystemProfile.Enfermeria, action)).Reason);
+            // Otro permiso de Enfermería no sirve, ni siquiera el de dar de alta.
+            Assert.Equal(AuthorizationDenialReason.PermissionRequired,
+                AssertDenied(Decide(SystemProfile.Enfermeria, action, ResidentBaselinePermission.ResidentIdentityCreate)).Reason);
+            foreach (var profile in new[] { SystemProfile.Medicina, SystemProfile.Auxiliar, SystemProfile.DireccionClinica, SystemProfile.Familiar, SystemProfile.Plataforma })
+            {
+                Assert.Equal(AuthorizationDenialReason.ActionNotAllowed,
+                    AssertDenied(Decide(profile, action, ResidentBaselinePermission.ResidentTransfer)).Reason);
+            }
+        }
+
+        // El permiso de trasladar no abre lo que sigue siendo solo de Administración.
+        var update = ResidentBaselinePolicy.Authorize(new ResidentBaselineAuthorizationRequest(
+            ResidentBaselineAction.ResidentIdentityUpdate, Subject(SystemProfile.Enfermeria, Scope(SystemProfile.Enfermeria, [ResidentBaselinePermission.ResidentTransfer])),
+            Center, Unit, TargetResident));
+        Assert.Equal(AuthorizationDenialReason.ActionNotAllowed, AssertDenied(update).Reason);
+    }
+
     // --- Puerta común (TryAuthorizeContext) --------------------------------------------------------
 
     [Fact]
