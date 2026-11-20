@@ -51,6 +51,15 @@ public class AvisosCitasExternasCorreoTests
     private static ExternalNoticeService Service(FakeEmailSender sender, EmailSettings settings) =>
         new(new SqlExternalNoticeStore(TestDatabase.ConnectionFactory), sender, settings, null, null, Madrid);
 
+    /// <summary>Procesa los avisos hasta que no queda ninguno pendiente. <c>ProcessDueAsync</c> lee un lote de 20 de todos los centros (los más antiguos primero) y la base de pruebas se comparte: con otras pruebas
+    /// que dejan avisos reservados, el de esta prueba, el más reciente, puede quedar fuera del primer lote. El proceso real hace varias pasadas; la prueba también.</summary>
+    private static async Task DrainAsync(ExternalNoticeService service, DateTimeOffset now)
+    {
+        for (var pass = 0; pass < 500 && await service.ProcessDueAsync(now) > 0; pass++)
+        {
+        }
+    }
+
     private static SqlProfileScopeDirectoryProvider Scopes => new(TestDatabase.ConnectionFactory);
 
     private static ExternalAppointmentsApplicationService Staff(SeededProfile by) =>
@@ -159,7 +168,7 @@ public class AvisosCitasExternasCorreoTests
         Assert.All(rows, r => Assert.Equal(("AVISO_CITA_EXTERNA", $"7D|{Today.AddDays(7):yyyy-MM-dd}", "PENDIENTE", (string?)null, "1"), (r.Template, r.Key, r.State, r.Reason, r.Version)));
         Assert.Equal($"1D|{Today.AddDays(1):yyyy-MM-dd}", (await RowsAsync(eve)).First().Key);
 
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 11));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 11));
         var mine = sender.Sent.Where(m => new[] { world.First.Address, world.Second.Address }.Contains(m.To)).ToList();
         Assert.Equal(4, mine.Count);
         Assert.Equal(2, mine.Count(m => m.To == world.First.Address));
@@ -188,7 +197,7 @@ public class AvisosCitasExternasCorreoTests
         var rows = await RowsAsync(id);
         Assert.Equal(world.Second.FamilyId, Assert.Single(rows).FamilyId);
 
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 11));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 11));
         Assert.Equal(world.Second.Address, Assert.Single(sender.Sent.Where(m => m.To == world.Second.Address || m.To == world.First.Address)).To);
     }
 
@@ -205,7 +214,7 @@ public class AvisosCitasExternasCorreoTests
         Assert.All(rows, r => Assert.Equal("AVISO_CITA_EXTERNA_SIN_CUBRIR", r.Template));
         Assert.Equal(world.Second.FamilyId, Assert.Single(rows).FamilyId);
 
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 11));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 11));
         var email = Assert.Single(sender.Sent.Where(m => m.To == world.Second.Address));
         Assert.Equal("Una cita en ResidApp todavía necesita ayuda", email.Subject);
 
@@ -277,7 +286,7 @@ public class AvisosCitasExternasCorreoTests
         }
 
         var sender = new FakeEmailSender();
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 11));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 11));
 
         var after = Assert.Single((await RowsAsync(id)).Where(r => r.FamilyId == world.First.FamilyId));
         Assert.Equal(("OMITIDO", expectedReason), (after.State, after.Reason));
@@ -295,7 +304,7 @@ public class AvisosCitasExternasCorreoTests
 
         await ReserveAsync(Today, 11);
         var sender = new FakeEmailSender();
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 19));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 19));
         Assert.All(await RowsAsync(id), r => Assert.Equal(("OMITIDO", "FUERA_DE_PLAZO"), (r.State, r.Reason)));
         Assert.DoesNotContain(sender.Sent, m => m.To == world.First.Address || m.To == world.Second.Address);
     }
@@ -380,7 +389,7 @@ public class AvisosCitasExternasCorreoTests
         await ReserveAsync(Today, 11);
         Assert.Equal(2, (await RowsAsync(id)).Count);
 
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 11));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 11));
         Assert.Equal(1, sender.Sent.Count(m => m.To == world.First.Address));
         Assert.Equal(1, sender.Sent.Count(m => m.To == world.Second.Address));
     }
@@ -423,7 +432,7 @@ public class AvisosCitasExternasCorreoTests
         Assert.Empty(await RowsAsync(after));
 
         var sender = new FakeEmailSender();
-        await Service(sender, Active()).ProcessDueAsync(Sim(Today, 12));
+        await DrainAsync(Service(sender, Active()), Sim(Today, 12));
         var omitted = Assert.Single(await RowsAsync(before));
         Assert.Equal(("OMITIDO", "BAJA_DE_AVISOS"), (omitted.State, omitted.Reason));
         Assert.DoesNotContain(sender.Sent, m => m.To == world.First.Address);
@@ -471,7 +480,7 @@ public class AvisosCitasExternasCorreoTests
         Assert.All(await RowsAsync(id), r => Assert.Equal(("PENDIENTE", 0), (r.State, r.Attempts)));
 
         var sender = new FakeEmailSender();
-        await Service(sender, Active(false, world.First.Address)).ProcessDueAsync(Sim(Today, 11));
+        await DrainAsync(Service(sender, Active(false, world.First.Address)), Sim(Today, 11));
         var rows = await RowsAsync(id);
         Assert.Equal("ENVIADO", rows.Single(r => r.FamilyId == world.First.FamilyId).State);
         var refused = rows.Single(r => r.FamilyId == world.Second.FamilyId);
@@ -488,8 +497,8 @@ public class AvisosCitasExternasCorreoTests
         var sender = new FakeEmailSender();
 
         await Task.WhenAll(
-            Task.Run(() => Service(sender, Active()).ProcessDueAsync(Sim(Today, 11))),
-            Task.Run(() => Service(sender, Active()).ProcessDueAsync(Sim(Today, 11))));
+            Task.Run(() => DrainAsync(Service(sender, Active()), Sim(Today, 11))),
+            Task.Run(() => DrainAsync(Service(sender, Active()), Sim(Today, 11))));
 
         Assert.Equal(1, sender.Sent.Count(m => m.To == world.First.Address));
         Assert.Equal(1, sender.Sent.Count(m => m.To == world.Second.Address));

@@ -199,7 +199,21 @@ public sealed class PermisosAplicacionTests
     [Fact]
     public async Task TRUNCATE_de_una_tabla_inmutable_esta_denegado()
     {
-        Assert.NotNull(await ErrorOfAsync("TRUNCATE TABLE dbo.eventos_auditoria", RoleOnlyUser));
+        // TRUNCATE exige ALTER sobre la tabla. No se intenta de verdad: antes de comprobar el permiso pide un bloqueo de tabla entera y, con otras pruebas insertando auditoría a la vez,
+        // daba interbloqueos (1205) que rompían a las demás y que el antiguo «cualquier error» daba por buenos.
+        await ProbeUserCreated.Value;
+        var impersonable = new SqlConnectionStringBuilder(TestDatabase.ConnectionString) { Pooling = false, MultipleActiveResultSets = false }.ConnectionString;
+        using var connection = new SqlConnection(impersonable);
+        await connection.OpenAsync();
+        await connection.ExecuteAsync($"EXECUTE AS USER = N'{RoleOnlyUser}'");
+        try
+        {
+            Assert.Equal(0, await connection.QuerySingleAsync<int>("SELECT ISNULL(HAS_PERMS_BY_NAME(N'dbo.eventos_auditoria', N'OBJECT', N'ALTER'), 0)"));
+        }
+        finally
+        {
+            await connection.ExecuteAsync("REVERT");
+        }
     }
 
     [Fact]
