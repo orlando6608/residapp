@@ -13,7 +13,7 @@ namespace ResidApp.Application.Ports;
 public sealed record SupervisionEpisode(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string UnitName, ClinicalEventOrigin Origin,
     DailyChangeClassification Classification, ClinicalEventStatus Status, DateTimeOffset ReceivedAt, bool Escalated,
-    bool HasFollowUp, DateOnly? FollowUpDue, bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone);
+    bool HasFollowUp, DateOnly? FollowUpDue, bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone, TimeOnly? FollowUpDueTime = null);
 
 /// <summary>DIR-04: hito del episodio, solo con su tipo, el perfil que lo hizo y la hora (sin texto).</summary>
 public enum SupervisionMilestoneKind
@@ -287,12 +287,19 @@ public static class SupervisionPendingRules
     public static bool IsOverdue(SupervisionEpisode episode, DateOnly today) =>
         episode.HasFollowUp && episode.FollowUpDue < today;
 
-    public static bool Matches(SupervisionPendingType type, SupervisionEpisode episode, DateOnly today) => type switch
+    /// <summary>Con hora prevista, vence cuando pasa esa hora (hora local del centro); sin hora, como la versión por día.</summary>
+    public static bool IsOverdue(SupervisionEpisode episode, DateTime now) =>
+        episode.HasFollowUp && FollowUpPlan.IsOverdue(episode.FollowUpDue, episode.FollowUpDueTime, now);
+
+    public static bool Matches(SupervisionPendingType type, SupervisionEpisode episode, DateOnly today) =>
+        Matches(type, episode, today.ToDateTime(TimeOnly.FromDateTime(DateTime.Now)));
+
+    public static bool Matches(SupervisionPendingType type, SupervisionEpisode episode, DateTime now) => type switch
     {
         SupervisionPendingType.SinValorar => episode.Status == ClinicalEventStatus.Pendiente,
         SupervisionPendingType.Escalado => episode.Escalated,
         SupervisionPendingType.Seguimiento => episode.HasFollowUp,
-        SupervisionPendingType.SeguimientoVencido => IsOverdue(episode, today),
+        SupervisionPendingType.SeguimientoVencido => IsOverdue(episode, now),
         SupervisionPendingType.IndicacionPendiente => episode.IndicationsPending > 0,
         SupervisionPendingType.IndicacionConIncidencia => episode.IndicationsNotDone > 0,
         SupervisionPendingType.ProtocoloUrgente => episode.HasUrgentProtocol,

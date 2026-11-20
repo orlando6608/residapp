@@ -8,7 +8,7 @@ namespace ResidApp.Application.UseCases;
 public sealed record RecordFollowUpActionCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision, FollowUpActionType Tipo,
     string? Texto = null, DateOnly? FechaPrevista = null, string? Criterio = null, Guid? EquipoEntranteId = null,
-    Guid? TransferenciaId = null);
+    Guid? TransferenciaId = null, TimeOnly? HoraPrevista = null);
 
 /// <summary>
 /// ENF-08/ENF-09: registrar una actuación, reprogramar con justificación, transferir al equipo o turno
@@ -27,7 +27,7 @@ public sealed class RecordFollowUpAction(
             {
                 FollowUpActionType.Actuacion => FollowUpAction.Note(command.Texto),
                 FollowUpActionType.Reprogramacion => FollowUpAction.Reschedule(
-                    new FollowUpPlan(command.FechaPrevista, command.Criterio), command.Texto),
+                    new FollowUpPlan(command.FechaPrevista, command.Criterio, command.HoraPrevista), command.Texto),
                 FollowUpActionType.Transferencia => FollowUpAction.Transfer(command.EquipoEntranteId, command.Texto),
                 FollowUpActionType.Recepcion => FollowUpAction.Receive(command.TransferenciaId ?? Guid.Empty),
                 _ => throw new DomainValidationException("FOLLOW_UP_ACTION_INVALID"),

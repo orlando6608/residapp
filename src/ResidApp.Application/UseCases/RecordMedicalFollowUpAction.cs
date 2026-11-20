@@ -8,7 +8,7 @@ namespace ResidApp.Application.UseCases;
 public sealed record RecordMedicalFollowUpActionCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision, FollowUpActionType Tipo,
     string? Texto = null, DateOnly? FechaPrevista = null, string? Criterio = null, Guid? EquipoEntranteId = null,
-    Guid? TransferenciaId = null);
+    Guid? TransferenciaId = null, TimeOnly? HoraPrevista = null);
 
 /// <summary>
 /// MED-11/MED-12: registrar una revisión, reprogramar con justificación y, al terminar el turno, transferir al
@@ -27,7 +27,7 @@ public sealed class RecordMedicalFollowUpAction(
             {
                 FollowUpActionType.Actuacion => FollowUpAction.Note(command.Texto),
                 FollowUpActionType.Reprogramacion => FollowUpAction.Reschedule(
-                    new FollowUpPlan(command.FechaPrevista, command.Criterio), command.Texto),
+                    new FollowUpPlan(command.FechaPrevista, command.Criterio, command.HoraPrevista), command.Texto),
                 FollowUpActionType.Transferencia => FollowUpAction.Transfer(command.EquipoEntranteId, command.Texto),
                 FollowUpActionType.Conservacion => FollowUpAction.Keep(command.Texto),
                 FollowUpActionType.Recepcion => FollowUpAction.Receive(command.TransferenciaId ?? Guid.Empty),

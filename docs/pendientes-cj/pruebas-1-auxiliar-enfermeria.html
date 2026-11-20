@@ -276,7 +276,7 @@
   .nota-ing p { margin: 0; white-space: pre-line; }
 </style>
 </head>
-<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-11-16">
+<body data-doc="pruebas-1-auxiliar-enfermeria" data-version="2026-11-20">
 
 <div class="page">
   <header>
@@ -566,11 +566,11 @@
         <div class="q-head"><span class="n">10</span><h3 class="q-title" id="t-10">Seguimiento y transferencia al equipo entrante</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span>Residente: <strong>Antonio García</strong></span></div>
         <ol class="pasos">
-          <li>Registra un tercer evento (como en la prueba 7) y valóralo (como en la 8: «Empezar valoración» y «Guardar borrador» con algún dato). «Iniciar seguimiento» no aparece hasta entonces: pulsa «Pasar a decisión asistencial» y elige la tarjeta «Iniciar seguimiento». Indica una fecha prevista, un criterio, o ambos (por ejemplo, fecha: mañana (solo se indica el día, no la hora); criterio: «si la saturación sigue por debajo de 92»).</li>
+          <li>Registra un tercer evento (como en la prueba 7) y valóralo (como en la 8: «Empezar valoración» y «Guardar borrador» con algún dato). «Iniciar seguimiento» no aparece hasta entonces: pulsa «Pasar a decisión asistencial» y elige la tarjeta «Iniciar seguimiento». Indica una fecha prevista (y, si quieres, una «Hora prevista (opcional)»), un criterio, o ambos (por ejemplo, fecha: hoy, con una hora que ya haya pasado, para ver el aviso al momento; criterio: «si la saturación sigue por debajo de 92»).</li>
           <li>En la pantalla del seguimiento, registra una actuación («Registrar actuación»), reprograma («Reprogramar», con justificación) y transfiere al «Equipo entrante» con una nota de continuidad («Transferir»).</li>
           <li>Abre la tarjeta «Seguimientos» y busca el evento. Después, «Resolver» y cierra el evento.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento sale de las bandejas y entra en «Seguimientos». La transferencia queda «pendiente de recepción» hasta que alguien pulsa «Confirmar recepción»; la puede confirmar cualquiera de Enfermería de la unidad que entre, aunque el equipo entrante tenga miembros. Un seguimiento con fecha pasada aparece «Pendiente» pero no se cierra solo.</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>El evento sale de las bandejas y entra en «Seguimientos». La transferencia queda «pendiente de recepción» hasta que alguien pulsa «Confirmar recepción»; la puede confirmar cualquiera de Enfermería de la unidad que entre, aunque el equipo entrante tenga miembros. Un seguimiento con fecha pasada aparece «Pendiente» pero no se cierra solo. La hora es opcional y orientativa y necesita una fecha: con hora, aparece «Pendiente» en cuanto pasa esa hora (hora de Madrid), así que con la hora de hoy ya pasada saldrá «Pendiente» al momento; sin hora, al día siguiente. «Reprogramar» también admite hora.</div>
         <fieldset class="choices" aria-labelledby="t-10">
           <label class="choice"><input type="radio" name="r-10" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-10" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

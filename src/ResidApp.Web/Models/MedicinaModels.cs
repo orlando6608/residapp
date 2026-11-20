@@ -59,7 +59,7 @@ public sealed record ValoracionMedicaViewModel(PendingChangeDetail Event, Valora
 
 /// <summary>MED-07 "indicación a Enfermería": texto, fecha prevista o criterio (al menos uno) e información
 /// adicional. No hay selector de prioridad.</summary>
-public sealed class IndicacionFormModel
+public sealed class IndicacionFormModel : IValidatableObject
 {
     [Required]
     public Guid EventoId { get; set; }
@@ -75,6 +75,9 @@ public sealed class IndicacionFormModel
     [Display(Name = "Fecha prevista")]
     public DateOnly? FechaPrevista { get; set; }
 
+    [Display(Name = "Hora prevista (opcional)")]
+    public TimeOnly? HoraPrevista { get; set; }
+
     [StringLength(FollowUpPlan.MaxCriterionLength)]
     [Display(Name = "Criterio")]
     public string? Criterio { get; set; }
@@ -82,6 +85,14 @@ public sealed class IndicacionFormModel
     [StringLength(MedicalIndication.MaxTextLength)]
     [Display(Name = "Información adicional")]
     public string? InformacionAdicional { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (HoraPrevista is not null && FechaPrevista is null)
+        {
+            yield return new ValidationResult("Para indicar una hora hay que indicar también la fecha.", [nameof(HoraPrevista)]);
+        }
+    }
 }
 
 public sealed record IndicacionViewModel(PendingChangeDetail Event, IndicacionFormModel Form);
@@ -89,7 +100,7 @@ public sealed record IndicacionViewModel(PendingChangeDetail Event, IndicacionFo
 /// <summary>MED-10 "crear seguimiento médico": fecha prevista o criterio (al menos uno) y objetivo
 /// obligatorio; lo decide el dominio (FollowUpPlan, MedicalFollowUp). El equipo responsable es Medicina de la
 /// unidad.</summary>
-public sealed class IniciarSeguimientoMedicoFormModel
+public sealed class IniciarSeguimientoMedicoFormModel : IValidatableObject
 {
     [Required]
     public Guid EventoId { get; set; }
@@ -100,6 +111,9 @@ public sealed class IniciarSeguimientoMedicoFormModel
     [Display(Name = "Fecha prevista de revisión")]
     public DateOnly? FechaPrevista { get; set; }
 
+    [Display(Name = "Hora prevista (opcional)")]
+    public TimeOnly? HoraPrevista { get; set; }
+
     [StringLength(FollowUpPlan.MaxCriterionLength)]
     [Display(Name = "Criterio de revisión")]
     public string? Criterio { get; set; }
@@ -108,6 +122,14 @@ public sealed class IniciarSeguimientoMedicoFormModel
     [StringLength(MedicalFollowUp.MaxObjectiveLength)]
     [Display(Name = "Objetivo del seguimiento")]
     public string? Objetivo { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (HoraPrevista is not null && FechaPrevista is null)
+        {
+            yield return new ValidationResult("Para indicar una hora hay que indicar también la fecha.", [nameof(HoraPrevista)]);
+        }
+    }
 }
 
 public sealed record IniciarSeguimientoMedicoViewModel(PendingChangeDetail Event, IniciarSeguimientoMedicoFormModel Form);
@@ -152,5 +174,5 @@ public static class MedicalIndicationDisplay
     /// <summary>Vencida: tiene fecha prevista ya pasada y sigue sin realizarse.</summary>
     public static bool IsOverdue(MedicalIndicationSummary indication) =>
         indication.Status is MedicalIndicationStatus.PendienteLectura or MedicalIndicationStatus.Leida
-        && FollowUpDisplay.IsOverdue(indication.DueDate);
+        && FollowUpDisplay.IsOverdue(indication.DueDate, indication.DueTime);
 }

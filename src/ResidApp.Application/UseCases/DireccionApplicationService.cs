@@ -46,7 +46,7 @@ public sealed class DireccionApplicationService(
             await EnsureDirectionScopeAsync(query.AmbitoPerfilId, query.CentroId, ct);
             var info = await directory.FindScopeAsync(query.AmbitoPerfilId, query.CentroId, ct) ?? throw new AccessDeniedException();
             var episodes = await directory.ListOpenEpisodesAsync(query.AmbitoPerfilId, query.CentroId, ct);
-            var today = DateOnly.FromDateTime(DateTime.Today);
+            var now = DateTime.Now;
             return info.Units.Select(unit =>
             {
                 var own = episodes.Where(e => e.UnitId == unit.Id).ToList();
@@ -55,7 +55,7 @@ public sealed class DireccionApplicationService(
                     own.Count(e => e.Status == ClinicalEventStatus.Pendiente),
                     own.Count(e => e.Status is ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnValoracionMedica),
                     own.Count(e => e.Escalated), own.Count(e => e.HasFollowUp),
-                    own.Count(e => SupervisionPendingRules.IsOverdue(e, today)),
+                    own.Count(e => SupervisionPendingRules.IsOverdue(e, now)),
                     own.Sum(e => e.IndicationsPending), own.Sum(e => e.IndicationsNotDone), own.Count(e => e.HasUrgentProtocol));
             }).ToList();
         });

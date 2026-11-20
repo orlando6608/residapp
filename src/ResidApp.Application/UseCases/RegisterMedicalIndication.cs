@@ -8,7 +8,7 @@ namespace ResidApp.Application.UseCases;
 
 public sealed record RegisterMedicalIndicationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision,
-    string? Texto, DateOnly? FechaPrevista, string? Criterio, string? InformacionAdicional);
+    string? Texto, DateOnly? FechaPrevista, string? Criterio, string? InformacionAdicional, TimeOnly? HoraPrevista = null);
 
 /// <summary>MED-06/MED-07 "registrar indicaciones a Enfermería", una de las salidas de la conducta médica:
 /// texto, fecha prevista o criterio e información adicional, sin prioridad automática. Exige la valoración
@@ -21,7 +21,7 @@ public sealed class RegisterMedicalIndication(
         ApplicationResultRunner.RunAsync(async () =>
         {
             var indication = new MedicalIndication(
-                command.Texto, new FollowUpPlan(command.FechaPrevista, command.Criterio), command.InformacionAdicional);
+                command.Texto, new FollowUpPlan(command.FechaPrevista, command.Criterio, command.HoraPrevista), command.InformacionAdicional);
 
             var scope = await MedicinaScope.RequireAsync(scopes, session, directory, command.AmbitoPerfilId, command.CentroId, command.EventoId, ct);
             return await repository.RegisterIndicationAsync(

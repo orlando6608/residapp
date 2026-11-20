@@ -33,6 +33,51 @@ public class FollowUpTests
     }
 
     [Fact]
+    public void Plan_ConFechaYHora_VenceCuandoPasaLaHora()
+    {
+        var plan = new FollowUpPlan(Today, null, new TimeOnly(18, 0));
+
+        Assert.Equal(new TimeOnly(18, 0), plan.DueTime);
+        Assert.False(plan.IsOverdue(Today.ToDateTime(new TimeOnly(17, 59))));
+        Assert.False(plan.IsOverdue(Today.ToDateTime(new TimeOnly(18, 0))));
+        Assert.True(plan.IsOverdue(Today.ToDateTime(new TimeOnly(18, 1))));
+        Assert.True(plan.IsOverdue(Today.AddDays(1).ToDateTime(new TimeOnly(0, 0))));
+    }
+
+    [Fact]
+    public void Plan_ConFechaSinHora_SigueVenciendoAlDiaSiguiente()
+    {
+        var plan = new FollowUpPlan(Today, null);
+
+        Assert.Null(plan.DueTime);
+        Assert.False(plan.IsOverdue(Today.ToDateTime(new TimeOnly(23, 59))));
+        Assert.True(plan.IsOverdue(Today.AddDays(1).ToDateTime(new TimeOnly(0, 0))));
+    }
+
+    [Fact]
+    public void Plan_HoraSinFecha_SeRechaza()
+    {
+        var ex = Assert.Throws<DomainValidationException>(() => new FollowUpPlan(null, "Si reaparece la fiebre.", new TimeOnly(9, 0)));
+        Assert.Equal("FOLLOW_UP_ACTION_INVALID", ex.Message);
+    }
+
+    [Fact]
+    public void Plan_HoraConSegundos_SeRedondeaAlMinuto()
+    {
+        var plan = new FollowUpPlan(Today, null, new TimeOnly(9, 30, 45));
+
+        Assert.Equal(new TimeOnly(9, 30), plan.DueTime);
+    }
+
+    [Fact]
+    public void Plan_SoloConCriterio_NoVenceNuncaAunConHora()
+    {
+        var plan = new FollowUpPlan(null, "Si reaparece la fiebre.");
+
+        Assert.False(plan.IsOverdue(Today.AddYears(1).ToDateTime(new TimeOnly(12, 0))));
+    }
+
+    [Fact]
     public void Acciones_ConSusDatos_SeAceptan()
     {
         Assert.Equal("Tolera la dieta.", FollowUpAction.Note(" Tolera la dieta. ").Text);

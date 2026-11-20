@@ -58,19 +58,21 @@ public sealed record PendingFamilyCommunicationSummary(
 /// que confirma.</summary>
 public sealed record FollowUpActionSummary(
     Guid Id, FollowUpActionType Type, string? Text, DateOnly? DueDate, string? Criterion, string? IncomingTeam,
-    Guid? TransferId, bool ByCurrentAccount, DateTimeOffset RecordedAt);
+    Guid? TransferId, bool ByCurrentAccount, DateTimeOffset RecordedAt, TimeOnly? DueTime = null);
 
 /// <summary>ENF-07B a ENF-09: el seguimiento de un evento con su plan inicial y todas sus acciones, de la
 /// más antigua a la más reciente. El plan vigente es el de la última reprogramación, si la hay; la
 /// transferencia pendiente es la última que nadie ha confirmado.</summary>
 public sealed record FollowUpDetail(
     DateOnly? InitialDueDate, string? InitialCriterion, string? ContinuityNotes, bool StartedByCurrentAccount,
-    DateTimeOffset StartedAt, IReadOnlyList<FollowUpActionSummary> Actions)
+    DateTimeOffset StartedAt, IReadOnlyList<FollowUpActionSummary> Actions, TimeOnly? InitialDueTime = null)
 {
     private FollowUpActionSummary? LastReschedule =>
         Actions.LastOrDefault(a => a.Type == FollowUpActionType.Reprogramacion);
 
     public DateOnly? DueDate => LastReschedule is { } r ? r.DueDate : InitialDueDate;
+
+    public TimeOnly? DueTime => LastReschedule is { } r ? r.DueTime : InitialDueTime;
 
     public string? Criterion => LastReschedule is { } r ? r.Criterion : InitialCriterion;
 
@@ -91,7 +93,7 @@ public sealed record OpenEscalationSummary(
 /// Enfermería de la unidad; DueDate/Criterion son el plan vigente.</summary>
 public sealed record FollowUpSummary(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, DateOnly? DueDate, string? Criterion,
-    DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt, bool TransferPending);
+    DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt, bool TransferPending, TimeOnly? DueTime = null);
 
 /// <summary>ENF-09/MED-03: escalado a Medicina, con el motivo que escribió Enfermería y si lo escaló la
 /// cuenta del ámbito que consulta.</summary>
@@ -116,7 +118,7 @@ public sealed record MedicalAssessmentDraft(
 public sealed record MedicalIndicationSummary(
     Guid Id, string Text, DateOnly? DueDate, string? Criterion, string? AdditionalInformation, bool IssuedByCurrentAccount,
     DateTimeOffset IssuedAt, MedicalIndicationStatus Status, int Revision, DateTimeOffset? ReadAt, DateTimeOffset? ResolvedAt,
-    string? Incident);
+    string? Incident, TimeOnly? DueTime = null);
 
 /// <summary>MED-10 a MED-12: el seguimiento médico de un evento, con su objetivo. Tracking reutiliza el
 /// seguimiento de Enfermería (plan vigente, acciones y transferencia pendiente); no tiene indicaciones de
@@ -129,7 +131,7 @@ public sealed record MedicalFollowUpDetail(string Objective, FollowUpDetail Trac
 public sealed record MedicalFollowUpSummary(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, string? UnitName, string Objective, DateOnly? DueDate,
     string? Criterion, DateTimeOffset StartedAt, FollowUpActionType? LastActionType, DateTimeOffset? LastActionAt,
-    FollowUpActionType? LastContinuity, string? LastContinuityTeam, bool LastContinuityByCurrentAccount, bool TransferPending);
+    FollowUpActionType? LastContinuity, string? LastContinuityTeam, bool LastContinuityByCurrentAccount, bool TransferPending, TimeOnly? DueTime = null);
 
 /// <summary>ENF-11/MED-13: un registro del protocolo urgente, con su autoría (solo si fue la cuenta del
 /// ámbito que consulta). Según el tipo trae el texto o el servicio y la hora del contacto (con nota opcional).</summary>

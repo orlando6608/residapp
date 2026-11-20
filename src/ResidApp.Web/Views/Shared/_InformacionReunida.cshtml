@@ -90,7 +90,7 @@
     <div class="card mb-3">
         <div class="card-body">
             <h2 class="h5 card-title">Seguimiento de Enfermería</h2>
-            <p class="mb-2">Plan vigente: @FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</p>
+            <p class="mb-2">Plan vigente: @FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.DueTime, seguimiento.Criterion)</p>
             @if (seguimiento.ContinuityNotes is not null)
             {
                 <p class="mb-2" style="white-space: pre-line">Indicaciones de continuidad: @seguimiento.ContinuityNotes</p>
@@ -106,7 +106,7 @@
                     {
                         <li style="white-space: pre-line">@accion.RecordedAt.ToLocalTime().ToString("g") · @FollowUpDisplay.Label(accion.Type)@(accion.Type switch
                             {
-                                FollowUpActionType.Reprogramacion => $": {FollowUpDisplay.Plan(accion.DueDate, accion.Criterion)} ({accion.Text})",
+                                FollowUpActionType.Reprogramacion => $": {FollowUpDisplay.Plan(accion.DueDate, accion.DueTime, accion.Criterion)} ({accion.Text})",
                                 FollowUpActionType.Transferencia => $": a {accion.IncomingTeam}{(accion.Text is null ? "" : $" ({accion.Text})")}",
                                 FollowUpActionType.Actuacion => $": {accion.Text}",
                                 _ => "",

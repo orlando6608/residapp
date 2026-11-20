@@ -7,7 +7,7 @@ namespace ResidApp.Application.UseCases;
 
 public sealed record StartFollowUpCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid EventoId, int Revision,
-    DateOnly? FechaPrevista, string? Criterio, string? IndicacionesContinuidad);
+    DateOnly? FechaPrevista, string? Criterio, string? IndicacionesContinuidad, TimeOnly? HoraPrevista = null);
 
 /// <summary>
 /// ENF-06/ENF-07B "iniciar seguimiento", una de las cuatro salidas de la decisión asistencial: exige fecha
@@ -21,7 +21,7 @@ public sealed class StartFollowUp(
     public Task<ApplicationResult<int>> ExecuteAsync(StartFollowUpCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
-            var plan = new FollowUpPlan(command.FechaPrevista, command.Criterio);
+            var plan = new FollowUpPlan(command.FechaPrevista, command.Criterio, command.HoraPrevista);
             var notes = string.IsNullOrWhiteSpace(command.IndicacionesContinuidad) ? null : command.IndicacionesContinuidad.Trim();
             if (notes is { Length: > FollowUpAction.MaxTextLength })
             {

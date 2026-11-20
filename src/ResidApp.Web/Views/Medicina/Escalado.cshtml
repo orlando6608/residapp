@@ -154,7 +154,7 @@
                         }
                         <p class="mb-0 mt-1" style="white-space: pre-line">@indicacion.Text</p>
                         <p class="text-muted mb-0">
-                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.Criterion) · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")
+                            @FollowUpDisplay.Plan(indicacion.DueDate, indicacion.DueTime, indicacion.Criterion) · emitida el @indicacion.IssuedAt.ToLocalTime().ToString("g")
                         </p>
                         @if (indicacion.Incident is not null)
                         {
@@ -170,7 +170,7 @@
 @if (medico.FollowUp is { } seguimientoMedico)
 {
     var abierto = evento.Status == ClinicalEventStatus.EnSeguimientoMedico;
-    var vencido = abierto && FollowUpDisplay.IsOverdue(seguimientoMedico.Tracking.DueDate);
+    var vencido = abierto && FollowUpDisplay.IsOverdue(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.DueTime);
     <div class="card mb-3 border-start border-4 @(vencido ? "border-danger" : "border-info")">
         <div class="card-body">
             <h2 class="h5 card-title">Seguimiento médico @(abierto ? "" : "(terminado)")</h2>
@@ -180,7 +180,7 @@
                 {
                     <span class="badge text-bg-danger">Pendiente</span>
                 }
-                Plan: @FollowUpDisplay.Plan(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.Criterion)
+                Plan: @FollowUpDisplay.Plan(seguimientoMedico.Tracking.DueDate, seguimientoMedico.Tracking.DueTime, seguimientoMedico.Tracking.Criterion)
             </p>
             <p class="text-muted mb-0">
                 Iniciado @(seguimientoMedico.Tracking.StartedByCurrentAccount ? "por ti" : "por otro profesional de Medicina")

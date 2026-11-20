@@ -6,7 +6,7 @@
     var evento = Model.Event;
     var medico = evento.Medical.FollowUp!;
     var seguimiento = medico.Tracking;
-    var vencido = FollowUpDisplay.IsOverdue(seguimiento.DueDate);
+    var vencido = FollowUpDisplay.IsOverdue(seguimiento.DueDate, seguimiento.DueTime);
     var pendiente = seguimiento.PendingTransfer;
     var revision = Model.FormFor(FollowUpActionType.Actuacion);
     var reprogramacion = Model.FormFor(FollowUpActionType.Reprogramacion);
@@ -46,11 +46,11 @@
             {
                 <span class="badge text-bg-danger">Pendiente</span>
             }
-            <span style="white-space: pre-line">@FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.Criterion)</span>
+            <span style="white-space: pre-line">@FollowUpDisplay.Plan(seguimiento.DueDate, seguimiento.DueTime, seguimiento.Criterion)</span>
         </p>
         @if (vencido)
         {
-            <p class="text-muted mb-0">Un seguimiento con la fecha prevista pasada consta como pendiente y sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
+            <p class="text-muted mb-0">Un seguimiento con la fecha o la hora prevista pasada consta como pendiente y sigue abierto: resuélvelo o reprográmalo justificadamente.</p>
         }
     </div>
 </div>
@@ -97,7 +97,7 @@
                         @switch (accion.Type)
                         {
                             case FollowUpActionType.Reprogramacion:
-                                <p class="mb-0">Nuevo plan: @FollowUpDisplay.Plan(accion.DueDate, accion.Criterion)</p>
+                                <p class="mb-0">Nuevo plan: @FollowUpDisplay.Plan(accion.DueDate, accion.DueTime, accion.Criterion)</p>
                                 <p class="mb-0" style="white-space: pre-line">Justificación: @accion.Text</p>
                                 break;
                             case FollowUpActionType.Transferencia:
@@ -154,6 +154,12 @@
                 <label for="reprogramar-fecha" class="form-label">Nueva fecha prevista</label>
                 <input id="reprogramar-fecha" name="Form.FechaPrevista" type="date" class="form-control form-control-lg" style="max-width: 260px;"
                        value="@reprogramacion.FechaPrevista?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="mb-3">
+                <label for="reprogramar-hora" class="form-label">Nueva hora prevista (opcional)</label>
+                <input id="reprogramar-hora" name="Form.HoraPrevista" type="time" class="form-control form-control-lg" style="max-width: 260px;"
+                       value="@reprogramacion.HoraPrevista?.ToString("HH:mm")" aria-describedby="reprogramar-ayuda-hora" />
+                <div id="reprogramar-ayuda-hora" class="form-text">Es una hora orientativa y necesita una fecha. Con hora, pasa a «Pendiente» cuando pasa esa hora; sin hora, al día siguiente de la fecha.</div>
             </div>
             <div class="mb-3">
                 <label for="reprogramar-criterio" class="form-label">Nuevo criterio</label>

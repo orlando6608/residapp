@@ -279,7 +279,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             .ToList();
 
         var followUp = await connection.QuerySingleOrDefaultAsync<FollowUpRow>(new CommandDefinition("""
-            SELECT s.id AS Id, s.fecha_prevista AS DueDate, s.criterio AS Criterion, s.indicaciones_continuidad AS ContinuityNotes,
+            SELECT s.id AS Id, s.fecha_prevista AS DueDate, s.hora_prevista AS DueTime, s.criterio AS Criterion, s.indicaciones_continuidad AS ContinuityNotes,
                    CAST(CASE WHEN s.iniciado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS StartedByCurrentAccount,
                    s.iniciado_en AS StartedAt
               FROM dbo.seguimientos s
@@ -287,7 +287,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
              WHERE s.evento_id = @EventId
             """, new { ProfileScopeId = profileScopeId, EventId = eventId }, cancellationToken: ct));
         var followUpActions = followUp is null ? [] : (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition($"""
-            SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
+            SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.hora_prevista AS DueTime, a.criterio AS Criterion,
                    a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
                    CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
                    a.registrado_en AS RecordedAt
@@ -329,7 +329,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             followUp is null ? null : new FollowUpDetail(
                 followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion,
                 followUp.ContinuityNotes, followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero),
-                followUpActions),
+                followUpActions, TimeOf(followUp.DueTime)),
             row.EscalatedAt is null ? null : new ClinicalEventEscalation(
                 row.EscalationReason!, row.EscalatedByCurrentAccount, new DateTimeOffset(row.EscalatedAt.Value, TimeSpan.Zero)),
             new MedicalDetail(
@@ -614,7 +614,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
     {
         var followUp = await connection.QuerySingleOrDefaultAsync<MedicalFollowUpRow>(new CommandDefinition("""
-            SELECT s.id AS Id, s.fecha_prevista AS DueDate, s.criterio AS Criterion, s.objetivo AS Objective,
+            SELECT s.id AS Id, s.fecha_prevista AS DueDate, s.hora_prevista AS DueTime, s.criterio AS Criterion, s.objetivo AS Objective,
                    CAST(CASE WHEN s.iniciado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS StartedByCurrentAccount,
                    s.iniciado_en AS StartedAt
               FROM dbo.seguimientos_medicos s
@@ -627,7 +627,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         }
 
         var actions = (await connection.QueryAsync<FollowUpActionRow>(new CommandDefinition($"""
-            SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.criterio AS Criterion,
+            SELECT a.id AS Id, a.tipo_codigo AS TypeCode, a.texto AS [Text], a.fecha_prevista AS DueDate, a.hora_prevista AS DueTime, a.criterio AS Criterion,
                    a.equipo_entrante AS IncomingTeam, a.transferencia_id AS TransferId,
                    CAST(CASE WHEN a.registrado_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS ByCurrentAccount,
                    a.registrado_en AS RecordedAt
@@ -641,13 +641,15 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
 
         return new MedicalFollowUpDetail(followUp.Objective, new FollowUpDetail(
             followUp.DueDate is null ? null : DateOnly.FromDateTime(followUp.DueDate.Value), followUp.Criterion, null,
-            followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero), actions));
+            followUp.StartedByCurrentAccount, new DateTimeOffset(followUp.StartedAt, TimeSpan.Zero), actions, TimeOf(followUp.DueTime)));
     }
 
     private static FollowUpActionSummary ToSummary(FollowUpActionRow a) => new(
         a.Id, EnumCode.ParseCode<FollowUpActionType>(a.TypeCode), a.Text,
         a.DueDate is null ? null : DateOnly.FromDateTime(a.DueDate.Value), a.Criterion, a.IncomingTeam, a.TransferId,
-        a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero));
+        a.ByCurrentAccount, new DateTimeOffset(a.RecordedAt, TimeSpan.Zero), TimeOf(a.DueTime));
+
+    private static TimeOnly? TimeOf(TimeSpan? time) => time is { } value ? TimeOnly.FromTimeSpan(value) : null;
 
     private static async Task<MedicalAssessmentDraft?> FindMedicalAssessmentAsync(
         System.Data.IDbConnection connection, Guid profileScopeId, Guid eventId, CancellationToken ct)
@@ -713,7 +715,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         System.Data.IDbConnection connection, Guid profileScopeId, string where, object parameters, CancellationToken ct)
     {
         var rows = await connection.QueryAsync<IndicationRow>(new CommandDefinition($"""
-            SELECT i.id AS Id, i.evento_id AS EventId, i.texto AS [Text], i.fecha_prevista AS DueDate, i.criterio AS Criterion,
+            SELECT i.id AS Id, i.evento_id AS EventId, i.texto AS [Text], i.fecha_prevista AS DueDate, i.hora_prevista AS DueTime, i.criterio AS Criterion,
                    i.informacion_adicional AS AdditionalInformation,
                    CAST(CASE WHEN i.emitida_por_cuenta_id = profile.cuenta_id THEN 1 ELSE 0 END AS BIT) AS IssuedByCurrentAccount,
                    i.emitida_en AS IssuedAt, i.estado_codigo AS StatusCode, i.revision AS Revision, i.leida_en AS ReadAt,
@@ -727,7 +729,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
             r.Id, r.Text, r.DueDate is null ? null : DateOnly.FromDateTime(r.DueDate.Value), r.Criterion, r.AdditionalInformation,
             r.IssuedByCurrentAccount, new DateTimeOffset(r.IssuedAt, TimeSpan.Zero), EnumCode.ParseCode<MedicalIndicationStatus>(r.StatusCode),
             r.Revision, r.ReadAt is null ? null : new DateTimeOffset(r.ReadAt.Value, TimeSpan.Zero),
-            r.ResolvedAt is null ? null : new DateTimeOffset(r.ResolvedAt.Value, TimeSpan.Zero), r.Incident))).ToList();
+            r.ResolvedAt is null ? null : new DateTimeOffset(r.ResolvedAt.Value, TimeSpan.Zero), r.Incident, TimeOf(r.DueTime)))).ToList();
     }
 
     private sealed record IndicationEventRow(
@@ -735,7 +737,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         string? ClosedByProfileCode);
 
     private sealed record IndicationRow(
-        Guid Id, Guid EventId, string Text, DateTime? DueDate, string? Criterion, string? AdditionalInformation,
+        Guid Id, Guid EventId, string Text, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string? AdditionalInformation,
         bool IssuedByCurrentAccount, DateTime IssuedAt, string StatusCode, int Revision, DateTime? ReadAt, DateTime? ResolvedAt,
         string? Incident);
 
@@ -827,6 +829,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         var rows = await connection.QueryAsync<FollowUpSummaryRow>(new CommandDefinition($"""
             SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName,
                    CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate,
+                   CASE WHEN reschedule.id IS NULL THEN seg.hora_prevista ELSE reschedule.hora_prevista END AS DueTime,
                    CASE WHEN reschedule.id IS NULL THEN seg.criterio ELSE reschedule.criterio END AS Criterion,
                    seg.iniciado_en AS StartedAt, last_action.tipo_codigo AS LastActionTypeCode, last_action.registrado_en AS LastActionAt,
                    CAST(CASE WHEN last_transfer.id IS NOT NULL AND NOT EXISTS (
@@ -837,7 +840,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                     {ScopedEventsFrom}
                        AND ea.estado_codigo = 'EN_SEGUIMIENTO') scoped
               JOIN dbo.seguimientos seg ON seg.evento_id = scoped.EventId
-              OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.criterio FROM dbo.seguimiento_acciones a
+              OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.hora_prevista, a.criterio FROM dbo.seguimiento_acciones a
                             WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'REPROGRAMACION' ORDER BY a.registrado_en DESC) reschedule
               OUTER APPLY (SELECT TOP 1 a.tipo_codigo, a.registrado_en FROM dbo.seguimiento_acciones a
                             WHERE a.seguimiento_id = seg.id ORDER BY a.registrado_en DESC) last_action
@@ -851,9 +854,10 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 r.DueDate is null ? null : DateOnly.FromDateTime(r.DueDate.Value), r.Criterion,
                 new DateTimeOffset(r.StartedAt, TimeSpan.Zero),
                 r.LastActionTypeCode is null ? null : EnumCode.ParseCode<FollowUpActionType>(r.LastActionTypeCode),
-                r.LastActionAt is null ? null : new DateTimeOffset(r.LastActionAt.Value, TimeSpan.Zero), r.TransferPending))
+                r.LastActionAt is null ? null : new DateTimeOffset(r.LastActionAt.Value, TimeSpan.Zero), r.TransferPending, TimeOf(r.DueTime)))
             .OrderBy(f => f.DueDate is null)
             .ThenBy(f => f.DueDate)
+            .ThenBy(f => f.DueTime)
             .ThenBy(f => f.StartedAt)
             .ToList();
     }
@@ -877,6 +881,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
         var rows = await connection.QueryAsync<MedicalFollowUpSummaryRow>(new CommandDefinition($"""
             SELECT scoped.EventId, scoped.ResidentId, scoped.ResidentDisplayName, scoped.UnitName, seg.objetivo AS Objective,
                    CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate,
+                   CASE WHEN reschedule.id IS NULL THEN seg.hora_prevista ELSE reschedule.hora_prevista END AS DueTime,
                    CASE WHEN reschedule.id IS NULL THEN seg.criterio ELSE reschedule.criterio END AS Criterion,
                    seg.iniciado_en AS StartedAt, last_action.tipo_codigo AS LastActionTypeCode, last_action.registrado_en AS LastActionAt,
                    continuity.tipo_codigo AS LastContinuityCode, continuity.equipo_entrante AS LastContinuityTeam,
@@ -890,7 +895,7 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                     {ScopedEventsFrom}
                        AND ea.estado_codigo = 'EN_SEGUIMIENTO_MEDICO') scoped
               JOIN dbo.seguimientos_medicos seg ON seg.evento_id = scoped.EventId
-              OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.criterio FROM dbo.seguimiento_medico_acciones a
+              OUTER APPLY (SELECT TOP 1 a.id, a.fecha_prevista, a.hora_prevista, a.criterio FROM dbo.seguimiento_medico_acciones a
                             WHERE a.seguimiento_id = seg.id AND a.tipo_codigo = 'REPROGRAMACION' ORDER BY a.registrado_en DESC) reschedule
               OUTER APPLY (SELECT TOP 1 a.tipo_codigo, a.registrado_en FROM dbo.seguimiento_medico_acciones a
                             WHERE a.seguimiento_id = seg.id ORDER BY a.registrado_en DESC) last_action
@@ -909,30 +914,31 @@ public sealed partial class SqlChangeInboxDirectory(SqlConnectionFactory connect
                 r.LastActionTypeCode is null ? null : EnumCode.ParseCode<FollowUpActionType>(r.LastActionTypeCode),
                 r.LastActionAt is null ? null : new DateTimeOffset(r.LastActionAt.Value, TimeSpan.Zero),
                 r.LastContinuityCode is null ? null : EnumCode.ParseCode<FollowUpActionType>(r.LastContinuityCode),
-                r.LastContinuityTeam, r.LastContinuityByCurrentAccount, r.TransferPending))
+                r.LastContinuityTeam, r.LastContinuityByCurrentAccount, r.TransferPending, TimeOf(r.DueTime)))
             .OrderBy(f => f.DueDate is null)
             .ThenBy(f => f.DueDate)
+            .ThenBy(f => f.DueTime)
             .ThenBy(f => f.StartedAt)
             .ToList();
     }
 
     private sealed record FollowUpRow(
-        Guid Id, DateTime? DueDate, string? Criterion, string? ContinuityNotes, bool StartedByCurrentAccount, DateTime StartedAt);
+        Guid Id, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string? ContinuityNotes, bool StartedByCurrentAccount, DateTime StartedAt);
 
     private sealed record MedicalFollowUpRow(
-        Guid Id, DateTime? DueDate, string? Criterion, string Objective, bool StartedByCurrentAccount, DateTime StartedAt);
+        Guid Id, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string Objective, bool StartedByCurrentAccount, DateTime StartedAt);
 
     private sealed record MedicalFollowUpSummaryRow(
-        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string Objective, DateTime? DueDate,
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, string Objective, DateTime? DueDate, TimeSpan? DueTime,
         string? Criterion, DateTime StartedAt, string? LastActionTypeCode, DateTime? LastActionAt, string? LastContinuityCode,
         string? LastContinuityTeam, bool LastContinuityByCurrentAccount, bool TransferPending);
 
     private sealed record FollowUpActionRow(
-        Guid Id, string TypeCode, string? Text, DateTime? DueDate, string? Criterion, string? IncomingTeam, Guid? TransferId,
+        Guid Id, string TypeCode, string? Text, DateTime? DueDate, TimeSpan? DueTime, string? Criterion, string? IncomingTeam, Guid? TransferId,
         bool ByCurrentAccount, DateTime RecordedAt);
 
     private sealed record FollowUpSummaryRow(
-        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, DateTime? DueDate, string? Criterion,
+        Guid EventId, Guid ResidentId, string ResidentDisplayName, string? UnitName, DateTime? DueDate, TimeSpan? DueTime, string? Criterion,
         DateTime StartedAt, string? LastActionTypeCode, DateTime? LastActionAt, bool TransferPending);
 
     public async Task<IReadOnlyList<PendingFamilyCommunicationSummary>> ListPendingFamilyCommunicationsAsync(

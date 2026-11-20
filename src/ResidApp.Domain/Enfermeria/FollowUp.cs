@@ -4,34 +4,49 @@ using ResidApp.Shared;
 namespace ResidApp.Domain.Enfermeria;
 
 /// <summary>
-/// ENF-07B: plan de un seguimiento, con una fecha prevista o un criterio (o ambos). Sin ninguno de los dos
-/// no hay seguimiento. Un seguimiento con fecha vence cuando esa fecha ya ha pasado; vencer no lo cierra
-/// ni lo oculta. Uno que solo tiene criterio no vence.
+/// ENF-07B: plan de un seguimiento, con una fecha prevista o un criterio (o ambos), y una hora prevista opcional si hay fecha. Sin ni
+/// fecha ni criterio no hay seguimiento. Un seguimiento con fecha vence cuando esa fecha ya ha pasado; con hora, cuando ya ha pasado esa
+/// hora (hora local del centro, Madrid). Vencer no lo cierra ni lo oculta. Uno que solo tiene criterio no vence.
 /// </summary>
 public sealed record FollowUpPlan
 {
     public const int MaxCriterionLength = 1000;
 
     public DateOnly? DueDate { get; }
+    /// <summary>Hora prevista, al minuto, solo con fecha. Es orientativa: no garantiza que se haga a esa hora.</summary>
+    public TimeOnly? DueTime { get; }
     public string? Criterion { get; }
 
-    public FollowUpPlan(DateOnly? dueDate, string? criterion)
+    public FollowUpPlan(DateOnly? dueDate, string? criterion, TimeOnly? dueTime = null)
     {
         criterion = VitalSigns.Normalize(criterion);
         if (dueDate is null && criterion is null)
         {
             throw new DomainValidationException("FOLLOW_UP_PLAN_REQUIRED");
         }
-        if (criterion is { Length: > MaxCriterionLength })
+        if (criterion is { Length: > MaxCriterionLength } || (dueTime is not null && dueDate is null))
         {
             throw new DomainValidationException("FOLLOW_UP_ACTION_INVALID");
         }
 
         DueDate = dueDate;
+        DueTime = dueTime is { } time ? new TimeOnly(time.Hour, time.Minute) : null;
         Criterion = criterion;
     }
 
+    /// <summary>Sin hora, vence al día siguiente de la fecha.</summary>
     public bool IsOverdue(DateOnly today) => DueDate < today;
+
+    /// <summary>Con hora, vence cuando <paramref name="now"/> (hora local del centro) pasa de esa hora; sin hora, al día siguiente.</summary>
+    public bool IsOverdue(DateTime now) => IsOverdue(DueDate, DueTime, now);
+
+    /// <summary>La misma regla para quien solo tiene la fecha y la hora sueltas (listas y pantallas).</summary>
+    public static bool IsOverdue(DateOnly? dueDate, TimeOnly? dueTime, DateTime now) => dueDate switch
+    {
+        null => false,
+        { } date when dueTime is { } time => date.ToDateTime(time) < now,
+        { } date => date < DateOnly.FromDateTime(now),
+    };
 }
 
 /// <summary>ENF-08/ENF-09 y MED-11/MED-12: tipos de acción sobre un seguimiento abierto. Conservación solo

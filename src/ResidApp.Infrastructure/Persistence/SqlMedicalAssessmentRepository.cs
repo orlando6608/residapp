@@ -138,14 +138,14 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
         var indicationId = Guid.NewGuid();
         var inserted = await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.indicaciones_medicas
-                (id, evento_id, residente_id, centro_id, texto, fecha_prevista, criterio, informacion_adicional, emitida_por_cuenta_id, emitida_en)
-            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @Text, @DueDate, @Criterion, @AdditionalInformation, @AccountId, @OccurredAt
+                (id, evento_id, residente_id, centro_id, texto, fecha_prevista, hora_prevista, criterio, informacion_adicional, emitida_por_cuenta_id, emitida_en)
+            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @Text, @DueDate, @DueTime, @Criterion, @AdditionalInformation, @AccountId, @OccurredAt
               FROM dbo.eventos_asistenciales ea
              WHERE ea.id = @EventId
                AND EXISTS (SELECT 1 FROM dbo.valoraciones_medicas v WITH (FORCESEEK) WHERE v.evento_id = ea.id AND v.estado_codigo = 'BORRADOR')
             """, new
         {
-            Id = indicationId, indication.Text, indication.Plan.DueDate, indication.Plan.Criterion, indication.AdditionalInformation,
+            Id = indicationId, indication.Text, indication.Plan.DueDate, DueTime = indication.Plan.DueTime?.ToTimeSpan(), indication.Plan.Criterion, indication.AdditionalInformation,
             AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
         }, transaction, cancellationToken: ct));
         if (inserted != 1)
@@ -190,14 +190,14 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
         var followUpId = Guid.NewGuid();
         var inserted = await connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.seguimientos_medicos
-                (id, evento_id, residente_id, centro_id, fecha_prevista, criterio, objetivo, iniciado_por_cuenta_id, iniciado_en)
-            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @DueDate, @Criterion, @Objective, @AccountId, @OccurredAt
+                (id, evento_id, residente_id, centro_id, fecha_prevista, hora_prevista, criterio, objetivo, iniciado_por_cuenta_id, iniciado_en)
+            SELECT @Id, ea.id, ea.residente_id, ea.centro_id, @DueDate, @DueTime, @Criterion, @Objective, @AccountId, @OccurredAt
               FROM dbo.eventos_asistenciales ea
              WHERE ea.id = @EventId
                AND EXISTS (SELECT 1 FROM dbo.valoraciones_medicas v WITH (FORCESEEK) WHERE v.evento_id = ea.id AND v.estado_codigo = 'BORRADOR')
             """, new
         {
-            Id = followUpId, input.FollowUp.Plan.DueDate, input.FollowUp.Plan.Criterion, input.FollowUp.Objective,
+            Id = followUpId, input.FollowUp.Plan.DueDate, DueTime = input.FollowUp.Plan.DueTime?.ToTimeSpan(), input.FollowUp.Plan.Criterion, input.FollowUp.Objective,
             AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
         }, transaction, cancellationToken: ct));
         if (inserted != 1)
@@ -231,9 +231,9 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
 
         var inserted = await connection.ExecuteAsync(new CommandDefinition($"""
             INSERT INTO dbo.seguimiento_medico_acciones
-                (id, centro_id, seguimiento_id, tipo_codigo, texto, fecha_prevista, criterio, equipo_entrante, equipo_entrante_id, transferencia_id,
+                (id, centro_id, seguimiento_id, tipo_codigo, texto, fecha_prevista, hora_prevista, criterio, equipo_entrante, equipo_entrante_id, transferencia_id,
                  registrado_por_cuenta_id, registrado_en)
-            SELECT @Id, s.centro_id, s.id, @TypeCode, @Text, @DueDate, @Criterion, q.nombre_visible, q.id, @TransferId, @AccountId, @OccurredAt
+            SELECT @Id, s.centro_id, s.id, @TypeCode, @Text, @DueDate, @DueTime, @Criterion, q.nombre_visible, q.id, @TransferId, @AccountId, @OccurredAt
               FROM dbo.seguimientos_medicos s WITH (FORCESEEK)
               JOIN dbo.eventos_asistenciales ea ON ea.id = s.evento_id
               LEFT JOIN dbo.equipos q ON q.id = @IncomingTeamId AND q.centro_id = ea.centro_id AND q.unidad_id = ea.unidad_id AND q.estado = 'ACTIVE'
@@ -244,7 +244,7 @@ public sealed class SqlMedicalAssessmentRepository(SqlConnectionFactory connecti
                       AND NOT EXISTS (SELECT 1 FROM dbo.seguimiento_medico_acciones r WHERE r.transferencia_id = t.id)))
             """, new
         {
-            Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, action.Plan?.Criterion,
+            Id = Guid.NewGuid(), TypeCode = action.Type.ToCode(), action.Text, action.Plan?.DueDate, DueTime = action.Plan?.DueTime?.ToTimeSpan(), action.Plan?.Criterion,
             action.IncomingTeamId, action.TransferId, AccountId = input.AccountId.Value, OccurredAt = occurredAt, input.EventId,
         }, transaction, cancellationToken: ct));
         if (inserted != 1)

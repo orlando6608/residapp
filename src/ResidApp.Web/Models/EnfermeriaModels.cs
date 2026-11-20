@@ -222,14 +222,25 @@ public static class FollowUpDisplay
         _ => string.Empty,
     };
 
+    /// <summary>La hora es orientativa («a las 18:00»): no garantiza que se haga a esa hora.</summary>
+    public static string Plan(DateOnly? dueDate, TimeOnly? dueTime, string? criterion) => (dueDate, dueTime, criterion) switch
+    {
+        ({ } date, { } time, { } text) => $"Revisar el {date:dd/MM/yyyy} a las {time:HH:mm} · {text}",
+        ({ } date, { } time, null) => $"Revisar el {date:dd/MM/yyyy} a las {time:HH:mm}",
+        _ => Plan(dueDate, criterion),
+    };
+
     public static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
 
     public static bool IsOverdue(DateOnly? dueDate) => dueDate < Today;
+
+    /// <summary>Con hora, vence cuando pasa esa hora (hora local del centro, Madrid); sin hora, al día siguiente.</summary>
+    public static bool IsOverdue(DateOnly? dueDate, TimeOnly? dueTime) => FollowUpPlan.IsOverdue(dueDate, dueTime, DateTime.Now);
 }
 
 /// <summary>ENF-07B "iniciar seguimiento": fecha prevista o criterio (al menos uno; lo decide el dominio,
 /// FollowUpPlan) e indicaciones de continuidad. El equipo responsable es la Enfermería de la unidad.</summary>
-public sealed class IniciarSeguimientoFormModel
+public sealed class IniciarSeguimientoFormModel : IValidatableObject
 {
     [Required]
     public Guid EventoId { get; set; }
@@ -240,6 +251,9 @@ public sealed class IniciarSeguimientoFormModel
     [Display(Name = "Fecha prevista de revisión")]
     public DateOnly? FechaPrevista { get; set; }
 
+    [Display(Name = "Hora prevista (opcional)")]
+    public TimeOnly? HoraPrevista { get; set; }
+
     [StringLength(FollowUpPlan.MaxCriterionLength)]
     [Display(Name = "Criterio de revisión")]
     public string? Criterio { get; set; }
@@ -247,11 +261,18 @@ public sealed class IniciarSeguimientoFormModel
     [StringLength(FollowUpAction.MaxTextLength)]
     [Display(Name = "Indicaciones de continuidad")]
     public string? IndicacionesContinuidad { get; set; }
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (HoraPrevista is not null && FechaPrevista is null)
+        {
+            yield return new ValidationResult("Para indicar una hora hay que indicar también la fecha.", [nameof(HoraPrevista)]);
+        }
+    }
 }
 
 /// <summary>ENF-08/ENF-09: una acción sobre el seguimiento. Tipo lo fija cada formulario de la pantalla
 /// (campo oculto); qué campos exige cada tipo lo decide el dominio (FollowUpAction).</summary>
-public sealed class SeguimientoAccionFormModel
+public sealed class SeguimientoAccionFormModel : IValidatableObject
 {
     [Required]
     public Guid EventoId { get; set; }
@@ -268,6 +289,9 @@ public sealed class SeguimientoAccionFormModel
     [Display(Name = "Nueva fecha prevista")]
     public DateOnly? FechaPrevista { get; set; }
 
+    [Display(Name = "Nueva hora prevista (opcional)")]
+    public TimeOnly? HoraPrevista { get; set; }
+
     [StringLength(FollowUpPlan.MaxCriterionLength)]
     [Display(Name = "Nuevo criterio")]
     public string? Criterio { get; set; }
@@ -276,6 +300,13 @@ public sealed class SeguimientoAccionFormModel
     public Guid? EquipoEntranteId { get; set; }
 
     public Guid? TransferenciaId { get; set; }
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (HoraPrevista is not null && FechaPrevista is null)
+        {
+            yield return new ValidationResult("Para indicar una hora hay que indicar también la fecha.", [nameof(HoraPrevista)]);
+        }
+    }
 }
 
 /// <summary>ENF-10 "escalar a Medicina": motivo obligatorio (lo decide el dominio, EscalationReason) y la

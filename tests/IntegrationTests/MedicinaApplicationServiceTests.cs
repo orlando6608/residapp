@@ -294,6 +294,71 @@ public class MedicinaApplicationServiceTests
     }
 
     [Fact]
+    public async Task Indicacion_ConHora_LaGuardaYLaLeenMedicinaYEnfermeria_YSinFechaEsInvalida()
+    {
+        var (enfermera, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var saved = await StartAndSaveMedicalAsync(medica, eventId);
+
+        var withoutDate = await service.RegisterMedicalIndicationAsync(new RegisterMedicalIndicationCommand(
+            medica.ProfileScopeId, medica.CenterId, eventId, saved, "Control de temperatura.", null, "Cada 4 horas.", null, new TimeOnly(9, 0)));
+        var ok = await service.RegisterMedicalIndicationAsync(new RegisterMedicalIndicationCommand(
+            medica.ProfileScopeId, medica.CenterId, eventId, saved, "Control de temperatura.", new DateOnly(2030, 1, 15), null, null, new TimeOnly(18, 45)));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, withoutDate.Error!.Code);
+        Assert.True(ok.Ok);
+        var byMedicine = Assert.Single((await FindAsync(medica, eventId))!.Medical.Indications);
+        Assert.Equal(new DateOnly(2030, 1, 15), byMedicine.DueDate);
+        Assert.Equal(new TimeOnly(18, 45), byMedicine.DueTime);
+        var listed = Assert.Single((await service.ListMedicalIndicationsAsync(new ListMedicalIndicationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!);
+        Assert.Equal(new TimeOnly(18, 45), listed.Indication.DueTime);
+    }
+
+    [Fact]
+    public async Task SeguimientoMedico_ConHora_LaGuardaYLaLeenLaFichaYLaBandeja()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var service = BuildMedicina(medica.ExternalSubject);
+        var saved = await StartAndSaveMedicalAsync(medica, eventId);
+
+        var started = await service.StartMedicalFollowUpAsync(StartFollowUp(medica, eventId, saved, new DateOnly(2030, 3, 1), dueTime: new TimeOnly(7, 30)));
+
+        Assert.True(started.Ok);
+        var detail = (await FindAsync(medica, eventId))!.Medical.FollowUp!;
+        Assert.Equal(new TimeOnly(7, 30), detail.Tracking.DueTime);
+        var item = Assert.Single((await ListFollowUpsAsync(medica)).Value!);
+        Assert.Equal(new TimeOnly(7, 30), item.DueTime);
+    }
+
+    [Fact]
+    public async Task LaBaseDeDatos_NoDejaCambiarLaHoraPrevistaDeUnaIndicacionYaEmitida_NiPonerHoraSinFecha()
+    {
+        var (_, _, medica, eventId) = await SeedEscalatedAsync();
+        var saved = await StartAndSaveMedicalAsync(medica, eventId);
+        Assert.True((await BuildMedicina(medica.ExternalSubject).RegisterMedicalIndicationAsync(new RegisterMedicalIndicationCommand(
+            medica.ProfileScopeId, medica.CenterId, eventId, saved, "Control de temperatura.", new DateOnly(2030, 1, 15), null, null, new TimeOnly(18, 45)))).Ok);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        // Una transición legal (PENDIENTE_LECTURA -> LEIDA) que además reescribe la hora: la guardia la rechaza.
+        var rewritten = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "UPDATE dbo.indicaciones_medicas SET hora_prevista = '07:00', revision = revision + 1, estado_codigo = 'LEIDA', leida_por_cuenta_id = emitida_por_cuenta_id, leida_en = emitida_en WHERE evento_id = @EventId",
+            new { EventId = eventId }));
+        Assert.Contains("MEDICAL_INDICATION_TRANSITION_INVALID", rewritten.Message);
+
+        // La misma transición sin tocar la hora sí pasa: la guardia no la estorba.
+        Assert.Equal(1, await connection.ExecuteAsync(
+            "UPDATE dbo.indicaciones_medicas SET revision = revision + 1, estado_codigo = 'LEIDA', leida_por_cuenta_id = emitida_por_cuenta_id, leida_en = emitida_en WHERE evento_id = @EventId",
+            new { EventId = eventId }));
+
+        // Hora sin fecha: lo rechaza la restricción de la tabla.
+        var withoutDate = await Assert.ThrowsAsync<SqlException>(() => connection.ExecuteAsync(
+            "INSERT INTO dbo.indicaciones_medicas (id, evento_id, residente_id, centro_id, texto, fecha_prevista, hora_prevista, criterio, emitida_por_cuenta_id, emitida_en) " +
+            "SELECT NEWID(), evento_id, residente_id, centro_id, 'x', NULL, '09:00', 'si algo', emitida_por_cuenta_id, emitida_en FROM dbo.indicaciones_medicas WHERE evento_id = @EventId",
+            new { EventId = eventId }));
+        Assert.Contains("CK_im_hora", withoutDate.Message);
+    }
+
+    [Fact]
     public async Task LaBaseDeDatos_RechazaSaltosDeEstadoYBorrados_DelCicloMedico()
     {
         var (_, _, medica, eventId) = await SeedEscalatedAsync();
@@ -871,8 +936,8 @@ public class MedicinaApplicationServiceTests
 
     private static StartMedicalFollowUpCommand StartFollowUp(
         SeededProfile seed, Guid eventId, int revision, DateOnly? dueDate = null, string? criterion = "Tras la radiografía.",
-        string? objective = "Decidir antibiótico según la radiografía.") =>
-        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, objective);
+        string? objective = "Decidir antibiótico según la radiografía.", TimeOnly? dueTime = null) =>
+        new(seed.ProfileScopeId, seed.CenterId, eventId, revision, dueDate, criterion, objective, dueTime);
 
     private static RecordMedicalFollowUpActionCommand FollowUpAction(
         SeededProfile seed, Guid eventId, int revision, FollowUpActionType type, string? text = null, DateOnly? dueDate = null,
