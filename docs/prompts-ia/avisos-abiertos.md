@@ -43,7 +43,7 @@ usuario cuando encajen:
   - **Los tests no cubren la zona de producción.** Las pruebas unitarias de esos tres usan Europe/Madrid explícito, pero `HorarioComunicadosTests` y
     el resto usan `Local`; el runner de CI (`ubuntu-26.04`) probablemente está en UTC (no comprobado). Un `DateTime.Today` o un `.ToLocalTime()`
     mal usado no fallaría en CI.
-  - **Una sola zona para toda la aplicación.** No hay zona por centro. Vale mientras todos los centros estén en Madrid; Canarias
+  - **Una sola zona para toda la aplicación.** (Estudio de zonas por centro hecho el 2026-11-20: `docs/producto/zonas-horarias-por-centro-estudio.md`; nada construido.) No hay zona por centro. Vale mientras todos los centros estén en Madrid; Canarias
     (Atlantic/Canary) tendría otra hora. No consta que CJ lo haya confirmado.
   - **Las franjas de citas se guardan como hora local sin zona** (`citas_franjas.hora_inicio`, `TIME(0)`) y las citas en UTC: si cambiara la zona del
     servidor, las franjas se moverían y las citas ya reservadas no.

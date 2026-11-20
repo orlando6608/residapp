@@ -60,3 +60,6 @@ tools/GuiaPdf/salida/
 
 # Base normativa local (textos literales de leyes y guías) que baja tools/normativa.ps1: se regenera, no se versiona
 /normativa-local/
+
+# Estudios que no deben estar en el repositorio público (por ejemplo, uno sobre un centro fuera de España): se guardan aquí, nunca se versionan
+/privado-local/

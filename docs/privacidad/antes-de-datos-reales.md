@@ -315,6 +315,10 @@ Entrada rápida de la Auxiliar en tablets compartidas con pulsera NTAG 424 DNA y
 - **Decidido por Orlando:** solo se ofrece en tablets compartidas registradas (D0 a D2 del ADR 0016 antes de la pulsera); se descarta la llave FIDO2; solo Auxiliar; voluntaria y apagada por defecto.
 - **No se registra** cada lectura de la pulsera ni la tablet usada (sería un control de horarios y ubicación del personal).
 
+## 18. Centro en una zona horaria fuera de España (estudio aparte, fuera del repositorio; nada construido)
+
+Un centro fuera de España exige un **estudio de cumplimiento propio** (normativa local, dónde se alojan los datos, transferencia internacional) que se mantiene **fuera del repositorio**, porque el repositorio es público. La zona horaria de ese centro no se activa sin ese estudio (F4 de `docs/producto/zonas-horarias-por-centro-estudio.md`). **Con datos de prueba sí; con datos reales no, hasta que lo cierre una persona experta.** No se escribe en el repositorio el nombre, el titular ni la dirección de ese centro.
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)
