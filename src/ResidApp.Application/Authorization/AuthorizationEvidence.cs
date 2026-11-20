@@ -19,6 +19,14 @@ public abstract record AuthorizationTarget
 
     /// <summary>ADM-03: corregir la identidad administrativa de un residente (ResidentIdentityUpdate).</summary>
     public sealed record IdentityUpdate(ResidentId ResidentId) : AuthorizationTarget;
+
+    /// <summary>Trasladar a un residente (ResidentTransfer): Administración siempre y Enfermería solo con el permiso RESIDENT_TRANSFER, con el residente en su
+    /// ámbito. Es un objetivo propio y no IdentityUpdate: ese también protege la baja, la suspensión y los datos de los familiares, que no se abren a Enfermería.</summary>
+    public sealed record Transfer(ResidentId ResidentId) : AuthorizationTarget;
+
+    /// <summary>La unidad de destino de un traslado: tiene que estar en el ámbito de la cuenta, con la misma regla del traslado (y no la del alta, que
+    /// para Enfermería exigiría además RESIDENT_IDENTITY_CREATE).</summary>
+    public sealed record TransferDestination(UnitId UnitId) : AuthorizationTarget;
 }
 
 /// <summary>Traduce AuthorizationSelection de authorization-subject-repository.ts. profileScopeId viaja

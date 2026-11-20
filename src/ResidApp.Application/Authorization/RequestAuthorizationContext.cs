@@ -135,6 +135,8 @@ public static class RequestAuthorizationContextResolver
                 ? ResidentBaselineAction.BaselineInitialComplete
                 : ResidentBaselineAction.BaselineReevaluate,
             AuthorizationTarget.IdentityUpdate => ResidentBaselineAction.ResidentIdentityUpdate,
+            AuthorizationTarget.Transfer => ResidentBaselineAction.ResidentTransfer,
+            AuthorizationTarget.TransferDestination => ResidentBaselineAction.ResidentTransferDestination,
             _ => throw new AccessDeniedException(),
         };
 
@@ -203,6 +205,24 @@ public static class RequestAuthorizationContextResolver
             operation.Subject.AccountId!.Value, operation.CenterId, operation.UnitId, operation.ResidentId!.Value);
     }
 
+    /// <summary>Traslado del residente: la política ya lo reserva a Administración y a Enfermería con el permiso RESIDENT_TRANSFER; devuelve el
+    /// residente autorizado y el perfil con el que se hace, que es el que queda en el traslado y en la auditoría.</summary>
+    public static (AdministrativeResidentTarget Target, SystemProfile Profile) RequireResidentTransfer(RequestAuthorizationContext context)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Transfer>(context);
+        var profile = operation.Subject.ActiveProfile;
+        if (profile is not (SystemProfile.Administracion or SystemProfile.Enfermeria))
+        {
+            throw new AccessDeniedException();
+        }
+        return (new AdministrativeResidentTarget(
+            operation.Subject.AccountId!.Value, operation.CenterId, operation.UnitId, operation.ResidentId!.Value), profile.Value);
+    }
+
+    /// <summary>Comprueba que la unidad de destino de un traslado está en el ámbito de la cuenta y con la misma regla del traslado.</summary>
+    public static void RequireTransferDestination(RequestAuthorizationContext context) =>
+        RequireTarget<AuthorizationTarget.TransferDestination>(context);
+
     /// <summary>Traduce executeBaselineSign de request-context.ts.</summary>
     public static async Task<SignBaselineDraftResult> ExecuteBaselineSignAsync(
         RequestAuthorizationContext context, IBaselineRepository repository, BaselineSignPayload payload, CancellationToken ct = default)
@@ -263,6 +283,20 @@ public static class RequestAuthorizationContextResolver
         var operation = RequireTarget<AuthorizationTarget.Read>(context);
         var input = new ReadCurrentBaselineSummaryInput(operation.CenterId, operation.ResidentId!.Value);
         return await repository.ReadCurrentSummaryAsync(input, ct);
+    }
+
+    /// <summary>Aviso a quien creó un borrador de basal que se canceló al trasladar al residente: solo Enfermería y Medicina, sobre un residente de su ámbito
+    /// y solo de su propia cuenta.</summary>
+    public static async Task<DraftCancelledNotice?> ExecuteDraftCancelledNoticeAsync(
+        RequestAuthorizationContext context, IBaselineRepository repository, DateTimeOffset since, CancellationToken ct = default)
+    {
+        var operation = RequireTarget<AuthorizationTarget.Read>(context);
+        if (operation.Subject.ActiveProfile is not (SystemProfile.Enfermeria or SystemProfile.Medicina))
+        {
+            throw new AccessDeniedException();
+        }
+        return await repository.FindDraftCancelledByTransferAsync(
+            new DraftCancelledNoticeInput(operation.Subject.AccountId!.Value, operation.CenterId, operation.ResidentId!.Value, since), ct);
     }
 
     /// <summary>ENF-24: versiones firmadas del basal para Enfermería y Medicina (BaselineHistoryRead sin

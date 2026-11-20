@@ -56,7 +56,7 @@ public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connec
     private static (string Sql, DynamicParameters Parameters) BuildEvidenceQuery(
         string externalSubject, AuthorizationSelection selection, AuthorizationTarget target)
     {
-        var hasResident = target is not AuthorizationTarget.Create;
+        var hasResident = target is not (AuthorizationTarget.Create or AuthorizationTarget.TransferDestination);
 
         var residentJoin = hasResident ? """
             JOIN dbo.residentes resident ON resident.id = @ResidentId
@@ -117,6 +117,9 @@ public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connec
             case AuthorizationTarget.Create create:
                 parameters.Add("CreateUnitId", create.UnitId.Value);
                 break;
+            case AuthorizationTarget.TransferDestination destination:
+                parameters.Add("CreateUnitId", destination.UnitId.Value);
+                break;
             case AuthorizationTarget.Read read:
                 parameters.Add("ResidentId", read.ResidentId.Value);
                 break;
@@ -129,6 +132,9 @@ public sealed class SqlAuthorizationEvidenceProvider(SqlConnectionFactory connec
                 break;
             case AuthorizationTarget.IdentityUpdate identity:
                 parameters.Add("ResidentId", identity.ResidentId.Value);
+                break;
+            case AuthorizationTarget.Transfer transfer:
+                parameters.Add("ResidentId", transfer.ResidentId.Value);
                 break;
         }
         return (sql, parameters);

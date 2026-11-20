@@ -30,9 +30,13 @@ public static class ProfilePermissions
     /// Apagado por defecto: lo concede Administración por perfil. Su ficha de la Guía por perfil es ENF-23 (<c>GuiaDerivaTests</c> exige una ficha por cada permiso concedible).</summary>
     public const string ExternalAppointmentManage = "EXTERNAL_APPOINTMENT_MANAGE";
 
+    /// <summary>Enfermería traslada a un residente de unidad, habitación o plaza solo con este permiso (CJ, 2026-10-07: «inicialmente Administración»; script 0108);
+    /// Administración siempre puede. Apagado por defecto: lo concede Administración a la cuenta que decida el centro. Su ficha de la Guía por perfil es ENF-26.</summary>
+    public const string ResidentTransfer = "RESIDENT_TRANSFER";
+
     public static IReadOnlyList<string> For(SystemProfile profile) => profile switch
     {
-        SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage, HealthBackgroundEdit, ExternalAppointmentManage],
+        SystemProfile.Enfermeria => [ResidentIdentityCreate, BaselineInitialComplete, BaselineReevaluate, ResidentPhotoManage, HealthBackgroundEdit, ExternalAppointmentManage, ResidentTransfer],
         SystemProfile.Medicina => [BaselineInitialComplete, BaselineReevaluate, HealthBackgroundEdit],
         SystemProfile.DireccionClinica => [ClinicalDetailRead, ReferenceRangesManage, ProcessDeadlinesManage, QualityReview],
         _ => [],

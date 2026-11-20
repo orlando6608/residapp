@@ -22,7 +22,8 @@ namespace ResidApp.Web.Controllers;
 public sealed class MedicinaController(
     MedicinaApplicationService service, ResidentBaselineApplicationService baselineService, FindEmergencyContact findEmergencyContact,
     ListMilestoneWarnings milestoneWarnings, ListPendingFamilyCommunications listFamilyCommunications,
-    CorrectFamilyCommunication correctFamilyCommunication, TransferHistoryAccess transferHistory, HealthBackgroundApplicationService healthBackground) : Controller
+    CorrectFamilyCommunication correctFamilyCommunication, TransferHistoryAccess transferHistory, HealthBackgroundApplicationService healthBackground,
+    ReadDraftCancelledNotice draftCancelledNotice) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -997,7 +998,9 @@ public sealed class MedicinaController(
         var health = await healthBackground.ReadAsync(scope.ProfileScopeId, centroId, resident.ResidentId, ct);
         return View(new EnfermeriaResidentDetailViewModel(
             resident, baselineResult.Ok ? baselineResult.Value : null, canManage.Ok && canManage.Value, openEvents.Ok ? openEvents.Value : null,
-            contact.Ok ? contact.Value : null, HealthBackground: health.Ok ? health.Value : null));
+            contact.Ok ? contact.Value : null, HealthBackground: health.Ok ? health.Value : null,
+            DraftCancelledByTransferAt: (await draftCancelledNotice.ExecuteAsync(
+                new ReadDraftCancelledNoticeCommand(scope.ProfileScopeId, centroId, resident.ResidentId), ct)).Value?.CancelledAt));
     }
 
     /// <summary>MED-22 (historia 9): eventos cerrados del residente que ve Medicina (escalados y propios), con el

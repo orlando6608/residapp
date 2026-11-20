@@ -27,6 +27,7 @@ public static class ResidentBaselinePolicy
             ResidentBaselineAction.ResidentIdentityUpdate => context.ActiveProfile == SystemProfile.Administracion
                 ? AuthorizationDecision.Allow()
                 : AuthorizationDecision.Deny(AuthorizationDenialReason.ActionNotAllowed),
+            ResidentBaselineAction.ResidentTransfer or ResidentBaselineAction.ResidentTransferDestination => AuthorizeResidentTransfer(context),
             ResidentBaselineAction.BaselineCurrentRead => AuthorizeBaselineCurrentRead(request, context),
             ResidentBaselineAction.BaselineInitialComplete =>
                 AuthorizeProfessionalWrite(context, ResidentBaselinePermission.BaselineInitialComplete),
@@ -120,6 +121,23 @@ public static class ResidentBaselinePolicy
         if (context.ActiveProfile == SystemProfile.Enfermeria)
         {
             return HasPermission(context, ResidentBaselinePermission.ResidentIdentityCreate)
+                ? AuthorizationDecision.Allow()
+                : AuthorizationDecision.Deny(AuthorizationDenialReason.PermissionRequired);
+        }
+        return AuthorizationDecision.Deny(AuthorizationDenialReason.ActionNotAllowed);
+    }
+
+    /// <summary>Administración siempre; Enfermería solo con el permiso RESIDENT_TRANSFER del ámbito; nadie más. El ámbito (unidad y residente) ya lo
+    /// comprobó TryAuthorizeContext.</summary>
+    private static AuthorizationDecision AuthorizeResidentTransfer(AuthorizedContext context)
+    {
+        if (context.ActiveProfile == SystemProfile.Administracion)
+        {
+            return AuthorizationDecision.Allow();
+        }
+        if (context.ActiveProfile == SystemProfile.Enfermeria)
+        {
+            return HasPermission(context, ResidentBaselinePermission.ResidentTransfer)
                 ? AuthorizationDecision.Allow()
                 : AuthorizationDecision.Deny(AuthorizationDenialReason.PermissionRequired);
         }

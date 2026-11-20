@@ -12,6 +12,7 @@ public enum ResidentBaselinePermission
     [Code("BASELINE_INITIAL_COMPLETE")] BaselineInitialComplete,
     [Code("BASELINE_REEVALUATE")] BaselineReevaluate,
     [Code("CLINICAL_DETAIL_READ")] ClinicalDetailRead,
+    [Code("RESIDENT_TRANSFER")] ResidentTransfer,
 }
 
 /// <summary>Finalidades que puede declarar Dirección para leer contenido clínico (CJ, 2026-10-06). Lista cerrada, y la
@@ -101,6 +102,8 @@ public enum ResidentBaselineAction
     ResidentIdentityCreate,
     ResidentIdentityRead,
     ResidentIdentityUpdate,
+    ResidentTransfer,
+    ResidentTransferDestination,
     BaselineCurrentRead,
     BaselineInitialComplete,
     BaselineReevaluate,
@@ -124,5 +127,5 @@ public sealed record ResidentBaselineAuthorizationRequest(
     ResidentId? ResidentId, ClinicalDetailAccessPurpose? Purpose = null)
 {
     /// <summary>Traduce la comprobación TS `"residentId" in resource`.</summary>
-    public bool RequiresResident => Action != ResidentBaselineAction.ResidentIdentityCreate;
+    public bool RequiresResident => Action is not (ResidentBaselineAction.ResidentIdentityCreate or ResidentBaselineAction.ResidentTransferDestination);
 }

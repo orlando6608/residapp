@@ -69,29 +69,15 @@ public sealed partial class AdministracionController
                 UnitId.From(form.UnidadDestinoId!.Value), location!.Value.RoomId, location.Value.PlaceId, form.OperacionId), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = TransferMessage(result.Value!);
+                TempData["Mensaje"] = TransferTexts.Success(result.Value!);
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
             }
 
-            ModelState.AddModelError(string.Empty, result.Error!.Code switch
-            {
-                ApplicationFailureCode.Conflict =>
-                    "El residente ya no está donde lo veías, esa plaza está ocupada o el traslado ya se hizo. Revisa la ficha y vuelve a intentarlo.",
-                ApplicationFailureCode.InvalidInput =>
-                    "Revisa el destino: tiene que ser una unidad activa de tu ámbito, con una habitación o plaza disponibles de esa unidad, y algo tiene que cambiar.",
-                _ => result.Error.Message,
-            });
+            ModelState.AddModelError(string.Empty, TransferTexts.Failure(result.Error!));
         }
 
         return View(await TransferViewAsync(activeScope, found.Value!.Resident, form, ct));
     }
-
-    private static string TransferMessage(TransferResidentResult result) =>
-        "Residente trasladado."
-        + (result.OpenEventsMoved > 0
-            ? $" {result.OpenEventsMoved} {(result.OpenEventsMoved == 1 ? "episodio abierto pasa" : "episodios abiertos pasan")} a la unidad de destino."
-            : string.Empty)
-        + (result.BaselineDraftCancelled ? " Se canceló el borrador de basal: se rehace en la unidad de destino." : string.Empty);
 
     private async Task<TransferResidentViewModel> TransferViewAsync(
         ActiveProfileScopeCookieValue activeScope, AdministrativeResidentSummary resident, TransferResidentFormModel form, CancellationToken ct)
@@ -100,7 +86,7 @@ public sealed partial class AdministracionController
         var units = await listUnits.ExecuteAsync(activeScope.ProfileScopeId, centerId, ct);
         var locations = await listLocations.ExecuteAsync(activeScope.ProfileScopeId, centerId, ct);
         return new TransferResidentViewModel(
-            resident, form,
+            resident.ResidentId, resident.DisplayName, resident.UnitName, form,
             units.Ok ? units.Value!.Select(u => new SelectListItem(u.Name, u.UnitId.Value.ToString())).ToList() : [],
             locations.Ok ? locations.Value! : []);
     }

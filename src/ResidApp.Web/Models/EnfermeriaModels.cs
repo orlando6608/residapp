@@ -103,7 +103,7 @@ public sealed record PendingChangeListViewModel(
 public sealed record EnfermeriaResidentDetailViewModel(
     ScopeResidentSummary Resident, CurrentBaselineSummary? Baseline, bool CanManageBaseline = false,
     IReadOnlyList<OpenEventSummary>? OpenEvents = null, ResidentEmergencyContacts? EmergencyContacts = null, ResidentPhotoEditorState? Photo = null,
-    HealthBackgroundView? HealthBackground = null);
+    HealthBackgroundView? HealthBackground = null, bool CanTransfer = false, DateTimeOffset? DraftCancelledByTransferAt = null);
 
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
