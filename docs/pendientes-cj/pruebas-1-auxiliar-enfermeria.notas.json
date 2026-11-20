@@ -1,4 +1,6 @@
 {
   "documento": "pruebas-1-auxiliar-enfermeria",
-  "notas": {}
+  "notas": {
+    "10": "Hecho: ahora puedes indicar una hora además de la fecha prevista, en el seguimiento de Enfermería (esta prueba), en el seguimiento médico y en las indicaciones médicas.\n• Con hora, el seguimiento pasa a «Pendiente» cuando llega esa hora; sin hora, al día siguiente, como antes.\n• La hora es opcional y solo se admite si hay fecha: sin fecha, la pantalla avisa y no guarda.\n• Los indicadores de Dirección siguen contando por días; la hora prevista no cuenta ahí.\nEsta prueba ya incluye ese paso: vuelve a hacerla y dinos en el comentario si el comportamiento es el que esperabas."
+  }
 }
