@@ -235,6 +235,8 @@ builder.Services.AddHostedService<AvisoRespuestasCjWorker>();
 builder.Services.AddHostedService<AvisoNotasCjWorker>();
 // Guía por perfil (/Guia): las fichas están en Guia/*.json, junto al resto de ficheros de la web (se publican con ella).
 builder.Services.AddSingleton(sp => GuiaCatalogo.Cargar(Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "Guia")));
+// Documentos de Plataforma (/Plataforma/Documentos): páginas HTML en Documentos/, se sirven solo a ese perfil (ver DocumentosCatalogo).
+builder.Services.AddSingleton(sp => DocumentosCatalogo.Cargar(Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "Documentos")));
 
 builder.Services.AddScoped<CreateResident>();
 builder.Services.AddScoped<SignBaseline>();

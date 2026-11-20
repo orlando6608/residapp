@@ -1,0 +1,251 @@
+<!doctype html>
+<!--
+  Generado por tools\documentos-a-html.ps1 a partir de docs/seguridad/pulsera-nfc-especificacion-compra.md. No se edita a mano: se cambia el Markdown y se vuelve a ejecutar el script.
+  Se sirve solo a Plataforma desde /Plataforma/Documento/pulsera-nfc-especificacion-compra (no es un fichero estático público).
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pulsera NFC con PIN: especificación de compra - ResidApp</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="fuente" content="docs/seguridad/pulsera-nfc-especificacion-compra.md">
+<meta name="fuente-sha256" content="6f9c5024b67482406fef51aae5824564aa0ecf687c27444e2725c46b590fa541">
+<link rel="icon" href="/images/logo.svg">
+<script src="/js/tema.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f7f7; --surface: #ffffff; --ink: #1a2427; --muted: #55686c; --rule: #d3dcdd;
+    --accent: #1b5f6b; --accent-soft: #e3eff0; --danger: #b3261e; --danger-bg: #fbeceb; --ok: #22703a; --ok-bg: #e7f4ea;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-bs-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618; --surface: #172023; --ink: #e2eaeb; --muted: #9aafb2; --rule: #2a383b;
+      --accent: #72c0cb; --accent-soft: #1b2e32; --danger: #f2b8b5; --danger-bg: #2c1716; --ok: #8fd3a2; --ok-bg: #15261a;
+    }
+  }
+  :root[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618; --surface: #172023; --ink: #e2eaeb; --muted: #9aafb2; --rule: #2a383b;
+    --accent: #72c0cb; --accent-soft: #1b2e32; --danger: #f2b8b5; --danger-bg: #2c1716; --ok: #8fd3a2; --ok-bg: #15261a;
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; padding-inline: 16px; }
+  .page { max-width: 1040px; margin: 0 auto; padding-block: 32px 96px; display: flex; flex-direction: column; gap: 32px; }
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.5rem; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); scroll-margin-top: 16px; }
+  h3 { font-size: 1.15rem; margin-top: 8px; scroll-margin-top: 16px; }
+  h4 { font-size: 1.02rem; margin-top: 4px; }
+  p, ul, ol { margin: 0; }
+  code { font-family: var(--mono); font-size: 0.86em; overflow-wrap: anywhere; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+  header { display: flex; flex-direction: column; gap: 14px; }
+  .marca { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 0.95rem; }
+  .marca img { width: 40px; height: 40px; flex: none; }
+  .marca strong { color: var(--ink); }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  .eyebrow { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .indice { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+  .indice a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 0.93rem; }
+  .indice a:hover { border-color: var(--accent); }
+  .documento { display: flex; flex-direction: column; gap: 14px; }
+  .documento > p, .documento > ul, .documento > ol, .documento > blockquote { max-width: 80ch; }
+  .documento ul, .documento ol { padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; }
+  .documento li > ul, .documento li > ol { margin-top: 6px; }
+  .documento blockquote { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-left: 5px solid var(--accent); border-radius: 8px; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .documento hr { width: 100%; border: 0; border-top: 1px solid var(--rule); margin: 8px 0; }
+  .tabla { overflow-x: auto; }
+  table.datos { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); font-size: 0.95rem; }
+  table.datos th, table.datos td { text-align: left; padding: 8px 12px; border: 1px solid var(--rule); vertical-align: top; }
+  table.datos thead th { background: var(--accent-soft); font-weight: 600; }
+  footer { color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+  @media (max-width: 640px) { h1 { font-size: 1.75rem; } }
+  @media print {
+    :root, :root:not([data-bs-theme="light"]), :root[data-bs-theme="dark"] {
+      color-scheme: light;
+      --bg: #ffffff; --surface: #ffffff; --ink: #1a2427; --muted: #55686c; --rule: #d3dcdd;
+      --accent: #1b5f6b; --accent-soft: #e3eff0;
+    }
+    body { padding: 0; }
+    .back, .indice { display: none; }
+    .page { padding-block: 0 24px; max-width: none; }
+    .tabla { overflow: visible; }
+    table.datos { min-width: 0; }
+    table.datos tr, .documento blockquote { break-inside: avoid; }
+    h2, h3, h4 { break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="marca">
+      <img src="/images/logo.svg" alt="" width="40" height="40">
+      <span><strong>ResidApp</strong> · Plataforma Asistencial Geriátrica</span>
+    </div>
+    <nav class="back" aria-label="Navegación">
+      <a href="/Plataforma/Documentos">← Volver a Documentos</a>
+      <a href="/Plataforma">Inicio de Plataforma</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Documentos · Pulsera NFC con PIN</p>
+    <h1>Pulsera NFC con PIN: especificación de compra</h1>
+    <p class="meta">Para: Quien compra las pulseras (Orlando) · Generado el 2026-11-20 desde <code>docs/seguridad/pulsera-nfc-especificacion-compra.md</code></p>
+    <nav aria-label="En esta página">
+      <ul class="indice">
+        <li><a href="#que-se-compra-y-en-que-orden">1. Qué se compra y en qué orden</a></li>
+        <li><a href="#requisitos-del-producto">2. Requisitos del producto</a></li>
+        <li><a href="#lo-que-no-se-pide-ni-se-envia-al-proveedor">3. Lo que NO se pide ni se envía al proveedor</a></li>
+        <li><a href="#lo-que-hay-que-tener-para-personalizar-las-pulseras">4. Lo que hay que tener para personalizar las pulseras</a></li>
+        <li><a href="#preguntas-para-el-fabricante-o-el-distribuidor-a-verificar-antes-de-pedir">5. Preguntas para el fabricante o el distribuidor (a verificar antes de pedir)</a></li>
+        <li><a href="#clausulas-del-contrato-de-suministro-no-son-las-del-art.28-si-no-hay-datos-personales">6. Cláusulas del contrato de suministro (no son las del art. 28 si no hay datos personales)</a></li>
+        <li><a href="#recepcion-y-custodia-del-lote-lista-de-comprobacion">7. Recepción y custodia del lote (lista de comprobación)</a></li>
+        <li><a href="#cantidades-y-reposicion">8. Cantidades y reposición</a></li>
+        <li><a href="#pruebas-del-lote-de-prueba-con-las-tablets-reales">9. Pruebas del lote de prueba (con las tablets reales)</a></li>
+        <li><a href="#alternativa-anotada-no-elegida">10. Alternativa anotada, no elegida</a></li>
+        <li><a href="#lo-que-no-se-ha-podido-confirmar-y-quien-lo-confirma">11. Lo que no se ha podido confirmar (y quién lo confirma)</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <article class="documento">
+<p><strong>BORRADOR para Orlando (quien compra).</strong> Está pensado para poder enseñarse a un proveedor o distribuidor, pero <strong>no se manda tal cual</strong>: los puntos marcados «a verificar» son hipótesis que hay que confirmar con el fabricante antes de pedir. Base: <a href="/Plataforma/Documento/pulsera-nfc-pin-lectura-dpo"><code>docs/privacidad/pulsera-nfc-pin-lectura-dpo.md</code></a> (apartado 2.9 y 2.5) y la nota de aplicación de NXP <strong>AN12196</strong> («NTAG 424 DNA features and hints»). Los precios <strong>no se han consultado</strong>: se piden ofertas.</p>
+<h2 id="que-se-compra-y-en-que-orden">1. Qué se compra y en qué orden</h2>
+<ol>
+<li><strong>Primero, un lote de prueba de 5 a 10 pulseras</strong>, para probar con las tablets reales del piloto. <strong>No se compra el lote real todavía.</strong></li>
+<li>Después, el lote real: <strong>número de personal con pulsera + 15 % de reserva</strong>, numerado.</li>
+<li>Aparte, <strong>un lector USB de NFC</strong> compatible con el chip, y <strong>al menos una tablet Android con NFC y Chrome</strong> para probar. Muchas tablets baratas no traen NFC y el iPad queda fuera (ADR 0009).</li>
+</ol>
+<p><strong>Antes de comprar nada</strong> deben estar decididos: B corregida y solo Auxiliar (hecho el 2026-11-20), la lista blanca de acciones (CJ) y quién va a operar el lector y la herramienta de personalización (hoy, una sola persona).</p>
+<h2 id="requisitos-del-producto">2. Requisitos del producto</h2>
+<div class="tabla"><table class="datos">
+<thead>
+<tr>
+<th>Requisito</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chip <strong>NXP NTAG 424 DNA</strong> original, con <strong>certificado de autenticidad</strong>. No sirven NTAG 213/215/216 ni MIFARE Classic</td>
+<td>Solo el 424 DNA firma un mensaje distinto en cada lectura. Hay chips falsificados (suposición)</td>
+</tr>
+<tr>
+<td>Entrega <strong>sin datos escritos por el proveedor</strong>: sin dirección web suya ni servicio de validación propio, con claves de transporte o por defecto</td>
+<td>Que el proveedor no conozca las claves finales y no meta a un tercero en la lectura</td>
+</tr>
+<tr>
+<td><strong>Random ID activado por nosotros</strong> al personalizar (es irreversible: no debe venir activado por el proveedor con claves ajenas)</td>
+<td>Evita que un tercero siga a la persona con el número de serie fijo</td>
+</tr>
+<tr>
+<td><strong>Número de serie solo cifrado</strong> dentro del mensaje, <strong>sin dato del centro</strong> en la dirección (ruta genérica)</td>
+<td>Un tercero que lea el mensaje no debe saber de qué centro es</td>
+</tr>
+<tr>
+<td><strong>Escritura del mensaje protegida por clave</strong> (a verificar los derechos por defecto)</td>
+<td>Que otro móvil no pueda reescribirlo</td>
+</tr>
+<tr>
+<td><strong>Sin límite de lecturas</strong> configurado en el chip</td>
+<td>AN12196 lo avisa como riesgo de denegación de servicio</td>
+</tr>
+<tr>
+<td>Pulsera de <strong>silicona</strong>, resistente al gel hidroalcohólico y al lavado, con cierre que se <strong>cambie sin herramientas</strong> (o precintado de un solo uso: ver la consulta laboral)</td>
+<td>Uso diario en planta. No es de privacidad</td>
+</tr>
+<tr>
+<td><strong>Sin nombre, foto, número de empleado ni código</strong> que coincida con algo del sistema. Si lleva número visible, es de lote y no coincide con el del chip</td>
+<td>Que el proveedor no reciba ni imprima datos personales</td>
+</tr>
+<tr>
+<td>Declaración del fabricante sobre materiales (silicona en contacto con la piel)</td>
+<td>Seguridad del producto</td>
+</tr>
+<tr>
+<td><strong>Lote numerado</strong> y trazable por caja</td>
+<td>Custodia y existencias</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>El PIN no va en la pulsera:</strong> el chip no lo guarda. El PIN solo lo conoce la persona y lo comprueba ResidApp.</p>
+<h2 id="lo-que-no-se-pide-ni-se-envia-al-proveedor">3. Lo que NO se pide ni se envía al proveedor</h2>
+<ul>
+<li><strong>Ningún dato personal</strong>: ni nombres, ni listas de personal, ni asignaciones. Así el proveedor es un <strong>proveedor de bienes</strong> y no un encargado del tratamiento (art. 28 del RGPD). Si grabara nombres, sería encargado: el centro tendría que autorizarlo por escrito y habría que trasladarle las mismas obligaciones. <strong>Se evita no enviándole nada.</strong></li>
+<li><strong>Ninguna clave final.</strong> La mejor opción es que el proveedor programe con <strong>claves de transporte</strong> y que ResidApp las <strong>cambie al recibir</strong>, con un lector USB; así, si el proveedor las filtra, ya no valen. Si ofrece «claves a medida», hay que ver cómo se entregan (ver apartado 5).</li>
+<li><strong>Ninguna clave de producción mezclada con las de pruebas.</strong> Claves distintas por <strong>lote, centro y entorno</strong>; nada se reutiliza entre clientes.</li>
+</ul>
+<h2 id="lo-que-hay-que-tener-para-personalizar-las-pulseras">4. Lo que hay que tener para personalizar las pulseras</h2>
+<p><strong>Web NFC no puede cambiar las claves de un NTAG 424 DNA</strong> (solo lee datos NDEF; el cambio de clave va por comandos de bajo nivel). Por eso hace falta, <strong>fuera de la aplicación web</strong>:</p>
+<ul>
+<li>Un <strong>PC con lector USB de NFC</strong> y un programa propio (por ejemplo, un script en <code>tools\</code>) que: cambie las claves, active <strong>Random ID</strong>, configure el mensaje con firma, proteja la escritura y compruebe una lectura.</li>
+<li>Un sitio y una persona responsables: el equipo y quien lo usa <strong>forman parte de la cadena de custodia</strong> de las claves.</li>
+</ul>
+<h2 id="preguntas-para-el-fabricante-o-el-distribuidor-a-verificar-antes-de-pedir">5. Preguntas para el fabricante o el distribuidor (a verificar antes de pedir)</h2>
+<ol>
+<li>¿Entregáis el NTAG 424 DNA <strong>sin Random ID activado</strong> y con claves de transporte, para activarlo nosotros?</li>
+<li>¿Qué <strong>derechos de acceso</strong> trae por defecto el fichero del mensaje (lectura y escritura sin clave)?</li>
+<li>¿Ofrecéis <strong>claves a medida</strong>? Si es así: ¿cómo las generáis, cómo nos las entregáis (canal cifrado), cuánto tiempo las retenéis y certificáis su <strong>destrucción</strong>?</li>
+<li>¿Podéis <strong>no escribir nada</strong> ni usar vuestro servicio de validación, y entregarlas <strong>numeradas por lote</strong>?</li>
+<li>¿Certificado de <strong>autenticidad</strong> del chip y declaración de <strong>materiales</strong> de la pulsera?</li>
+<li>¿Plazo, mínimo de pedido, <strong>lote de prueba de 5 a 10 unidades</strong>, y precio por unidad en cada tramo? (Precio: <strong>a pedir</strong>; no hay cifra consultada.)</li>
+<li>¿Qué <strong>lector USB</strong> recomendáis para cambiar claves y activar Random ID, y qué herramienta oficial de NXP existe?</li>
+<li>¿Cómo responde la pulsera con <strong>guantes, humedad y puesta en la muñeca</strong> a la distancia de lectura de una tablet?</li>
+</ol>
+<h2 id="clausulas-del-contrato-de-suministro-no-son-las-del-art.28-si-no-hay-datos-personales">6. Cláusulas del contrato de suministro (no son las del art. 28 si no hay datos personales)</h2>
+<ul>
+<li>Confidencialidad de las claves y <strong>destrucción comprobable</strong> de las de transporte tras el trabajo.</li>
+<li>Claves distintas por lote y por centro; <strong>nunca reutilizadas</strong> entre clientes.</li>
+<li>Entrega de claves por <strong>canal cifrado</strong>.</li>
+<li><strong>No subcontratar</strong> la programación sin permiso.</li>
+<li><strong>Aviso inmediato</strong> de cualquier incidente que afecte a las claves.</li>
+<li>Certificado de autenticidad del chip y especificación completa del lote.</li>
+</ul>
+<h2 id="recepcion-y-custodia-del-lote-lista-de-comprobacion">7. Recepción y custodia del lote (lista de comprobación)</h2>
+<ol>
+<li>Contar las cajas y comprobar la <strong>numeración del lote</strong> con el albarán; anotar quién recibe.</li>
+<li>Probar <strong>una pulsera por caja</strong> con el lector: que se lee, que el chip es el esperado, que <strong>no viene con Random ID activado</strong> (si el proveedor no lo activó) y que las claves son las de transporte.</li>
+<li><strong>Personalizar</strong> las pulseras (cambiar claves, activar Random ID, configurar el mensaje, proteger la escritura) y <strong>probar una lectura</strong> de cada una.</li>
+<li>Guardar el lote <strong>bajo llave</strong>, con registro de quién retira cada pulsera y a quién se entrega, y con cuenta de existencias (asignadas, sin asignar, retiradas).</li>
+<li><strong>Las claves</strong> de cada lote se guardan <strong>fuera del repositorio y de la base de datos</strong> (Key Vault en producción; valores de prueba en desarrollo) con una versión (<code>kid</code>).</li>
+</ol>
+<h2 id="cantidades-y-reposicion">8. Cantidades y reposición</h2>
+<ul>
+<li><strong>Lote real = personal con pulsera + 15 % de reserva.</strong> Rotar las claves de las pulseras <strong>equivale a cambiarlas</strong> (el cambio de clave exige la herramienta de personalización), así que la reserva sirve también para una rotación de emergencia ante sospecha. No hay rotación periódica por calendario.</li>
+<li>Si se pierde una caja sin asignar, <strong>las pulseras no sirven</strong> mientras no se den de alta (el alta exige a Administración y a la persona), pero hay que registrar la pérdida.</li>
+</ul>
+<h2 id="pruebas-del-lote-de-prueba-con-las-tablets-reales">9. Pruebas del lote de prueba (con las tablets reales)</h2>
+<p>Antes de comprar el lote real, comprobar con 5 a 10 pulseras:</p>
+<ul>
+<li>Lectura con la pulsera <strong>puesta</strong>, con <strong>guantes</strong>, con <strong>humedad</strong> y con la tablet en su funda.</li>
+<li>Que la tablet <strong>tiene NFC activado</strong>, es <strong>Android con Chrome</strong> y la página lee la etiqueta con Web NFC en primer plano.</li>
+<li>La pulsera <strong>con Random ID activado</strong> (es lo que se usará).</li>
+<li>Qué ocurre si <strong>otro móvil</strong> abre el mensaje: la dirección debe abrir una página inocua que no comprueba ni registra nada.</li>
+<li><strong>Intentos de reescritura</strong> desde otro móvil: no debe poder.</li>
+<li>Si la tablet o el móvil de un tercero ve el mensaje, que no revele el centro ni la persona.</li>
+</ul>
+<h2 id="alternativa-anotada-no-elegida">10. Alternativa anotada, no elegida</h2>
+<p>Una <strong>llave de seguridad FIDO2 con NFC y PIN propio</strong> evitaría que ResidApp custodie el PIN y las claves del chip, resiste a webs falsas y reutiliza las passkeys ya hechas. Se <strong>descartó</strong> el 2026-11-20 por coste (decenas de euros por unidad frente a un euro o dos), formato (llavero o tarjeta, no pulsera) y porque no está comprobada con las tablets. Queda como opción futura si el coste de custodiar el PIN y las claves resulta alto.</p>
+<h2 id="lo-que-no-se-ha-podido-confirmar-y-quien-lo-confirma">11. Lo que no se ha podido confirmar (y quién lo confirma)</h2>
+<ul>
+<li>Comportamiento exacto de Web NFC con Random ID y con la dirección abierta fuera de la página: <strong>prueba con aparatos reales</strong> (apartado 9).</li>
+<li>Derechos de acceso por defecto, qué entregan los proveedores y los servicios de «claves a medida»: <strong>el fabricante o el distribuidor</strong> (apartado 5).</li>
+<li>Precio por unidad y del lector USB: <strong>ofertas</strong> (no consultadas).</li>
+<li>Si el centro piloto tiene tablets con NFC: <strong>el centro</strong>.</li>
+</ul>
+
+    </article>
+  </main>
+  <footer>
+    Documento de trabajo para Plataforma, no para el centro ni para las familias. Esta página se genera del fichero <code>docs/seguridad/pulsera-nfc-especificacion-compra.md</code>; si hay que cambiar algo, se cambia allí.
+  </footer>
+</div>
+</body>
+</html>
