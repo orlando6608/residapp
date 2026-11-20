@@ -172,7 +172,7 @@ $estilo
     </div>
     <nav class="back" aria-label="Navegación">
       <a href="/Plataforma/Documentos">← Volver a Documentos</a>
-      <a href="/Plataforma">Inicio de Plataforma</a>
+      <a href="/">Inicio</a>
     </nav>
     <p class="eyebrow">ResidApp · Documentos · $temaHtml</p>
     <h1>$tituloHtml</h1>

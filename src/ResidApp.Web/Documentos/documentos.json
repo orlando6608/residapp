@@ -1,13 +1,5 @@
 [
   {
-    "id": "pulsera-nfc-guia-implementacion",
-    "fuente": "docs/seguridad/pulsera-nfc-guia-implementacion.md",
-    "tema": "Pulsera NFC con PIN",
-    "titulo": "Guía de implementación",
-    "paraQuien": "Quien construya la pulsera (ingeniería)",
-    "resumen": "Las decisiones tomadas, las ocho piezas de construcción en orden, el flujo de una entrada paso a paso, el PIN, la sesión limitada, los eventos, las claves, las condiciones del DPO y las pruebas."
-  },
-  {
     "id": "pulsera-nfc-guia-administracion",
     "fuente": "docs/seguridad/pulsera-nfc-guia-administracion.md",
     "tema": "Pulsera NFC con PIN",

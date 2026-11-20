@@ -7,15 +7,14 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-        <li class="breadcrumb-item"><a asp-action="Index">Centros</a></li>
         <li class="breadcrumb-item active" aria-current="page">Documentos</li>
     </ol>
 </nav>
 
 <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"documentos"' />Documentos</h1>
 <p class="text-muted">
-    Documentos de trabajo de la plataforma: diseños, guías y especificaciones que todavía no son parte de la aplicación. Solo los ve este perfil. Son
-    borradores: antes de usarlos con datos reales los valida una persona experta, y cada uno lo dice al empezar. No contienen datos de residentes ni del personal de ningún centro.
+    Documentos de apoyo al trabajo de la plataforma: guías de trabajo, protocolos, documentos informativos y metodológicos y especificaciones. Solo los ve este perfil.
+    Cada documento dice para quién es y en qué estado está: algunos son borradores que valida una persona experta antes de usarlos con datos reales. No contienen datos de residentes ni del personal de ningún centro.
 </p>
 <div asp-validation-summary="All" class="text-danger"></div>
 

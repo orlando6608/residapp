@@ -45,6 +45,14 @@ else
                 </div>
             </a>
         </div>
+        <div class="col-12 col-md-4">
+            <a asp-controller="Plataforma" asp-action="Documentos" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"documentos"' />Documentos</h2>
+                    <p class="card-text text-muted mb-0">Guías de trabajo, protocolos y documentos de apoyo de la plataforma.</p>
+                </div>
+            </a>
+        </div>
     }
     @if (perfil is SystemProfile.Administracion)
     {
