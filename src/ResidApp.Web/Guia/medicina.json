@@ -454,7 +454,8 @@
         { "p": "No me sale el botón «Crear borrador de basal».", "r": "Tu ámbito no tiene el permiso de basal. Se lo pide a Administración, que es quien lo concede." },
         { "p": "«Cancelar borrador»: ¿puedo anular un borrador?", "r": "Sí, antes de firmarlo: escribe el «Motivo de la cancelación» y pulsa «Cancelar borrador»." },
         { "p": "«No tienes un borrador activo para este residente.»", "r": "No hay borrador o ya se firmó o se canceló. Vuelve a la ficha y créalo de nuevo." },
-        { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." }
+        { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." },
+        { "p": "La ficha dice que mi borrador de basal se canceló por un traslado de unidad.", "r": "Alguien trasladó al residente de unidad mientras el borrador seguía a medias, y un borrador no pasa de una unidad a otra. Crea el basal de nuevo en la unidad de destino." }
       ],
       "rutas": ["Medicina/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign", "EnfermeriaBasal/CrearBorrador", "EnfermeriaBasal/CancelarBorrador"],
       "mensajes": [

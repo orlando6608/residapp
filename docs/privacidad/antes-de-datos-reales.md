@@ -300,6 +300,13 @@ Quien opera ResidApp (hoy Orlando) podría necesitar ver datos reales de un cent
 
 Textos del BOE consolidados, no oficiales (`normativa-local\INDICE.md`, comprobación del 2026-11-12). Las citas del RGPD y de la LOPDGDD de este apartado se cotejaron con `normativa-local\` el 2026-11-18.
 
+## 16. Traslado de un residente por Enfermería con permiso (`0108`; decisión de Orlando del 2026-11-20 y lectura de `dpo-residapp`)
+
+Desde el script `0108`, Enfermería puede trasladar a un residente de unidad, habitación o plaza si Administración le concede el permiso `RESIDENT_TRANSFER` (apagado por defecto). Lectura completa, condiciones de código y su estado: `docs/privacidad/traslado-por-enfermeria-lectura-dpo.md` (**admisible con condiciones; lo valida una persona**).
+
+- **Antes de datos reales, de una persona:** la base jurídica del traslado por Enfermería y por Administración (art. 9.2.h RGPD; Llei 21/2000, art. 11), una entrada nueva en el registro de actividades, un anexo en la EIPD general (visibilidad, disponibilidad e integridad), un párrafo en la información al personal (con asesoría laboral) y que el centro decida por escrito a quién concede el permiso y quién revisa los traslados.
+- **Pregunta para CJ (clínica):** si Enfermería puede cancelar, al trasladar, el borrador de basal creado por Medicina (Orlando eligió cancelar y avisar a quien lo creó, 14 días).
+
 ## Cómo se marca como hecho
 
 Cuando una persona valide los borradores y se decidan las mejoras, anótalo aquí con la fecha y quién lo hizo, y quita el recordatorio del traspaso (`docs/prompts-ia/continuar-construccion.md`)

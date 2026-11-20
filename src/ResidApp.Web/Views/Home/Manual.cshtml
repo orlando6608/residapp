@@ -264,7 +264,7 @@
                 <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Administración principal de las dos plantas.</td></tr>
                 <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Las dos plantas, con lectura clínica auditada, rangos de referencia, plazos de los hitos e indicadores y calidad de proceso.</td></tr>
                 <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Las dos plantas, con permiso de basal y de la ficha de antecedentes.</td></tr>
-                <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal, de la ficha de antecedentes y de las citas externas; miembro de los equipos de las dos plantas.</td></tr>
+                <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal, de la ficha de antecedentes y de las citas externas; miembro de los equipos de las dos plantas. Ninguna cuenta de prueba trae el permiso de trasladar: para probarlo, concédeselo a esta desde Usuarios, en el perfil de la cuenta, sección Permisos.</td></tr>
                 <tr><td><code>almendros-enfermeria-planta1</code></td><td>Enfermería</td><td>Solo la Planta 1, con los mismos permisos; sirve para probar el historial tras un traslado.</td></tr>
                 <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con cinco residentes en «Mis residentes»: Rosa, Antonio, Carmen, Lucía y Manuel.</td></tr>
                 <tr><td><code>almendros-elena</code></td><td>Familiar</td><td>Elena, hija de Rosa, en el Portal Familiar.</td></tr>
@@ -374,7 +374,7 @@
 <section id="residentes-administracion" class="mb-4">
     <h2 class="h5">
         Residentes y ficha administrativa
-        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración (o Enfermería con permiso, para trasladar)</span>
     </h2>
     <p>
         Lo primero que ves en el inicio de Administración es el bloque <strong>Requiere atención</strong>, con cifras y un
@@ -430,7 +430,11 @@
         abiertos del residente pasan a la unidad de destino y la unidad de origen deja de verlos; los episodios ya cerrados no
         cambian (la unidad de destino puede pedirlos con un motivo, ver «Historial y línea temporal del residente»). Si cambia de unidad y tenía un borrador de basal a medias, el borrador se cancela y el basal se rehace en la unidad
         de destino. El traslado queda en el historial de ubicación de la ficha y en la auditoría, y un reenvío del formulario no lo
-        repite. Hoy lo hace Administración; que Enfermería también pueda, con un permiso específico, queda para cuando un centro lo pida.
+        repite. Lo hace Administración. Enfermería también puede, desde su ficha del residente (botón <strong>Trasladar</strong>), si Administración le ha
+        concedido el permiso «Trasladar a un residente de unidad, habitación o plaza» (viene apagado): con él, la unidad de origen y la de destino tienen
+        que estar en el ámbito de su cuenta, y el permiso no da baja, suspensión ni corrección de identidad. Si el traslado cambia de unidad y había un
+        borrador de basal a medias, se cancela aunque lo hubiera creado otra persona (por ejemplo Medicina), y quien lo creó ve en la ficha del residente un
+        aviso con la fecha. En la auditoría consta el perfil con el que se trasladó.
     </p>
     <p class="mb-0">
         <strong>Dar de baja</strong> cierra la estancia del residente en el centro. Elige el motivo (fallecimiento, alta voluntaria,
@@ -764,7 +768,7 @@
         <strong>Revocar</strong>. Cada perfil tiene sus permisos:
     </p>
     <ul>
-        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente, rellenar y cambiar la ficha de antecedentes de salud y registrar y cambiar las citas externas de los residentes (anotar la nota «Al terminar» de una cita realizada no lo necesita).</li>
+        <li><strong>Enfermería:</strong> dar de alta residentes, basal inicial (al alta), reevaluar el basal, poner, cambiar y quitar la foto del residente, rellenar y cambiar la ficha de antecedentes de salud y registrar y cambiar las citas externas de los residentes (anotar la nota «Al terminar» de una cita realizada no lo necesita) y trasladar a un residente de unidad, habitación o plaza.</li>
         <li><strong>Medicina:</strong> basal inicial, reevaluar el basal y rellenar y cambiar la ficha de antecedentes de salud.</li>
         <li><strong>Dirección Clínica:</strong> lectura clínica detallada y auditada, gestionar los rangos de referencia, gestionar los plazos de los hitos del proceso y ver los indicadores y la calidad de proceso (las Direcciones que ya existían no lo tienen hasta que se lo concedas).</li>
         <li>Auxiliar y Administración no tienen permisos configurables.</li>
@@ -1088,7 +1092,9 @@
         Una vez creado, completas las nueve áreas una por una (cada una queda marcada como completada) y el
         índice de Barthel (diez ítems con puntuación automática sobre 100; mientras lo rellenas, la barra del pie
         muestra el total y cuántos ítems llevas). Puedes cancelar el borrador con
-        un motivo en cualquier momento antes de firmarlo.
+        un motivo en cualquier momento antes de firmarlo. Si alguien traslada al residente de unidad mientras tu borrador sigue a medias, el
+        borrador se cancela solo: en la ficha del residente verás el aviso «Tu borrador de basal de este residente se canceló por un traslado de
+        unidad el [fecha]» (durante 14 días, sin el contenido del borrador) y el basal se rehace en la unidad de destino.
     </p>
     <p class="mb-0">
         Cuando las nueve áreas y Barthel están completos, la pantalla de confirmación muestra un resumen
@@ -1347,6 +1353,12 @@
         consentimiento y cuándo, encuadrarla antes de guardarla y anotar que no quiere foto (ver «Residentes y ficha administrativa» en
         Administración: funciona igual), <strong>si Administración te ha dado el permiso</strong> «Poner, cambiar y quitar la foto del
         residente»; sin él, la ves pero la ficha te dice que se lo pidas. Medicina y Auxiliar la ven pero no la cambian.
+    </p>
+    <p class="mb-0">
+        Si Administración te ha concedido el permiso «Trasladar a un residente de unidad, habitación o plaza», la ficha muestra el botón
+        <strong>Trasladar</strong>: elige la unidad de destino (de tu ámbito) y, si quieres, una habitación o plaza libre, y pulsa
+        <strong>Trasladar</strong> (funciona igual que en «Residentes y ficha administrativa»). Sin el permiso, el botón no sale y, si abres la
+        pantalla a mano, la aplicación te lo dice y te pide que se lo pidas a Administración.
     </p>
     <p class="mb-0">
         Debajo del basal está el bloque <strong>Antecedentes de salud</strong>, con las alergias e intolerancias a medicamentos, las
@@ -1610,7 +1622,8 @@
         directamente. Si tu ámbito tiene permiso de basal, también ves <strong>Crear borrador de basal</strong>
         o <strong>Iniciar reevaluación</strong> (ver "Crear, completar y firmar el estado basal"). La cuenta de
         prueba <code>almendros-medicina</code> tiene ese permiso. La ficha muestra también sus
-        <strong>eventos abiertos</strong> que ve Medicina: los escalados y los propios de Medicina, con su estado.
+        <strong>eventos abiertos</strong> que ve Medicina: los escalados y los propios de Medicina, con su estado. Si un borrador de basal tuyo se
+        cancela porque alguien traslada al residente de unidad, la ficha te lo avisa con la fecha.
         También ves el bloque <strong>Antecedentes de salud</strong> con las alergias, las enfermedades e intervenciones y la medicación habitual del residente (ver "Ficha de antecedentes de salud").
     </p>
     <p class="mb-0">
