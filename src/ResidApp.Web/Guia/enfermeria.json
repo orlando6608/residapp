@@ -281,7 +281,7 @@
         { "texto": "Cuando ya no haga falta seguir, pulsa **Resolver**: vuelves a la decisión asistencial, donde cierras el evento o lo escalas.", "botones": ["Resolver"] }
       ],
       "despues": [
-        { "para": "Enfermería", "texto": "La bandeja «Seguimientos» es común a la unidad y muestra la próxima revisión, la última actuación y si hay una transferencia pendiente. Si la fecha prevista pasa, consta como **Pendiente**, pero sigue abierto: nunca se cierra ni se oculta solo. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha: con hora, pasa a **Pendiente** cuando pasa esa hora (hora de Madrid); sin hora, al día siguiente de la fecha. Uno que solo tiene criterio no vence. La valoración no se modifica durante el seguimiento." }
+        { "para": "Enfermería", "texto": "La bandeja «Seguimientos» es común a la unidad y muestra la próxima revisión, la última actuación y si hay una transferencia pendiente. Si la fecha prevista pasa, consta como **Pendiente**, pero sigue abierto: nunca se cierra ni se oculta solo. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha: con hora, pasa a **Pendiente** cuando pasa esa hora (hora del centro); sin hora, al día siguiente de la fecha. Uno que solo tiene criterio no vence. La valoración no se modifica durante el seguimiento." }
       ],
       "dudas": [
         { "p": "«Revisa los datos: indica una fecha prevista o un criterio de revisión. Para iniciar un seguimiento hace falta una valoración guardada.»", "r": "Rellena la fecha o el criterio, o guarda antes la valoración (ENF-05)." },

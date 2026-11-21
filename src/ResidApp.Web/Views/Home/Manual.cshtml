@@ -588,7 +588,7 @@
         cita, no se envía. No se manda al reservar ni al finalizar, ni cuando la familia cambia o cancela su propia cita, ni por la baja del residente, ni al cerrar una solicitud o
         retirar una propuesta. Está apagado por defecto (tiene su propio interruptor, además del general del correo, y se enciende para todo el entorno, no por centro) y, en las pruebas,
         solo llega a las direcciones autorizadas. La pantalla no dice si el correo salió ni si el aviso está activado: avísala tú en todo caso: el correo es un complemento y puede acabar en el correo no deseado de la familia (por eso, al confirmar la dirección, se le pide que añada <code>no-responder@avisos.residapp.es</code> a sus contactos). 
-        <strong>Recordatorio del día antes.</strong> Si está activado en la aplicación (tiene otro interruptor propio, apagado por defecto), el día anterior a una cita confirmada, entre las 10:00 y las 18:59 (hora de Madrid),
+        <strong>Recordatorio del día antes.</strong> Si está activado en la aplicación (tiene otro interruptor propio, apagado por defecto), el día anterior a una cita confirmada, entre las 10:00 y las 18:59 (hora del centro),
         la persona de la familia que la reservó recibe un único correo genérico («Tienes una cita mañana en ResidApp») con un enlace a ResidApp. Dice que tiene una cita mañana, pero no la hora,
         el equipo, la modalidad, el motivo, el residente ni el centro, y no se puede responder. Solo le llega a quien reservó la cita y solo si su ficha tiene correo con la dirección confirmada
         con la familia, aún tiene acceso al Portal Familiar, el residente sigue activo y sin suspender y su autorización sigue vigente; si no, se omite y no se manda después. Es uno por cita y por
@@ -1008,7 +1008,7 @@
     <p>
         El perfil <strong>Plataforma</strong> es de quien opera ResidApp, no del personal de un centro. Su inicio tiene una tarjeta,
         <strong>Centros</strong>, que lista los centros (nombre, código, estado y número de unidades) y permite crear uno con
-        <strong>Nuevo centro</strong>. El formulario pide el nombre del centro, su <strong>zona horaria</strong> (viene elegida «Península y Baleares (Madrid)», que hoy es la única disponible), el nombre de su primera unidad y su primer
+        <strong>Nuevo centro</strong>. El formulario pide el nombre del centro, su <strong>zona horaria</strong> (viene elegida «Península y Baleares (Madrid)»; la otra opción es «Canarias»), el nombre de su primera unidad y su primer
         administrador (identificador de acceso y nombre). Opcionalmente puedes subir ya el <strong>logo del centro</strong> (PNG o JPEG, que se encuadra igual que en «Nombre y logo del centro»); después lo cambia la Administración del propio centro, no Plataforma. Los códigos del centro y de la unidad no se escriben: se generan solos a partir de los nombres (en mayúsculas, sin
         acentos y con guiones; si el del centro ya existe se añade -2, -3…), no se pueden cambiar y el del centro se ve después en la lista «Centros». Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil
         Administración y la unidad concedida. Para que pueda entrar, abre el centro (<strong>Administraciones y unidades</strong>) y pulsa
@@ -1043,7 +1043,7 @@
         (<strong>Administraciones y unidades</strong>), en la sección <strong>Zona horaria</strong>: <strong>Corregir la zona horaria</strong> pide la «Zona nueva» y un «Motivo» de una lista
         («Se eligió mal al dar de alta el centro» o «El centro ha cambiado de ubicación»), te enseña cuántas franjas de citas activas y citas futuras reservadas se ven afectadas, y exige marcar
         «He visto lo que se ve afectado y confirmo el cambio de zona.» antes de <strong>Cambiar la zona horaria</strong>. La Administración no puede cambiarla; en su Auditoría aparece
-        «Zona horaria del centro cambiada». La pantalla de Plataforma usa siempre la hora de la península.
+        «Zona horaria del centro cambiada». Los recordatorios y avisos por correo ya reservados para hoy o mañana pueden repetirse o no salir ese día. La pantalla de Plataforma usa siempre la hora de la península.
     </p>
 </section>
 
@@ -1577,7 +1577,7 @@
     </p>
     <p>
         Un seguimiento cuya fecha ya ha pasado aparece como <strong>Pendiente</strong>, pero sigue abierto y
-        visible: nunca se cierra ni se oculta solo. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha. Con hora, el seguimiento pasa a Pendiente cuando pasa esa hora (hora de Madrid); sin hora, al día siguiente de la fecha. Uno que solo tiene criterio no vence.
+        visible: nunca se cierra ni se oculta solo. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha. Con hora, el seguimiento pasa a Pendiente cuando pasa esa hora (hora del centro); sin hora, al día siguiente de la fecha. Uno que solo tiene criterio no vence.
     </p>
     <p>
         En la pantalla del seguimiento puedes <strong>registrar una actuación</strong>,
@@ -1737,7 +1737,7 @@
         <strong>Seguimientos</strong> del inicio de Medicina, compartida por la unidad. La bandeja muestra el
         objetivo, la próxima revisión, la última actuación y quién lleva el seguimiento tras el último cambio de
         turno. Un seguimiento cuya fecha ya ha pasado aparece como <strong>Pendiente</strong>, pero sigue abierto
-        y visible. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha. Con hora, el seguimiento pasa a Pendiente cuando pasa esa hora (hora de Madrid); sin hora, al día siguiente de la fecha. Cada evento admite un solo seguimiento médico.
+        y visible. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha. Con hora, el seguimiento pasa a Pendiente cuando pasa esa hora (hora del centro); sin hora, al día siguiente de la fecha. Cada evento admite un solo seguimiento médico.
     </p>
     <p>
         En la pantalla del seguimiento puedes <strong>registrar una revisión</strong> o

@@ -315,7 +315,7 @@ public static class ExternalNoteDisplay
 
     public static string Next(ExternalNoteVersion version, DateOnly appointmentDate) => Next(new ExternalNextVisit(version.NextDate, version.NextMonths), appointmentDate);
 
-    /// <summary>Fecha y hora de una versión, en la hora del servidor (la de Madrid).</summary>
+    /// <summary>Fecha y hora de una versión, en la hora del centro.</summary>
     public static string When(DateTimeOffset at) => CenterTime.Local(at).ToString("dd/MM/yyyy HH:mm");
 }
 

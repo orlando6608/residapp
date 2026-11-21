@@ -206,7 +206,7 @@ public sealed partial class SqlExternalAppointmentRepository(SqlConnectionFactor
         await RequireWriterAsync(connection, transaction, actor, ct);
         var current = await LockOpenAsync(connection, transaction, actor, appointmentId, expectedVersion, ct);
         var before = ToRecord(current);
-        if (newStatus == ExternalAppointmentStatus.Cancelada || !ExternalAppointmentRules.CanTransition(before.Status, newStatus, before.Appointment.Date, ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(DateTimeOffset.UtcNow)))
+        if (newStatus == ExternalAppointmentStatus.Cancelada || !ExternalAppointmentRules.CanTransition(before.Status, newStatus, before.Appointment.Date, CenterTime.Today))
         {
             throw new DomainValidationException(ExternalAppointment.InvalidCode);
         }

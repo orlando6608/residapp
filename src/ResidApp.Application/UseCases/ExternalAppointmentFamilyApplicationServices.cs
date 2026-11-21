@@ -80,7 +80,7 @@ public sealed class ExternalAppointmentFamilySettingsApplicationService(
             await settings.ListOfferedAsync(
                 await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion, SystemProfile.Enfermeria, SystemProfile.Medicina], ct), appointmentIds, Today(), ct));
 
-    private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
+    private DateOnly Today() => CenterTime.TodayAt(clock.GetUtcNow());
 
     private async Task<ExternalAppointmentActor> ActorAsync(Guid profileScopeId, CenterId centerId, IReadOnlyCollection<SystemProfile> allowed, CancellationToken ct)
     {
@@ -126,7 +126,7 @@ public sealed class FamilyExternalAppointmentsApplicationService(
             return outcome == FamilyArrangementOutcome.NotFound ? throw new AccessDeniedException() : outcome;
         });
 
-    private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
+    private DateOnly Today() => CenterTime.TodayAt(clock.GetUtcNow());
 
     private async Task<FamilyPortalAccess> AccessAsync(FamilyPortalQuery query, CancellationToken ct)
     {

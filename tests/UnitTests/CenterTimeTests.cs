@@ -159,4 +159,20 @@ public class CenterTimeTests
 
         Assert.True(found.Count == 0, "Usa CenterTime (ResidApp.Shared) en lugar de la hora local del servidor:" + Environment.NewLine + string.Join(Environment.NewLine, found));
     }
+
+    // El día de Madrid es el de los contratos de módulos y el de Plataforma (siempre Madrid). Un día de un centro (citas, bajas, avisos) es el de SU zona: CenterTime.Today / TodayAt.
+    private static readonly string[] MadridDayAllowed = ["CenterModules.cs", "CenterModuleAccess.cs", "PlatformApplicationService.cs", "PlataformaController.cs"];
+
+    [Fact]
+    public void El_dia_de_Madrid_solo_se_usa_en_los_modulos_y_en_Plataforma()
+    {
+        var src = Path.Combine(Raiz(), "src");
+        var found = Directory.EnumerateFiles(src, "*.cs", SearchOption.AllDirectories)
+            .Where(file => !MadridDayAllowed.Contains(Path.GetFileName(file)) && !Path.GetRelativePath(src, file).Split(Path.DirectorySeparatorChar).Any(part => part is "obj" or "bin"))
+            .Where(file => File.ReadLines(file).Any(line => !line.TrimStart().StartsWith("//") && line.Contains("TodayInMadrid")))
+            .Select(file => Path.GetRelativePath(src, file))
+            .ToList();
+
+        Assert.True(found.Count == 0, "«Hoy» de un centro sale de CenterTime, no de TodayInMadrid:" + Environment.NewLine + string.Join(Environment.NewLine, found));
+    }
 }

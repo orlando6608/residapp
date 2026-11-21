@@ -6,7 +6,7 @@ namespace ResidApp.Domain.Enfermeria;
 /// <summary>
 /// ENF-07B: plan de un seguimiento, con una fecha prevista o un criterio (o ambos), y una hora prevista opcional si hay fecha. Sin ni
 /// fecha ni criterio no hay seguimiento. Un seguimiento con fecha vence cuando esa fecha ya ha pasado; con hora, cuando ya ha pasado esa
-/// hora (hora local del centro, Madrid). Vencer no lo cierra ni lo oculta. Uno que solo tiene criterio no vence.
+/// hora (hora local del centro). Vencer no lo cierra ni lo oculta. Uno que solo tiene criterio no vence.
 /// </summary>
 public sealed record FollowUpPlan
 {

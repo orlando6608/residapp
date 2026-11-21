@@ -12,7 +12,7 @@ namespace ResidApp.FunctionalTests;
 /// auditoría; la Administración no puede; y las pantallas del centro muestran las horas en su zona. Canarias está en el catálogo pero inactiva hasta F3: estas pruebas la activan
 /// mientras corren y la dejan como estaba.
 /// </summary>
-public class ZonaHorariaPaginasTests(WebAppFactory factory) : IClassFixture<WebAppFactory>, IAsyncLifetime
+public class ZonaHorariaPaginasTests(WebAppFactory factory) : IClassFixture<WebAppFactory>
 {
     private const string Token = "__RequestVerificationToken";
     private const string Canarias = "Atlantic/Canary";
@@ -20,15 +20,6 @@ public class ZonaHorariaPaginasTests(WebAppFactory factory) : IClassFixture<WebA
 
     private static SqlConnectionFactory Db => new(WebAppFactory.TestConnectionString);
 
-    public Task InitializeAsync() => SetCanariasAsync(true);
-
-    public Task DisposeAsync() => SetCanariasAsync(false);
-
-    private static async Task SetCanariasAsync(bool active)
-    {
-        using var connection = await Db.OpenAsync();
-        await connection.ExecuteAsync("UPDATE dbo.zonas_horarias SET activa = @active WHERE codigo = @code", new { active, code = Canarias });
-    }
 
     private static string ExtractValue(string html, string inputName) =>
         Regex.Match(html, $"name=\"{Regex.Escape(inputName)}\"[^>]*value=\"([^\"]*)\"").Groups[1].Value;
