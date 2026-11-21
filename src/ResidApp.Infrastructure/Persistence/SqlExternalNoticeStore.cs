@@ -39,6 +39,8 @@ public sealed class SqlExternalNoticeStore(SqlConnectionFactory connections) : I
         return [.. rows.Select(r => new PendingExternalNotice(r.Id, CenterId.From(r.CenterId), r.AppointmentId, r.Key, r.Language, r.Template))];
     }
 
+    public Task<TimeZoneInfo> ZoneOfCenterAsync(CenterId centerId, CancellationToken ct = default) => SqlTaskCenterZone.ReadAsync(connections, centerId, ct);
+
     public async Task<bool> ClaimAsync(Guid id, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);

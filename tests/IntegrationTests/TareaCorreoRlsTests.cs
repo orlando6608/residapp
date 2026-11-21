@@ -157,6 +157,26 @@ public sealed class TareaCorreoRlsTests
     }
 
     [Fact]
+    public async Task ElRolDeLaTarea_LeeLaZonaDeUnCentroSoloPorElProcedimiento_NoLaTablaNiLaVista()
+    {
+        // Script 0110: la tarea decide si un aviso está en la franja de SU centro; para eso solo recibe el nombre de la zona.
+        var setup = await SeedAsync("Residente Tarea Correo Zona");
+        using var task = await OpenAsAsync(TaskUser);
+
+        Assert.Equal("Europe/Madrid", await task.ExecuteScalarAsync<string>(SqlTaskCenterZone.Sql, new { setup.CenterId }));
+        foreach (var sql in new[]
+        {
+            "SELECT * FROM dbo.zonas_centro",
+            "SELECT * FROM dbo.zonas_horarias",
+            "SELECT * FROM dbo.zonas_vigentes_centros",
+            "INSERT INTO dbo.zonas_centro (id, centro_id, numero, zona_codigo, motivo_codigo, franjas_afectadas, citas_afectadas, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en) VALUES (NEWID(), NEWID(), 1, 'Europe/Madrid', 'ALTA', 0, 0, NEWID(), 'PLATAFORMA', SYSUTCDATETIME())",
+        })
+        {
+            await AssertDeniedAsync(task, sql);
+        }
+    }
+
+    [Fact]
     public async Task ElRolDeLaTarea_LeeDeLasCuentasSoloElIdentificadorYElEstado()
     {
         // Script 0093: los avisos comprueban que la cuenta del familiar siga activa (una cuenta suspendida no recibe avisos), y nada más de la cuenta.

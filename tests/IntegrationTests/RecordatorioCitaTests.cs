@@ -370,6 +370,68 @@ public class RecordatorioCitaTests
         Assert.Equal("PENDIENTE", Assert.Single(await RowsAsync(unclaimedRecent)).Estado);
     }
 
+    /// <summary>Le pone al centro de la instalación de prueba la zona dada, como lo haría Plataforma (alta en Madrid y una corrección; script 0109).</summary>
+    internal static async Task SetCenterZoneAsync(Setup setup, string zone)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("""
+            INSERT INTO dbo.zonas_centro (id, centro_id, numero, zona_codigo, motivo_codigo, franjas_afectadas, citas_afectadas, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @center, 1, 'Europe/Madrid', 'ALTA', 0, 0, @actor, 'PLATAFORMA', SYSUTCDATETIME()),
+                   (NEWID(), @center, 2, @zone, 'CAMBIO_DE_UBICACION', 0, 0, @actor, 'PLATAFORMA', SYSUTCDATETIME())
+            """, new { center = setup.Admin.CenterId.Value, actor = setup.Admin.AccountId.Value, zone });
+    }
+
+    [Fact]
+    public async Task CadaCentroReservaYEnviaEnLaFranjaDeSuZona_ElDeCanariasUnaHoraDespuesQueElDeLaPeninsula()
+    {
+        var madrid = await SetupWithAddressAsync("Residente Recordatorio Zona Madrid");
+        var canary = await SetupWithAddressAsync("Residente Recordatorio Zona Canarias");
+        await SetCenterZoneAsync(canary, "Atlantic/Canary");
+        var day = Today.AddDays(2);
+        var inMadrid = await InsertAsync(madrid, "MEDICO", LocalUtc(day.AddDays(1), 12));
+        var inCanary = await InsertAsync(canary, "MEDICO", LocalUtc(day.AddDays(1), 12));
+        Guid[] mine = [inMadrid, inCanary];
+
+        // 10:30 en Madrid son las 09:30 en Canarias: solo el centro de la península está en su franja.
+        await ReserveAsync(Sim(day, 10, 30), mine);
+        Assert.Single(await RowsAsync(inMadrid));
+        Assert.Empty(await RowsAsync(inCanary));
+
+        // 19:30 en Madrid son las 18:30 en Canarias: ahora es al revés, y lo de Madrid no se repite.
+        await ReserveAsync(Sim(day, 19, 30), mine);
+        Assert.Single(await RowsAsync(inMadrid));
+        var reserved = Assert.Single(await RowsAsync(inCanary));
+        Assert.Equal(("PENDIENTE", day.AddDays(1).ToString("yyyy-MM-dd")), (reserved.Estado, reserved.Clave));
+
+        // Al enviar, cada recordatorio se mira con la franja de su centro: el de Madrid ya está fuera de plazo y el de Canarias sale.
+        var sender = new FakeEmailSender();
+        var service = new ReminderService(new SqlReminderStore(TestDatabase.ConnectionFactory), sender, Active());
+        await service.ProcessDueAsync(Sim(day, 19, 30));
+        Assert.Single(sender.Sent);
+        var late = Assert.Single(await RowsAsync(inMadrid));
+        Assert.Equal(("OMITIDO", "FUERA_DE_PLAZO"), (late.Estado, late.Motivo));
+        Assert.Equal("ENVIADO", Assert.Single(await RowsAsync(inCanary)).Estado);
+    }
+
+    [Fact]
+    public async Task ElDiaDeMañanaEsElDelCentro_LaMismaCitaEsDeMañanaEnCanariasYDePasadoMañanaEnLaPeninsula()
+    {
+        // La cita es a las 23:30 UTC del día 15 de enero: en Canarias (UTC+0 en invierno) es el 15 a las 23:30; en la península (UTC+1) ya es el 16 a las 00:30.
+        var madrid = await SetupWithAddressAsync("Residente Recordatorio Mañana Madrid");
+        var canary = await SetupWithAddressAsync("Residente Recordatorio Mañana Canarias");
+        await SetCenterZoneAsync(canary, "Atlantic/Canary");
+        var startsAt = new DateTime(2026, 1, 15, 23, 30, 0, DateTimeKind.Utc);
+        var old = new DateTime(2026, 1, 5, 9, 0, 0, DateTimeKind.Utc);
+        var inMadrid = await InsertAsync(madrid, "MEDICO", startsAt, createdUtc: old);
+        var inCanary = await InsertAsync(canary, "MEDICO", startsAt, createdUtc: old);
+
+        // El día 14 a las 12:00 UTC (13:00 en la península, 12:00 en Canarias) los dos centros están en franja y «mañana» es el 15 en los dos.
+        await ReserveAsync(new DateTimeOffset(2026, 1, 14, 12, 0, 0, TimeSpan.Zero), inMadrid, inCanary);
+
+        Assert.Empty(await RowsAsync(inMadrid)); // para la península la cita es del día 16
+        Assert.Equal("2026-01-15", Assert.Single(await RowsAsync(inCanary)).Clave);
+    }
+
     [Fact]
     public async Task ElRegistroDeUnRecordatorio_SoloGuardaElDiaDeLaCita_NiHoraNiDireccionNiMotivo()
     {

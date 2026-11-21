@@ -33,11 +33,11 @@ public sealed class CorreoOptions
     /// el aviso de propuesta sin él mientras espera su validación.</summary>
     public bool AvisoCambioCita { get; set; }
 
-    /// <summary>Interruptor propio del recordatorio de cita del día antes (de las 10:00 a las 18:59, hora de Madrid), además de <see cref="Activo"/>: apagado por defecto. Exige
+    /// <summary>Interruptor propio del recordatorio de cita del día antes (de las 10:00 a las 18:59, hora del centro), además de <see cref="Activo"/>: apagado por defecto. Exige
     /// «Siempre activo» en la Web App.</summary>
     public bool RecordatorioCita { get; set; }
 
-    /// <summary>Interruptor propio de los avisos de citas externas a la familia (7 días, víspera y 2 días si sigue sin cubrir; de las 10:00 a las 18:59, hora de Madrid), además de <see cref="Activo"/>: apagado
+    /// <summary>Interruptor propio de los avisos de citas externas a la familia (7 días, víspera y 2 días si sigue sin cubrir; de las 10:00 a las 18:59, hora del centro), además de <see cref="Activo"/>: apagado
     /// por defecto. Es el interruptor del ENTORNO; cada centro tiene además el suyo (apagado por defecto) en «Ajustes para la familia». Exige «Siempre activo» en la Web App.</summary>
     public bool AvisoCitaExterna { get; set; }
 
