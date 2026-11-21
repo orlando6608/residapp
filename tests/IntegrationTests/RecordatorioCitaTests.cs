@@ -414,6 +414,34 @@ public class RecordatorioCitaTests
     }
 
     [Fact]
+    public async Task UnCentroASeisHorasDeMadrid_ReservaEnSuFranja_YSuMañanaEsElSuyo()
+    {
+        var newYork = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+        var madrid = await SetupWithAddressAsync("Residente Recordatorio Zona Madrid Seis");
+        var far = await SetupWithAddressAsync("Residente Recordatorio Zona Nueva York");
+        await SetCenterZoneAsync(far, "America/New_York");
+        var day = Today.AddDays(2);
+        var inMadrid = await InsertAsync(madrid, "MEDICO", LocalUtc(day.AddDays(1), 12));
+        var inFar = await InsertAsync(far, "MEDICO", TimeZoneInfo.ConvertTimeToUtc(day.AddDays(1).ToDateTime(new TimeOnly(12, 0)), newYork));
+        Guid[] mine = [inMadrid, inFar];
+
+        // 10:30 en Madrid son las 04:30 en Nueva York: solo el centro de Madrid está en su franja.
+        await ReserveAsync(Sim(day, 10, 30), mine);
+        Assert.Single(await RowsAsync(inMadrid));
+        Assert.Empty(await RowsAsync(inFar));
+
+        // 19:30 en Madrid son las 13:30 en Nueva York: ahora es al revés, con «mañana» del día siguiente de Nueva York.
+        await ReserveAsync(Sim(day, 19, 30), mine);
+        Assert.Single(await RowsAsync(inMadrid));
+        var reserved = Assert.Single(await RowsAsync(inFar));
+        Assert.Equal(("PENDIENTE", day.AddDays(1).ToString("yyyy-MM-dd")), (reserved.Estado, reserved.Clave));
+
+        // A las 23:30 de Madrid (17:30 en Nueva York) sigue siendo el día `day` allí: no se reserva nada nuevo ni se repite.
+        await ReserveAsync(Sim(day, 23, 30), mine);
+        Assert.Single(await RowsAsync(inFar));
+    }
+
+    [Fact]
     public async Task ElDiaDeMañanaEsElDelCentro_LaMismaCitaEsDeMañanaEnCanariasYDePasadoMañanaEnLaPeninsula()
     {
         // La cita es a las 23:30 UTC del día 15 de enero: en Canarias (UTC+0 en invierno) es el 15 a las 23:30; en la península (UTC+1) ya es el 16 a las 00:30.

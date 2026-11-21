@@ -112,6 +112,9 @@ public class ZonaHorariaPaginasTests(WebAppFactory factory) : IClassFixture<WebA
         Assert.Contains("Zona horaria del centro", page);
         Assert.Contains("Península y Baleares (Madrid)", page);
         Assert.Contains("Canarias", page);
+        // Miami y México están en el catálogo pero inactivas (script 0112): Plataforma no las ofrece.
+        Assert.DoesNotContain("Miami", page);
+        Assert.DoesNotContain("Ciudad de México", page);
         Assert.Contains("después solo Plataforma puede corregirla", page);
 
         async Task<string> CreateAsync(string zone, string suffix)
