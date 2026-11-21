@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.6.0](https://github.com/orlando6608/residapp/compare/v0.5.0...v0.6.0) (2026-11-21)
+
+
+### Features
+
+* Enfermería puede trasladar a un residente con el permiso RESIDENT_TRANSFER ([4ab703a](https://github.com/orlando6608/residapp/commit/4ab703a0268e6dfed22bb737a00c8caee7276dd5))
+* Enfermería puede trasladar a un residente con el permiso RESIDENT_TRANSFER ([644a05f](https://github.com/orlando6608/residapp/commit/644a05fc587ee435ba48e7491734b2cff441a5b4))
+* hora prevista opcional en seguimientos e indicaciones ([08e5f20](https://github.com/orlando6608/residapp/commit/08e5f2099b27ba572d88b8f623b065c1bc912a05))
+* hora prevista opcional en seguimientos e indicaciones ([a4d7fa5](https://github.com/orlando6608/residapp/commit/a4d7fa545338076a89e2d7252bdc99524614a616))
+* sección «Documentos» en Plataforma con los documentos de la pulsera NFC ([b9d9f78](https://github.com/orlando6608/residapp/commit/b9d9f78b558b5e28d146df1f8bcd94d3624f6a64))
+* sección «Documentos» en Plataforma con los documentos de la pulsera NFC ([da65493](https://github.com/orlando6608/residapp/commit/da6549355c97eb64e0015b854134beb0d8e99e61))
+* zonas horarias por centro, F0: la hora del centro sale de CenterTime ([ead6ec0](https://github.com/orlando6608/residapp/commit/ead6ec0226efce0679303d592e6947efce60640a))
+* zonas horarias por centro, F0: la hora del centro sale de CenterTime ([b635298](https://github.com/orlando6608/residapp/commit/b635298e432dfbdfcb9ad78915ca11fb110874f7))
+* zonas horarias por centro, F1: catálogo, zona al crear el centro y corrección por Plataforma ([84ec2f7](https://github.com/orlando6608/residapp/commit/84ec2f7ec0adac4207a0b887ec4d316d346f35ec))
+* zonas horarias por centro, F1: catálogo, zona al crear el centro y corrección por Plataforma ([5bf8e86](https://github.com/orlando6608/residapp/commit/5bf8e868750a5cec80a27e987c0c377af00cc72f))
+* zonas horarias por centro, F2: los avisos por correo usan la zona de cada centro ([a1fec30](https://github.com/orlando6608/residapp/commit/a1fec30274460679545b00f391cc108c40d95a1c))
+* zonas horarias por centro, F2: los avisos por correo usan la zona de cada centro ([54d73e2](https://github.com/orlando6608/residapp/commit/54d73e2c4cc0b2dbc2ed851e9920c57ecf481da0))
+* zonas horarias por centro, F3: Canarias activa y «hoy» del centro en citas externas y bajas ([75abe2b](https://github.com/orlando6608/residapp/commit/75abe2ba6139fbed78ab9cdf05a2818dc771fe80))
+* zonas horarias por centro, F3: Canarias activa y «hoy» del centro en citas externas y bajas ([bdb931b](https://github.com/orlando6608/residapp/commit/bdb931b2a481fa4a954980d92b2bbf054926f667))
+
+
+### Bug Fixes
+
+* «Documentos» de Plataforma deja fuera la lectura del DPO ([5ab0e70](https://github.com/orlando6608/residapp/commit/5ab0e706a37e0d04a04ee8498474ef9c97d49247))
+* «Documentos» de Plataforma deja fuera la lectura del DPO ([389898d](https://github.com/orlando6608/residapp/commit/389898d94b278064092c6d18fdf6b1757e700ac9))
+* «Documentos» de Plataforma pasa al inicio y deja fuera la guía de implementación ([73ef143](https://github.com/orlando6608/residapp/commit/73ef14306202d0eebab1efac8c5246dec2897913))
+* «Documentos» de Plataforma pasa al inicio y deja fuera la guía de implementación ([1d76e2e](https://github.com/orlando6608/residapp/commit/1d76e2eab29198f8e908e0597c0c7f395664d8e5))
+* dos pruebas de integración que fallaban de vez en cuando en la suite completa ([030577c](https://github.com/orlando6608/residapp/commit/030577c444db983536b7c3f5062dc498fbbeba11))
+* dos pruebas de integración que fallaban de vez en cuando en la suite completa ([542c097](https://github.com/orlando6608/residapp/commit/542c09770b6f069e5d047b57a5d62a2bf05118fb))
+* interbloqueos (1205) en las acciones de la familia sobre citas externas ([a5909e3](https://github.com/orlando6608/residapp/commit/a5909e3ae900aee195eb7ad27c98bca07cf544d0))
+* interbloqueos (1205) en las acciones de la familia sobre citas externas ([007213b](https://github.com/orlando6608/residapp/commit/007213bcd28ede7e253db42f1a1bfa5c47f1b3a7))
+
 ## [0.5.0](https://github.com/orlando6608/residapp/compare/v0.4.0...v0.5.0) (2026-11-19)
 
 
