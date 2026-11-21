@@ -17,7 +17,10 @@ namespace ResidApp.IntegrationTests;
 /// Tipo de servicio del centro (ADR 0017, script 0113): se elige al crear el centro, queda como columna y como fila 1 de la constancia, y después solo Plataforma corrige un error de alta con el centro
 /// sin personas, por el procedimiento <c>corregir_tipo_servicio_centro</c> (única vía: la aplicación no puede escribir la columna). Estas pruebas abren las conexiones con el contexto de sesión de
 /// producción (la fábrica con tenant), porque el procedimiento comprueba por sí mismo el ámbito de Plataforma, y las llamadas a mano se hacen suplantando a un usuario como el real de la aplicación.
+/// Va en la colección <c>AvisoCambioCita</c> porque una de ellas deja la corrección parada unos segundos con bloqueos sobre la fila del centro, y las pruebas de esa colección recorren todos los centros
+/// (<c>reservar_avisos_citas_externas_en</c>): en paralelo, una de ellas era la víctima de un interbloqueo (1205) y fallaba la CI.
 /// </summary>
+[Collection("AvisoCambioCita")]
 public class TipoServicioCentroTests
 {
     private const string AppUser = "residapp_tipo_servicio_test";
