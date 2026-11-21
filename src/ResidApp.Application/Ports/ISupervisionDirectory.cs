@@ -166,8 +166,7 @@ public static class SupervisionIndicatorRules
 
     /// <summary>Límites UTC [From, ToExclusive) de los días from a to (incluidos) de la zona horaria zone.</summary>
     public static (DateTime From, DateTime ToExclusive) UtcBounds(DateOnly from, DateOnly to, TimeZoneInfo zone) =>
-        (TimeZoneInfo.ConvertTimeToUtc(from.ToDateTime(TimeOnly.MinValue), zone),
-         TimeZoneInfo.ConvertTimeToUtc(to.AddDays(1).ToDateTime(TimeOnly.MinValue), zone));
+        (CenterTime.StartOfDayUtc(from, zone), CenterTime.StartOfDayUtc(to.AddDays(1), zone));
 
     /// <summary>Cada hecho (en UTC) cuenta en su día de la zona horaria zone, la misma en la que se eligió el periodo.</summary>
     public static SupervisionIndicators Aggregate(

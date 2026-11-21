@@ -150,7 +150,7 @@ public static class AppointmentSlots
                         continue;
                     }
 
-                    var start = new DateTimeOffset(local, zone.GetUtcOffset(local));
+                    var start = CenterTime.FromLocal(local, zone);
                     var slot = new AppointmentSlot(start, start.AddMinutes(window.DurationMinutes));
                     if (start >= earliest && start <= latest
                         && !teamBlocks.Any(b => Overlaps(slot, b.StartsAt, b.EndsAt))

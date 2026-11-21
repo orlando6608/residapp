@@ -175,4 +175,42 @@ public class CenterTimeTests
 
         Assert.True(found.Count == 0, "«Hoy» de un centro sale de CenterTime, no de TodayInMadrid:" + Environment.NewLine + string.Join(Environment.NewLine, found));
     }
+
+    // «Hoy» y los días de un centro no son los de UTC: con un desfase de varias horas, comparar el día UTC de una columna `*_en` (UTC) con el día del centro falla cada tarde-noche.
+    // Los límites del día del centro llegan como parámetros (CenterTime.StartOfDayUtc) y se comparan con >= y <. Los scripts anteriores a 0111 ya están aplicados y no se editan.
+    private static readonly string[] UtcDayComparisons =
+    [
+        @"CAST\(\s*[\w\.]*_en\s+AS\s+DATE\s*\)", @"CONVERT\(\s*DATE\s*,\s*[\w\.]*_en\b", @"SYSUTCDATETIME\(\)\s+AS\s+DATE\b", @"GETUTCDATE\(\)\s+AS\s+DATE\b",
+    ];
+
+    [Fact]
+    public void Ninguna_consulta_nueva_compara_el_dia_UTC_de_una_columna_UTC()
+    {
+        var root = Raiz();
+        var files = Directory.EnumerateFiles(Path.Combine(root, "src"), "*.*", SearchOption.AllDirectories)
+            .Where(file => (file.EndsWith(".cs") || file.EndsWith(".cshtml")) && !Path.GetRelativePath(root, file).Split(Path.DirectorySeparatorChar).Any(part => part is "obj" or "bin"))
+            .Concat(Directory.EnumerateFiles(Path.Combine(root, "database", "scripts"), "*.sql")
+                .Where(file => int.TryParse(Path.GetFileName(file)[..4], out var number) && number > 110));
+        var found = new List<string>();
+        foreach (var file in files)
+        {
+            var number = 0;
+            foreach (var line in File.ReadLines(file))
+            {
+                number++;
+                var trimmed = line.TrimStart();
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("--") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
+                {
+                    continue;
+                }
+
+                if (UtcDayComparisons.Any(pattern => Regex.IsMatch(line, pattern, RegexOptions.IgnoreCase)))
+                {
+                    found.Add($"{Path.GetRelativePath(root, file)}:{number}: {trimmed.Trim()}");
+                }
+            }
+        }
+
+        Assert.True(found.Count == 0, "Compara con los límites del día del centro (CenterTime.StartOfDayUtc), no con el día UTC:" + Environment.NewLine + string.Join(Environment.NewLine, found));
+    }
 }

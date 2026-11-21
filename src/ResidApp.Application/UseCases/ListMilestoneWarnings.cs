@@ -35,7 +35,7 @@ public sealed class ListMilestoneWarnings(
             var facts = await directory.ListMilestoneFactsAsync(command.AmbitoPerfilId, command.CentroId, now.AddDays(-WindowDays), now.AddMinutes(5), ct);
             var report = ProcessQualityRules.Build(
                 facts.Where(f => f.Responsible == scope.Profile).ToList(), await deadlines.GetEffectiveAsync(command.CentroId, ct), [],
-                DateOnly.FromDateTime(now), DateOnly.FromDateTime(now), now);
+                CenterTime.TodayAt(new DateTimeOffset(now)), CenterTime.TodayAt(new DateTimeOffset(now)), now);
             return (IReadOnlyList<MilestoneEntry>)report.Exceptions
                 .Where(e => e.End is null)
                 .OrderByDescending(e => e.Status == MilestoneStatus.FueraDePlazo)

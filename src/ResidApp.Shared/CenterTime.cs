@@ -35,11 +35,28 @@ public static class CenterTime
     public static DateTime Local(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Zone);
 
     /// <summary>La hora de un campo <c>datetime-local</c> (sin zona) como instante, entendida con la hora del centro. Una hora que no existe ese día (el cambio de hora) se
-    /// toma con el desfase estándar de la zona.</summary>
-    public static DateTimeOffset FromLocal(DateTime local)
+    /// toma con el desfase estándar de la zona; una que se repite, con el de la primera vez (la del horario de verano).</summary>
+    public static DateTimeOffset FromLocal(DateTime local) => FromLocal(local, Zone);
+
+    /// <summary>Lo mismo que <see cref="FromLocal(DateTime)"/> con la zona que se indique (para quien ya la tiene, como la generación de franjas de citas).</summary>
+    public static DateTimeOffset FromLocal(DateTime local, TimeZoneInfo zone)
     {
         var unspecified = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
-        return new DateTimeOffset(unspecified, Zone.GetUtcOffset(unspecified));
+        var offset = zone.IsAmbiguousTime(unspecified) ? zone.GetAmbiguousTimeOffsets(unspecified).Max() : zone.GetUtcOffset(unspecified);
+        return new DateTimeOffset(unspecified, offset);
+    }
+
+    /// <summary>El instante UTC en que empieza un día del centro. En una zona cuyo cambio de hora cae a medianoche, las 00:00 pueden no existir (el día empieza a la primera hora
+    /// válida, que es el instante del cambio) o repetirse (empieza la primera vez). <c>TimeZoneInfo.ConvertTimeToUtc</c> lanzaría una excepción en el primer caso.</summary>
+    public static DateTime StartOfDayUtc(DateOnly day, TimeZoneInfo zone)
+    {
+        var local = DateTime.SpecifyKind(day.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified);
+        while (zone.IsInvalidTime(local))
+        {
+            local = local.AddMinutes(30);
+        }
+
+        return FromLocal(local, zone).UtcDateTime;
     }
 
     /// <summary>La fecha de hoy en el centro.</summary>
