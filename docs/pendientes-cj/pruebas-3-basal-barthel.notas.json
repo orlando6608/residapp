@@ -1,4 +1,8 @@
 {
   "documento": "pruebas-3-basal-barthel",
-  "notas": {}
+  "notas": {
+    "2": "Dos cosas, ambas anotadas y sin construir todavía.\n1) Nombre: cambiar «Traslado» por «Transferencias». Hoy aparece «Traslados» en el área de movilidad y «Traslado cama-sillón» en el Barthel. ¿Quieres «Transferencias» en los dos sitios, y cómo escribirías el del Barthel?\n2) Etiología con deterioro cognitivo leve: hoy solo se admite si la categoría es «Demencia documentada». Es una regla clínica y la cambiaríamos solo con tu confirmación. ¿Quieres poder indicarla también en deterioro cognitivo leve, y en alguna otra categoría?",
+    "5": "Dos cosas.\n1) Aviso: dinos en qué pantalla lo viste y qué texto salió exactamente, para ver a qué caso se refiere y ajustar la frase.\n2) Reevaluación: lo hemos anotado, no está construido. La propuesta sería partir de las respuestas del basal vigente (las nueve áreas y el Barthel), cambiar solo lo que haya variado y firmar de nuevo. ¿Prefieres que la persona tenga que revisar cada área antes de firmar, o que firme directamente lo que no ha tocado?",
+    "6": "Lo estamos comprobando. Una posible causa es tener abierto otro perfil en otra pestaña del mismo navegador: la sesión es una sola y al cambiar de perfil el formulario de la primera pestaña deja de valer. Si te vuelve a pasar, anota si tenías otra pestaña abierta con otro perfil y qué texto del error salió."
+  }
 }
