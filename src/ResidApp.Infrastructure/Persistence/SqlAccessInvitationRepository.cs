@@ -24,7 +24,8 @@ public sealed class SqlAccessInvitationRepository(SqlConnectionFactory connectio
                                         AND other.centro_id <> @CenterId AND other.estado = 'ACTIVE') THEN 1 ELSE 0 END AS BIT) AS OtherCenters,
                CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.credenciales credential WHERE credential.cuenta_id = account.id
                                         AND credential.hash_contrasena IS NOT NULL) THEN 1 ELSE 0 END AS BIT) AS HasPassword,
-               center.nombre_visible AS CenterName
+               center.nombre_visible AS CenterName,
+               CASE WHEN center.codigo = N'PLATAFORMA' THEN NULL ELSE center.tipo_de_servicio END AS ServiceTypeCode
           FROM dbo.cuentas account WITH (UPDLOCK, ROWLOCK)
           JOIN dbo.centros center ON center.id = @CenterId
         """;
@@ -213,12 +214,14 @@ public sealed class SqlAccessInvitationRepository(SqlConnectionFactory connectio
             AccountId = account.Id, CenterId = centerId.Value, Kind = kind.ToCode(), TokenHash = tokenHash, Now = now,
             IssuerId = issuerId.Value, IssuerProfile = issuerProfile, ExpiresAt = expiresAt,
         }, transaction, cancellationToken: ct));
-        return new IssuedAccessInvitation(kind, account.Subject, account.DisplayName, account.CenterName, expiresAt);
+        return new IssuedAccessInvitation(
+            kind, account.Subject, account.DisplayName, account.CenterName, expiresAt,
+            account.ServiceTypeCode is null ? null : EnumCode.ParseCode<CenterServiceType>(account.ServiceTypeCode));
     }
 
     private static DateTimeOffset Utc(DateTime now) => new(DateTime.SpecifyKind(now, DateTimeKind.Utc));
 
-    private sealed record AccountRow(Guid Id, string Subject, string? DisplayName, bool Active, bool OtherCenters, bool HasPassword, string CenterName);
+    private sealed record AccountRow(Guid Id, string Subject, string? DisplayName, bool Active, bool OtherCenters, bool HasPassword, string CenterName, string? ServiceTypeCode);
 
     private sealed record LiveRow(Guid Id, Guid AccountId, string KindCode, DateTime ExpiresAt);
 }

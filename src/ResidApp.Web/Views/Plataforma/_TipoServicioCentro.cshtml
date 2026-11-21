@@ -1,0 +1,55 @@
+@using ResidApp.Domain.Platform
+@using ResidApp.Shared
+@using ResidApp.Web.Models
+@model PlatformCenterServiceTypeViewModel
+@* Tipo de servicio de un centro (ADR 0017, script 0113). Lo elige Plataforma al crear el centro; después solo se corrige un error de alta, y solo si el centro no tiene ninguna persona. Sin la cuenta de quien lo fijó. *@
+<section aria-labelledby="tipo-servicio-titulo" class="mt-5">
+    <h2 class="h4" id="tipo-servicio-titulo">Tipo de servicio</h2>
+    <p class="text-muted">
+        Dice si el centro es una Residencia o un Centro de Día. Lo elige quien da de alta el centro y <strong>no se cambia</strong>: solo Plataforma puede corregir un error de alta, y solo mientras el centro no tenga
+        ninguna persona dada de alta (ni residentes ni familiares). Si el centro ya tiene personas y se eligió mal, hay que crear un centro nuevo.
+    </p>
+    <p class="fw-semibold mb-3">Tipo actual: <partial name="_EtiquetaTipoServicio" model="(CenterServiceType?)Model.State.Current" /></p>
+
+    @if (Model.State.HasPeople)
+    {
+        <div class="alert alert-secondary" role="status" data-tipo-servicio-bloqueado>
+            Este centro ya tiene personas dadas de alta, así que su tipo de servicio no se puede cambiar.
+        </div>
+    }
+    else
+    {
+        var other = Model.State.Current == CenterServiceType.Residencia ? CenterServiceType.CentroDeDia : CenterServiceType.Residencia;
+        <details class="mb-3">
+            <summary class="fw-semibold">Corregir un error de alta</summary>
+            <form asp-action="CorregirTipoServicio" method="post" class="mt-3" data-formulario-tipo-servicio>
+                <input type="hidden" name="CentroId" value="@Model.CenterId" />
+                <input type="hidden" name="TipoDeServicio" value="@other" />
+                <div class="alert alert-warning" role="status">
+                    El centro pasará de <strong>@CenterServiceTypeDisplay.Label(Model.State.Current)</strong> a <strong>@CenterServiceTypeDisplay.Label(other)</strong>. Queda en la auditoría del centro. En cuanto el centro
+                    tenga una persona dada de alta, ya no se podrá corregir.
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="Confirmo" id="tipo-servicio-confirmo" value="true" required />
+                    <label class="form-check-label" for="tipo-servicio-confirmo">Confirmo que el centro es de tipo «@CenterServiceTypeDisplay.Label(other)» y que se eligió mal al darlo de alta.</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">Cambiar a @CenterServiceTypeDisplay.Label(other)</button>
+            </form>
+        </details>
+    }
+
+    <h3 class="h5 mt-4">Constancia del tipo de servicio</h3>
+    <ul class="list-group">
+        @foreach (var change in Model.State.History)
+        {
+            <li class="list-group-item">
+                <span class="fw-semibold">@CenterServiceTypeDisplay.Label(change.Type)</span> · @CenterServiceTypeDisplay.ReasonOfCode(change.Reason)
+                <span class="small text-body-secondary d-block">@CenterTime.Local(change.ChangedAt).ToString("dd/MM/yyyy HH:mm")</span>
+            </li>
+        }
+        @if (Model.State.History.Count == 0)
+        {
+            <li class="list-group-item text-body-secondary">Sin constancia: el centro es anterior a este dato y es una Residencia, como siempre.</li>
+        }
+    </ul>
+</section>

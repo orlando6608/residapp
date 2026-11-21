@@ -12,7 +12,7 @@
     <div class="col-12 col-md-10 col-lg-8">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h1 class="h4 mb-3">Acceso a @Model.Centro</h1>
+                <h1 class="h4 mb-3">Acceso a @Model.Centro <partial name="_EtiquetaTipoServicio" model="Model.TipoDeServicio" /></h1>
                 <dl class="row mb-3">
                     <dt class="col-sm-4">Perfil</dt>
                     <dd class="col-sm-8">@ResidApp.Web.Models.SystemProfileDisplay.Label(Model.Perfil)</dd>

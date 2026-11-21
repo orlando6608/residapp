@@ -1,4 +1,5 @@
 using ResidApp.Domain.Modules;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -48,4 +49,4 @@ public sealed record PlatformModuleChange(
     ModuleDisableReason? DisableReason, DateTimeOffset RequestReceivedAt, ModuleRequestChannel Channel, string RequestReference, DateTimeOffset ChangedAt);
 
 /// <summary>Un módulo cuya última alta vence (o venció sin renovarse) en el periodo consultado.</summary>
-public sealed record PlatformExpiringModule(CenterId CenterId, string CenterName, string ModuleCode, DateOnly ValidUntil);
+public sealed record PlatformExpiringModule(CenterId CenterId, string CenterName, string ModuleCode, DateOnly ValidUntil, CenterServiceType ServiceType);

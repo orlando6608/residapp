@@ -76,7 +76,7 @@ public sealed class ProfileScopeController(ListActiveProfileScopes listActivePro
         {
             SoloUnAmbito = soloUnAmbito,
             Options = scopes
-                .Select(s => new ProfileScopeOptionViewModel(s.ProfileScopeId, s.CenterId.Value, s.CenterName, SystemProfileDisplay.Label(s.Profile)))
+                .Select(s => new ProfileScopeOptionViewModel(s.ProfileScopeId, s.CenterId.Value, s.CenterName, SystemProfileDisplay.Label(s.Profile), s.ServiceType))
                 .ToList(),
             ReturnUrl = returnUrl,
         };

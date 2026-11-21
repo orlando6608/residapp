@@ -1,10 +1,11 @@
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
 
 /// <summary>Lo que hace falta para la hoja de la invitación recién emitida (el token no se guarda: lo pone quien la emite).</summary>
-public sealed record IssuedAccessInvitation(AccessInvitationKind Kind, string Subject, string? DisplayName, string CenterName, DateTime ExpiresAt);
+public sealed record IssuedAccessInvitation(AccessInvitationKind Kind, string Subject, string? DisplayName, string CenterName, DateTime ExpiresAt, CenterServiceType? ServiceType = null);
 
 /// <summary>LiveExpiresAt (UTC) es null si la cuenta no tiene ninguna invitación viva.</summary>
 public sealed record AccessInvitationStatus(bool HasPassword, DateTime? LiveExpiresAt);

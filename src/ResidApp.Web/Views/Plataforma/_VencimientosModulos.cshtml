@@ -17,7 +17,7 @@
                 @foreach (var item in upcoming)
                 {
                     <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                        <span><a asp-action="Centro" asp-route-centroId="@item.CenterId.Value">@item.CenterName</a> · @CenterModules.Find(item.ModuleCode)?.Name</span>
+                        <span><a asp-action="Centro" asp-route-centroId="@item.CenterId.Value">@item.CenterName</a> <partial name="_EtiquetaTipoServicio" model="(ResidApp.Domain.Platform.CenterServiceType?)item.ServiceType" /> · @CenterModules.Find(item.ModuleCode)?.Name</span>
                         <span class="text-body-secondary">hasta el @item.ValidUntil.ToString("dd/MM/yyyy")</span>
                     </li>
                 }
@@ -30,7 +30,7 @@
                 @foreach (var item in expired)
                 {
                     <li class="list-group-item d-flex flex-wrap justify-content-between gap-2">
-                        <span><a asp-action="Centro" asp-route-centroId="@item.CenterId.Value">@item.CenterName</a> · @CenterModules.Find(item.ModuleCode)?.Name</span>
+                        <span><a asp-action="Centro" asp-route-centroId="@item.CenterId.Value">@item.CenterName</a> <partial name="_EtiquetaTipoServicio" model="(ResidApp.Domain.Platform.CenterServiceType?)item.ServiceType" /> · @CenterModules.Find(item.ModuleCode)?.Name</span>
                         <span class="text-body-secondary">vencido el @item.ValidUntil.ToString("dd/MM/yyyy")</span>
                     </li>
                 }

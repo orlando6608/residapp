@@ -1,5 +1,6 @@
 using Dapper;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Platform;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.Shared;
 
@@ -16,7 +17,8 @@ public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connec
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
             SELECT profile.id AS ProfileScopeId, account.id AS AccountId, profile.centro_id AS CenterId,
-                   center.nombre_visible AS CenterName, profile.perfil_codigo AS Profile, account.nombre_visible AS AccountDisplayName
+                   center.nombre_visible AS CenterName, profile.perfil_codigo AS Profile, account.nombre_visible AS AccountDisplayName,
+                   CASE WHEN center.codigo = N'PLATAFORMA' THEN NULL ELSE center.tipo_de_servicio END AS ServiceTypeCode
               FROM dbo.cuentas account
               JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id
                   AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
@@ -28,7 +30,8 @@ public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connec
         return rows
             .Select(row => new ActiveProfileScope(
                 row.ProfileScopeId, AccountId.From(row.AccountId), CenterId.From(row.CenterId), row.CenterName,
-                EnumCode.ParseCode<SystemProfile>(row.Profile), row.AccountDisplayName))
+                EnumCode.ParseCode<SystemProfile>(row.Profile), row.AccountDisplayName,
+                row.ServiceTypeCode is null ? null : EnumCode.ParseCode<CenterServiceType>(row.ServiceTypeCode)))
             .ToList();
     }
 
@@ -73,7 +76,7 @@ public sealed class SqlProfileScopeDirectoryProvider(SqlConnectionFactory connec
             cancellationToken: ct))).ToList();
     }
 
-    private sealed record Row(Guid ProfileScopeId, Guid AccountId, Guid CenterId, string CenterName, string Profile, string? AccountDisplayName);
+    private sealed record Row(Guid ProfileScopeId, Guid AccountId, Guid CenterId, string CenterName, string Profile, string? AccountDisplayName, string? ServiceTypeCode);
 
     private sealed record UnitRow(Guid UnitId, string Name);
 }

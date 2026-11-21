@@ -15,7 +15,7 @@ public sealed record CodigosRecuperacionViewModel(IReadOnlyList<string> Codigos,
 /// pantalla desde la que se emitió.</summary>
 public sealed record HojaInvitacionViewModel(
     ResidApp.Domain.Accounts.AccessInvitationKind Tipo, string Usuario, string? Nombre, string Centro, DateTime CaducaEnUtc, string Direccion,
-    string Volver);
+    string Volver, ResidApp.Domain.Platform.CenterServiceType? TipoDeServicio = null);
 
 /// <summary>Usar una invitación: para quién es y si es de recuperación.</summary>
 public sealed record UsarInvitacionViewModel(string Usuario, bool Recuperacion);

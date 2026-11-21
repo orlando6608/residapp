@@ -1,3 +1,4 @@
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -8,7 +9,7 @@ namespace ResidApp.Application.Ports;
 /// visible de la cuenta (0023), null si nadie se lo ha puesto.</summary>
 public sealed record ActiveProfileScope(
     Guid ProfileScopeId, AccountId AccountId, CenterId CenterId, string CenterName, SystemProfile Profile,
-    string? AccountDisplayName = null);
+    string? AccountDisplayName = null, CenterServiceType? ServiceType = null);
 
 /// <summary>
 /// Lista los ambitos_perfil ACTIVOS de una cuenta, sin resolver ningún AuthorizationTarget. A diferencia de

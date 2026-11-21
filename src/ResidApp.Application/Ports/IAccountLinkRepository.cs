@@ -1,10 +1,12 @@
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
 
 /// <summary>La vinculación recién emitida, para la hoja que se entrega. Las fechas son UTC.</summary>
-public sealed record IssuedAccountLink(string CenterName, SystemProfile Profile, IReadOnlyList<string> UnitNames, DateTime ExpiresAt);
+public sealed record IssuedAccountLink(
+    string CenterName, SystemProfile Profile, IReadOnlyList<string> UnitNames, DateTime ExpiresAt, CenterServiceType? ServiceType = null);
 
 /// <summary>Una vinculación del centro que sigue abierta: sin canjear (Redeemed* nulos) o canjeada y pendiente de confirmar.</summary>
 public sealed record AccountLinkSummary(
@@ -15,7 +17,8 @@ public sealed record AccountLinkSummary(
 }
 
 /// <summary>Lo que se le enseña a la persona antes de aceptar: de qué centro es, qué perfil y en qué unidades.</summary>
-public sealed record LiveAccountLink(Guid Id, string CenterName, SystemProfile Profile, IReadOnlyList<string> UnitNames, DateTime ExpiresAt);
+public sealed record LiveAccountLink(
+    Guid Id, string CenterName, SystemProfile Profile, IReadOnlyList<string> UnitNames, DateTime ExpiresAt, CenterServiceType? ServiceType = null);
 
 /// <summary>
 /// Vincular una cuenta que ya existe en otro centro (ADR 0007, I2b, script 0065). La Administración del centro emite la vinculación sin

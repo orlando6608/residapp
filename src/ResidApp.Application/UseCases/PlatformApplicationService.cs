@@ -37,11 +37,16 @@ public sealed record ChangeCenterModuleCommand(
 
 public sealed record CreateCenterCommand(
     Guid AmbitoPerfilId, CenterId CentroId, Guid OperacionId, string? CodigoCentro, string? NombreCentro, string? CodigoUnidad,
-    string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador, byte[]? Logo = null, string? ZonaHoraria = null);
+    string? NombreUnidad, string? IdentificadorAdministrador, string? NombreAdministrador, byte[]? Logo = null, string? ZonaHoraria = null,
+    CenterServiceType? TipoDeServicio = null);
 
 /// <summary>Corrige la zona horaria de un centro (script 0109). «Confirmado» es lo que Plataforma vio afectado y confirmó; si al guardar es otra cosa, se pide confirmar de nuevo.</summary>
 public sealed record ChangeCenterTimeZoneCommand(
     Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, string? ZonaHoraria, CenterTimeZoneChangeReason? Motivo, CenterTimeZoneImpact Confirmado);
+
+/// <summary>Corrige el tipo de servicio de un centro (ADR 0017, script 0113): solo un error de alta y solo con el centro sin personas.</summary>
+public sealed record ChangeCenterServiceTypeCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, CenterId CentroDestinoId, CenterServiceType? TipoDeServicio);
 
 /// <summary>
 /// Fachada del perfil de plataforma (script 0026; 0047): lista de centros, alta de un centro con su primera unidad y su primer
@@ -51,7 +56,7 @@ public sealed record ChangeCenterTimeZoneCommand(
 public sealed class PlatformApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IPlatformCenterDirectory directory,
     IPlatformCenterRepository centers, IAccessInvitationRepository invitations, ICenterModuleRepository modules, TimeProvider clock,
-    ICenterTimeZoneDirectory timeZoneCatalog, ICenterTimeZoneRepository timeZones)
+    ICenterTimeZoneDirectory timeZoneCatalog, ICenterTimeZoneRepository timeZones, ICenterServiceTypeRepository serviceTypes)
 {
     /// <summary>Las zonas horarias que Plataforma ofrece al crear un centro o corregir la suyo.</summary>
     public Task<ApplicationResult<IReadOnlyList<CenterTimeZone>>> ListTimeZonesAsync(PlatformQuery query, CancellationToken ct = default) =>
@@ -180,7 +185,23 @@ public sealed class PlatformApplicationService(
                 string.IsNullOrWhiteSpace(command.CodigoUnidad) ? ExchangeText.UnitCode(command.NombreUnidad ?? "") : command.CodigoUnidad,
                 command.NombreUnidad, command.IdentificadorAdministrador, command.NombreAdministrador, command.Logo, centerCodeGenerated);
             var zone = CenterTimeZoneRules.ValidateZone(command.ZonaHoraria ?? CenterTimeZoneRules.DefaultZoneCode, await timeZoneCatalog.ListCatalogAsync(ct));
-            return await centers.CreateCenterAsync(access, command.OperacionId, data with { ZoneCode = zone }, ct);
+            // Sin valor por defecto: quien no elige el tipo de servicio no crea el centro (ADR 0017).
+            var serviceType = CenterServiceTypeRules.Validate(command.TipoDeServicio);
+            return await centers.CreateCenterAsync(access, command.OperacionId, data with { ZoneCode = zone, ServiceType = serviceType }, ct);
+        });
+
+    /// <summary>El tipo de servicio de un centro, su constancia y si tiene personas (sí o no).</summary>
+    public Task<ApplicationResult<CenterServiceTypeState>> GetCenterServiceTypeAsync(PlatformCenterQuery query, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+            await serviceTypes.GetAsync(await AccessAsync(query.AmbitoPerfilId, query.CentroId, ct), query.CentroDestinoId, ct));
+
+    /// <summary>Corrige el tipo de servicio de un centro sin personas (error de alta).</summary>
+    public Task<ApplicationResult<bool>> ChangeCenterServiceTypeAsync(ChangeCenterServiceTypeCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var access = await AccessAsync(command.AmbitoPerfilId, command.CentroId, ct);
+            await serviceTypes.ChangeAsync(access, command.CentroDestinoId, CenterServiceTypeRules.Validate(command.TipoDeServicio), ct);
+            return true;
         });
 
     public Task<ApplicationResult<PlatformCenterDetail>> FindCenterAsync(PlatformCenterQuery query, CancellationToken ct = default) =>

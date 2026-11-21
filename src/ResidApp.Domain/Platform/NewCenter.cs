@@ -17,7 +17,7 @@ public static class PlatformCenter
 /// el primero libre con -2, -3… y, en un reenvío, el código no forma parte de lo que se compara.</summary>
 public sealed record NewCenterData(
     string CenterCode, string CenterName, CenterUnitData Unit, ProfessionalAccountData Administrator, CenterLogoImage? Logo = null,
-    bool CenterCodeGenerated = false, string ZoneCode = CenterTimeZoneRules.DefaultZoneCode);
+    bool CenterCodeGenerated = false, string ZoneCode = CenterTimeZoneRules.DefaultZoneCode, CenterServiceType ServiceType = CenterServiceType.Residencia);
 
 /// <summary>
 /// Reglas del alta de un centro por el operador de plataforma. El código del centro sigue las del código de una unidad (de 2 a

@@ -36,6 +36,9 @@ public sealed class PermisosAplicacionTests
     // Su UPDATE es solo de la columna terminada_en (cierre de la declaración): concedido por columna; el disparador rechaza el resto.
     private static readonly HashSet<string> ColumnaTerminada = Names("declaraciones_acceso_clinico declaraciones_historial_traslado");
 
+    // UPDATE de la tabla concedido, pero con DENY de esta columna (script 0113: el tipo de servicio del centro solo lo cambia el procedimiento corregir_tipo_servicio_centro).
+    private static readonly Dictionary<string, string> ColumnaDenegada = new(StringComparer.OrdinalIgnoreCase) { ["centros"] = "tipo_de_servicio" };
+
     // Solo la toca el administrador (aplicar-scripts.sh), no la aplicación.
     private static readonly HashSet<string> SinPermisos = Names("scripts_aplicados entorno_bd zonas_horarias");
 
@@ -97,7 +100,12 @@ public sealed class PermisosAplicacionTests
             var columnDenies = own.Count(g => g.Permission == "UPDATE" && g.State == "DENY" && g.ColumnId > 0);
             var grantedColumn = own.Where(g => g.Permission == "UPDATE" && g.State == "GRANT" && g.ColumnId > 0).Select(g => g.Column).SingleOrDefault();
             if (ColumnaTerminada.Contains(table) && (columnGrants != 1 || grantedColumn != "terminada_en" || columnDenies == 0)) problems.Add($"{table}: debe tener UPDATE solo de terminada_en (esa columna concedida y el resto denegadas)");
-            if (!ColumnaTerminada.Contains(table) && (columnGrants > 0 || columnDenies > 0)) problems.Add($"{table}: no debe tener permisos de UPDATE por columna");
+            if (ColumnaDenegada.TryGetValue(table, out var deniedColumn))
+            {
+                var deniedColumns = own.Where(g => g.Permission == "UPDATE" && g.State == "DENY" && g.ColumnId > 0).Select(g => g.Column).ToList();
+                if (columnGrants > 0 || deniedColumns.Count != 1 || deniedColumns[0] != deniedColumn) problems.Add($"{table}: debe tener solo el DENY de UPDATE de la columna {deniedColumn}");
+            }
+            else if (!ColumnaTerminada.Contains(table) && (columnGrants > 0 || columnDenies > 0)) problems.Add($"{table}: no debe tener permisos de UPDATE por columna");
         }
 
         foreach (var name in Update.Concat(Delete).Concat(ColumnaTerminada))
@@ -247,7 +255,7 @@ public sealed class PermisosAplicacionTests
         {
             var expectedInsert = SinPermisos.Contains(table) ? 0 : 1;
             // HAS_PERMS_BY_NAME de tabla da 1 solo con UPDATE de tabla entera; las declaraciones (solo una columna) se prueban aparte.
-            var expectedUpdate = Update.Contains(table) && !ColumnaTerminada.Contains(table) ? 1 : 0;
+            var expectedUpdate = Update.Contains(table) && !ColumnaTerminada.Contains(table) && !ColumnaDenegada.ContainsKey(table) ? 1 : 0;
             var expectedDelete = Delete.Contains(table) ? 1 : 0;
             if (insert != expectedInsert || update != expectedUpdate || delete != expectedDelete)
                 problems.Add($"{table}: efectivo I/U/D {insert}/{update}/{delete}, esperado {expectedInsert}/{expectedUpdate}/{expectedDelete}");
@@ -297,6 +305,17 @@ public sealed class PermisosAplicacionTests
         // El peor caso (también db_datawriter): los DENY de columna ganan al UPDATE de tabla.
         Assert.Equal(230, await ErrorOfAsync("UPDATE dbo.declaraciones_acceso_clinico SET cuenta_id = cuenta_id WHERE 1 = 0"));
         Assert.Equal(230, await ErrorOfAsync("UPDATE dbo.declaraciones_historial_traslado SET caduca_en = caduca_en WHERE 1 = 0"));
+    }
+
+    [Fact]
+    public async Task El_tipo_de_servicio_del_centro_no_lo_cambia_la_aplicacion_ni_con_db_datawriter()
+    {
+        // Script 0113: el UPDATE del nombre sigue permitido, el de la columna del tipo no. El peor caso (también db_datawriter) lo para el DENY de columna.
+        Assert.Null(await ErrorOfAsync("UPDATE dbo.centros SET nombre_visible = nombre_visible WHERE 1 = 0", RoleOnlyUser));
+        Assert.Equal(230, await ErrorOfAsync("UPDATE dbo.centros SET tipo_de_servicio = tipo_de_servicio WHERE 1 = 0", RoleOnlyUser));
+        Assert.Equal(230, await ErrorOfAsync("UPDATE dbo.centros SET tipo_de_servicio = tipo_de_servicio WHERE 1 = 0"));
+        Assert.Equal(PermissionDenied, await ErrorOfAsync("UPDATE dbo.tipos_servicio_centro SET tipo_codigo = tipo_codigo WHERE 1 = 0", RoleOnlyUser));
+        Assert.Equal(PermissionDenied, await ErrorOfAsync("DELETE FROM dbo.tipos_servicio_centro WHERE 1 = 0", RoleOnlyUser));
     }
 
     [Fact]

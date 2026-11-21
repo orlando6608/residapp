@@ -51,7 +51,8 @@ public class ZonaHorariaCentroTests
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedIdentity(subject),
         new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
         new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
-        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
+        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
+        new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
 
     private static ChangeCenterTimeZoneCommand Change(
         Operator op, CenterId center, string? zone, CenterTimeZoneChangeReason? reason, int slots = 0, int appointments = 0) =>
@@ -157,7 +158,7 @@ public class ZonaHorariaCentroTests
         var unitCode = Code();
         var centerCode = Code();
         CreateCenterCommand Create(string zone) => new(
-            op.ProfileScopeId, CenterId.From(PlatformCenter.Id), centerId, centerCode, "Residencia Zona (ficticia)", unitCode, "Primera unidad", adminSubject, "Admin Nuevo", null, zone);
+            op.ProfileScopeId, CenterId.From(PlatformCenter.Id), centerId, centerCode, "Residencia Zona (ficticia)", unitCode, "Primera unidad", adminSubject, "Admin Nuevo", null, zone, TipoDeServicio: CenterServiceType.Residencia);
 
         var created = await service.CreateCenterAsync(Create(Canarias));
         Assert.True(created.Ok, created.Error?.Message);
@@ -181,7 +182,7 @@ public class ZonaHorariaCentroTests
         var service = BuildPlatform(op.ExternalSubject);
         string Code() => $"zon-{Guid.NewGuid():N}"[..20];
         CreateCenterCommand Create(Guid id, string? zone) => new(
-            op.ProfileScopeId, CenterId.From(PlatformCenter.Id), id, Code(), "Residencia Zona (ficticia)", Code(), "Primera unidad", $"test-adm-{Guid.NewGuid():N}"[..28], "Admin Nuevo", null, zone);
+            op.ProfileScopeId, CenterId.From(PlatformCenter.Id), id, Code(), "Residencia Zona (ficticia)", Code(), "Primera unidad", $"test-adm-{Guid.NewGuid():N}"[..28], "Admin Nuevo", null, zone, TipoDeServicio: CenterServiceType.Residencia);
         var withoutZone = Guid.NewGuid();
         var invalid = Guid.NewGuid();
 
@@ -320,7 +321,8 @@ public class ZonaHorariaCentroTests
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedIdentity(admin.ExternalSubject),
             new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
             new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
-            new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
+            new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
+        new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
 
         var result = await asAdmin.ChangeCenterTimeZoneAsync(new ChangeCenterTimeZoneCommand(
             admin.ProfileScopeId, admin.CenterId, admin.CenterId, Canarias, CenterTimeZoneChangeReason.ErrorDeAlta, new CenterTimeZoneImpact(0, 0)));

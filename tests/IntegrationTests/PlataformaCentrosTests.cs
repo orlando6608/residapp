@@ -40,7 +40,8 @@ public class PlataformaCentrosTests
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedPlatformSessionIdentityProvider(subject),
         new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
         new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
-        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
+        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
+        new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
 
     private static string NewCode() => $"cen-{Guid.NewGuid():N}"[..20];
 
@@ -49,7 +50,7 @@ public class PlataformaCentrosTests
     private static CreateCenterCommand Create(
         Operator op, string? centerCode = null, string? adminSubject = null, Guid? operationId = null, string centerName = "Residencia Nueva (ficticia)") =>
         new(op.ProfileScopeId, op.CenterId, operationId ?? Guid.NewGuid(), centerCode ?? NewCode(), centerName, NewCode(),
-            "Primera unidad", adminSubject ?? NewSubject(), "Admin Nuevo");
+            "Primera unidad", adminSubject ?? NewSubject(), "Admin Nuevo", TipoDeServicio: CenterServiceType.Residencia);
 
     private static async Task<int> CountAsync(string sql, object parameters)
     {
@@ -152,7 +153,7 @@ public class PlataformaCentrosTests
     public async Task DatosInvalidos_SeRechazan(string centerCode, string centerName, string unitCode, string unitName, string subject, string adminName)
     {
         var op = await CreateOperatorAsync();
-        var command = new CreateCenterCommand(op.ProfileScopeId, op.CenterId, Guid.NewGuid(), centerCode, centerName, unitCode, unitName, subject, adminName);
+        var command = new CreateCenterCommand(op.ProfileScopeId, op.CenterId, Guid.NewGuid(), centerCode, centerName, unitCode, unitName, subject, adminName, TipoDeServicio: CenterServiceType.Residencia);
 
         var result = await BuildPlatform(op.ExternalSubject).CreateCenterAsync(command);
 
@@ -213,7 +214,7 @@ public class PlataformaCentrosTests
     }
 
     private static CreateCenterCommand CreateWithoutCodes(Operator op, string centerName, string adminSubject, Guid? operationId = null) =>
-        new(op.ProfileScopeId, op.CenterId, operationId ?? Guid.NewGuid(), null, centerName, null, "Primera unidad", adminSubject, "Admin Nuevo");
+        new(op.ProfileScopeId, op.CenterId, operationId ?? Guid.NewGuid(), null, centerName, null, "Primera unidad", adminSubject, "Admin Nuevo", TipoDeServicio: CenterServiceType.Residencia);
 
     private static async Task<string> CenterCodeAsync(Guid centerId)
     {

@@ -112,6 +112,10 @@ public sealed class CoberturaRlsTests
             ["zonas_centro|FILTER|"] = "fn_centro_o_plataforma",
             ["zonas_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
             ["zonas_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
+            // Script 0113: la constancia del tipo de servicio de cada centro, con las mismas tres piezas que zonas_centro.
+            ["tipos_servicio_centro|FILTER|"] = "fn_centro_o_plataforma",
+            ["tipos_servicio_centro|BLOCK|AFTER INSERT"] = "fn_estructura_escribe",
+            ["tipos_servicio_centro|BLOCK|AFTER UPDATE"] = "fn_centro_del_ambito",
         };
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var rows = (await connection.QueryAsync<(string Table, string Type, string Operation, string Definition)>("""

@@ -41,7 +41,8 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                    (SELECT TOP (1) account.sujeto_externo
                       FROM dbo.ambitos_perfil profile JOIN dbo.cuentas account ON account.id = profile.cuenta_id
                      WHERE profile.centro_id = center.id AND profile.perfil_codigo = 'ADMINISTRACION' ORDER BY profile.concedido_en) AS AdminSubject,
-                   ISNULL((SELECT TOP (1) zone.zona_codigo FROM dbo.zonas_centro zone WHERE zone.centro_id = center.id ORDER BY zone.numero DESC), @DefaultZone) AS ZoneCode
+                   ISNULL((SELECT TOP (1) zone.zona_codigo FROM dbo.zonas_centro zone WHERE zone.centro_id = center.id ORDER BY zone.numero DESC), @DefaultZone) AS ZoneCode,
+                   center.tipo_de_servicio AS ServiceTypeCode
               FROM dbo.centros center WHERE center.id = @Id
             """, new { Id = operationId, DefaultZone = CenterTimeZoneRules.DefaultZoneCode }, transaction, cancellationToken: ct));
         if (previous is not null)
@@ -52,6 +53,7 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
                    && string.Equals(previous.UnitCode, data.Unit.Code, StringComparison.OrdinalIgnoreCase)
                    && string.Equals(previous.AdminSubject, data.Administrator.Subject, StringComparison.OrdinalIgnoreCase)
                    && string.Equals(previous.ZoneCode, data.ZoneCode, StringComparison.Ordinal)
+                   && string.Equals(previous.ServiceTypeCode, data.ServiceType.ToCode(), StringComparison.Ordinal)
                 ? CenterId.From(operationId)
                 : throw new DomainValidationException("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_REQUEST");
         }
@@ -83,13 +85,13 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
         var parameters = new
         {
             CenterId = operationId, UnitId = unitId, AdminId = adminId, ProfileScopeId = profileScopeId, ActorId = access.AccountId.Value,
-            CenterCode = centerCode, CenterName = data.CenterName, UnitCode = data.Unit.Code, UnitName = data.Unit.Name,
+            CenterCode = centerCode, CenterName = data.CenterName, ServiceType = data.ServiceType.ToCode(), UnitCode = data.Unit.Code, UnitName = data.Unit.Name,
             data.Administrator.Subject, AdminName = data.Administrator.DisplayName, OccurredAt = occurredAt,
         };
         try
         {
             await connection.ExecuteAsync(new CommandDefinition("""
-                INSERT INTO dbo.centros (id, codigo, nombre_visible, estado, creado_en) VALUES (@CenterId, @CenterCode, @CenterName, 'ACTIVE', @OccurredAt);
+                INSERT INTO dbo.centros (id, codigo, nombre_visible, estado, creado_en, tipo_de_servicio) VALUES (@CenterId, @CenterCode, @CenterName, 'ACTIVE', @OccurredAt, @ServiceType);
                 INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (@UnitId, @CenterId, @UnitCode, @UnitName, 'ACTIVE', @OccurredAt);
                 INSERT INTO dbo.cuentas (id, sujeto_externo, nombre_visible, estado, creado_en) VALUES (@AdminId, @Subject, @AdminName, 'ACTIVE', @OccurredAt);
                 INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
@@ -107,6 +109,8 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
 
         // La zona horaria elegida al crear el centro (script 0109): la fila 1 de su historia.
         await SqlCenterTimeZones.InsertCreationAsync(connection, transaction, CenterId.From(operationId), data.ZoneCode, access, occurredAt, ct);
+        // El tipo de servicio elegido al crear el centro (script 0113, ADR 0017): la fila 1 de su constancia, con el mismo tipo que la columna.
+        await SqlCenterServiceTypes.InsertCreationAsync(connection, transaction, CenterId.From(operationId), data.ServiceType, access, occurredAt, ct);
 
         if (data.Logo is not null)
         {
@@ -224,5 +228,5 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
             Action = action, OccurredAt = occurredAt,
         }, transaction, cancellationToken: ct));
 
-    private sealed record PreviousRow(string Code, string Name, string? UnitCode, string? AdminSubject, string ZoneCode);
+    private sealed record PreviousRow(string Code, string Name, string? UnitCode, string? AdminSubject, string ZoneCode, string ServiceTypeCode);
 }

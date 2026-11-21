@@ -45,7 +45,8 @@ public class ModulosCentroTests
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedSessionIdentityProvider(subject),
         new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
         new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
-        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
+        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
+        new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
 
     private static CenterModuleAccess BuildAccess(string subject, IModuleSettings? settings = null) => new(
         new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), settings ?? new Settings(), new FakeEnvironmentMarker(development: true), new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory),

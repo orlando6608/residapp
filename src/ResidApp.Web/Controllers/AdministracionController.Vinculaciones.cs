@@ -51,7 +51,7 @@ public sealed partial class AdministracionController
                 var issued = result.Value!;
                 return View("HojaVinculacion", new HojaVinculacionViewModel(
                     issued.Details.CenterName, issued.Details.Profile, issued.Details.UnitNames, issued.Details.ExpiresAt,
-                    Url.Action("Vincular", "Cuenta", new { id = issued.Token }, Request.Scheme)!, issued.Token, Url.Action(nameof(Vinculaciones))!));
+                    Url.Action("Vincular", "Cuenta", new { id = issued.Token }, Request.Scheme)!, issued.Token, Url.Action(nameof(Vinculaciones))!, issued.Details.ServiceType));
             }
 
             if (result.Error!.Code == ApplicationFailureCode.AccessDenied)

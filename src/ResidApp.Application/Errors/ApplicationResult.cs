@@ -126,6 +126,21 @@ public static class ApplicationResultRunner
             "Han cambiado las franjas o las citas afectadas desde que las viste: revisa los números y confirma otra vez."),
     };
 
+    /// <summary>Tipo de servicio del centro (ADR 0017, script 0113): cada fallo dice qué pasa. El procedimiento y los disparadores de la base de datos lanzan CENTER_SERVICE_TYPE_*.</summary>
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> CenterServiceTypeFailures = new()
+    {
+        ["CENTER_SERVICE_TYPE_INVALID"] = (ApplicationFailureCode.InvalidInput, "Elige el tipo de servicio: Residencia o Centro de Día."),
+        ["CENTER_SERVICE_TYPE_CENTER_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "El centro no existe, o es el de Plataforma, que no es un servicio: su tipo no se cambia."),
+        ["CENTER_SERVICE_TYPE_SEQUENCE_INVALID"] = (ApplicationFailureCode.Conflict,
+            "El centro ya tiene ese tipo de servicio, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla."),
+        ["CENTER_SERVICE_TYPE_NOT_EMPTY"] = (ApplicationFailureCode.Conflict,
+            "El centro ya tiene personas dadas de alta (residentes o familiares): su tipo de servicio no se puede cambiar. Si se eligió mal, hay que crear un centro nuevo."),
+        ["CENTER_SERVICE_TYPE_FORBIDDEN"] = (ApplicationFailureCode.AccessDenied, "Solo Plataforma puede corregir el tipo de servicio de un centro."),
+        ["CENTER_SERVICE_TYPE_HISTORY_IMMUTABLE"] = (ApplicationFailureCode.Conflict, "La constancia del tipo de servicio no se puede modificar ni borrar."),
+        ["CENTER_SERVICE_TYPE_HISTORY_MISSING"] = (ApplicationFailureCode.Conflict, "El tipo de servicio no se puede cambiar sin su constancia."),
+    };
+
     /// <summary>Citas externas de los residentes (script 0101): cada fallo dice qué pasa. Los triggers de la base de datos lanzan los mismos códigos. Una cita que no existe o que
     /// no está en el ámbito de quien la pide dan el mismo error (acceso denegado), sin distinguirlas.</summary>
     private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> ExternalAppointmentFailures = new()
@@ -221,6 +236,11 @@ public static class ApplicationResultRunner
         if (CenterTimeZoneFailures.TryGetValue(message, out var timeZone))
         {
             return new ApplicationFailure(timeZone.Code, timeZone.Text);
+        }
+
+        if (CenterServiceTypeFailures.TryGetValue(message, out var serviceType))
+        {
+            return new ApplicationFailure(serviceType.Code, serviceType.Text);
         }
 
         if (PositionFailures.TryGetValue(message, out var position))

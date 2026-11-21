@@ -9,7 +9,8 @@ namespace ResidApp.Application.Ports;
 public sealed record PlatformAccess(Guid ProfileScopeId, AccountId AccountId);
 
 /// <summary>Un centro del sistema distinto del reservado. UnitCount cuenta todas sus unidades, activas o no.</summary>
-public sealed record PlatformCenterSummary(CenterId CenterId, string Code, string Name, bool Active, int UnitCount, DateTimeOffset CreatedAt);
+public sealed record PlatformCenterSummary(
+    CenterId CenterId, string Code, string Name, bool Active, int UnitCount, DateTimeOffset CreatedAt, CenterServiceType ServiceType);
 
 /// <summary>Lectura de los centros para el operador de plataforma. Solo trae datos del centro, nunca de residentes.</summary>
 public interface IPlatformCenterDirectory
@@ -54,5 +55,5 @@ public sealed record PlatformMultiCenterAccount(
     AccountId AccountId, string Subject, string? DisplayName, bool Active, bool HasPassword, DateTime? LiveInvitationExpiresAt,
     IReadOnlyList<PlatformAccountScope> Scopes);
 
-/// <summary>Un perfil vigente de una cuenta en un centro.</summary>
-public sealed record PlatformAccountScope(string CenterName, SystemProfile Profile);
+/// <summary>Un perfil vigente de una cuenta en un centro. ServiceType es el tipo de servicio del centro (ADR 0017); null en el centro reservado de Plataforma, que no es un servicio.</summary>
+public sealed record PlatformAccountScope(string CenterName, SystemProfile Profile, CenterServiceType? ServiceType = null);

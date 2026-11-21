@@ -154,7 +154,7 @@
     <p class="mb-0">
         La cabecera está en todas las pantallas. <strong>«Mi panel»</strong> te lleva al inicio de tu perfil (por
         ejemplo, el inicio de Enfermería). El menú con el nombre de tu perfil muestra con qué cuenta has entrado y tu ámbito
-        activo, y desde él puedes pulsar <strong>«Mi cuenta»</strong> (más abajo), <strong>«Cambiar ámbito»</strong> para volver a elegir con qué perfil o centro trabajas (si solo tienes uno, la pantalla te lo dice y no hay nada que elegir)
+        activo, y desde él puedes pulsar <strong>«Mi cuenta»</strong> (más abajo), <strong>«Cambiar ámbito»</strong> para volver a elegir con qué perfil o centro trabajas (si solo tienes uno, la pantalla te lo dice y no hay nada que elegir; cada centro aparece con su <strong>tipo de servicio</strong>, <em>Residencia</em> o <em>Centro de Día</em>, también en «Mi cuenta» y en las hojas de invitación y de acceso a otro centro)
         o <strong>«Salir»</strong>. En el móvil, todo esto está tras el botón de
         menú de la esquina superior derecha.
     </p>
@@ -1007,8 +1007,8 @@
     </h2>
     <p>
         El perfil <strong>Plataforma</strong> es de quien opera ResidApp, no del personal de un centro. Su inicio tiene una tarjeta,
-        <strong>Centros</strong>, que lista los centros (nombre, código, estado y número de unidades) y permite crear uno con
-        <strong>Nuevo centro</strong>. El formulario pide el nombre del centro, su <strong>zona horaria</strong> (viene elegida «Península y Baleares (Madrid)»; en la lista salen solo las zonas que Plataforma tiene activas, hoy también «Canarias»), el nombre de su primera unidad y su primer
+        <strong>Centros</strong>, que lista los centros (nombre, tipo de servicio, código, estado y número de unidades) y permite crear uno con
+        <strong>Nuevo centro</strong>. El formulario pide el nombre del centro, su <strong>zona horaria</strong> (viene elegida «Península y Baleares (Madrid)»; en la lista salen solo las zonas que Plataforma tiene activas, hoy también «Canarias»), su <strong>tipo de servicio</strong> (<strong>Residencia</strong> o <strong>Centro de Día</strong>; no viene elegido y hay que marcar «Confirmo que el tipo de servicio elegido es el correcto y que no se podrá cambiar cuando el centro tenga personas.»), el nombre de su primera unidad y su primer
         administrador (identificador de acceso y nombre). Opcionalmente puedes subir ya el <strong>logo del centro</strong> (PNG o JPEG, que se encuadra igual que en «Nombre y logo del centro»); después lo cambia la Administración del propio centro, no Plataforma. Los códigos del centro y de la unidad no se escriben: se generan solos a partir de los nombres (en mayúsculas, sin
         acentos y con guiones; si el del centro ya existe se añade -2, -3…), no se pueden cambiar y el del centro se ve después en la lista «Centros». Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, que nace activa con el perfil
         Administración y la unidad concedida. Para que pueda entrar, abre el centro (<strong>Administraciones y unidades</strong>) y pulsa
@@ -1044,6 +1044,13 @@
         («Se eligió mal al dar de alta el centro» o «El centro ha cambiado de ubicación»), te enseña cuántas franjas de citas activas y citas futuras reservadas se ven afectadas, y exige marcar
         «He visto lo que se ve afectado y confirmo el cambio de zona.» antes de <strong>Cambiar la zona horaria</strong>. La Administración no puede cambiarla; en su Auditoría aparece
         «Zona horaria del centro cambiada». Los recordatorios y avisos por correo ya reservados para hoy o mañana pueden repetirse o no salir ese día. La pantalla de Plataforma usa siempre la hora de la península.
+    </p>
+    <p>
+        <strong>Tipo de servicio del centro.</strong> Dice si el centro es una <strong>Residencia</strong> o un <strong>Centro de Día</strong>; lo elige quien da de alta el centro y <strong>no se cambia</strong>.
+        Solo Plataforma puede corregir un error de alta, y solo mientras el centro no tenga ninguna persona dada de alta (ni residentes, de cualquier estado, ni familiares). Se hace en el detalle del centro
+        (<strong>Administraciones y unidades</strong>), en la sección <strong>Tipo de servicio</strong>: ves el «Tipo actual» y la «Constancia del tipo de servicio» (el alta y, si la hay, la corrección) y, en <strong>Corregir un error de alta</strong>,
+        marcas «Confirmo que el centro es de tipo «…» y que se eligió mal al darlo de alta.» y pulsas <strong>Cambiar a</strong> el otro tipo. Si el centro ya tiene personas, la pantalla lo dice y no ofrece el cambio: hay que crear un centro nuevo.
+        La Administración no puede cambiarlo; en su Auditoría aparece «Tipo de servicio del centro corregido». Por ahora el tipo solo se ve como una etiqueta de texto: ninguna otra pantalla (habitaciones, camas, vocabulario) cambia por él.
     </p>
 </section>
 

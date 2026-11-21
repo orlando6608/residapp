@@ -284,6 +284,8 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             ["Form.NombreUnidad"] = "Planta 1",
             ["Form.IdentificadorAdministrador"] = $"func-admin-{suffix}",
             ["Form.NombreAdministrador"] = "Admin Funcional (ficticio)",
+            ["Form.TipoDeServicio"] = "Residencia",
+            ["Form.ConfirmoTipo"] = "true",
         });
         var repeated = await PostAsync(new()
         {
@@ -291,6 +293,8 @@ public class ProfessionalAccountScreensTests : IClassFixture<ResidentsFlowTests.
             ["Form.NombreUnidad"] = "Planta 1",
             ["Form.IdentificadorAdministrador"] = $"func-admin-{suffix}",
             ["Form.NombreAdministrador"] = "Admin Funcional (ficticio)",
+            ["Form.TipoDeServicio"] = "Residencia",
+            ["Form.ConfirmoTipo"] = "true",
         });
         var adminHome = await PageAsync("ADMINISTRACION", null);
         var adminPlatform = await PageAsync("ADMINISTRACION", null, "/Plataforma");

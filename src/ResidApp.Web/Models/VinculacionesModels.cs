@@ -22,7 +22,8 @@ public sealed record AccountLinksViewModel(
 
 /// <summary>La hoja que se entrega a la persona: Direccion lleva el token y solo se enseña esta vez.</summary>
 public sealed record HojaVinculacionViewModel(
-    string Centro, SystemProfile Perfil, IReadOnlyList<string> Unidades, DateTime CaducaEnUtc, string Direccion, string Codigo, string Volver);
+    string Centro, SystemProfile Perfil, IReadOnlyList<string> Unidades, DateTime CaducaEnUtc, string Direccion, string Codigo, string Volver,
+    ResidApp.Domain.Platform.CenterServiceType? TipoDeServicio = null);
 
 /// <summary>Lo que ve la persona antes de aceptar. Token vuelve en el formulario, no en la dirección.</summary>
 public sealed record AceptarVinculacionViewModel(LiveAccountLink Vinculacion, string Token);
