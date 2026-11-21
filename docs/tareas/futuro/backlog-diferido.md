@@ -27,7 +27,8 @@ Del "Fuera de alcance" de `alcance.md`, sin cambios ni interpretación adicional
 - Exportación masiva de historias clínicas individuales.
 - Exportar los registros asistenciales (cierres de turno, cambios, valoraciones) a otro programa: **después del piloto**, cuando se sepa qué programa usa el centro, con contrato de encargado, auditoría y probablemente una evaluación de impacto (CJ, `importacion-exportacion-confirmaciones-cj` 3.1, 2026-10-25).
 - Integraciones con historias clínicas externas en la primera versión.
-- Flujos específicos de Centro de Día y SAAD antes de validar el modelo inicial en residencias.
+- Flujos específicos de SAAD antes de validar el modelo inicial en residencias.
+- Parte diario del Centro de Día (llegada y salida, comidas, actividades e incidencias del día, aviso diario a la familia, quién recoge y transporte): el Centro de Día se estudia como segunda modalidad de centro (`tipo_de_servicio`), por fases y sin datos reales hasta la validación de una persona experta; este parte sigue fuera hasta que CJ lo especifique (ver `docs/privacidad/centro-de-dia-lectura-dpo.md`).
 - CFS y Pfeiffer dentro del estado basal.
 
 ## Decisiones y preparación para producción/piloto real

@@ -1,0 +1,720 @@
+<!doctype html>
+<!--
+  Documento para CJ. Se responde abriéndolo en el navegador (no hace falta editar este código).
+  Las respuestas se guardan solas en el servidor (api/respuestas/); ingeniería las lee de allí. Cómo funciona: docs/pendientes-cj/README.md.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Centro de Día: qué se anota en el día</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f7;
+    --surface: #ffffff;
+    --ink: #1a2427;
+    --muted: #55686c;
+    --rule: #d3dcdd;
+    --accent: #1b5f6b;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3eff0;
+    --warn-rule: #e0bf55;
+    --blank: #fffdf4;
+    --blank-rule: #c9b36a;
+    --ok-bg: #e4f2e7;
+    --ok-ink: #1d4d2b;
+    --ok-rule: #8cc29b;
+    --danger: #b3261e;
+    --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --sans: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101618;
+      --surface: #172023;
+      --ink: #e2eaeb;
+      --muted: #9aafb2;
+      --rule: #2a383b;
+      --accent: #72c0cb;
+      --accent-ink: #0d1a1c;
+      --accent-soft: #1b2e32;
+      --warn-rule: #7c6520;
+      --blank: #1d2420;
+      --blank-rule: #6f6334;
+      --ok-bg: #173022;
+      --ok-ink: #bfe5c9;
+      --ok-rule: #3f7a52;
+      --danger: #f2b8b5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101618;
+    --surface: #172023;
+    --ink: #e2eaeb;
+    --muted: #9aafb2;
+    --rule: #2a383b;
+    --accent: #72c0cb;
+    --accent-ink: #0d1a1c;
+    --accent-soft: #1b2e32;
+    --warn-rule: #7c6520;
+    --blank: #1d2420;
+    --blank-rule: #6f6334;
+    --ok-bg: #173022;
+    --ok-ink: #bfe5c9;
+    --ok-rule: #3f7a52;
+    --danger: #f2b8b5;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 16px;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 48px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .prose { max-width: 66ch; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.25; margin: 0; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.45rem; }
+  h3 { font-size: 1.1rem; font-weight: 500; }
+  p, ul, ol { margin: 0; }
+  section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 16px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  ul, ol { padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+  code { font-family: var(--mono); font-size: 0.86em; }
+  strong { font-weight: 600; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .back { font-size: 0.95rem; display: flex; flex-wrap: wrap; gap: 0 24px; }
+  .back a { display: inline-flex; align-items: center; min-height: 48px; }
+  header { display: flex; flex-direction: column; gap: 12px; }
+  .meta { color: var(--muted); font-size: 0.95rem; }
+  .lead { font-size: 1.08rem; }
+
+  .keyfacts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .keyfacts > div { background: var(--surface); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .keyfacts .k { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  @media (max-width: 640px) { .keyfacts { grid-template-columns: 1fr; } }
+  .context { padding-left: 12px; border-left: 3px solid var(--warn-rule); }
+
+  /* Cómo responder: tres pasos */
+  .howto { display: flex; flex-direction: column; gap: 12px; }
+  .steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .steps li {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .steps .step-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: var(--serif); font-weight: 600;
+  }
+  .steps strong { font-size: 1.02rem; }
+  .steps span { font-size: 0.93rem; }
+  @media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Índice de temas */
+  .toc { display: flex; flex-direction: column; gap: 8px; }
+  .toc a {
+    display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+    padding: 10px 14px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--surface); text-decoration: none; color: var(--ink);
+  }
+  .toc a:hover { border-color: var(--accent); }
+  .toc .tc { font-family: var(--mono); font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+  .toc a.all .tc { color: var(--ok-ink); }
+
+  /* Preguntas */
+  .qs { display: flex; flex-direction: column; gap: 16px; }
+  .q {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--blank-rule);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .q[data-done] { border-left-color: var(--ok-rule); }
+  .q-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; }
+  .q-head .n { font-family: var(--serif); font-weight: 600; color: var(--accent); }
+  .q-title { font-family: var(--sans); font-size: 1.04rem; font-weight: 600; }
+  .why { color: var(--muted); font-size: 0.93rem; }
+  .chip {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+    background: var(--blank); border: 1px dashed var(--blank-rule); color: var(--muted);
+  }
+  .q[data-done] .chip { background: var(--ok-bg); border: 1px solid var(--ok-rule); color: var(--ok-ink); }
+  @media (max-width: 520px) {
+    .q-head { grid-template-columns: auto 1fr; }
+    .q-head .chip { grid-column: 2; justify-self: start; }
+  }
+
+  .choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .choice {
+    position: relative;
+    display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+    padding: 10px 14px;
+    border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .choice .letter {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid var(--accent); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; line-height: 1;
+  }
+  .choice .txt { padding-top: 2px; }
+  .choice:hover { border-color: var(--accent); }
+  .choice:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+  .choice:has(input:checked) .letter { background: var(--accent); color: var(--accent-ink); }
+  .choice:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 0.92rem; color: var(--muted); }
+  textarea, input[type="text"] {
+    font: inherit; font-size: 1rem; color: var(--ink);
+    background: var(--blank); border: 1px solid var(--blank-rule); border-radius: 4px;
+    padding: 8px 10px; width: 100%; box-sizing: border-box;
+  }
+  textarea { min-height: 2.8em; resize: vertical; }
+  textarea:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* Barra fija de guardado */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface); border-top: 1px solid var(--rule);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    padding: 10px 16px;
+  }
+  .bar-in {
+    max-width: 880px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  }
+  .progress { display: flex; flex-direction: column; gap: 4px; min-width: 170px; }
+  .progress #avance { font-weight: 600; font-size: 0.95rem; }
+  .meter { height: 6px; border-radius: 3px; background: var(--rule); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--ok-rule); transition: width 0.2s; }
+  .estado { flex: 1 1 260px; font-size: 0.9rem; color: var(--muted); }
+  .estado.error { color: var(--danger); font-weight: 600; }
+  .estado.ok { color: var(--ok-ink); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-size: 0.95rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--surface); color: var(--accent);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 640px) { .page { padding-bottom: 240px; } }
+
+  footer { color: var(--muted); font-size: 0.88rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+
+  @media print {
+    .bar, .howto, .toc, .back { display: none; }
+    .page { padding-bottom: 24px; }
+    .q { break-inside: avoid; }
+  }
+  /* Nota de ingeniería: lo que ingeniería responde a una pregunta (fichero .notas.json del documento); solo lectura. */
+  .nota-ing { background: var(--surface); border: 1px solid var(--accent); border-left-width: 4px; padding: 8px 12px; border-radius: 4px; margin: 10px 0 0; font-size: 0.95rem; }
+  .nota-ing strong { display: block; font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+  .nota-ing p { margin: 0; white-space: pre-line; }
+</style>
+<body data-doc="centro-de-dia-parte-diario-cj" data-version="2026-11-21">
+
+<div class="page">
+  <header>
+    <nav class="back" aria-label="Navegación">
+      <a href="index.html">← Documentos para CJ</a>
+      <a href="/">Volver a ResidApp</a>
+    </nav>
+    <p class="eyebrow">ResidApp · Producto · Pendiente de tu criterio</p>
+    <h1>El Centro de Día: qué se anota en el día</h1>
+    <p class="meta">Estado a 21/11/2026 · Para CJ, responsable de producto</p>
+    <p class="lead prose">
+      Orlando está estudiando si ResidApp, pensada para residencias, puede usarse también en un <strong>Centro de Día</strong>: un servicio al que las personas van por la mañana y del que vuelven a casa por la tarde,
+      sin camas ni turno de noche, y en el que la familia espera saber cada día cómo ha ido. <strong>No está decidido abrirlo ni hay nada construido.</strong> Muchas cosas ya valdrían tal cual (sin habitaciones, sin noche);
+      lo que no existe es el <strong>parte del día</strong>: la llegada y la salida, las comidas, la participación y lo que pasó. Eso es lo que te preguntamos.
+    </p>
+    <p class="lead prose">
+      Si se hace, el parte del día será algo <strong>nuevo y separado</strong> de lo que ya funciona en las residencias, que no cambia. Ingeniería no inventará ninguna lista ni ningún valor: todo lo que se anote lo defines tú.
+    </p>
+  </header>
+
+  <div class="keyfacts" role="list">
+    <div role="listitem"><span class="k">Qué bloquea</span><span>El parte del día no se puede diseñar sin tus respuestas. Nada de esto toca a las residencias.</span></div>
+    <div role="listitem"><span class="k">Qué no cambia</span><span>El registro del Auxiliar, la revisión de Enfermería y los comunicados a la familia de las residencias siguen igual.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>18 preguntas en 5 temas. Sin datos personales reales en los comentarios.</span></div>
+  </div>
+
+  <section class="howto" aria-labelledby="como">
+    <h2 id="como">Cómo responder</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><strong>Responde aquí</strong>
+        <span>Pulsa la opción que elijas. Si quieres matizar, escribe en el comentario. Lo que marcas se guarda solo en el servidor: puedes cerrar y seguir otro día, también desde otro ordenador.</span></li>
+      <li><span class="step-n">2</span><strong>No hay que enviar nada</strong>
+        <span>No hay botón de guardar ni fichero que mandar: abajo verás «Guardado en el servidor» con la hora. Si cambias una respuesta, se guarda la nueva. Ingeniería recibe un aviso cuando dejas de responder un rato. No hace falta haberlo respondido todo: si una pregunta no es tuya, déjala en blanco.</span></li>
+    </ol>
+    <p class="prose meta">
+      ¿Desde otro ordenador? Abre este documento y verás lo que ya has contestado. No escribas datos personales reales (ni de personas atendidas ni de familiares ni de trabajadores) en los comentarios.
+    </p>
+  </section>
+
+  <nav class="toc" id="indice" aria-label="Temas del documento"></nav>
+
+  <section class="tema" id="tema-1">
+    <h2>Tema 1 · Quién viene a un centro de día y quién trabaja en él</h2>
+    <div class="stack prose">
+      <p>Un centro de día no es una residencia pequeña: la gente llega por la mañana y se va por la tarde, y puede ir solo algunos días. Antes de pensar en qué se apunta,
+        necesitamos saber a quién se atiende y con qué equipo, porque cambia qué es razonable pedir y a quién. No hace falta que contestes con cifras exactas: con lo que ves habitualmente basta.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="1.1">
+        <div class="q-head"><span class="n">1.1</span><h3 class="q-title" id="t-1-1">¿Quién usa un centro de día?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Cambia lo que se puede contar y a quién: si hay personas más jóvenes o con discapacidad, hay que cuidar más quién ve qué.</p>
+        <fieldset class="choices" aria-labelledby="t-1-1">
+          <label class="choice"><input type="radio" name="r-1-1" value="A"><span class="letter">A</span><span class="txt">Casi siempre personas mayores.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="B"><span class="letter">B</span><span class="txt">Sobre todo personas mayores, y algunas más jóvenes con discapacidad o con enfermedad mental.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="C"><span class="letter">C</span><span class="txt">De todo, sin que predomine nadie.</span></label>
+          <label class="choice"><input type="radio" name="r-1-1" value="D"><span class="letter">D</span><span class="txt">No lo sé.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="1.2">
+        <div class="q-head"><span class="n">1.2</span><h3 class="q-title" id="t-1-2">¿Qué perfiles trabajan en un centro de día y cuáles de ellos escribirían o leerían lo que pasa en el día?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo: auxiliares, técnicos de atención social, fisioterapeuta, terapeuta ocupacional, psicólogo, enfermería, medicina. Decide qué perfiles hacen falta y qué ve cada uno.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="1.3">
+        <div class="q-head"><span class="n">1.3</span><h3 class="q-title" id="t-1-3">¿Con qué frecuencia una persona empieza, se va unos meses y vuelve? ¿Y cuántas pasan después a una residencia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide si hace falta pensar en altas y bajas repetidas, y en el paso de un servicio a otro. No pedimos cifras exactas: una idea basta.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-2">
+    <h2>Tema 2 · Llegada, salida y ausencias</h2>
+    <div class="stack prose">
+      <p>Hoy ResidApp no sabe nada de entradas y salidas, porque en una residencia la persona vive allí. En un centro de día es lo primero que se anota. Te preguntamos lo mínimo que hace falta,
+        no lo máximo posible: cada dato anotado es un dato más que proteger.</p>
+        <p><strong>Importante:</strong> ResidApp no avisará a la familia de que alguien «no ha llegado». Eso es una función de seguridad (una persona con deterioro que sale de casa y no llega) y un aviso
+        automático por correo no es lo bastante fiable para eso. Tus respuestas nos sirven para saber qué <em>no</em> debe prometer la aplicación.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="2.1">
+        <div class="q-head"><span class="n">2.1</span><h3 class="q-title" id="t-2-1">Cuando una persona llega y cuando se va, ¿qué hay que anotar?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide qué campos tiene el registro de asistencia. Si quieres saber también quién lo anota, dilo en el comentario.</p>
+        <fieldset class="choices" aria-labelledby="t-2-1">
+          <label class="choice"><input type="radio" name="r-2-1" value="A"><span class="letter">A</span><span class="txt">Solo si vino o no vino ese día.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="B"><span class="letter">B</span><span class="txt">Si vino o no, y la hora de llegada.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="C"><span class="letter">C</span><span class="txt">Si vino o no, la hora de llegada y la hora de salida.</span></label>
+          <label class="choice"><input type="radio" name="r-2-1" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional): ¿quién lo anota?<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.2">
+        <div class="q-head"><span class="n">2.2</span><h3 class="q-title" id="t-2-2">Si una persona no viene, ¿hace falta anotar por qué?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide si el registro lleva un motivo de ausencia y, si lo lleva, cuál (una lista corta o algo más).</p>
+        <fieldset class="choices" aria-labelledby="t-2-2">
+          <label class="choice"><input type="radio" name="r-2-2" value="A"><span class="letter">A</span><span class="txt">No hace falta anotar el motivo.</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="B"><span class="letter">B</span><span class="txt">Basta una lista corta: «avisó la familia», «no avisó», «otro motivo».</span></label>
+          <label class="choice"><input type="radio" name="r-2-2" value="C"><span class="letter">C</span><span class="txt">Hace falta saber más (por ejemplo, que ha ingresado en un hospital). Explícalo en el comentario.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="2.3">
+        <div class="q-head"><span class="n">2.3</span><h3 class="q-title" id="t-2-3">Si a la hora de siempre una persona no ha llegado, ¿qué hace hoy el centro?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">No te lo preguntamos para que la aplicación lo organice, sino para entender el caso y no prometer lo que no hace. ¿Llama a casa? ¿Quién? ¿A qué hora?</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-3">
+    <h2>Tema 3 · Lo que se anota del día</h2>
+    <div class="stack prose">
+      <p>Aquí no pedimos valores clínicos: pedimos <strong>qué se anota y con qué opciones</strong>. Ingeniería no inventará ninguna lista de comidas, de actividades ni de incidencias:
+        las pondrás tú. Cuanto más cerrada sea la lista (elegir entre pocas opciones, en vez de escribir una frase), menos riesgo hay de que se cuele algo que no debería leerse.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="3.1">
+        <div class="q-head"><span class="n">3.1</span><h3 class="q-title" id="t-3-1">De la comida, ¿qué se anota? ¿Y se cuenta a la familia o solo lo ve el equipo?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide si el registro de comida tiene una lista (cuánto ha comido, si necesitó ayuda) y qué parte llega a la familia.</p>
+        <fieldset class="choices" aria-labelledby="t-3-1">
+          <label class="choice"><input type="radio" name="r-3-1" value="A"><span class="letter">A</span><span class="txt">Solo si comió o no comió.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="B"><span class="letter">B</span><span class="txt">Cuánto comió (con una lista corta de opciones que me dirás en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="C"><span class="letter">C</span><span class="txt">Cuánto comió y si necesitó ayuda para comer.</span></label>
+          <label class="choice"><input type="radio" name="r-3-1" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional): ¿lo ve la familia o solo el equipo?<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.2">
+        <div class="q-head"><span class="n">3.2</span><h3 class="q-title" id="t-3-2">De las actividades del día, ¿qué se quiere contar? ¿Con una lista cerrada o con una frase?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, «participó en un taller de memoria». Una lista cerrada es más segura; una frase es más cálida pero puede decir más de lo que debe.</p>
+        <fieldset class="choices" aria-labelledby="t-3-2">
+          <label class="choice"><input type="radio" name="r-3-2" value="A"><span class="letter">A</span><span class="txt">Una lista cerrada de actividades (la escribirás tú o el centro).</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="B"><span class="letter">B</span><span class="txt">Una frase corta de texto libre.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="C"><span class="letter">C</span><span class="txt">Las dos cosas: lista cerrada y, además, una frase corta.</span></label>
+          <label class="choice"><input type="radio" name="r-3-2" value="D"><span class="letter">D</span><span class="txt">No se cuenta nada de las actividades.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="3.3">
+        <div class="q-head"><span class="n">3.3</span><h3 class="q-title" id="t-3-3">¿Qué tipos de dieta hay en un centro de día? ¿Quién las prepara y quién necesita verlas?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, de textura, diabética, sin sal o por religión o creencias. Decide qué se anota de la dieta y quién la ve (por ejemplo, la cocina). Sin nombres reales.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="3.4">
+        <div class="q-head"><span class="n">3.4</span><h3 class="q-title" id="t-3-4">¿Qué cosas del día hay que contar a la familia por escrito a última hora de la tarde y cuáles solo de palabra?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, una caída, una herida, un cambio de conducta, un enfado con otra persona. Lo que va por escrito no puede nombrar a otras personas ni contener lesiones, sospechas ni diagnósticos: eso se habla en directo. Cuéntanos dónde pondrías esa línea. Sin nombres reales.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="3.5">
+        <div class="q-head"><span class="n">3.5</span><h3 class="q-title" id="t-3-5">Lo que la familia cuenta por la mañana («durmió mal», «no se tomó la pastilla»), ¿hoy se anota? ¿Dónde?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">ResidApp no tiene mensajes libres de la familia al centro. Decide si hace falta un sitio para esto o si se queda de palabra.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-4">
+    <h2>Tema 4 · Cómo se cuenta a la familia</h2>
+    <div class="stack prose">
+      <p>Orlando ya ha decidido dos cosas: el parte del día será un <strong>registro nuevo, separado</strong> del circuito clínico de siempre (registro del Auxiliar, revisión de Enfermería, aprobación y publicación), que no cambia;
+        y vendrá <strong>apagado por defecto</strong> en cada centro, que lo enciende cuando quiere.
+        La revisión de protección de datos recomienda además que lo prepare un profesional, con listas cerradas y sin inteligencia artificial, y que cada persona (y, si es posible, cada familiar) pueda decir que no lo quiere. Eso aún se tiene que validar.
+        Lo que falta es lo que solo sabes tú: quién lo escribe, quién lo revisa y qué espera la familia.</p>
+        <p>El correo diario, si se hace, solo diría «Tienes un aviso nuevo en ResidApp», sin contenido, y solo a quien lo active.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="4.1">
+        <div class="q-head"><span class="n">4.1</span><h3 class="q-title" id="t-4-1">¿Quién escribe el parte del día y quién lo revisa antes de que lo vea la familia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy la auxiliar no puede aprobar lo que se publica para la familia. Decide si eso se mantiene en un centro de día y si hay enfermería todos los días.</p>
+        <fieldset class="choices" aria-labelledby="t-4-1">
+          <label class="choice"><input type="radio" name="r-4-1" value="A"><span class="letter">A</span><span class="txt">Lo escribe la auxiliar y lo revisa una enfermera.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="B"><span class="letter">B</span><span class="txt">Lo escribe y lo revisa la misma persona del equipo asistencial.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="C"><span class="letter">C</span><span class="txt">Lo escribe otro perfil (técnico de atención social, terapeuta…) y lo revisa quien decida el centro.</span></label>
+          <label class="choice"><input type="radio" name="r-4-1" value="D"><span class="letter">D</span><span class="txt">Depende del centro.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.2">
+        <div class="q-head"><span class="n">4.2</span><h3 class="q-title" id="t-4-2">Si pasa algo importante a media mañana, ¿cómo se avisa hoy a la familia? ¿El resumen de la tarde debe repetirlo o solo remitir a esa conversación?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Se supone que por teléfono, no por la aplicación. Decide qué dice el parte cuando ya se habló con la familia.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="4.3">
+        <div class="q-head"><span class="n">4.3</span><h3 class="q-title" id="t-4-3">¿Cómo se le pregunta a cada persona qué quiere que sepa su familia (y a quién no)? ¿Dónde se anota hoy?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La voluntad de la persona manda: si no quiere que su familia vea el parte, no se envía. Decide cómo se pregunta y cómo se recoge. Sin nombres reales.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="4.4">
+        <div class="q-head"><span class="n">4.4</span><h3 class="q-title" id="t-4-4">¿Cuánto tiempo debe ver la familia un parte diario?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Los comunicados ordinarios se ven 30 días y los relevantes 6 meses. Un parte diario es mucho más frecuente y, cuanto más tiempo se conserva, más datos se acumulan.</p>
+        <fieldset class="choices" aria-labelledby="t-4-4">
+          <label class="choice"><input type="radio" name="r-4-4" value="A"><span class="letter">A</span><span class="txt">30 días, como los comunicados ordinarios.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="B"><span class="letter">B</span><span class="txt">6 meses, como los relevantes.</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="C"><span class="letter">C</span><span class="txt">Menos de 30 días (dilo en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-4-4" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="4.5">
+        <div class="q-head"><span class="n">4.5</span><h3 class="q-title" id="t-4-5">Si una familia pide recibir un aviso cada tarde, ¿a qué hora debería llegar y qué días?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Solo habrá correo para quien lo pida, solo los días con parte publicado, y sin contenido. Hoy los correos de ResidApp se envían entre las 10:00 y las 18:59 (hora del centro). Si tu hora cae fuera, dínoslo.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-5">
+    <h2>Tema 5 · Quién recoge y transporte</h2>
+    <div class="stack prose">
+      <p>Quién recoge a la persona es una cuestión de seguridad: una persona con deterioro entregada a quien no debe es un riesgo grave. Esto no es un dato clínico, pero es delicado. Contesta sin nombres ni datos reales.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="5.1">
+        <div class="q-head"><span class="n">5.1</span><h3 class="q-title" id="t-5-1">¿Quién recoge a la persona? ¿Hay una lista de personas autorizadas, y otra de personas a quienes no se debe entregar? ¿Qué se pide hoy de cada una?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo: solo la familia, o a veces una cuidadora contratada, un vecino, un taxi o una ambulancia. Qué se pide hoy (nombre, parentesco, teléfono, documento de identidad) decide qué campos tendría el registro. De la lista de no autorizados, la aplicación solo guardaría el hecho, sin el motivo.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="5.2">
+        <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">El transporte, ¿lo hace el propio centro, una empresa o la familia? ¿Qué necesita saber el centro?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, silla de ruedas, hora de recogida o dirección. La dirección de una persona es un dato delicado: decide si la aplicación debe guardarla o no.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    ResidApp · Documento de trabajo para producto. Ingeniería no ha elegido ninguna opción: todas las decisiones son
+    de CJ. Cuando respondas, ingeniería las revisa, te consulta lo que no quede claro y lo incorpora a la
+    aplicación. Tus respuestas se guardan en el servidor de desarrollo, detrás de la clave de estos documentos.
+  </footer>
+</div>
+
+<div class="bar" role="region" aria-label="Estado de las respuestas">
+  <div class="bar-in">
+    <div class="progress"><span id="avance">0 respondidas</span><span class="meter" aria-hidden="true"><span id="medidor"></span></span></div>
+    <p class="estado" id="estado" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+/* Cuestionario de CJ: el mismo script en todos los documentos de docs/pendientes-cj (ver README.md). Las respuestas se guardan solas en el servidor. */
+(function () {
+  "use strict";
+  var DOC = document.body.dataset.doc;
+  var VERSION = document.body.dataset.version;
+  var API = "api/respuestas/" + DOC;
+  var KEY = "residapp-pendientes-cj:" + DOC;
+  var questions = Array.prototype.slice.call(document.querySelectorAll("[data-q]"));
+  var estado = document.getElementById("estado");
+  var dirty = false;      // hay cambios que aún no están en el servidor
+  var savedAt = null;     // cuándo se guardó por última vez en el servidor
+  var ready = false;      // ya se ha leído lo que hay en el servidor: hasta entonces no se guarda nada (no se pisa lo guardado con una página vacía)
+  var failed = "";        // por qué falló el último guardado ("" si no falló)
+  var rev = 0;            // número de cambio: si cambia mientras se guarda, queda algo por guardar
+  var timer = null;
+  var saving = false;
+
+  function clean(el) { return el ? el.textContent.replace(/\s+/g, " ").trim() : ""; }
+  function fieldsOf(q) { return Array.prototype.slice.call(q.querySelectorAll("[data-field]")); }
+  function valueOf(f) { return f.type === "checkbox" ? f.checked : f.value.trim(); }
+  function when(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function read(q) {
+    var r = { pregunta: q.dataset.pregunta || clean(q.querySelector(".q-title")) };
+    if (q.querySelector("input[type=radio]")) {
+      var c = q.querySelector("input[type=radio]:checked");
+      r.opcion = c ? c.value : "";
+      r.textoOpcion = c ? clean(c.closest(".choice").querySelector(".txt")) : "";
+    }
+    fieldsOf(q).forEach(function (f) { r[f.dataset.field] = valueOf(f); });
+    // Respondida: con una opción elegida o con cualquier campo escrito (CJ puede contestar con sus palabras).
+    r.respondida = !!r.opcion || fieldsOf(q).some(function (f) { var v = valueOf(f); return v !== "" && v !== false; });
+    return r;
+  }
+
+  function collect() {
+    var respuestas = {}, done = 0;
+    questions.forEach(function (q) {
+      var r = read(q);
+      if (r.respondida) done++;
+      respuestas[q.dataset.q] = r;
+    });
+    return { documento: DOC, cuestionario: VERSION, guardado: new Date().toISOString(),
+             respondidas: done, total: questions.length, respuestas: respuestas };
+  }
+
+  function apply(data) {
+    var rs = (data && data.respuestas) || {};
+    questions.forEach(function (q) {
+      var r = rs[q.dataset.q];
+      if (!r) return;
+      q.querySelectorAll("input[type=radio]").forEach(function (i) { i.checked = i.value === r.opcion; });
+      fieldsOf(q).forEach(function (f) {
+        var v = r[f.dataset.field];
+        if (f.type === "checkbox") f.checked = v === true; else f.value = typeof v === "string" ? v : "";
+      });
+    });
+  }
+
+  function say(kind, text) {
+    estado.className = "estado" + (kind ? " " + kind : "");
+    estado.textContent = text;
+  }
+
+  function status() {
+    if (failed) say("error", failed);
+    else if (!ready) say("", "Comprobando lo que ya tienes guardado…");
+    else if (dirty) say("", "Guardando…");
+    else if (savedAt) say("ok", "Guardado en el servidor (" + when(savedAt) + ").");
+    else say("", "Lo que marques se guarda solo.");
+  }
+
+  function store(data) {
+    try { localStorage.setItem(KEY, JSON.stringify({ borrador: data, sinGuardar: dirty, ficheroGuardado: savedAt })); } catch (e) { /* sin almacenamiento local */ }
+  }
+
+  function refresh() {
+    var data = collect();
+    questions.forEach(function (q) {
+      var done = data.respuestas[q.dataset.q].respondida;
+      q.toggleAttribute("data-done", done);
+      var chip = q.querySelector(".chip");
+      if (chip) chip.textContent = done ? "Respondida" : "Pendiente";
+    });
+    document.getElementById("avance").textContent = data.respondidas + " de " + data.total + " respondidas";
+    document.getElementById("medidor").style.width = (data.total ? 100 * data.respondidas / data.total : 0) + "%";
+    var toc = document.getElementById("indice");
+    if (toc) {
+      toc.innerHTML = "";
+      document.querySelectorAll("section.tema").forEach(function (s) {
+        var qs = Array.prototype.slice.call(s.querySelectorAll("[data-q]"));
+        var n = qs.filter(function (q) { return data.respuestas[q.dataset.q].respondida; }).length;
+        var a = document.createElement("a");
+        a.href = "#" + s.id;
+        if (n === qs.length) a.className = "all";
+        a.innerHTML = "<span></span><span class=\"tc\"></span>";
+        a.firstChild.textContent = clean(s.querySelector("h2"));
+        a.lastChild.textContent = (n === qs.length ? "✓ " : "") + n + " de " + qs.length;
+        toc.appendChild(a);
+      });
+    }
+    return data;
+  }
+
+  // Guarda en el servidor lo que hay en pantalla. Si falla, lo marcado sigue en este navegador y se reintenta solo.
+  function save() {
+    clearTimeout(timer);
+    if (!ready) return;
+    if (saving) { timer = setTimeout(save, 1000); return; }
+    var sent = rev;
+    var data = collect();
+    var json = JSON.stringify(data, null, 2) + "\n";
+    saving = true;
+    fetch(API, { method: "PUT", headers: { "Content-Type": "application/json" }, body: json, credentials: "same-origin", keepalive: json.length < 60000 })
+      .then(function (r) {
+        if (!r.ok) throw r.status;
+        failed = "";
+        savedAt = data.guardado;
+        if (rev === sent) dirty = false; else timer = setTimeout(save, 1000);
+      })
+      .catch(function (e) {
+        failed = e === 401
+          ? "Se ha cerrado el acceso a estos documentos. Vuelve a abrirlos con la clave; lo que has marcado sigue en este navegador."
+          : "No se ha podido guardar en el servidor. Lo que marcas sigue en este navegador y se reintentará.";
+        timer = setTimeout(save, 15000);
+      })
+      .finally(function () { saving = false; store(collect()); status(); });
+  }
+
+  function onChange(e) {
+    if (!e.target.closest || !e.target.closest("[data-q]")) return;
+    dirty = true;
+    rev++;
+    store(refresh());
+    status();
+    clearTimeout(timer);
+    timer = setTimeout(save, 2000);
+  }
+  document.addEventListener("input", onChange);
+  document.addEventListener("change", onChange);
+  // Si se cierra o se cambia de pestaña con algo sin guardar, se guarda ya.
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && dirty) save(); });
+
+  // Recupera lo último que se guardó en el servidor. Hasta que lo consigue (200 o 404) no se guarda nada.
+  function load() {
+    fetch(API, { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) {
+        if (r.status === 204) return null;
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        ready = true;
+        failed = "";
+        if (data && data.documento === DOC && !dirty) {
+          apply(data);
+          savedAt = data.guardado || null;
+          store(refresh());
+          if (data.cuestionario !== VERSION) {
+            say("error", "Tus respuestas son de otra versión de las preguntas (" + data.cuestionario + "): revisa que siguen teniendo sentido.");
+            return;
+          }
+        } else if (!data && !dirty && refresh().respondidas > 0) {
+          dirty = true; // respuestas de este navegador que el servidor todavía no tiene: se suben
+        }
+        if (dirty) save();
+        status();
+      })
+      .catch(function () {
+        failed = "No se han podido leer las respuestas guardadas en el servidor. No se guarda nada hasta conseguirlo; se reintenta solo.";
+        status();
+        setTimeout(load, 10000);
+      });
+  }
+
+  // Notas de ingeniería: lo que ingeniería responde a cada pregunta (<documento>.notas.json, se despliega con la aplicación). Solo lectura; sin nota, no se muestra nada.
+  function notes() {
+    fetch(DOC + ".notas.json", { cache: "no-store", credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var ns = (data && data.documento === DOC && data.notas) || {};
+        questions.forEach(function (q) {
+          var t = ns[q.dataset.q];
+          if (typeof t !== "string" || !t.trim()) return;
+          var box = document.createElement("aside");
+          box.className = "nota-ing";
+          box.setAttribute("aria-label", "Nota de ingeniería");
+          var h = document.createElement("strong");
+          h.textContent = "Nota de ingeniería";
+          var p = document.createElement("p");
+          p.textContent = t.trim(); // texto plano, nunca HTML
+          box.appendChild(h);
+          box.appendChild(p);
+          q.appendChild(box);
+        });
+      })
+      .catch(function () { /* sin notas */ });
+  }
+
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(KEY)); } catch (e) { local = null; }
+  if (local && local.borrador) {
+    apply(local.borrador);
+    dirty = local.sinGuardar === true;
+    savedAt = local.ficheroGuardado || null;
+  }
+  refresh();
+  status();
+  if (location.protocol.indexOf("http") === 0) { load(); notes(); }
+  else say("error", "Abre este documento desde la web de ResidApp para que se guarden las respuestas.");
+})();
+</script>
+</body>
+</html>

@@ -89,7 +89,8 @@ Una cuenta puede tener uno o varios perfiles autorizados, pero debe seleccionar 
 - Rankings nominativos de productividad o evaluaciones automáticas de mala praxis.
 - Exportación masiva de historias clínicas individuales.
 - Integraciones con historias clínicas externas en la primera versión.
-- Flujos específicos de Centro de Día y SAAD antes de validar el modelo inicial en residencias.
+- Flujos específicos de SAAD antes de validar el modelo inicial en residencias.
+- Parte diario del Centro de Día (llegada y salida, comidas, actividades e incidencias del día, aviso diario a la familia, quién recoge y transporte): el Centro de Día se estudia como segunda modalidad de centro (`tipo_de_servicio`), por fases y sin datos reales hasta la validación de una persona experta; este parte sigue fuera hasta que CJ lo especifique (ver `docs/privacidad/centro-de-dia-lectura-dpo.md`).
 - CFS y Pfeiffer dentro del estado basal.
 
 ## Principios funcionales invariantes

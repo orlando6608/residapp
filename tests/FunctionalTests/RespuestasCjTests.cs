@@ -143,6 +143,7 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
 
     [Theory]
     [InlineData("app-catalan-castellano-cj")]
+    [InlineData("centro-de-dia-parte-diario-cj")]
     [InlineData("confirmaciones-tercera-tanda-cj")]
     [InlineData("modulos-base-y-opcionales-cj")]
     [InlineData("modulos-por-centro-aviso-cj")]
