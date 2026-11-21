@@ -22,6 +22,9 @@ public sealed class RespuestasCjTests : IClassFixture<ResidentsFlowTests.WebAppF
 
     public void Dispose()
     {
+        // Cada prueba levanta su propio servidor (WithWebHostBuilder): sin liberarlo, las 14 pruebas de esta clase dejan sus vigilantes de ficheros abiertos y el CI de Linux llega al límite de
+        // instancias de inotify (128 por usuario), con un 500 en la primera petición de la prueba que ya no cabe.
+        _factory.Dispose();
         if (Directory.Exists(_folder))
         {
             Directory.Delete(_folder, recursive: true);
