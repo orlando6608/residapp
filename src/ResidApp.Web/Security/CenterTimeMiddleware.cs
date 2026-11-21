@@ -38,8 +38,10 @@ public sealed class CenterZoneCache
         }
         catch (Exception error) when (!ct.IsCancellationRequested)
         {
-            // Sin fila o con un fallo de lectura, las horas saldrían en la zona de la península sin que nadie lo note: se deja constancia (el fallo no se cachea).
-            logger.LogWarning(error, "No se pudo leer la zona horaria del centro del ámbito activo; se usa {Zone}.", CenterTimeZoneRules.DefaultZoneCode);
+            // Sin fila o con un fallo de lectura, las horas saldrían en la zona de la península sin que nadie lo note: se deja constancia (el fallo no se cachea). Una zona que el
+            // servidor no conoce es un error de verdad (con una zona lejana serían varias horas equivocadas); un fallo de lectura de la base de datos, un aviso.
+            var level = error is TimeZoneNotFoundException or InvalidTimeZoneException ? LogLevel.Error : LogLevel.Warning;
+            logger.Log(level, error, "No se pudo leer la zona horaria del centro del ámbito activo; se usa {Zone}.", CenterTimeZoneRules.DefaultZoneCode);
             return zone;
         }
 

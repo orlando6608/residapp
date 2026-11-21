@@ -323,20 +323,6 @@ public sealed partial class AdministracionController
     private static DateOnly WeekOf(AdministrationAppointment appointment) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(appointment.StartsAt, CitasZone).DateTime);
 
-    /// <summary>Una fecha y hora escritas en la hora local del servidor, como instante. Las horas que no existen (cambio de hora) se desplazan una hora.</summary>
-    private static DateTimeOffset? LocalToOffset(DateTime? local)
-    {
-        if (local is not { } value)
-        {
-            return null;
-        }
-
-        var unspecified = DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
-        if (CitasZone.IsInvalidTime(unspecified))
-        {
-            unspecified = unspecified.AddHours(1);
-        }
-
-        return new DateTimeOffset(unspecified, CitasZone.GetUtcOffset(unspecified));
-    }
+    /// <summary>Una fecha y hora escritas en la hora del centro, como instante (las horas que no existen o se repiten por el cambio de hora, como en <see cref="CenterTime.FromLocal(DateTime)"/>).</summary>
+    private static DateTimeOffset? LocalToOffset(DateTime? local) => local is { } value ? CenterTime.FromLocal(value, CitasZone) : null;
 }

@@ -17,6 +17,10 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
     public async Task<IReadOnlyList<AssignedResidentSummary>> ListAsync(
         Guid profileScopeId, CenterId centerId, CancellationToken ct = default)
     {
+        // «Hoy» es el día del centro: el cierre cotidiano cuenta entre su medianoche y la siguiente, no entre las de UTC.
+        var today = CenterTime.Today;
+        var todayStart = CenterTime.StartOfDayUtc(today, CenterTime.Zone);
+        var tomorrowStart = CenterTime.StartOfDayUtc(today.AddDays(1), CenterTime.Zone);
         using var connection = await connections.OpenAsync(ct);
         var rows = await connection.QueryAsync<Row>(new CommandDefinition("""
             SELECT resident.id AS ResidentId, resident.nombre_visible AS DisplayName, unit.id AS UnitId, unit.nombre_visible AS UnitName,
@@ -42,12 +46,12 @@ public sealed class SqlAssignedResidentDirectory(SqlConnectionFactory connection
                   SELECT TOP 1 cc.id
                     FROM dbo.cierres_cotidianos_residente cc
                    WHERE cc.residente_id = resident.id AND cc.centro_id = profile.centro_id
-                     AND CAST(cc.ocurrido_en AS DATE) = CAST(SYSUTCDATETIME() AS DATE)
+                     AND cc.ocurrido_en >= @TodayStart AND cc.ocurrido_en < @TomorrowStart
               ) closure_today
              WHERE profile.id = @ProfileScopeId AND profile.centro_id = @CenterId
                AND profile.perfil_codigo = 'AUXILIAR' AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
              ORDER BY resident.nombre_visible
-            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value }, cancellationToken: ct));
+            """, new { ProfileScopeId = profileScopeId, CenterId = centerId.Value, TodayStart = todayStart, TomorrowStart = tomorrowStart }, cancellationToken: ct));
 
         return rows
             .Select(row => new AssignedResidentSummary(

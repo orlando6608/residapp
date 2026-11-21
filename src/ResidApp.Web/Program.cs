@@ -476,6 +476,8 @@ TechnicalFailureLog.Register(app.Services.GetRequiredService<ILoggerFactory>().C
 
 // Las horas se calculan con la zona del servidor: si no es Europe/Madrid, en producción no arranca y en desarrollo avisa.
 ServerTimeZone.Verify(app.Environment, app.Logger);
+// El servidor tiene que conocer todas las zonas activas del catálogo: si no, un centro vería las horas en la zona de la península (en producción no arranca).
+await CatalogZoneVerifier.VerifyAsync(app.Services, app.Environment, app.Logger);
 // Un proveedor de IA que no esté en la lista autorizada (ADR 0011) impide arrancar.
 IaOptions.Validate(app.Services.GetRequiredService<IOptions<IaOptions>>().Value);
 // Módulos con todo activo solo en un entorno que declara ser de desarrollo; un entorno desconocido cuenta como producción y no arranca (ADR 0015).
