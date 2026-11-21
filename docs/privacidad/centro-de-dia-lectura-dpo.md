@@ -21,6 +21,8 @@ Términos, en una frase cada uno. **Dato de salud**: cualquier dato que diga alg
 
 **Bloquean construir:** ver el apartado 4 (resumen: nada de la fase 5 sin ADR propio, especificación de CJ y una lectura mía del esquema; nada de correo diario sin FAM-10 y alcance actualizados por escrito; y ningún dato real de un Centro de Día sin las condiciones previas del apartado 4.3).
 
+**Actualización del 2026-11-21 (tarde): el piloto será un Centro de Día completamente privado, sin plazas concertadas.** Lo que cambia en la autoridad de control, el ENS y la base jurídica, qué debe decir el ADR 0017, qué debe llevar el script `0112` y la lista mínima antes de personas reales están en el apartado 6. Lo anterior no se ha borrado; el apartado 6.3 marca lo que cambia.
+
 ---
 
 ## 0. Contradicción detectada con `docs/flujos-clinicos/` (aviso; no la resuelvo)
@@ -290,9 +292,186 @@ El criterio es el de la Llei 21/2000, art. 11.4 (`llei-21-2000.txt:117`): «El p
 
 ---
 
+## 6. Piloto: Centro de Día completamente privado (añadido el 2026-11-21)
+
+**Qué es esta sección.** Los apartados 0 a 5 se escribieron sin saber la titularidad del piloto. Orlando ha decidido (traspaso `docs/tareas/alta-prioridad/pendientes-centro-de-dia.md`, apartado 1) que el piloto será **un Centro de Día completamente privado, sin plazas concertadas**, y que el producto debe contemplar más adelante plazas mixtas (concertadas y privadas), que según él es lo habitual en España y Cataluña. **[A verificar]** ese resumen suyo: no lo he podido confirmar en fuente oficial. No borro nada de lo anterior: aquí digo qué sigue valiendo, qué pasa a «cuando haya plazas mixtas» y qué cambio. Alcance: fases 1 a 4 del plan, que no dependen de las respuestas de CJ y no recogen datos nuevos de personas. He colocado la sección antes de «Qué debe validar una persona» para que lo nuevo quede junto al resto del análisis.
+
+Términos nuevos, en una frase cada uno. **Disparador** (*trigger*): regla guardada en la base de datos que se ejecuta sola cuando cambia una fila y puede rechazar el cambio, sea cual sea el programa que lo pidió. **Seguridad por filas**: filtro de la base de datos que hace que cada centro solo vea sus filas (ADR 0008). **Procedimiento con permisos del dueño** (`EXECUTE AS OWNER`): programa guardado en la base que se ejecuta con los permisos de su dueño y no con los de quien lo llama; sirve para hacer una sola cosa concreta que la aplicación no puede hacer por su cuenta. **Tabla de solo añadir**: tabla en la que nadie puede cambiar ni borrar filas desde la aplicación. **ENS**: Esquema Nacional de Seguridad, el conjunto de medidas de seguridad que la ley impone al sector público y a quien le presta servicios.
+
+### 6.1 Lo que sé y lo que no sobre el piloto
+
+- **[Decidido por Orlando, sin verificar]** Privado, sin plazas concertadas.
+- **Lo que no sé y cambia la respuesta** (pregunto a Orlando en 6.8):
+  1. **¿Cobra el centro, directa o indirectamente, dinero público?** «Sin conciertos» no es «sin relación con la Administración». La Ley 39/2006 prevé una prestación económica «vinculada al servicio» que se reconoce «únicamente cuando no sea posible el acceso a un servicio público o concertado» y que «estará, en todo caso, vinculada a la adquisición de un servicio»; las Administraciones «supervisarán, en todo caso, el destino y utilización de estas prestaciones» (art. 17.1 a 17.3, `ley-39-2006.txt:273-275`). Un centro privado puede, pues, tener usuarios que le pagan con esa ayuda y una Administración que pida justificar el servicio. También habría que saber si recibe subvención o convenio.
+  2. **¿Tendrá profesionales sanitarios propios** (enfermería, medicina)? Condiciona la base del art. 9.2.h (que admite «un contrato con un profesional sanitario», `rgpd.txt:124`) y si la documentación asistencial se rige por la Llei 21/2000 (apartado 3.4).
+  3. **Forma jurídica y autorización administrativa del centro.** La Llei 12/2007 exige que las entidades de iniciativa privada soliciten «la autorización o presenten la comunicación previa» y, si hay establecimiento, «la autorización, en todo caso» (art. 71.1, `llei-12-2007.txt:586`), con inscripción de oficio en el registro de entidades, servicios y establecimientos sociales (art. 71.4, línea 589). Un centro real ya debería estar ahí; no cambia la autoridad de control, pero es el primer dato del alta.
+
+### 6.2 Autoridad de control y ENS con el piloto privado
+
+Los dos temas se deciden por **quién es el centro y para quién presta el servicio**, no por el tipo de servicio. Por eso, en el producto, **el tipo (`RESIDENCIA` o `CENTRO_DE_DIA`) no debe codificar la titularidad ni los conciertos** (ver ADR 0017, punto 9, en 6.4).
+
+| Pregunta | Texto | Piloto privado sin conciertos | Cuando haya plazas mixtas |
+|---|---|---|---|
+| **¿APDCAT o AEPD?** | Llei 32/2010, art. 3: la APDCAT actúa sobre los tratamientos de «a) Las instituciones públicas», «b) La Administración de la Generalidad», «c) Los entes locales», «e) Las entidades de derecho privado que cumplan, como mínimo, uno de los tres requisitos» (capital, ingresos o órganos directivos mayoritariamente públicos), «f) Las demás entidades de derecho privado que prestan servicios públicos mediante cualquier forma de gestión directa o indirecta, si se trata de ficheros y tratamientos vinculados a la prestación de dichos servicios» (`llei-32-2010.txt:26-35`) | **[Opinión] AEPD.** Un centro privado autorizado no es, por sí mismo, parte del sistema público: «El sistema público de servicios sociales está integrado por [...] los que la Administración concierte con las entidades de iniciativa social o privada» (Llei 12/2007, art. 14.1, línea 183); entra en la Red de Atención Pública solo si está «acreditado» (art. 70.1, línea 579) y las entidades privadas «pasan a formar parte» de la Red cuando gestionan servicios públicos «mediante el establecimiento del contrato correspondiente» (art. 75.2, línea 613). Sin concierto, contrato ni acreditación no veo la letra f), y las letras a) a e) y h) exigen vínculo público. **[A verificar]** por la persona experta si la autorización, o los usuarios con prestación vinculada (6.1.1), bastan para la letra f) (lo creo improbable) | **Dos autoridades en un mismo centro es posible**: la letra f) dice «tratamientos vinculados a la prestación de dichos servicios», o sea, los de las personas con plaza concertada irían a la APDCAT y los de las privadas a la AEPD. Lo decide una persona experta. Para el producto: un solo responsable por centro, un solo RAT y una sola EIPD que lo reflejen; la política parametriza `[AUTORIDAD]` y no lo fija en código |
+| **¿ENS?** | RD 311/2022, art. 2.1: «de aplicación a todo el sector público»; art. 2.3: se aplica también a entidades privadas que «en virtud de una relación contractual, presten servicios o provean soluciones a las entidades del sector público para el ejercicio por estas de sus competencias y potestades administrativas» (`ens-rd-311-2022.txt:68,70`). LOPDGDD, disp. adic. 1.ª.2: las medidas del ENS las aplican «los responsables enumerados en el artículo 77.1» (sector público) (`lopdgdd.txt:756`) | **No hay obligación que yo vea**: el centro no es sector público ni presta servicios a una entidad pública mediante contrato. **[Suposición]** sin conciertos, convenios ni contratos con una Administración; la prestación vinculada paga al usuario, no al centro, y no crea contrato (6.1.1; **[A verificar]**). Sigue valiendo el art. 32 RGPD (seguridad adecuada al riesgo) y el ENS como referencia voluntaria | La plaza concertada hace que el centro preste un servicio por cuenta de la Administración y trasladará a ResidApp requisitos del ENS (política de seguridad, declaración o certificación de conformidad: `ens-rd-311-2022.txt:70-73`). Si es **una sola instancia** para todas las plazas, el ENS afectaría probablemente a todo el sistema del centro. **[A verificar]**. Es un coste de ResidApp, no del diseño de los centros; no se prepara ahora |
+| **¿Delegado de protección de datos obligatorio?** | RGPD, art. 37.1.c: cuando las actividades principales consistan en «el tratamiento a gran escala de categorías especiales de datos» (`rgpd.txt:442`); LOPDGDD, art. 34.1.l: «Los centros sanitarios legalmente obligados al mantenimiento de las historias clínicas de los pacientes» (`lopdgdd.txt:277`); el art. 34.2 admite designarlo de forma voluntaria | **[A verificar]**: un centro pequeño no parece «gran escala» (considerando 91: «una cantidad considerable de datos personales a nivel regional, nacional o supranacional», `rgpd-considerandos.txt:96`), pero si tiene autorización sanitaria y está obligado a llevar historias clínicas podría caer en el art. 34.1.l (depende de 6.1.2). La designación voluntaria es recomendable | Más probable cuanto más usuarios |
+| **¿EIPD?** | AEPD: «será necesario realizar una EIPD en la mayoría de los casos en los que dicho tratamiento cumpla con dos o más criterios» de su lista (`aepd-lista-eipd.txt:38-41`); el criterio 4 (categorías especiales) y el 9 («mayores con algún grado de discapacidad [...] personas que acceden a servicios sociales», líneas 65-69, 79-82) se cumplen | **Sí, aunque el piloto sea pequeño**: el tamaño no la evita. El apartado 4.2 se reduce a los riesgos de las funciones que el piloto use | Igual, con los riesgos de cada función añadida |
+| **¿Registro de actividades?** | RGPD, art. 30.5: la excepción para menos de 250 personas no se aplica si el tratamiento «incluya categorías especiales de datos» (`rgpd.txt:368`) | Hace falta, en el centro y en ResidApp | Igual |
+
+**Qué sigue valiendo ya, también para el piloto**: (a) el método (leer el art. 3 de la Llei 32/2010 contra los hechos del centro) y la regla de que **la titularidad y los conciertos se piden en el alta o el contrato** de cada centro, porque deciden autoridad, ENS y contrato; (b) que el texto legal no fije la autoridad en código; (c) que la persona experta es necesaria (por datos de salud de personas vulnerables y criterios 4 y 9, no por la hipótesis de «centro concertado»).
+
+**Qué pasa a «cuando haya plazas mixtas»**: la APDCAT para parte de los tratamientos; el ENS y la declaración de conformidad; la base 6.1.c o contractual para justificar la plaza ante la Administración; los plazos de conservación que fije la Administración concertante; la Administración como destinataria de datos (información art. 13.1.e) ; y un **dato nuevo por persona**, «plaza concertada o privada», que revela una prestación o un grado de dependencia reconocido (dato de salud por inferencia) y necesita su propia lectura antes de existir. No lo creo ahora; solo lo anoto para que el ADR 0017 no lo dé por hecho.
+
+### 6.3 Qué cambio de lo anterior
+
+| Apartado | Decía | Ahora, para el piloto |
+|---|---|---|
+| Conclusión, punto 8 | Más probable APDCAT y ENS; falta titularidad | **Cambia** para el piloto: AEPD y sin ENS obligatorio, como **[Opinión]** pendiente de 6.1. Se mantiene como regla general del producto |
+| 2.2, fila «Asistencia diaria» | 6.1.b o 6.1.e; 6.1.c si hay concierto | **Cambia**: 6.1.b (contrato con el usuario o su representante). La 6.1.c queda para plazas concertadas; la prestación vinculada **[A verificar]** |
+| 2.2, fila «Asistencia y cuidados» (art. 9.2.h) | El Derecho debe ser el de la Llei 12/2007 o la Ley 39/2006; la DA 17.ª no las cita; consentimiento como alternativa | **Se matiza y mejora**: añado la LOPDGDD, art. 9.2: los tratamientos del art. 9.2.h «fundados en el Derecho español deberán estar amparados en una norma con rango de ley» y esa norma «podrá amparar el tratamiento de datos en el ámbito de la salud cuando así lo exija la gestión de los sistemas y servicios de asistencia sanitaria y social, pública y privada» (`lopdgdd.txt:106-107`). La pregunta a la persona experta es más concreta: ¿la Llei 12/2007 «exige» ese tratamiento en un servicio privado autorizado? **[A verificar]** si una ley autonómica vale como «norma con rango de ley» del Derecho español. El consentimiento explícito sigue siendo alternativa, pero es débil si negarlo impide recibir el servicio **[Opinión]** |
+| 2.5, primer párrafo | Un Centro de Día es más probable público o concertado (Ley 39/2006, art. 14.8) | Vale como regla general del producto; **no describe al piloto**, cuya titularidad ya se conoce |
+| 2.5, «privado pequeño (AEPD, sin ENS) no vale sin comprobar» | No vale sin comprobar | **Para el piloto pasa a ser la hipótesis de trabajo**, con las tres comprobaciones de 6.1 |
+| 3.4, «¿centro sanitario?» | Más débil en un Centro de Día | Sigue; depende de 6.1.2 (profesional sanitario y autorización sanitaria) |
+| 4.3, punto 2 | Titularidad y conciertos, autoridad, ENS | Reducido a confirmar 6.1.1 a 6.1.3. Los puntos 1, 3, 4, 5, 6 y 7 **no cambian**. Añado: decidir si se designa delegado (6.2) |
+| 5, pregunta 1 a Orlando | Titularidad | **Contestada** (privado, sin conciertos); sustituida por las de 6.8 |
+| 5, pregunta 8 a Orlando | La persona experta es más necesaria porque «probablemente concertado o público» | La razón cambia, la necesidad no: datos de salud de personas vulnerables y criterios 4 y 9 de la AEPD |
+
+### 6.4 Fase 1 (tipo de servicio) con el piloto privado
+
+#### 6.4.1 Mis cinco condiciones del apartado 3.1
+
+**Siguen en pie, y el piloto no relaja ninguna.** Que sea privado no cambia que `tipo_de_servicio` no es un dato personal ni que cambiarlo con datos cambiaría fines, bases y plazos. Lo que añade o precisa:
+
+1. **Elección explícita en el alta.** Con el valor por defecto de la base (`RESIDENCIA`), un formulario que se olvidara del campo clasificaría mal un Centro de Día, y como el error solo se corrige con el centro vacío, descubrirlo con personas dadas de alta obliga a crear otro centro. Recomiendo que el formulario **no preseleccione** el tipo y muestre antes de confirmar «Tipo de servicio: [X]. No se podrá cambiar cuando haya personas». **[Opinión]**; es la pregunta 3 de 6.8.
+2. **El centro reservado de Plataforma no es un servicio.** `0026` lo creó en `dbo.centros` (`0026_perfil_plataforma.sql:22-24`) y recibirá `RESIDENCIA` por defecto. Ninguna pantalla debe mostrarle etiqueta de tipo y el procedimiento de corrección debe rechazarlo (como `CENTER_TIMEZONE_CENTER_INVALID` en `0109:84-85`). Si no, «Plataforma · Residencia» aparecería en el selector de ámbito del operador.
+3. **La modalidad consta en el contrato o el alta** (art. 28.3.a). El piloto privado no añade cláusulas de Administración, pero el contrato debe nombrar los dos tipos y qué categorías de datos corresponden a cada uno. Hoy **no hay parte contratante por el lado de ResidApp** (`antes-de-datos-reales.md`, apartados 7 y 13).
+4. **Lectura siempre del centro verificado en la base**, no de la cookie del ámbito (ADR 0008, punto 5; ADR 0015, líneas 31 y 110-114). En la fase 1 solo afecta a la etiqueta (un fallo es de exactitud, art. 5.1.d); cuando una función dependa del tipo (fase 5), un fallo sería un tratamiento sin instrucción.
+5. **Ninguna función por tipo nace encendida** y cada función nueva con datos de personas pasa por mi lectura del esquema. Esto es lo que impide que «Centro de Día» se convierta en un interruptor encubierto de 5a a 5d.
+
+#### 6.4.2 Qué debe decir el ADR 0017
+
+1. **Decisión:** columna `tipo_de_servicio` en `dbo.centros`, valores `RESIDENCIA` (por defecto, y el de todos los centros existentes) y `CENTRO_DE_DIA`; nombre elegido para no chocar con «modalidad» de cita ni con «tipo» de titularidad.
+2. **Por qué no es un módulo del ADR 0015:** no se contrata, no se enciende ni se apaga; define la naturaleza del servicio, y cambiarla con datos cambiaría finalidades, bases jurídicas y plazos. Por eso no hay anexo, ficha versionada ni vigencia.
+3. **Quién lo fija y con qué base:** Plataforma, en el alta, **según lo que declara el centro** en el alta o el contrato (RGPD art. 28.3.a). El centro no lo cambia desde ninguna pantalla.
+4. **Inmutabilidad y corrección:** solo se corrige un error de alta, solo con el centro **sin ninguna persona** (ni residentes, de cualquier estado incluidas bajas y suspendidos, ni familiares), con motivo de una lista cerrada de un único valor (`ERROR_DE_ALTA`), sin texto libre y con auditoría solo de identificadores. Con personas, se crea un centro nuevo; **sus datos no se trasladan** (la historia no viaja entre centros: asunto abierto, 6.4.4 y apartado 2.6).
+5. **Fuente de verdad:** la columna; el historial de solo añadir es constancia de quién y cuándo. Coherencia entre ambos garantizada por disparador y por prueba.
+6. **Lectura y dependencias:** el tipo se lee del centro verificado en la base (nunca de la cookie), con un único ayudante. **Lista cerrada de lo que depende del tipo** en este ADR: etiqueta, ocultar habitación y cama, vocabulario, valores por defecto del horario. Cualquier función nueva por tipo (asistencia, parte, correo, quién recoge, transporte) exige ADR propio, lectura del esquema, interruptor apagado por defecto y comprobación en el caso de uso.
+7. **Qué NO es ni cambia:** no autoriza ningún tratamiento nuevo; no cambia la seguridad por filas, los permisos de perfil, los subencargados ni quién es responsable.
+8. **Visibilidad:** quién ve qué (tabla de 6.5), etiqueta **de texto** (no solo color) con un único ayudante, y **no aparece** en correos, títulos de pestaña, direcciones, cookies ni en la auditoría de ninguna persona.
+9. **Titularidad y conciertos:** el tipo de servicio **no** los codifica ni los deduce. Si el producto necesita registrarlos (plazas mixtas), serán otro dato, con otro ADR y otra lectura (autoridad de control, ENS, dato de «plaza concertada» por persona, 6.2).
+10. **Consecuencias para los papeles:** el contrato de encargado y el RAT nombran los tipos; la EIPD de cada centro lleva solo los riesgos de lo que el centro use.
+11. **Verificación exigida:** pruebas de inmutabilidad, de permisos (6.4.3, punto 9) y de aislamiento; prueba por reflexión de que toda acción que dependa del tipo lo comprueba en el caso de uso.
+12. **Asuntos abiertos, sin resolver en el ADR:** traslado entre un servicio y otro de la misma entidad (alta nueva, sin historial compartido; qué se exporta y con qué base); cuentas con perfiles en los dos centros (ADR 0007, pendiente del DPO real); un solo responsable o dos.
+
+#### 6.4.3 Qué debe llevar el script `0112`
+
+(Confirmar el número con `git fetch`: el último usado era `0111`.) Mismo patrón que `0109` (`0109_zona_horaria_centro.sql`) y `0090`/`0091`.
+
+1. **Columna:** `ALTER TABLE dbo.centros ADD tipo_de_servicio NVARCHAR(16) COLLATE Latin1_General_100_BIN2 NOT NULL CONSTRAINT DF_centros_tipo_servicio DEFAULT 'RESIDENCIA'` y `CONSTRAINT CK_centros_tipo_servicio CHECK (tipo_de_servicio IN ('RESIDENCIA','CENTRO_DE_DIA'))`. Collation binaria, como `estado` (`0002:71`). Los centros existentes quedan en `RESIDENCIA` por el valor por defecto; no se rellenan filas de historial para ellos (como en `0109:11`).
+2. **Historial, tabla de solo añadir** (nombre propuesto `dbo.tipos_servicio_centro`): `id`, `centro_id` (FK a `centros`), `numero`, `tipo_codigo` (mismo CHECK), `motivo_codigo` con CHECK `IN ('ALTA','ERROR_DE_ALTA')`, `cambiado_por_cuenta_id` (FK a `cuentas`), `cambiado_por_perfil` con CHECK `= 'PLATAFORMA'`, `cambiado_en`. **Sin recuentos, sin texto libre.** CHECK: `ALTA` solo con `numero = 1`; `ERROR_DE_ALTA` con `numero >= 1`. Índice único `(centro_id, numero)`.
+3. **Disparador de solo añadir** (`INSTEAD OF UPDATE, DELETE` que lanza error, como `TR_zc_immutable`, `0109:76-78`) y **disparador de validación** (`AFTER INSERT`, como `TR_zc_valid`): rechaza el centro reservado `PLATAFORMA` y exige que cada corrección **cambie de verdad** el tipo respecto a la fila anterior o, si no hay fila anterior (centro anterior a `0112`), respecto de `RESIDENCIA`.
+4. **Seguridad por filas** en la tabla nueva, las tres piezas de `0109:95-98`: filtro `seg.fn_centro_o_plataforma`, bloqueo de inserción `seg.fn_estructura_escribe` (la autora es la cuenta del ámbito activo y solo perfil `PLATAFORMA`) y bloqueo de cambio `seg.fn_centro_del_ambito`. `dbo.centros` **sigue sin seguridad por filas** (`0068:12`); no se le añade.
+5. **Permisos de la aplicación** (`residapp_aplicacion`): sobre la tabla nueva `GRANT INSERT` y `DENY UPDATE, DELETE` (como `0109:102-103`); sobre `centros`, **`DENY UPDATE (tipo_de_servicio)`**. Hoy la aplicación tiene `UPDATE` de la tabla entera (`0091:53`, `(N'centros', 1, 0)`) para cambiar el nombre; un `DENY` de columna gana al `GRANT` de tabla (`0091:14-16`). Así **la aplicación no puede cambiar el tipo por la vía ordinaria**, ni por un SQL manipulado. La prueba que compara la matriz de permisos de `0091` con los efectivos debe aprender esta excepción de columna.
+6. **Procedimiento de corrección con permisos del dueño**, `dbo.corregir_tipo_servicio_centro` (única vía de cambio; solo `GRANT EXECUTE` a `residapp_aplicacion`, no a `PUBLIC`; ni `residapp_tareas`):
+   - **Comprobar quién llama.** Como el procedimiento corre con los permisos del dueño, **se salta los bloqueos de la seguridad por filas** (`IS_MEMBER(N'db_owner') = 1` está en `0030:35`, `0090:37` y `0090:94`). El bloqueo de inserción que en `0109` garantizaba que solo Plataforma escribe **deja de proteger aquí**: el procedimiento debe verificar por su cuenta que `SESSION_CONTEXT('ambito_perfil_id')` es un ámbito activo de perfil `PLATAFORMA` de la cuenta indicada. Es la trampa principal de este diseño.
+   - Rechazar el centro reservado, un centro inexistente y un tipo igual al actual.
+   - **Comprobar que el centro está vacío con permisos del dueño**: no hay ninguna fila en `residentes` ni en `familiares` del centro, en cualquier estado. Con permisos de la aplicación la seguridad por filas devolvería cero filas a Plataforma, que no tiene ámbito en ese centro, y **parecería vacío un centro con personas** (mismo motivo por el que `recuento_citas_centro` usa permisos del dueño, `0109:106-119`).
+   - **Impedir un alta concurrente**: bloquear la fila del centro y las lecturas de personas hasta confirmar. El alta de residente (`SqlResidentRepository.cs:50-59`) no bloquea la fila del centro, así que hace falta una **prueba de concurrencia** (alta de residente mientras se corrige) y vigilar los interbloqueos (precedente `0107`).
+   - Insertar la fila de historial (número siguiente, motivo de lista cerrada) y cambiar la columna, **en la misma transacción** que el evento de auditoría que escribe la aplicación (`CENTER_SERVICE_TYPE_CHANGE`, solo cuenta, perfil `PLATAFORMA`, centro y recurso; como `SqlCenterTimeZones.cs:93-97`). **Ni el tipo ni el motivo en la auditoría**: están en la fila de historial.
+   - **No devolver cifras**: ni cuántas personas hay ni de qué tablas. Solo éxito o un código de error cerrado (por ejemplo `CENTER_SERVICE_TYPE_NOT_EMPTY`). Una cifra sería innecesaria para decidir y ampliaría lo que Plataforma sabe de un centro.
+7. **Disparador de guarda sobre `centros`** (nuevo, `AFTER UPDATE`; no tocar `0095`): si cambia `tipo_de_servicio` (comparación binaria), exige que la última fila de historial tenga ese tipo y que el centro esté vacío. Es la defensa en profundidad si alguien con permisos de dueño actualiza a mano, y es lo único que pararía el cambio si se retirara el `DENY`.
+8. **Alta de centro** (no es SQL del script, pero el script lo presupone): el caso de uso que crea el centro (`SqlPlatformCenterRepository.cs:92`) inserta el centro con el tipo elegido y la **fila 1 `ALTA`** en la misma transacción, como ya hace con la zona (`SqlCenterTimeZones.InsertCreationAsync`). Una prueba comprueba que todo centro creado por la aplicación tiene su fila 1.
+9. **Lo que NO se concede:** `residapp_tareas` no recibe nada (solo tiene permisos de columna sobre otras tablas y `centros` no está entre ellas: `0083:30-38`); una prueba comprueba que no puede leer la columna. Cuando la tarea de correo la necesite (5c) será otro script con su lectura.
+10. **Cobertura y papeles:** la tabla nueva entra en la cobertura de seguridad por filas y en la matriz de permisos; la cuenta del operador en ella es un dato personal seudonimizado (como en `0109`, apartado 1 de `zona-horaria-centro-lectura-dpo.md`) y su **plazo de conservación queda sin decidir, junto al de `modulos_centro` y `zonas_centro`**.
+11. **Una sola transacción**, con `SET XACT_ABORT ON`, como `0109`.
+
+**Alternativa válida (más simple, algo menos estricta):** no poner el `DENY` y que la aplicación inserte el historial bajo la seguridad por filas, dejando que el disparador del punto 7 haga la comprobación del centro vacío llamando a una función con permisos del dueño. Evita la trampa de «comprobar quién llama» pero deja a la aplicación con permiso de escribir la columna. Prefiero el diseño de arriba (mínimo privilegio, art. 32 RGPD), y ambas dejan fuera de la aplicación el cambio sin centro vacío.
+
+#### 6.4.4 Sobre «entidad con residencia y Centro de Día» y el piloto
+
+Con la información que tengo, el piloto no comparte entidad con una residencia. Si la compartiera, el apartado 2.6 sigue igual: serían dos centros distintos y el `0112` no tiene que hacer nada especial, salvo que ninguna pantalla ni procedimiento mueva personas de un centro a otro.
+
+### 6.5 Quién ve el tipo y si plantea problemas de privacidad o de seguridad por filas
+
+| Quién | Qué puede ver | Qué NO debe poder leer |
+|---|---|---|
+| **Plataforma** | El tipo de cualquier centro (lista, ficha, cuentas con varios centros, vencimientos) y el historial de correcciones con la cuenta operadora | Nada de las personas del centro; **ni siquiera cuántas hay** al corregir (solo «tiene personas» o «no») |
+| **Administración y resto del personal del centro** | El tipo de **su** centro; el evento de corrección en la auditoría del centro | El tipo y el historial de otros centros; el nombre de la cuenta operadora (se recomienda mostrar «Plataforma de ResidApp», `antes-de-datos-reales.md` apartado 19, para todos los eventos de Plataforma a la vez) |
+| **Cuenta con perfiles en varios centros** | En el selector de ámbito, el tipo de **cada centro en el que tiene un ámbito activo** | El de centros sin perfil; no cruza datos: la seguridad por filas sigue yendo por el ámbito activo |
+| **Familia** | Solo, para el vocabulario de la fase 3, el tipo del centro de cada residente al que está vinculada, leído por ese vínculo | Cualquier otro centro; el historial |
+| **Tarea de correo** | Nada | La columna (sin `GRANT`) |
+| **Visitante sin sesión** | Nada (la política de privacidad genérica no nombra ningún centro) | Cualquier tipo |
+
+**¿Plantea algún problema?** **No de privacidad**: el tipo describe a un centro, no a una persona (considerando 14, `rgpd-considerandos.txt:19`) y el nombre del centro ya se muestra a esas mismas personas. Tres cautelas:
+
+1. **Seguridad por filas:** `dbo.centros` no la tiene (`0068:12`) y la aplicación la lee uniéndola con los ámbitos de la cuenta (`SqlProfileScopeDirectoryProvider.cs:20-25`; `SqlPlatformCenterDirectory.cs:17-25`). Por tanto el tipo de cualquier centro es legible desde cualquier ámbito a nivel de base de datos. **Es aceptable porque no es dato personal, pero no debe usarse como frontera de seguridad.** Los datos de las fases 5a a 5d necesitarán su propia seguridad por filas por centro y, como defensa en profundidad, una regla que solo admita filas en centros de tipo `CENTRO_DE_DIA` (**[Opinión]**, se decide en su lectura).
+2. **Una cuenta en los dos servicios de una misma entidad** (residencia y Centro de Día): la etiqueta **ayuda** a no actuar en el centro equivocado (art. 5.1.d, exactitud), pero no resuelve la pregunta pendiente de las cuentas en varios centros (ADR 0007) ni si es un solo responsable.
+3. **Etiqueta junto a datos de personas:** que un listado de personas lleve «Centro de Día» revela el servicio que reciben. Solo aparece a personal y familiares que ya lo saben; **no debe salir en correos, títulos de pestaña, direcciones, cookies ni en la auditoría**, ni en documentos que la familia pueda reenviar sin necesidad. En las hojas de invitación y vinculación (`HojaInvitacion`, `HojaVinculacion`), que se entregan en mano, es admisible.
+
+### 6.6 Fases 2 a 4: qué se puede hacer ya con el piloto
+
+Las tres **no recogen datos nuevos de personas**: se pueden construir ya, con datos de prueba, sin esperar a CJ ni a la persona experta. Lo que cambia es qué se puede **mostrar a personas reales** (6.7).
+
+| Fase | Se puede hacer ya | Condiciones |
+|---|---|---|
+| **2. Plazas sin fricción** | Ocultar «Habitaciones» y «Cama» en el alta y el menú; corregir «ubicación pendiente»; el rótulo «Sin habitación asignada» según el tipo; etiqueta de tipo en selectores e invitaciones | (1) **Ningún campo nuevo** («días contratados», «jornada» pasa a 5a). (2) Ocultar no borra ni migra nada. (3) La etiqueta sale del centro verificado en la base. (4) La unidad se muestra como «sala», sin datos de dónde vive la persona |
+| **3. Vocabulario** | Construirlo por tipo, **primero lo que ve la familia y el alta**; «residente» se queda en pantallas internas (decisión de Orlando) | (1) Un único mecanismo (el del catalán), sin condicionales por las vistas. (2) **Antes de mostrar a personas reales**, la política de privacidad (`Privacy.cshtml`), las cláusulas y las plantillas de correo deben dejar de decir «residencia» en un Centro de Día: es transparencia (arts. 12.1 y 13). Lo leo yo cuando estén. (3) Texto legal como plantilla con `[CENTRO]` y `[AUTORIDAD]` (provisionalmente AEPD) |
+| **4. Horario** | Valores por defecto por tipo (publicación a las 18:00 y margen de 0 a 30 min son una propuesta de ingeniería: **los fija CJ**) | (1) Se aplican **solo al crear la configuración** de un centro nuevo; **nunca reescriben la de un centro existente** (sería cambiar un tratamiento sin instrucción, art. 28.3.a). (2) No tocar la franja del correo: el correo diario es 5c. Si se hace configurable, lectura breve mía del script que sustituye `0092` y `0105` |
+
+### 6.7 Lista mínima antes de dar de alta personas reales en un Centro de Día privado
+
+Parte de que el piloto use **solo las funciones que ya existen** (registro cotidiano, eventos, comunicados a la familia con aprobación, etc.) y **no** la asistencia diaria, el parte, el correo diario ni la recogida (5a a 5d): esas tareas siguen en papel del propio centro, que es su responsable, y no son un tratamiento de ResidApp. Es una lista de mínimos: lo que ya consta en `antes-de-datos-reales.md` no se repite salvo para decir que sigue bloqueando.
+
+**De una persona (no es código):**
+
+1. **La persona experta existe y ha validado** los borradores que el piloto usa (hoy no existe: Orlando, 2026-11-02): base del art. 9.2.h para un servicio social privado (6.3), autoridad (AEPD), si se designa delegado (6.2), plazos. *[bloquea todo lo demás que sea jurídico]*
+2. **Parte contratante de ResidApp** (sociedad titular) y **contrato de encargado** con el centro (art. 28.3): objeto, duración, naturaleza, finalidad, tipos de datos y categorías de interesados; **nombra los dos tipos de servicio** y los módulos apagados; anexo de subencargados (Azure; Mistral y Azure Communication Services solo si se encienden); **salida de datos al fin del contrato** (art. 28.3.g, que hoy no existe: bloqueante general).
+3. **Registro de actividades** del centro (responsable) y de ResidApp (art. 30.2), con las líneas nuevas (zona horaria, tipo de servicio, módulos).
+4. **EIPD del centro** (criterios 4 y 9 de la AEPD) con el anexo del apartado 4.2 **reducido a lo que el piloto use**.
+5. **Información** (arts. 13 y 12.1) a personas usuarias o sus representantes, familias y personal, y política de privacidad validada y completa (hoy «Texto en revisión»; faltan identidad del prestador, datos del centro, autoridad, plazos, región de Azure y de Mistral) y **adaptada a «centro de día»**. Información laboral al personal con la asesoría que corresponda.
+6. **Procedimientos escritos del centro** (los adopta el centro; ResidApp no regula la organización): voluntad del usuario sobre qué ve la familia (Ley 41/2002, art. 5.1), derechos (`procedimiento-derechos-borrador.md`), brechas (`protocolo-brechas-borrador.md`, art. 33), alta y baja de cuentas del personal.
+7. **Decisión escrita «borrar o bloquear»** (LOPDGDD, art. 32) y **plazos de conservación** (clínico, `eventos_acceso`, sesiones, auditoría, `zonas_centro`, `modulos_centro`, `tipos_servicio_centro`), con la respuesta a si un Centro de Día es «centro sanitario» a efectos del art. 12 de la Llei 21/2000 (depende de 6.1.2).
+8. **Confirmar los hechos de 6.1** (dinero público, profesionales sanitarios, autorización administrativa) y que consten en el alta del centro.
+9. **El titular de ResidApp** en el pie del correo, solo si se enciende el correo (`antes-de-datos-reales.md`, apartado 7).
+
+**De código o de infraestructura:**
+
+1. **Entorno de producción.** La base de Azure es de desarrollo; con personas reales hace falta un entorno de producción (ADR 0014, aplazado), en región de la UE, con gestor de secretos y copias, **sin datos de prueba**, con `Privacidad:AnonimizarFamiliarActivo` a `false` y sin `Modulos__ActivarTodos`.
+2. **Seguridad pendiente que no depende de la modalidad:** la clave TOTP en claro en `dbo.credenciales` (puerta abierta); si se abre el Portal Familiar, el segundo factor de familiares y FAM-10; decisión por escrito del plazo de `eventos_acceso` (la purga puede esperar al primer vencimiento, la decisión no).
+3. **Fases 1 y 3** (tipo y textos legales y de cara a la familia y al alta) **hechas**: sin ellas la información a las personas sería inexacta. La fase 2 es recomendable (evita una «ubicación pendiente» falsa) pero no es de privacidad; la 4 no es necesaria.
+4. **Lo que el piloto no use queda apagado** y no se enciende sin sus condiciones de `antes-de-datos-reales.md`: Portal Familiar y su correo (`Correo__Activo`), citas con la familia, dictado, pulsera.
+5. **Las pruebas de aislamiento y de permisos en verde** (seguridad por filas, matriz de permisos, inmutabilidad), incluidas las de 6.4.3.
+6. **Datos de prueba, capturas y ejemplos** del Manual y la Guía solo inventados.
+
+**No se exige para el piloto** (queda para plazas mixtas o para 5a–5d): APDCAT, ENS, cláusulas de una Administración, dato de «plaza concertada», información art. 14 a quien recoge, EIPD de asistencia, parte, correo y recogida.
+
+### 6.8 Preguntas que aún necesito de Orlando (una a una, cerradas)
+
+1. **Dinero público.** ¿Alguna persona usuaria del piloto pagará el servicio con una ayuda pública (por ejemplo, la prestación vinculada al servicio de la Ley 39/2006), o el centro recibe subvención, convenio o contrato de una administración? (A) Ninguna ayuda ni subvención. (B) Algún usuario con prestación vinculada, pero el centro no tiene contrato. (C) El centro recibe subvención o convenio. (D) No lo sé todavía.
+2. **Profesionales sanitarios.** ¿El centro tendrá enfermería o medicina propia (de plantilla o contratada)? (A) Enfermería y medicina. (B) Solo enfermería. (C) Ninguna: servicio social sin profesional sanitario. (D) No lo sé todavía.
+3. **Alta de centro.** ¿El formulario de alta de centro debe obligar a elegir el tipo de servicio, sin valor preseleccionado, y mostrar una confirmación antes de crear el centro? (A) Sí, es mi propuesta. (B) No, preseleccionar «Residencia».
+
+### 6.9 Qué debe validar una persona, a verificar y fuentes de esta sección
+
+**Qué debe validar una persona (además de lo del apartado «Qué debe validar»):** que el piloto privado sin conciertos queda bajo la AEPD y fuera del ENS (6.2) y qué hechos lo desmentirían (6.1); la base del art. 9.2.h para un servicio privado autorizado con el art. 9.2 de la LOPDGDD (6.3); si debe designarse delegado (6.2); el diseño del `0112` (6.4.3), en especial la comprobación de quién llama al procedimiento con permisos del dueño y el centro vacío; y la lista mínima de 6.7.
+
+**A verificar (nuevo):**
+- Que una prestación vinculada al servicio, una autorización administrativa o una subvención no hagan aplicable la letra f) del art. 3 de la Llei 32/2010 ni el art. 2.3 del RD 311/2022 (6.2).
+- Si una ley autonómica (Llei 12/2007) vale como «norma con rango de ley» del art. 9.2 de la LOPDGDD (6.3).
+- Que `HOLDLOCK` o el bloqueo de la fila del centro basten para impedir un alta de residente concurrente con la corrección del tipo, en Azure SQL (6.4.3, punto 6): se decide con la prueba de concurrencia, no con la teoría.
+- Que Azure SQL acepte `DENY UPDATE` de columna sobre `dbo.centros` junto al `GRANT` de tabla con el mismo resultado que en `0091` (ingeniería).
+- Lo que dice Orlando sobre «plazas mixtas lo habitual en España y Cataluña» (6.1).
+- Que un centro pequeño no es «gran escala» a efectos del art. 37.1.c (no tengo la guía WP243 en la base local).
+
+**Fuentes de esta sección (consultadas el 2026-11-21 en `normativa-local/`, texto consolidado, no oficial; las leyes catalanas están en castellano, versión BOE):** `llei-32-2010.txt` (art. 3), `llei-12-2007.txt` (arts. 14, 15, 70, 71, 75), `ley-39-2006.txt` (arts. 14.8 y 17), `ens-rd-311-2022.txt` (arts. 2 y 3), `lopdgdd.txt` (arts. 9, 34; disp. adic. 1.ª y 17.ª), `rgpd.txt` (arts. 9.2.h, 30.5, 37.1), `rgpd-considerandos.txt` (considerando 91), `aepd-lista-eipd.txt`. Repositorio: `docs/tareas/alta-prioridad/pendientes-centro-de-dia.md`; `docs/privacidad/antes-de-datos-reales.md` (apartados 7, 8, 13, 14, 17 a 19) y `zona-horaria-centro-lectura-dpo.md`; scripts `0002`, `0026`, `0030`, `0068`, `0083`, `0090`, `0091`, `0095`, `0109`; `SqlProfileScopeDirectoryProvider.cs`, `SqlPlatformCenterDirectory.cs`, `SqlPlatformCenterRepository.cs`, `SqlCenterTimeZones.cs` y `SqlResidentRepository.cs`.
+
+---
+
 ## Qué debe validar una persona
 
 Todo este documento es borrador. En particular: la base del art. 9.2.h (apartado 2.2), la autoridad y el ENS (2.5), el tratamiento de las personas que recogen (1, 2.3), el correo diario en forma de aviso sin contenido y con opt-in (3.3), los plazos de asistencia, horas y parte (3.4), el anexo de riesgos de la EIPD (4.2) y la lista del apartado 4.3. **No soy DPO designado ni abogado.**
+
+Para el piloto privado, además: apartado 6.9 (lo que valida una persona y lo nuevo a verificar).
 
 ## A verificar
 
