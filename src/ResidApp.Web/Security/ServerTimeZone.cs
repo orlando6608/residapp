@@ -1,9 +1,10 @@
 namespace ResidApp.Web.Security;
 
-/// <summary>La aplicación calcula las franjas de las citas, el horario de los comunicados, los días de los indicadores y todas las horas que muestra
-/// con la zona horaria del servidor (<see cref="TimeZoneInfo.Local"/>). En Azure sale de WEBSITE_TIME_ZONE=Europe/Madrid, que fija el despliegue; si
-/// falta (un entorno nuevo, otra región, una Web App recreada) el servidor arranca en UTC y las horas salen desplazadas sin que nada avise. Al
-/// arrancar se comprueba: en producción la aplicación no arranca, y en desarrollo y pruebas solo avisa en el registro.</summary>
+/// <summary>La zona horaria del servidor. Las horas que ven los centros salen de la zona de cada centro (<see cref="ResidApp.Shared.CenterTime"/>), no de la del servidor, y ninguna parte de la
+/// aplicación pregunta <see cref="TimeZoneInfo.Local"/> (una prueba de arquitectura lo prohíbe). Se sigue exigiendo Europe/Madrid, que es la zona de Plataforma y la de los centros sin zona
+/// elegida, y es lo que fija el despliegue (WEBSITE_TIME_ZONE=Europe/Madrid en Azure): si falta (un entorno nuevo, otra región, una Web App recreada) el servidor arranca en UTC y algo
+/// que dependa de la hora del servidor saldría desplazado sin que nada avise. Al arrancar se comprueba: en producción la aplicación no arranca, y en desarrollo y pruebas solo avisa en el
+/// registro. Que el servidor conozca las zonas activas del catálogo lo comprueba <see cref="CatalogZoneVerifier"/>.</summary>
 public static class ServerTimeZone
 {
     public const string Expected = "Europe/Madrid";

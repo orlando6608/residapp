@@ -40,7 +40,7 @@ public sealed record FamilyCommunicationScheduleSettings(
 
 /// <summary>
 /// Cuándo ve la familia una comunicación (CJ, 2026-10-07, continuidad-supervision-comunicacion 5.1 y 5.2). Quien la prepara la
-/// aprueba al guardarla. Se deja un margen y después sale a una hora fija del día (por defecto las 19:00) en la zona horaria del servidor:
+/// aprueba al guardarla. Se deja un margen y después sale a una hora fija del día (por defecto las 19:00) en la zona horaria del centro:
 /// la primera de esas horas que cae a partir del margen. Hasta que se publica se puede corregir (CJ, 2026-10-10). Administración y Dirección
 /// Clínica pueden publicarla antes. La hora se fija al guardar el comunicado, con el horario que tenga entonces el centro. Si la información
 /// es urgente este no es el canal: se usan otros canales además.

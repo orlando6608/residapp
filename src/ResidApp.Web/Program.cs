@@ -474,7 +474,7 @@ TechnicalFailureLog.Register(app.Services.GetRequiredService<ILoggerFactory>().C
         ? new TechnicalFailureLog.RequestContext(SessionAuthentication.SessionId(http.User), ActiveProfileScopeCookie.Read(http.Request)?.CenterId)
         : null);
 
-// Las horas se calculan con la zona del servidor: si no es Europe/Madrid, en producción no arranca y en desarrollo avisa.
+// La zona del servidor tiene que ser Europe/Madrid (la de Plataforma y la de los centros sin zona elegida): si no, en producción no arranca y en desarrollo avisa.
 ServerTimeZone.Verify(app.Environment, app.Logger);
 // El servidor tiene que conocer todas las zonas activas del catálogo: si no, un centro vería las horas en la zona de la península (en producción no arranca).
 await CatalogZoneVerifier.VerifyAsync(app.Services, app.Environment, app.Logger);

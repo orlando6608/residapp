@@ -75,28 +75,58 @@ public class ZonaHorariaCentroTests
         }
     }
 
+    private const int HoursIn2026And2027 = 24 * (365 + 365);
+
     [Fact]
-    public async Task Cada_zona_del_catalogo_la_conoce_el_servidor_y_la_base_de_datos_y_las_dos_dan_la_misma_hora_en_invierno_y_en_verano()
+    public async Task Cada_zona_del_catalogo_la_conoce_el_servidor_y_la_base_de_datos_y_las_dos_dan_el_mismo_desfase_durante_2026_y_2027()
     {
-        // La aplicación calcula con el nombre estándar (TimeZoneInfo) y los avisos de la base con el de Windows (AT TIME ZONE): si discreparan, un recordatorio saldría en otra hora que las pantallas.
+        // La aplicaciÃ³n calcula con el nombre estÃ¡ndar (TimeZoneInfo: tzdata en Linux) y los avisos de la base con el de Windows (AT TIME ZONE): si discreparan, un recordatorio saldrÃ­a en otra
+        // hora que las pantallas. Se comparan TODAS las horas de 2026 y 2027, en los dos sentidos, incluidas las zonas inactivas: una zona cuyos datos no coincidan no se puede activar.
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
         var zones = (await connection.QueryAsync<(string Code, string WindowsName)>(
-            "SELECT codigo, nombre_windows FROM dbo.zonas_horarias WHERE codigo NOT LIKE N'Test/%'")).ToList();
+            "SELECT codigo, nombre_windows FROM dbo.zonas_horarias WHERE codigo NOT LIKE N'Test/%' ORDER BY orden")).ToList();
         Assert.Contains(zones, zone => zone.Code == Madrid);
         Assert.Contains(zones, zone => zone.Code == Canarias);
+        Assert.Contains(zones, zone => zone.Code == "America/New_York");
+        Assert.Contains(zones, zone => zone.Code == "America/Mexico_City");
 
+        var origin = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var mismatches = new List<string>();
         foreach (var (code, windowsName) in zones)
         {
             var net = TimeZoneInfo.FindSystemTimeZoneById(code);
-            foreach (var instant in new[] { new DateTimeOffset(2026, 1, 15, 12, 0, 0, TimeSpan.Zero), new DateTimeOffset(2026, 7, 15, 12, 0, 0, TimeSpan.Zero) })
+
+            // UTC -> local: el desfase que SQL aplica a cada instante frente al de .NET.
+            var utcToLocal = await connection.QueryAsync<(int Hour, int Minutes)>(
+                "SELECT value, DATEPART(TZOFFSET, DATEADD(HOUR, CAST(value AS INT), CAST(@origin AS DATETIME2(0))) AT TIME ZONE 'UTC' AT TIME ZONE @windowsName) FROM GENERATE_SERIES(0, @last)",
+                new { origin, windowsName, last = HoursIn2026And2027 - 1 });
+            foreach (var (hour, minutes) in utcToLocal)
             {
-                var sqlMinutes = await connection.ExecuteScalarAsync<int>(
-                    "SELECT DATEPART(TZOFFSET, CAST(@instant AS DATETIME2(0)) AT TIME ZONE 'UTC' AT TIME ZONE @windowsName)", new { instant = instant.UtcDateTime, windowsName });
-                Assert.Equal((int)net.GetUtcOffset(instant).TotalMinutes, sqlMinutes);
+                var instant = new DateTimeOffset(origin.AddHours(hour), TimeSpan.Zero);
+                if ((int)net.GetUtcOffset(instant).TotalMinutes != minutes)
+                {
+                    mismatches.Add($"{code} UTCâ†’local {instant:yyyy-MM-dd HH}Z: .NET {(int)net.GetUtcOffset(instant).TotalMinutes} min, SQL {minutes} min");
+                    break;
+                }
+            }
+
+            // local -> UTC: la hora de reloj (sin zona) que SQL entiende y .NET entiende igual; las horas que no existen o se repiten solo se comprueba que SQL no falla.
+            var localToUtc = await connection.QueryAsync<(int Hour, int Minutes)>(
+                "SELECT value, DATEPART(TZOFFSET, CAST(DATEADD(HOUR, CAST(value AS INT), CAST(@origin AS DATETIME2(0))) AS DATETIME2(0)) AT TIME ZONE @windowsName) FROM GENERATE_SERIES(0, @last)",
+                new { origin = DateTime.SpecifyKind(origin, DateTimeKind.Unspecified), windowsName, last = HoursIn2026And2027 - 1 });
+            foreach (var (hour, minutes) in localToUtc)
+            {
+                var local = DateTime.SpecifyKind(origin.AddHours(hour), DateTimeKind.Unspecified);
+                if (!net.IsInvalidTime(local) && !net.IsAmbiguousTime(local) && (int)net.GetUtcOffset(local).TotalMinutes != minutes)
+                {
+                    mismatches.Add($"{code} localâ†’UTC {local:yyyy-MM-dd HH}: .NET {(int)net.GetUtcOffset(local).TotalMinutes} min, SQL {minutes} min");
+                    break;
+                }
             }
         }
-    }
 
+        Assert.True(mismatches.Count == 0, "El servidor (tzdata) y SQL Server no dan el mismo desfase; la zona no se puede activar hasta contrastar su norma oficial:" + Environment.NewLine + string.Join(Environment.NewLine, mismatches));
+    }
     [Fact]
     public async Task El_catalogo_ofrece_Madrid_y_Canarias_pero_no_una_zona_inactiva()
     {
@@ -108,6 +138,11 @@ public class ZonaHorariaCentroTests
 
         await EnsureInactiveZoneAsync();
         Assert.DoesNotContain(await directory.ListCatalogAsync(), z => z.Code == Inactiva);
+
+        // Miami y MÃ©xico estÃ¡n dadas de alta (0112) pero inactivas hasta que cada una tenga su estudio de cumplimiento: Plataforma no las ofrece.
+        Assert.DoesNotContain(withCanarias, z => z.Code is "America/New_York" or "America/Mexico_City");
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal(0, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.zonas_horarias WHERE codigo IN (N'America/New_York', N'America/Mexico_City') AND activa = 1"));
     }
 
     [Fact]
