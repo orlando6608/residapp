@@ -49,7 +49,7 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
         "pruebas-4-direccion-flujo", "pruebas-5-administracion-flujo", "pruebas-6-comunicados-portal-flujo", "pruebas-7-citas-flujo",
         "pruebas-8-aislamiento-flujo", "pruebas-9-citas-externas-flujo",
         "portal-familiar-confirmaciones-cj", "confirmaciones-tercera-tanda-cj", "portal-familiar-dos-idiomas-cj", "modulos-base-y-opcionales-cj",
-        "modulos-por-centro-aviso-cj", "medicina-alergias-y-plazos-cj", "citas-externas-modulo-cj", "guia-cumplimiento-datos-cj", "app-catalan-castellano-cj", "orlando", "orlando/dominio-y-correo", "orlando/aviso-correo-decisiones", "orlando/guia-pruebas-dictado",
+        "modulos-por-centro-aviso-cj", "medicina-alergias-y-plazos-cj", "citas-externas-modulo-cj", "guia-cumplimiento-datos-cj", "app-catalan-castellano-cj", "centro-de-dia-parte-diario-cj", "orlando", "orlando/dominio-y-correo", "orlando/aviso-correo-decisiones", "orlando/guia-pruebas-dictado",
     ];
 
     [Theory]
