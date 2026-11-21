@@ -32,7 +32,7 @@ public sealed class Resident
     public required DateOnly BirthDate
     {
         get;
-        init => field = value <= DateOnly.FromDateTime(DateTime.UtcNow)
+        init => field = value <= CenterTime.Today
             ? value
             : throw new DomainValidationException("RESIDENT_CREATE_INPUT_INVALID");
     }
