@@ -54,6 +54,8 @@ public partial class AccesoTests
         var reused = await person.GetAsync($"/Cuenta/Vincular/{token}");
 
         Assert.Contains("Acceso a ", offer);
+        // La hoja que ve la persona antes de aceptar dice si el centro es una Residencia o un Centro de Día (ADR 0017).
+        Assert.Contains("data-tipo-servicio=\"RESIDENCIA\"", offer);
         Assert.Contains("Enfermería", offer);
         // La persona invitada no tiene ámbito en ese centro: aun así la hoja le dice a qué unidades se la ofrecen (la política de `unidades` no debe esconderlas).
         var unitName = await ScalarAsync<string>("SELECT nombre_visible FROM dbo.unidades WHERE CAST(id AS NVARCHAR(36)) = @unit", new { unit = await AdminUnitAsync(adminAccountId) });

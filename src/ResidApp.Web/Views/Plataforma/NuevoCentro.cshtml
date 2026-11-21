@@ -41,6 +41,23 @@
                     <span asp-validation-for="Form.ZonaHoraria" class="text-danger"></span>
                     <div id="zona-ayuda" class="form-text">Decide cómo se ven las horas y qué día es «hoy» en ese centro. La elige quien da de alta el centro; después solo Plataforma puede corregirla.</div>
                 </div>
+                <div class="mb-3">
+                    <label asp-for="Form.TipoDeServicio" class="form-label"></label>
+                    <select asp-for="Form.TipoDeServicio" class="form-select form-select-lg" aria-describedby="tipo-servicio-ayuda" required>
+                        <option value="">Elige el tipo de servicio</option>
+                        @foreach (var type in Enum.GetValues<ResidApp.Domain.Platform.CenterServiceType>())
+                        {
+                            <option value="@type" selected="@(type == Model.Form.TipoDeServicio)">@ResidApp.Web.Models.CenterServiceTypeDisplay.Label(type)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Form.TipoDeServicio" class="text-danger"></span>
+                    <div id="tipo-servicio-ayuda" class="form-text">Residencia o Centro de Día, según lo que el centro declara en el alta o el contrato. <strong>No se podrá cambiar cuando el centro tenga personas.</strong> Hasta entonces, solo Plataforma puede corregir un error.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="Form.ConfirmoTipo" id="tipo-servicio-confirmo" value="true" required @(Model.Form.ConfirmoTipo ? "checked" : "") />
+                    <label class="form-check-label" for="tipo-servicio-confirmo">Confirmo que el tipo de servicio elegido es el correcto y que no se podrá cambiar cuando el centro tenga personas.</label>
+                    <span asp-validation-for="Form.ConfirmoTipo" class="text-danger d-block"></span>
+                </div>
                 <partial name="_LogoCentroCampo" model='new ResidApp.Web.Models.LogoCentroCampoViewModel("Form.Logo", "logo-centro-fichero", "Logo del centro (opcional)")' />
                 <p class="form-text mt-0">El centro con logo propio lo ve en su encabezado en vez del de ResidApp. Después lo cambia su Administración.</p>
             </fieldset>

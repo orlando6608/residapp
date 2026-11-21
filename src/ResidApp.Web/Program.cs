@@ -95,6 +95,7 @@ builder.Services.AddSingleton<CenterZoneCache>();
 builder.Services.AddScoped<SqlCenterTimeZones>();
 builder.Services.AddScoped<ICenterTimeZoneDirectory>(sp => sp.GetRequiredService<SqlCenterTimeZones>());
 builder.Services.AddScoped<ICenterTimeZoneRepository>(sp => sp.GetRequiredService<SqlCenterTimeZones>());
+builder.Services.AddScoped<ICenterServiceTypeRepository, SqlCenterServiceTypes>();
 builder.Services.AddScoped<IModuleSettings, ModuleSettings>();
 builder.Services.AddScoped<IEnvironmentMarker, SqlEnvironmentMarker>();
 builder.Services.AddScoped<CenterModuleAccess>();

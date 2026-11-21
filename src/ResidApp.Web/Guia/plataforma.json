@@ -19,6 +19,7 @@
     "Ver, suspender y reactivar las cuentas que trabajan en más de un centro, y entregarles su invitación.",
     "Activar, renovar y apagar los módulos opcionales de un centro, a petición suya, y ver su historial y los que vencen.",
     "Corregir la zona horaria de un centro, con un motivo y habiendo visto lo que se ve afectado.",
+    "Corregir el tipo de servicio de un centro (Residencia o Centro de Día) si se eligió mal al darlo de alta, solo mientras el centro no tenga ninguna persona.",
     "Consultar los documentos de apoyo de la plataforma (guías de trabajo, protocolos, documentos informativos y especificaciones).",
     "Añadir y quitar tus passkeys."
   ],
@@ -72,13 +73,14 @@
         "Estar dentro con el perfil **Plataforma** (se entra con passkey; ver PLA-01).",
         "Del **centro**: su *nombre*. De él se genera solo el código del centro, que **no se puede cambiar** después.",
         "De la **zona horaria** del centro: viene elegida *Península y Baleares (Madrid)*; en la lista salen solo las zonas activas, hoy también *Canarias*. Decide cómo se ven las horas y qué día es «hoy» en ese centro; después solo Plataforma puede corregirla (ver PLA-12).",
+        "Del **tipo de servicio**: *Residencia* o *Centro de Día*, según lo que el centro declara en el alta o el contrato. **No viene elegido**: hay que elegirlo y marcar una casilla que lo confirma. **No se podrá cambiar cuando el centro tenga personas**; hasta entonces, solo Plataforma puede corregir un error (ver PLA-13).",
         "De su **primera unidad**: un nombre. De él se genera solo su código.",
         "Del **primer administrador**: un *identificador de acceso* (de 3 a 200 caracteres: letras, dígitos y `.` `_` `-` `@`; **no puede ser el de una cuenta que ya exista**) y su nombre.",
         "Opcional, el **logo**: PNG o JPEG, hasta 512 KB y 1024 píxeles por lado. Luego lo cambia la Administración del centro."
       ],
       "pasos": [
         { "texto": "Abre **Centros** (es la tarjeta de tu inicio, o el enlace «Mi panel» de arriba) y pulsa **Nuevo centro**.", "botones": ["Centros", "Mi panel", "Nuevo centro"] },
-        { "texto": "En **Centro**: «Nombre del centro», «Zona horaria del centro» y «Logo del centro (opcional)». Los códigos no se escriben: se generan solos a partir de los nombres.", "campos": ["Nombre del centro", "Zona horaria del centro", "Logo del centro (opcional)"] },
+        { "texto": "En **Centro**: «Nombre del centro», «Zona horaria del centro», «Tipo de servicio» (elige Residencia o Centro de Día; marca la casilla «Confirmo que el tipo de servicio elegido es el correcto y que no se podrá cambiar cuando el centro tenga personas.») y «Logo del centro (opcional)». Los códigos no se escriben: se generan solos a partir de los nombres.", "campos": ["Nombre del centro", "Zona horaria del centro", "Tipo de servicio", "Confirmo que el tipo de servicio elegido es el correcto y que no se podrá cambiar cuando el centro tenga personas.", "Logo del centro (opcional)"] },
         { "texto": "En **Primera unidad**, escribe «Nombre de la primera unidad».", "campos": ["Nombre de la primera unidad"] },
         { "texto": "En **Primer administrador**, escribe «Identificador de acceso del administrador» y «Nombre del administrador».", "campos": ["Identificador de acceso del administrador", "Nombre del administrador"] },
         { "texto": "Pulsa **Crear centro**. Se crea todo a la vez o nada: el centro, la unidad y la cuenta del administrador, activa y con el perfil Administración.", "botones": ["Crear centro"] },
@@ -87,17 +89,21 @@
       ],
       "despues": [
         { "para": "Administración", "texto": "Con la hoja elige su contraseña (12 caracteres como mínimo) y prepara el código del móvil. Entra en el **Inicio** y, con **Mi panel**, llega al **Inicio de Administración**, como **Administración principal**. Lo encuentra casi vacío: 0 residentes, solo su propia cuenta y la unidad que le creaste con el centro, sin edificios, habitaciones ni plazas, y «No hay nada pendiente». Lo primero: nombre y logo del centro, su estructura (edificios, habitaciones y plazas) y el alta de su equipo." },
-        { "para": "Plataforma", "texto": "Tu parte termina al entregar la hoja. No ves residentes ni contenido clínico. Todo queda en la auditoría. Si te equivocaste de zona horaria, ver PLA-12." }
+        { "para": "Plataforma", "texto": "Tu parte termina al entregar la hoja. No ves residentes ni contenido clínico. Todo queda en la auditoría. Si te equivocaste de zona horaria, ver PLA-12; si te equivocaste de tipo de servicio, ver PLA-13." }
       ],
       "dudas": [
         { "p": "«Ya existe una cuenta con ese identificador de acceso.»", "r": "No se ha creado nada: cambia el identificador y vuelve a pulsar «Crear centro». Un nombre de centro repetido no da error: el código nuevo lleva -2, -3… y se ve en la lista «Centros»." },
         { "p": "«Revisa los datos: el identificador de acceso lleva de 3 a 200 caracteres…»", "r": "Corrige el identificador (de 3 a 200 caracteres, sin espacios) o rellena los nombres que falten." },
+        { "p": "«Elige el tipo de servicio del centro: Residencia o Centro de Día.»", "r": "No has elegido el tipo de servicio: no viene preseleccionado a propósito. Elígelo y vuelve a pulsar «Crear centro»." },
+        { "p": "«Marca la casilla para confirmar el tipo de servicio: no se podrá cambiar cuando el centro tenga personas.»", "r": "Falta la casilla de confirmación: márcala y vuelve a pulsar «Crear centro». No se ha creado nada." },
         { "p": "Se perdió la hoja, caducó, o no sale el botón de invitación.", "r": "Ver PLA-03: se crea otra, y la nueva anula la anterior." }
       ],
       "rutas": ["Plataforma/Index", "Plataforma/NuevoCentro", "Plataforma/Centro", "Plataforma/Invitacion"],
       "mensajes": [
         "Ya existe una cuenta con ese identificador de acceso.",
-        "Revisa los datos: el identificador de acceso lleva de 3 a 200 caracteres"
+        "Revisa los datos: el identificador de acceso lleva de 3 a 200 caracteres",
+        "Elige el tipo de servicio del centro: Residencia o Centro de Día.",
+        "Marca la casilla para confirmar el tipo de servicio: no se podrá cambiar cuando el centro tenga personas."
       ],
       "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
       "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" },
@@ -429,6 +435,42 @@
         "Zona horaria cambiada. Queda en la auditoría del centro.",
         "No hay otra zona disponible a la que cambiar.",
         "Marca que has visto lo que se ve afectado para confirmar el cambio de zona."
+      ],
+      "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
+      "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" },
+      "acceso": { "id": "soporte", "titulo": "Qué hace Plataforma o soporte" }
+    },
+    {
+      "codigo": "PLA-13",
+      "pregunta": "¿Cómo corrijo el tipo de servicio de un centro?",
+      "palabras": ["tipo de servicio", "residencia", "centro de día", "corregir tipo", "error de alta", "constancia"],
+      "permisos": [],
+      "antes": [
+        "Saber qué es: el **tipo de servicio** dice si el centro es una *Residencia* o un *Centro de Día*. Se elige al dar de alta el centro (ver PLA-02) y **no se cambia**.",
+        "Que sea una **corrección de un error de alta**: solo Plataforma puede hacerla, y **solo mientras el centro no tenga ninguna persona dada de alta** (ni residentes, de cualquier estado, ni familiares). La Administración del centro no puede.",
+        "Si el centro **ya tiene personas** y se eligió mal, no hay corrección posible: hay que crear un centro nuevo."
+      ],
+      "pasos": [
+        { "texto": "Abre **Centros** y, en el centro, pulsa **Administraciones y unidades**. Baja a **Tipo de servicio**: ahí ves el «Tipo actual» y, más abajo, la «Constancia del tipo de servicio».", "botones": ["Centros", "Administraciones y unidades"], "campos": ["Tipo de servicio", "Constancia del tipo de servicio"] },
+        { "texto": "Abre **Corregir un error de alta**. Lee el aviso amarillo: te dice de qué tipo a qué tipo pasará el centro y que, en cuanto tenga una persona dada de alta, ya no se podrá corregir.", "botones": ["Corregir un error de alta"] },
+        { "texto": "Marca «Confirmo que el centro es de tipo «…» y que se eligió mal al darlo de alta.» y pulsa **Cambiar a** el otro tipo (el botón dice «Cambiar a Residencia» o «Cambiar a Centro de Día»).", "botones": ["Cambiar a"], "campos": ["Confirmo que el centro es de tipo"] },
+        { "texto": "Sale un aviso verde: «Tipo de servicio corregido. Queda en la auditoría del centro.» y la constancia suma una fila con el motivo «Corrección de un error de alta»." }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Ve en su Auditoría «Tipo de servicio del centro corregido». Las pantallas del centro no cambian todavía por el tipo: solo la etiqueta que lo muestra." },
+        { "para": "Plataforma", "texto": "Sigues viendo el tipo de cada centro en «Centros», en la ficha del centro, en las cuentas de varios centros y en los módulos que vencen. La constancia no muestra la cuenta de quien lo cambió, pero la acción queda en la auditoría." }
+      ],
+      "dudas": [
+        { "p": "No sale «Corregir un error de alta», solo un aviso gris: «Este centro ya tiene personas dadas de alta…».", "r": "El centro ya tiene al menos un residente o un familiar, así que el tipo no se puede cambiar. Si se eligió mal, crea un centro nuevo." },
+        { "p": "«El centro ya tiene personas dadas de alta (residentes o familiares): su tipo de servicio no se puede cambiar. Si se eligió mal, hay que crear un centro nuevo.»", "r": "Alguien dio de alta a una persona entre que abriste la pantalla y pulsaste el botón. No se ha cambiado nada." },
+        { "p": "«El centro ya tiene ese tipo de servicio, o alguien lo ha cambiado mientras tanto: vuelve a cargar la pantalla.»", "r": "Recarga la ficha del centro: verás el tipo actual y su constancia." },
+        { "p": "«Marca la casilla para confirmar la corrección del tipo de servicio.»", "r": "Falta la casilla de confirmación: márcala y vuelve a pulsar el botón." }
+      ],
+      "rutas": ["Plataforma/Centro", "Plataforma/CorregirTipoServicio"],
+      "mensajes": [
+        "Tipo de servicio corregido. Queda en la auditoría del centro.",
+        "Marca la casilla para confirmar la corrección del tipo de servicio.",
+        "El centro ya tiene personas dadas de alta (residentes o familiares)"
       ],
       "manual": { "id": "plataforma-centros", "titulo": "Centros nuevos" },
       "flujo": { "id": "centro", "titulo": "Antes del primer residente: un centro nuevo" },

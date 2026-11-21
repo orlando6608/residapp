@@ -50,7 +50,7 @@ else
                         <ul class="small text-body-secondary mb-1">
                             @foreach (var scope in account.Scopes)
                             {
-                                <li>@scope.CenterName · @SystemProfileDisplay.Label(scope.Profile)</li>
+                                <li>@scope.CenterName <partial name="_EtiquetaTipoServicio" model="scope.ServiceType" /> · @SystemProfileDisplay.Label(scope.Profile)</li>
                             }
                         </ul>
                         @if (account.LiveInvitationExpiresAt is { } expires)

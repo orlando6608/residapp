@@ -486,7 +486,7 @@ public sealed class CuentaController(
         {
             Usuario = account.UserName,
             Nombre = scopes.Select(s => s.AccountDisplayName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? account.UserName,
-            Ambitos = scopes.Select(s => $"{SystemProfileDisplay.Label(s.Profile)} · {s.CenterName}").ToList(),
+            Ambitos = scopes.Select(s => $"{SystemProfileDisplay.Label(s.Profile)} · {s.CenterName}{(s.ServiceType is { } type ? $" ({CenterServiceTypeDisplay.Label(type)})" : "")}").ToList(),
             TieneContrasena = account.PasswordHash is not null,
             SegundoFactorActivo = account.TwoFactorEnabled,
             CodigosRestantes = account.TwoFactorEnabled ? await users.CountRecoveryCodesAsync(account) : 0,

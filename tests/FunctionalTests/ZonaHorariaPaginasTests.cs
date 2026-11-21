@@ -125,6 +125,7 @@ public class ZonaHorariaPaginasTests(WebAppFactory factory) : IClassFixture<WebA
                 [Token] = ExtractValue(form, Token), ["Form.OperacionId"] = ExtractValue(form, "Form.OperacionId"),
                 ["Form.NombreCentro"] = $"Residencia Zona {suffix} (ficticia)", ["Form.NombreUnidad"] = "Planta 1",
                 ["Form.IdentificadorAdministrador"] = $"zona-admin-{suffix}", ["Form.NombreAdministrador"] = "Admin Zona (ficticio)", ["Form.ZonaHoraria"] = zone,
+                ["Form.TipoDeServicio"] = "Residencia", ["Form.ConfirmoTipo"] = "true",
             }));
             return response.StatusCode == HttpStatusCode.Redirect ? "creado" : WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
         }

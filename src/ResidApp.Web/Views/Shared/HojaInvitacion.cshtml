@@ -19,7 +19,7 @@
                     <dt class="col-sm-4">Usuario</dt>
                     <dd class="col-sm-8"><code class="text-break">@Model.Usuario</code></dd>
                     <dt class="col-sm-4">Centro</dt>
-                    <dd class="col-sm-8">@Model.Centro</dd>
+                    <dd class="col-sm-8">@Model.Centro <partial name="_EtiquetaTipoServicio" model="Model.TipoDeServicio" /></dd>
                     <dt class="col-sm-4">Vale hasta</dt>
                     <dd class="col-sm-8">@CenterTime.Local(Model.CaducaEnUtc).ToString("dddd d 'de' MMMM, HH:mm") (una sola vez)</dd>
                 </dl>

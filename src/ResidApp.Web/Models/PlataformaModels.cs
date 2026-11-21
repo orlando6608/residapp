@@ -25,6 +25,14 @@ public sealed class NewCenterFormModel
     [Display(Name = "Zona horaria del centro")]
     public string? ZonaHoraria { get; set; } = CenterTimeZoneRules.DefaultZoneCode;
 
+    /// <summary>El tipo de servicio del centro (ADR 0017, script 0113). Sin valor por defecto: hay que elegir. Después solo Plataforma corrige un error de alta, y solo con el centro sin personas.</summary>
+    [Required(ErrorMessage = "Elige el tipo de servicio del centro: Residencia o Centro de Día.")]
+    [Display(Name = "Tipo de servicio")]
+    public CenterServiceType? TipoDeServicio { get; set; }
+
+    /// <summary>La confirmación de que el tipo elegido es el correcto, antes de crear el centro.</summary>
+    public bool ConfirmoTipo { get; set; }
+
     [Required(ErrorMessage = "Escribe el nombre de la primera unidad.")]
     [StringLength(CenterUnit.MaxNameLength, ErrorMessage = "El nombre de la unidad no puede pasar de {1} caracteres.")]
     [Display(Name = "Nombre de la primera unidad")]
@@ -138,6 +146,18 @@ public sealed class CenterTimeZoneFormModel
 }
 
 public sealed record PlatformCenterTimeZoneViewModel(Guid CenterId, CenterTimeZoneState State, IReadOnlyList<CenterTimeZone> Zones);
+
+/// <summary>Corregir el tipo de servicio de un centro (ADR 0017): un error de alta, con el centro sin personas. El servidor vuelve a comprobarlo todo al guardar.</summary>
+public sealed class CenterServiceTypeFormModel
+{
+    public Guid CentroId { get; set; }
+
+    public CenterServiceType? TipoDeServicio { get; set; }
+
+    public bool Confirmo { get; set; }
+}
+
+public sealed record PlatformCenterServiceTypeViewModel(Guid CenterId, CenterServiceTypeState State);
 
 /// <summary>Los textos de la zona horaria del centro en pantalla: lista cerrada de motivos y su historia.</summary>
 public static class CenterTimeZoneDisplay

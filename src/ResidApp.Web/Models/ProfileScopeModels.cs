@@ -2,7 +2,8 @@ using ResidApp.Shared;
 
 namespace ResidApp.Web.Models;
 
-public sealed record ProfileScopeOptionViewModel(Guid ProfileScopeId, Guid CenterId, string CenterName, string ProfileLabel);
+public sealed record ProfileScopeOptionViewModel(
+    Guid ProfileScopeId, Guid CenterId, string CenterName, string ProfileLabel, ResidApp.Domain.Platform.CenterServiceType? ServiceType = null);
 
 public sealed class SelectProfileScopeViewModel
 {

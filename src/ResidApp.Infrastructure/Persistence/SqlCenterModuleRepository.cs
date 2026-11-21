@@ -109,14 +109,16 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
         using var connection = await connections.OpenAsync(ct);
         await SqlPlatformCenterRepository.EnsureOperatorAsync(connection, null, access, ct);
         var rows = await connection.QueryAsync<ExpiringRow>(new CommandDefinition("""
-            SELECT center.id AS CenterId, center.nombre_visible AS CenterName, change.modulo_codigo AS ModuleCode, CAST(change.vigente_hasta AS DATETIME2(0)) AS ValidUntil
+            SELECT center.id AS CenterId, center.nombre_visible AS CenterName, change.modulo_codigo AS ModuleCode, CAST(change.vigente_hasta AS DATETIME2(0)) AS ValidUntil,
+                   center.tipo_de_servicio AS ServiceTypeCode
               FROM dbo.modulos_centro change
               JOIN dbo.centros center ON center.id = change.centro_id AND center.estado = 'ACTIVE'
              WHERE change.estado_codigo = 'ACTIVE' AND change.vigente_hasta BETWEEN @From AND @Until
                AND change.numero = (SELECT MAX(other.numero) FROM dbo.modulos_centro other WHERE other.centro_id = change.centro_id AND other.modulo_codigo = change.modulo_codigo)
              ORDER BY change.vigente_hasta, center.nombre_visible, change.modulo_codigo
             """, new { From = from.ToDateTime(TimeOnly.MinValue), Until = until.ToDateTime(TimeOnly.MinValue) }, cancellationToken: ct));
-        return rows.Select(row => new PlatformExpiringModule(CenterId.From(row.CenterId), row.CenterName, row.ModuleCode, DateOnly.FromDateTime(row.ValidUntil))).ToList();
+        return rows.Select(row => new PlatformExpiringModule(
+            CenterId.From(row.CenterId), row.CenterName, row.ModuleCode, DateOnly.FromDateTime(row.ValidUntil), EnumCode.ParseCode<CenterServiceType>(row.ServiceTypeCode))).ToList();
     }
 
     private static DateTimeOffset UtcOffset(DateTime value) => new(DateTime.SpecifyKind(value, DateTimeKind.Utc));
@@ -175,6 +177,8 @@ public sealed class SqlCenterModuleRepository(SqlConnectionFactory connections) 
         public string ModuleCode { get; set; } = "";
 
         public DateTime ValidUntil { get; set; }
+
+        public string ServiceTypeCode { get; set; } = "RESIDENCIA";
     }
 
     private sealed class Row

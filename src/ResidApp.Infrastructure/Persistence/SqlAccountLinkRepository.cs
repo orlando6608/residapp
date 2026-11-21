@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Infrastructure.Persistence;
@@ -44,11 +45,14 @@ public sealed class SqlAccountLinkRepository(SqlConnectionFactory connections) :
             """, units.Select(unit => new { Id = id, CenterId = access.CenterId.Value, UnitId = unit.Value }).Distinct().ToList(),
             transaction, cancellationToken: ct));
         await SqlProfessionalAccountRepository.AuditAsync(connection, transaction, access, "ACCOUNT_LINK", id, "ACCOUNT_LINK_ISSUE", Utc(now), ct: ct);
-        var centerName = await connection.ExecuteScalarAsync<string>(new CommandDefinition(
-            "SELECT nombre_visible FROM dbo.centros WHERE id = @CenterId", new { CenterId = access.CenterId.Value }, transaction, cancellationToken: ct));
+        var center = await connection.QuerySingleOrDefaultAsync<CenterRow>(new CommandDefinition(
+            "SELECT nombre_visible AS Name, tipo_de_servicio AS ServiceTypeCode FROM dbo.centros WHERE id = @CenterId",
+            new { CenterId = access.CenterId.Value }, transaction, cancellationToken: ct));
         var unitNames = await UnitNamesAsync(connection, transaction, [id], ct);
         transaction.Commit();
-        return new IssuedAccountLink(centerName ?? string.Empty, profile, unitNames.GetValueOrDefault(id) ?? [], expiresAt);
+        return new IssuedAccountLink(
+            center?.Name ?? string.Empty, profile, unitNames.GetValueOrDefault(id) ?? [], expiresAt,
+            center is null ? null : EnumCode.ParseCode<CenterServiceType>(center.ServiceTypeCode));
     }
 
     public async Task<IReadOnlyList<AccountLinkSummary>> ListOpenAsync(AccountAdministrationAccess access, DateTime now, CancellationToken ct = default)
@@ -94,7 +98,8 @@ public sealed class SqlAccountLinkRepository(SqlConnectionFactory connections) :
     {
         using var connection = await connections.OpenAsync(ct);
         var row = await connection.QuerySingleOrDefaultAsync<LiveRow>(new CommandDefinition("""
-            SELECT link.id AS Id, center.nombre_visible AS CenterName, link.perfil_codigo AS ProfileCode, link.caduca_en AS ExpiresAt
+            SELECT link.id AS Id, center.nombre_visible AS CenterName, link.perfil_codigo AS ProfileCode, link.caduca_en AS ExpiresAt,
+                   center.tipo_de_servicio AS ServiceTypeCode
               FROM dbo.vinculaciones_cuenta link
               JOIN dbo.centros center ON center.id = link.centro_id AND center.estado = 'ACTIVE'
              WHERE link.resumen_token = @TokenHash
@@ -108,7 +113,9 @@ public sealed class SqlAccountLinkRepository(SqlConnectionFactory connections) :
         // La persona invitada no tiene ámbito en ese centro y la política de `unidades` no le deja leerlas: un procedimiento (script 0090) devuelve solo las de esta hoja viva.
         var units = (await connection.QueryAsync<string>(new CommandDefinition(
             "EXEC dbo.nombres_unidades_vinculacion @TokenHash, @Now", new { TokenHash = tokenHash, Now = now }, cancellationToken: ct))).ToList();
-        return new LiveAccountLink(row.Id, row.CenterName, EnumCode.ParseCode<SystemProfile>(row.ProfileCode), units, row.ExpiresAt);
+        return new LiveAccountLink(
+            row.Id, row.CenterName, EnumCode.ParseCode<SystemProfile>(row.ProfileCode), units, row.ExpiresAt,
+            EnumCode.ParseCode<CenterServiceType>(row.ServiceTypeCode));
     }
 
     public async Task RedeemAsync(AccountId accountId, Guid linkId, DateTime now, CancellationToken ct = default)
@@ -251,7 +258,9 @@ public sealed class SqlAccountLinkRepository(SqlConnectionFactory connections) :
     private sealed record OpenRow(
         Guid Id, string ProfileCode, DateTime IssuedAt, DateTime ExpiresAt, string? RedeemedBySubject, string? RedeemedByName, DateTime? RedeemedAt);
 
-    private sealed record LiveRow(Guid Id, string CenterName, string ProfileCode, DateTime ExpiresAt);
+    private sealed record LiveRow(Guid Id, string CenterName, string ProfileCode, DateTime ExpiresAt, string ServiceTypeCode);
+
+    private sealed record CenterRow(string Name, string ServiceTypeCode);
 
     private sealed record LockedLinkRow(Guid CenterId, string ProfileCode, Guid IssuerId);
 

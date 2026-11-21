@@ -159,17 +159,18 @@ public class LogoCentroTests
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedBrandingSessionIdentityProvider(subject),
             new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
             new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
-            new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
+            new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
+        new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
         string Code() => $"cen-{Guid.NewGuid():N}"[..20];
         string Admin() => $"test-adm-{Guid.NewGuid():N}"[..28];
         var withLogoId = Guid.NewGuid();
         var invalidId = Guid.NewGuid();
 
         var created = await platform.CreateCenterAsync(new CreateCenterCommand(
-            scopeId, CenterId.From(PlatformCenter.Id), withLogoId, Code(), "Residencia Con Logo (ficticia)", Code(), "Primera unidad", Admin(), "Admin Nuevo", Png));
+            scopeId, CenterId.From(PlatformCenter.Id), withLogoId, Code(), "Residencia Con Logo (ficticia)", Code(), "Primera unidad", Admin(), "Admin Nuevo", Png, TipoDeServicio: CenterServiceType.Residencia));
         var invalid = await platform.CreateCenterAsync(new CreateCenterCommand(
             scopeId, CenterId.From(PlatformCenter.Id), invalidId, Code(), "Residencia Logo Roto (ficticia)", Code(), "Primera unidad", Admin(), "Admin Nuevo",
-            "<svg/>"u8.ToArray()));
+            "<svg/>"u8.ToArray(), TipoDeServicio: CenterServiceType.Residencia));
 
         Assert.True(created.Ok, created.Error?.Message);
         var logo = await Directory.ReadLogoAsync(CenterId.From(withLogoId));

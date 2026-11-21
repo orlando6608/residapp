@@ -1,3 +1,4 @@
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 
 namespace ResidApp.Application.Ports;
@@ -41,4 +42,4 @@ public sealed record PlatformAdministrationScope(
 /// <summary>Un centro con sus unidades y sus ámbitos de Administración, para el operador de plataforma.</summary>
 public sealed record PlatformCenterDetail(
     CenterId CenterId, string Code, string Name, IReadOnlyList<(UnitId UnitId, string Name)> Units,
-    IReadOnlyList<PlatformAdministrationScope> Administrations);
+    IReadOnlyList<PlatformAdministrationScope> Administrations, CenterServiceType ServiceType);

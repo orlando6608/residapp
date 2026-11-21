@@ -34,7 +34,7 @@ public sealed partial class AdministracionController
         var issued = result.Value!;
         return View("HojaInvitacion", new HojaInvitacionViewModel(
             issued.Details.Kind, issued.Details.Subject, issued.Details.DisplayName, issued.Details.CenterName, issued.Details.ExpiresAt,
-            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, back));
+            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, back, issued.Details.ServiceType));
     }
 
     [HttpPost]

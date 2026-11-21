@@ -25,7 +25,7 @@
 {
     var unico = Model.Options[0];
     <div class="alert alert-info" role="status">
-        Solo tienes un ámbito activo: <strong>@unico.ProfileLabel</strong> en <strong>@unico.CenterName</strong>. No hay otro al que cambiar.
+        Solo tienes un ámbito activo: <strong>@unico.ProfileLabel</strong> en <strong>@unico.CenterName</strong> <partial name="_EtiquetaTipoServicio" model="unico.ServiceType" />. No hay otro al que cambiar.
         Si necesitas otro perfil, pídeselo a la Administración de tu centro.
     </div>
     <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Volver al inicio</a>
@@ -64,7 +64,7 @@ else
                     <input type="hidden" name="centerId" value="@option.CenterId" />
                     <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
                     <button type="submit" class="btn btn-primary btn-lg w-100 d-flex justify-content-between align-items-center">
-                        <span>@option.CenterName</span>
+                        <span>@option.CenterName <partial name="_EtiquetaTipoServicio" model="option.ServiceType" /></span>
                         <span class="badge text-bg-light">@option.ProfileLabel</span>
                     </button>
                 </form>

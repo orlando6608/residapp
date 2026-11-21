@@ -18,14 +18,14 @@ public sealed class SqlPlatformCenterDirectory(SqlConnectionFactory connections)
             SELECT center.id AS CenterId, center.codigo AS Code, center.nombre_visible AS Name,
                    CAST(CASE WHEN center.estado = 'ACTIVE' THEN 1 ELSE 0 END AS BIT) AS Active,
                    (SELECT COUNT(*) FROM dbo.unidades unit WHERE unit.centro_id = center.id) AS UnitCount,
-                   center.creado_en AS CreatedAt
+                   center.creado_en AS CreatedAt, center.tipo_de_servicio AS ServiceTypeCode
               FROM dbo.centros center
              WHERE center.id <> @PlatformCenterId
              ORDER BY center.nombre_visible, center.codigo
             """, new { PlatformCenterId = PlatformCenter.Id }, cancellationToken: ct));
         return rows.Select(row => new PlatformCenterSummary(
             CenterId.From(row.CenterId), row.Code, row.Name, row.Active, row.UnitCount,
-            new DateTimeOffset(DateTime.SpecifyKind(row.CreatedAt, DateTimeKind.Utc)))).ToList();
+            new DateTimeOffset(DateTime.SpecifyKind(row.CreatedAt, DateTimeKind.Utc)), EnumCode.ParseCode<CenterServiceType>(row.ServiceTypeCode))).ToList();
     }
 
     public async Task<PlatformCenterDetail?> FindAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default)
@@ -33,7 +33,7 @@ public sealed class SqlPlatformCenterDirectory(SqlConnectionFactory connections)
         using var connection = await connections.OpenAsync(ct);
         await SqlPlatformCenterRepository.EnsureOperatorAsync(connection, null, access, ct);
         var center = await connection.QuerySingleOrDefaultAsync<CenterNameRow>(new CommandDefinition("""
-            SELECT center.codigo AS Code, center.nombre_visible AS Name FROM dbo.centros center
+            SELECT center.codigo AS Code, center.nombre_visible AS Name, center.tipo_de_servicio AS ServiceTypeCode FROM dbo.centros center
              WHERE center.id = @CenterId AND center.id <> @PlatformCenterId
             """, new { CenterId = centerId.Value, PlatformCenterId = PlatformCenter.Id }, cancellationToken: ct));
         if (center is null)
@@ -60,7 +60,7 @@ public sealed class SqlPlatformCenterDirectory(SqlConnectionFactory connections)
                 await SqlAdministrationScope.ListUnitsAsync(connection, null, centerId, scope.ProfileScopeId, ct)));
         }
 
-        return new PlatformCenterDetail(centerId, center.Code, center.Name, units, administrations);
+        return new PlatformCenterDetail(centerId, center.Code, center.Name, units, administrations, EnumCode.ParseCode<CenterServiceType>(center.ServiceTypeCode));
     }
 
     public async Task<IReadOnlyList<PlatformMultiCenterAccount>> ListMultiCenterAccountsAsync(
@@ -96,20 +96,22 @@ public sealed class SqlPlatformCenterDirectory(SqlConnectionFactory connections)
             return [];
         }
 
-        var scopes = (await connection.QueryAsync<(Guid AccountId, string Center, string Profile)>(new CommandDefinition("""
-            SELECT profile.cuenta_id AS AccountId, center.nombre_visible AS Center, profile.perfil_codigo AS Profile
+        var scopes = (await connection.QueryAsync<(Guid AccountId, string Center, string Profile, string? ServiceTypeCode)>(new CommandDefinition("""
+            SELECT profile.cuenta_id AS AccountId, center.nombre_visible AS Center, profile.perfil_codigo AS Profile,
+                   CASE WHEN center.codigo = N'PLATAFORMA' THEN NULL ELSE center.tipo_de_servicio END AS ServiceTypeCode
               FROM dbo.ambitos_perfil profile JOIN dbo.centros center ON center.id = profile.centro_id
              WHERE profile.estado = 'ACTIVE' AND profile.cuenta_id IN @Ids
              ORDER BY center.nombre_visible, profile.perfil_codigo
             """, new { Ids = accounts.Select(account => account.AccountId).ToList() }, cancellationToken: ct)))
             .GroupBy(scope => scope.AccountId)
-            .ToDictionary(group => group.Key, group => (IReadOnlyList<PlatformAccountScope>)group.Select(scope => new PlatformAccountScope(scope.Center, EnumCode.ParseCode<SystemProfile>(scope.Profile))).ToList());
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<PlatformAccountScope>)group.Select(scope => new PlatformAccountScope(
+                scope.Center, EnumCode.ParseCode<SystemProfile>(scope.Profile), scope.ServiceTypeCode is null ? null : EnumCode.ParseCode<CenterServiceType>(scope.ServiceTypeCode))).ToList());
         return accounts.Select(account => new PlatformMultiCenterAccount(
             AccountId.From(account.AccountId), account.Subject, account.DisplayName, account.Active, account.HasPassword,
             account.LiveInvitationExpiresAt, scopes.GetValueOrDefault(account.AccountId) ?? [])).ToList();
     }
 
-    private sealed record CenterNameRow(string Code, string Name);
+    private sealed record CenterNameRow(string Code, string Name, string ServiceTypeCode);
 
     private sealed record UnitNameRow(Guid UnitId, string Name);
 
@@ -118,5 +120,5 @@ public sealed class SqlPlatformCenterDirectory(SqlConnectionFactory connections)
     private sealed record MultiCenterRow(
         Guid AccountId, string Subject, string? DisplayName, bool Active, bool HasPassword, DateTime? LiveInvitationExpiresAt);
 
-    private sealed record CenterRow(Guid CenterId, string Code, string Name, bool Active, int UnitCount, DateTime CreatedAt);
+    private sealed record CenterRow(Guid CenterId, string Code, string Name, bool Active, int UnitCount, DateTime CreatedAt, string ServiceTypeCode);
 }

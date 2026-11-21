@@ -162,7 +162,8 @@ public class AdministracionPrincipalTests
         new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedPrincipalSessionIdentityProvider(subject),
         new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
         new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
-        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory));
+        new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
+        new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
 
     [Fact]
     public async Task ElSoporte_CreaElCentroConSuPrimeraAdministracionPrincipal_LaMarcaYAnadeUnidades()
@@ -173,7 +174,7 @@ public class AdministracionPrincipalTests
         var adminSubject = $"test-adm-{Guid.NewGuid():N}"[..28];
         var created = await platform.CreateCenterAsync(new CreateCenterCommand(
             op.ProfileScopeId, op.CenterId, centerId, $"cen-{Guid.NewGuid():N}"[..20], "Residencia Principal (ficticia)", $"u-{Guid.NewGuid():N}"[..14],
-            "Primera unidad", adminSubject, "Admin Principal"));
+            "Primera unidad", adminSubject, "Admin Principal", TipoDeServicio: CenterServiceType.Residencia));
         Assert.True(created.Ok, created.Error?.Message);
         var extraUnit = await AdministracionResidentesTests.AddUnitAsync(CenterId.From(centerId));
         var query = new PlatformCenterQuery(op.ProfileScopeId, op.CenterId, CenterId.From(centerId));

@@ -78,11 +78,16 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
             }
         }
 
+        if (!form.ConfirmoTipo)
+        {
+            ModelState.AddModelError("Form.ConfirmoTipo", "Marca la casilla para confirmar el tipo de servicio: no se podrá cambiar cuando el centro tenga personas.");
+        }
+
         if (ModelState.IsValid)
         {
             var result = await service.CreateCenterAsync(new CreateCenterCommand(
                 activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), form.OperacionId, null, form.NombreCentro,
-                null, form.NombreUnidad, form.IdentificadorAdministrador, form.NombreAdministrador, logo, form.ZonaHoraria), ct);
+                null, form.NombreUnidad, form.IdentificadorAdministrador, form.NombreAdministrador, logo, form.ZonaHoraria, form.TipoDeServicio), ct);
             if (result.Ok)
             {
                 TempData["Mensaje"] = "Centro creado. Para que su administrador pueda entrar, pulsa «Administraciones y unidades» en ese centro y luego «Crear invitación de acceso o de recuperación».";
@@ -128,6 +133,13 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
             ViewData["Zona"] = new PlatformCenterTimeZoneViewModel(centroId, zone.Value!, await ZonesAsync(activeScope, ct));
         }
 
+        var serviceType = await service.GetCenterServiceTypeAsync(new PlatformCenterQuery(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(centroId)), ct);
+        if (serviceType.Ok)
+        {
+            ViewData["TipoServicio"] = new PlatformCenterServiceTypeViewModel(centroId, serviceType.Value!);
+        }
+
         ViewData["Modulos"] = new PlatformCenterModulesViewModel(
             centroId, modules.Value ?? [], CenterModules.All.Where(m => m.UsesThirdParty && !moduleSettings.IsThirdPartyConfigured(m.Code)).Select(m => m.Code).ToHashSet(),
             CenterModuleRules.TodayInMadrid(clock.GetUtcNow()));
@@ -150,6 +162,31 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
             ? (principal ? "Marcada como Administración principal." : "Ya no es Administración principal.")
             : (result.Error!.Code == ApplicationFailureCode.Conflict ? "Ese perfil ya estaba así. Revisa el centro." : result.Error.Message);
         return RedirectToAction(nameof(Centro), new { centroId });
+    }
+
+    /// <summary>ADR 0017, script 0113: corrige el tipo de servicio de un centro. Solo Plataforma, solo un error de alta y solo con el centro sin personas (lo comprueba la base de datos).</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CorregirTipoServicio(CenterServiceTypeFormModel form, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        if (!form.Confirmo)
+        {
+            TempData["Error"] = "Marca la casilla para confirmar la corrección del tipo de servicio.";
+            return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
+        }
+
+        var result = await service.ChangeCenterServiceTypeAsync(new ChangeCenterServiceTypeCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), CenterId.From(form.CentroId), form.TipoDeServicio), ct);
+        TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
+            ? "Tipo de servicio corregido. Queda en la auditoría del centro."
+            : result.Error!.Message;
+        return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
     }
 
     /// <summary>Script 0109: corrige la zona horaria de un centro. Solo Plataforma, con un motivo de lista cerrada y habiendo visto (y confirmado) lo que se ve afectado.</summary>
@@ -261,7 +298,8 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
         var issued = result.Value!;
         return View("HojaInvitacion", new HojaInvitacionViewModel(
             issued.Details.Kind, issued.Details.Subject, issued.Details.DisplayName, issued.Details.CenterName, issued.Details.ExpiresAt,
-            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, Url.Action(nameof(Centro), new { centroId })!));
+            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, Url.Action(nameof(Centro), new { centroId })!,
+            issued.Details.ServiceType));
     }
 
     [HttpPost]
@@ -333,7 +371,8 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
         var issued = result.Value!;
         return View("HojaInvitacion", new HojaInvitacionViewModel(
             issued.Details.Kind, issued.Details.Subject, issued.Details.DisplayName, issued.Details.CenterName, issued.Details.ExpiresAt,
-            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, Url.Action(nameof(Cuentas))!));
+            Url.Action("Invitacion", "Acceso", new { id = issued.Token }, Request.Scheme)!, Url.Action(nameof(Cuentas))!,
+            issued.Details.ServiceType));
     }
 
     [HttpPost]

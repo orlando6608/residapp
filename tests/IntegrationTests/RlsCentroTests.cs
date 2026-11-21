@@ -479,6 +479,50 @@ public sealed class RlsCentroTests
         await Assert.ThrowsAsync<SqlException>(() => asOperator.ExecuteAsync("DELETE FROM dbo.zonas_centro WHERE centro_id = @centerA", new { centerA }));
     }
 
+    // ---- Tipo de servicio del centro (script 0113, ADR 0017) ----
+
+    private static Task InsertServiceTypeAsync(SqlConnection connection, Guid centerId, int number, string type, string reason, Guid changedBy, string profile) =>
+        connection.ExecuteAsync("""
+            INSERT INTO dbo.tipos_servicio_centro (id, centro_id, numero, tipo_codigo, motivo_codigo, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @centerId, @number, @type, @reason, @changedBy, @profile, SYSUTCDATETIME())
+            """, new { centerId, number, type, reason, changedBy, profile });
+
+    [Fact]
+    public async Task La_constancia_del_tipo_de_servicio_la_ve_cada_centro_la_suya_y_Plataforma_todas_pero_solo_Plataforma_inserta_el_alta_y_nunca_se_cambia()
+    {
+        var a = await SeedCenterWithResidentAsync();
+        var b = await SeedCenterWithResidentAsync();
+        var operatorScope = await SeedPlatformOperatorAsync();
+        var centerA = a.Profile.CenterId.Value;
+        var centerB = b.Profile.CenterId.Value;
+        var centerC = (await SeedCenterWithResidentAsync()).Profile.CenterId.Value;
+
+        // El alta (fila 1) coincide con el tipo del centro, que en estos centros de prueba es el de siempre: RESIDENCIA.
+        using var asOperator = await OpenLimitedAsync(operatorScope.Scope);
+        await InsertServiceTypeAsync(asOperator, centerA, 1, "RESIDENCIA", "ALTA", operatorScope.AccountId, "PLATAFORMA");
+        await InsertServiceTypeAsync(asOperator, centerB, 1, "RESIDENCIA", "ALTA", operatorScope.AccountId, "PLATAFORMA");
+
+        using var asAdminA = await OpenLimitedAsync(ScopeOf(a.Profile));
+        Assert.Equal(1, await CountAsync(asAdminA, "tipos_servicio_centro", centerA));
+        Assert.Equal(0, await CountAsync(asAdminA, "tipos_servicio_centro", centerB));
+        Assert.Equal(1, await CountAsync(asOperator, "tipos_servicio_centro", centerB));
+        using var withoutScope = await OpenLimitedAsync(null);
+        Assert.Equal(0, await CountAsync(withoutScope, "tipos_servicio_centro", centerA));
+
+        // La Administración del centro no inserta nada, ni como ella misma ni firmando como Plataforma; Plataforma no firma con la cuenta de otra persona.
+        await Assert.ThrowsAsync<SqlException>(() => InsertServiceTypeAsync(asAdminA, centerA, 2, "CENTRO_DE_DIA", "ERROR_DE_ALTA", a.Profile.AccountId.Value, "ADMINISTRACION"));
+        await Assert.ThrowsAsync<SqlException>(() => InsertServiceTypeAsync(asAdminA, centerA, 2, "CENTRO_DE_DIA", "ERROR_DE_ALTA", a.Profile.AccountId.Value, "PLATAFORMA"));
+        await Assert.ThrowsAsync<SqlException>(() => InsertServiceTypeAsync(asOperator, centerA, 2, "CENTRO_DE_DIA", "ERROR_DE_ALTA", a.Profile.AccountId.Value, "PLATAFORMA"));
+        // Una corrección a mano no la inserta ni Plataforma (solo el procedimiento, con permisos del dueño), y el alta tiene que coincidir con el tipo del centro.
+        Assert.Equal("CENTER_SERVICE_TYPE_SEQUENCE_INVALID", (await Assert.ThrowsAsync<SqlException>(() =>
+            InsertServiceTypeAsync(asOperator, centerA, 2, "CENTRO_DE_DIA", "ERROR_DE_ALTA", operatorScope.AccountId, "PLATAFORMA"))).Message);
+        Assert.Equal("CENTER_SERVICE_TYPE_SEQUENCE_INVALID", (await Assert.ThrowsAsync<SqlException>(() =>
+            InsertServiceTypeAsync(asOperator, centerC, 1, "CENTRO_DE_DIA", "ALTA", operatorScope.AccountId, "PLATAFORMA"))).Message);
+        // Ni se actualiza ni se borra, aunque la fila sea de su centro.
+        await Assert.ThrowsAsync<SqlException>(() => asAdminA.ExecuteAsync("UPDATE dbo.tipos_servicio_centro SET tipo_codigo = 'RESIDENCIA' WHERE centro_id = @centerA", new { centerA }));
+        await Assert.ThrowsAsync<SqlException>(() => asOperator.ExecuteAsync("DELETE FROM dbo.tipos_servicio_centro WHERE centro_id = @centerA", new { centerA }));
+    }
+
     // ---- Módulos opcionales por centro (script 0098) ----
 
     private static Task InsertModuleAsync(SqlConnection connection, Guid centerId, int number, bool enable, Guid changedBy, string profile) =>

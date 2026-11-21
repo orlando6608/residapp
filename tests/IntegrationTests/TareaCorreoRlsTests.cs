@@ -177,6 +177,26 @@ public sealed class TareaCorreoRlsTests
     }
 
     [Fact]
+    public async Task ElRolDeLaTarea_NoLeeNiCambiaElTipoDeServicioDeUnCentro()
+    {
+        // Script 0113 (ADR 0017): el tipo de servicio, su constancia y los procedimientos que lo leen y lo corrigen no se conceden a la tarea de correo. Cuando la fase 5c lo necesite será otro script con su lectura.
+        var setup = await SeedAsync("Residente Tarea Correo Tipo");
+        using var task = await OpenAsAsync(TaskUser);
+
+        foreach (var sql in new[]
+        {
+            "SELECT tipo_de_servicio FROM dbo.centros",
+            "SELECT * FROM dbo.tipos_servicio_centro",
+            "UPDATE dbo.centros SET tipo_de_servicio = N'CENTRO_DE_DIA' WHERE 1 = 0",
+            $"EXEC dbo.centro_tiene_personas '{setup.CenterId}'",
+            $"EXEC dbo.corregir_tipo_servicio_centro '{setup.CenterId}', N'CENTRO_DE_DIA', '{Guid.NewGuid()}'",
+        })
+        {
+            await AssertDeniedAsync(task, sql);
+        }
+    }
+
+    [Fact]
     public async Task ElRolDeLaTarea_LeeDeLasCuentasSoloElIdentificadorYElEstado()
     {
         // Script 0093: los avisos comprueban que la cuenta del familiar siga activa (una cuenta suspendida no recibe avisos), y nada más de la cuenta.
