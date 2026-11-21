@@ -7,7 +7,7 @@ namespace ResidApp.Web.Correo;
 
 /// <summary>
 /// La tarea programada del recordatorio de cita (ADR 0012; docs/privacidad/recordatorio-cita-por-correo.md): cada minuto pide a la base de datos que reserve los recordatorios de las
-/// citas de mañana (solo dentro de la franja de las 10:00 a las 18:59, hora de Madrid) y manda los reservados. Con el correo apagado (<c>Correo:Activo</c> o <c>Correo:RecordatorioCita</c>)
+/// citas de mañana (solo dentro de la franja de las 10:00 a las 18:59, hora del centro) y manda los reservados. Con el correo apagado (<c>Correo:Activo</c> o <c>Correo:RecordatorioCita</c>)
 /// no toca la base. Un fallo de una vuelta no la detiene, y no registra la excepción entera. Necesita «Siempre activo» en la Web App: una aplicación dormida a las 10:00 pierde el
 /// recordatorio del día sin dejar fila ni error. Usa la misma conexión propia que el aviso de cambio (<see cref="ChangeNoticeTaskIdentity"/>, script 0083): con el usuario limitado
 /// de la aplicación vería cero filas sin ningún error, así que antes de cada vuelta comprueba que su conexión es del rol de la tarea y, si no, lo registra COMO ERROR (una vez,

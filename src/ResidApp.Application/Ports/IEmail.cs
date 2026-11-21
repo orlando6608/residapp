@@ -134,7 +134,7 @@ public sealed record PendingReminder(Guid Id, CenterId CenterId, Guid Appointmen
 /// cada una. La clave única (plantilla, cita, fecha) impide reservarlo dos veces. El motivo del cambio y el detalle de las solicitudes no se leen nunca.</summary>
 public interface IReminderStore
 {
-    /// <summary>Llama al procedimiento de la base de datos, que calcula «mañana» con la hora de Madrid, solo actúa en la franja de envío y devuelve cuántas filas creó.</summary>
+    /// <summary>Llama al procedimiento de la base de datos, que calcula «mañana» con la zona de cada centro, solo actúa en los centros que están en su franja de envío y devuelve cuántas filas creó.</summary>
     Task<int> ReserveAsync(string language, string templateVersion, CancellationToken ct = default);
 
     /// <summary>Los recordatorios PENDIENTES sin reclamar, los más antiguos primero.</summary>
@@ -145,6 +145,9 @@ public interface IReminderStore
 
     /// <summary>Vuelve a leer la cita y el vínculo (la misma consulta que el portal) y dice a quién escribir o por qué no, en el orden de docs/privacidad/recordatorio-cita-por-correo.md, apartado 3.</summary>
     Task<ChangeNoticePreparation> PrepareAsync(PendingReminder reminder, DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>La zona horaria del centro (script 0110): el recordatorio solo sale dentro de la franja de envío de SU centro.</summary>
+    Task<TimeZoneInfo> ZoneOfCenterAsync(CenterId centerId, CancellationToken ct = default);
 
     /// <summary>Cierra una fila PENDIENTE: ENVIADO, FALLIDO u OMITIDO.</summary>
     Task ResolveAsync(Guid id, string state, string? reason, string? operationId, int attempts, DateTimeOffset now, CancellationToken ct = default);
@@ -161,7 +164,7 @@ public sealed record PendingExternalNotice(Guid Id, CenterId CenterId, Guid Appo
 /// decide a quién se escribe (a quien se encargó, o a todos si nadie) y por qué no; después se vuelve a comprobar el acceso con la misma consulta que usa el portal.</summary>
 public interface IExternalNoticeStore
 {
-    /// <summary>Llama al procedimiento de la base de datos, que solo actúa en la franja de envío y devuelve cuántas filas creó.</summary>
+    /// <summary>Llama al procedimiento de la base de datos, que solo actúa en los centros que están en su franja de envío (con la zona de cada centro) y devuelve cuántas filas creó.</summary>
     Task<int> ReserveAsync(string language, string templateVersion, CancellationToken ct = default);
 
     /// <summary>Los avisos PENDIENTES sin reclamar, los más antiguos primero.</summary>
@@ -172,6 +175,9 @@ public interface IExternalNoticeStore
 
     /// <summary>Vuelve a comprobar el aviso (cita vigente y visible, interruptores, baja, quién lo tiene) y el acceso del portal, y dice a quién escribir o por qué no.</summary>
     Task<ChangeNoticePreparation> PrepareAsync(PendingExternalNotice notice, DateTimeOffset now, CancellationToken ct = default);
+
+    /// <summary>La zona horaria del centro (script 0110): el aviso solo sale dentro de la franja de envío de SU centro.</summary>
+    Task<TimeZoneInfo> ZoneOfCenterAsync(CenterId centerId, CancellationToken ct = default);
 
     /// <summary>Cierra una fila PENDIENTE: ENVIADO, FALLIDO u OMITIDO.</summary>
     Task ResolveAsync(Guid id, string state, string? reason, string? operationId, int attempts, DateTimeOffset now, CancellationToken ct = default);

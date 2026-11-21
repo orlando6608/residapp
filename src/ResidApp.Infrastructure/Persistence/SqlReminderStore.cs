@@ -8,7 +8,7 @@ namespace ResidApp.Infrastructure.Persistence;
 
 /// <summary>
 /// El registro de envíos del recordatorio de cita (script 0092). La reserva la hace el procedimiento <c>dbo.reservar_recordatorios_cita</c> (el rol de la tarea no puede insertar en la
-/// tabla): calcula «mañana» con la hora de Madrid, solo actúa en la franja de envío y deja una fila PENDIENTE por cita, o ya cerrada como OMITIDO / CITA_RECIENTE. La tarea
+/// tabla): calcula «mañana» con la hora de cada centro, solo actúa en la franja de envío y deja una fila PENDIENTE por cita, o ya cerrada como OMITIDO / CITA_RECIENTE. La tarea
 /// reclama cada fila, vuelve a leer la cita y el vínculo con la misma consulta que usa el portal (<see cref="SqlFamilyPortalReader.AccessibleLinks"/>, no una copia) y decide a quién
 /// escribir o por qué no. Nunca lee <c>citas_cambios</c> ni el detalle de ninguna solicitud. La fila no guarda la dirección: se devuelve para enviar y no se escribe en ningún sitio.
 /// </summary>
@@ -29,8 +29,6 @@ public sealed class SqlReminderStore(SqlConnectionFactory connections, TimeZoneI
           FROM dbo.citas WHERE id = @appointmentId AND centro_id = @center
         """;
 
-    private TimeZoneInfo Zone => zone ?? AppointmentSql.Zone;
-
     public async Task<int> ReserveAsync(string language, string templateVersion, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
@@ -43,6 +41,9 @@ public sealed class SqlReminderStore(SqlConnectionFactory connections, TimeZoneI
         var rows = await connection.QueryAsync<PendingRow>(new CommandDefinition(ListPendingSql, new { limit, template = EmailLog.ReminderTemplate }, cancellationToken: ct));
         return [.. rows.Select(r => new PendingReminder(r.Id, CenterId.From(r.CenterId), r.AppointmentId, r.DateKey, r.Language))];
     }
+
+    public Task<TimeZoneInfo> ZoneOfCenterAsync(CenterId centerId, CancellationToken ct = default) =>
+        zone is null ? SqlTaskCenterZone.ReadAsync(connections, centerId, ct) : Task.FromResult(zone);
 
     public async Task<bool> ClaimAsync(Guid id, CancellationToken ct = default)
     {
@@ -62,14 +63,16 @@ public sealed class SqlReminderStore(SqlConnectionFactory connections, TimeZoneI
             return new(null, EmailLog.AppointmentNotCurrent);
         }
 
+        // El día de la cita y «mañana» son los de la zona del centro (la misma con la que la base reservó el recordatorio).
+        var centerZone = await ZoneOfCenterAsync(reminder.CenterId, ct);
         var startsAt = AppointmentSql.Utc(row.StartsAt);
-        var appointmentDay = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(startsAt, Zone).DateTime);
+        var appointmentDay = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(startsAt, centerZone).DateTime);
         if (appointmentDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) != reminder.DateKey)
         {
             return new(null, EmailLog.AppointmentNotCurrent);
         }
 
-        if (appointmentDay != DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Zone).DateTime).AddDays(1))
+        if (appointmentDay != DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, centerZone).DateTime).AddDays(1))
         {
             return new(null, EmailLog.OutOfWindow);
         }

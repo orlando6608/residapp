@@ -7,7 +7,7 @@ namespace ResidApp.Web.Correo;
 
 /// <summary>
 /// La tarea programada de los avisos de citas externas a la familia (PR 6; script 0105): cada minuto pide a la base de datos que reserve los avisos del día (solo dentro de la franja de las
-/// 10:00 a las 18:59, hora de Madrid) y manda los reservados. Con el correo apagado (<c>Correo:Activo</c> o <c>Correo:AvisoCitaExterna</c>) no toca la base; cada centro, además, tiene su propio
+/// 10:00 a las 18:59, hora del centro) y manda los reservados. Con el correo apagado (<c>Correo:Activo</c> o <c>Correo:AvisoCitaExterna</c>) no toca la base; cada centro, además, tiene su propio
 /// interruptor, que la base comprueba al reservar y al enviar. Un fallo de una vuelta no la detiene, y no registra la excepción entera. Necesita «Siempre activo» en la Web App. Usa la misma conexión
 /// propia que el resto de avisos (<see cref="ChangeNoticeTaskIdentity"/>, script 0083): antes de cada vuelta comprueba que su conexión es del rol de la tarea y, si no, lo registra COMO ERROR
 /// (una vez, hasta que se corrija) y no procesa nada.

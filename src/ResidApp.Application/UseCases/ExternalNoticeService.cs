@@ -9,14 +9,14 @@ namespace ResidApp.Application.UseCases;
 /// programada de la aplicación llama cada minuto a <see cref="ReserveDueAsync"/> (la base reserva una fila por persona y cita: a 7 días y la víspera, a quien tiene un encargo o, si nadie, a todos
 /// los autorizados con correo confirmado; a 2 días, solo si sigue sin cubrir y no a quien se encargó o dijo «No puedo») y a <see cref="ProcessDueAsync"/> (reclama cada fila, vuelve a comprobar todo
 /// al enviar —el aviso ya no vale si alguien se encargó, la cita se movió u ocultó, el residente se restringió, o la persona ya no tiene acceso o se dio de baja— y manda un solo correo a esa
-/// persona). Solo se envía en la franja de las 10:00 a las 18:59 (hora de Madrid). Sin reintentos. <paramref name="log"/> recibe solo la plantilla, el estado y un código: nunca una dirección
+/// persona). Solo se envía en la franja de las 10:00 a las 18:59 (hora del centro). Sin reintentos. <paramref name="log"/> recibe solo la plantilla, el estado y un código: nunca una dirección
 /// ni el texto de una excepción. Apagado por defecto: hace falta <see cref="EmailSettings.Active"/> y <see cref="EmailSettings.ExternalNotice"/> (el interruptor del entorno) y, además, el del
 /// centro, que la base comprueba al reservar y al enviar.
 /// </summary>
 public sealed class ExternalNoticeService(
     IExternalNoticeStore store, IEmailSender sender, EmailSettings settings, Action<string>? log = null, TimeSpan? sendTimeout = null, TimeZoneInfo? zone = null)
 {
-    /// <summary>Primera hora de la franja de envío (hora local de Madrid): las 10:00.</summary>
+    /// <summary>Primera hora de la franja de envío (hora local del centro): las 10:00.</summary>
     public const int WindowStartHour = ReminderService.WindowStartHour;
 
     /// <summary>La franja termina antes de esta hora: la última vuelta posible es a las 18:59.</summary>
@@ -28,17 +28,18 @@ public sealed class ExternalNoticeService(
 
     private bool Enabled => settings.Active && settings.ExternalNotice;
 
-    /// <summary>Si <paramref name="now"/> está dentro de la franja de envío (hora de la zona de la aplicación, Europe/Madrid).</summary>
-    public bool InWindow(DateTimeOffset now)
+    /// <summary>Si <paramref name="now"/> está dentro de la franja de envío en la zona dada (la del centro del aviso). Con una zona fijada al construir el servicio (las pruebas), manda esa; sin ninguna, la de Madrid.</summary>
+    public bool InWindow(DateTimeOffset now, TimeZoneInfo? centerZone = null)
     {
-        var hour = TimeZoneInfo.ConvertTime(now, zone ?? CenterTime.Zone).Hour;
+        var hour = TimeZoneInfo.ConvertTime(now, zone ?? centerZone ?? CenterTime.Madrid).Hour;
         return hour >= WindowStartHour && hour < WindowEndHour;
     }
 
-    /// <summary>Pide a la base de datos que reserve los avisos que tocan hoy. Devuelve cuántos reservó. Fuera de la franja ni siquiera llama.</summary>
+    /// <summary>Pide a la base de datos que reserve los avisos que tocan hoy. Devuelve cuántos reservó. La franja la decide la base, centro a centro con la zona de cada uno
+    /// (<paramref name="now"/> no se usa: el procedimiento lee su propio reloj).</summary>
     public async Task<int> ReserveDueAsync(DateTimeOffset now, CancellationToken ct = default)
     {
-        if (!Enabled || !InWindow(now))
+        if (!Enabled)
         {
             return 0;
         }
@@ -74,12 +75,19 @@ public sealed class ExternalNoticeService(
             return 0;
         }
 
-        var inWindow = InWindow(now);
+        var zones = new Dictionary<Guid, TimeZoneInfo>();
         foreach (var notice in due)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
+                // La franja es la del centro del aviso. Si no se puede leer su zona, no se reclama: se reintenta en la vuelta siguiente.
+                if (zone is null && !zones.ContainsKey(notice.CenterId.Value))
+                {
+                    zones[notice.CenterId.Value] = await store.ZoneOfCenterAsync(notice.CenterId, ct);
+                }
+
+                var inWindow = InWindow(now, zones.GetValueOrDefault(notice.CenterId.Value));
                 if (!await store.ClaimAsync(notice.Id, ct))
                 {
                     continue;

@@ -8,14 +8,14 @@ namespace ResidApp.Application.UseCases;
 /// El recordatorio de una cita confirmada, el día antes (ADR 0012; CJ, tercera tanda 6.2 B; lectura de privacidad en docs/privacidad/recordatorio-cita-por-correo.md). Nadie lo
 /// desencadena: la tarea programada de la aplicación llama cada minuto a <see cref="ReserveDueAsync"/> (pide a la base de datos que reserve una fila por cada cita confirmada de
 /// mañana) y a <see cref="ProcessDueAsync"/> (reclama cada fila, vuelve a comprobar que sigue siendo verdad que la cita es mañana y a quién escribir, y manda un solo correo a
-/// quien reservó la cita). Solo se envía en la franja de las 10:00 a las 18:59 (hora de Madrid): fuera de ella no se reserva ni se envía nada, y lo que quedó reservado se cierra
+/// quien reservó la cita). Solo se envía en la franja de las 10:00 a las 18:59 (hora del centro): fuera de ella no se reserva ni se envía nada, y lo que quedó reservado se cierra
 /// como OMITIDO / FUERA_DE_PLAZO, porque «mañana» ya no sería verdad. Sin reintentos. <paramref name="log"/> recibe solo la plantilla, el estado y un código: nunca una dirección ni
 /// el texto de una excepción. Apagado por defecto: hace falta <see cref="EmailSettings.Active"/> y <see cref="EmailSettings.Reminder"/>.
 /// </summary>
 public sealed class ReminderService(
     IReminderStore store, IEmailSender sender, EmailSettings settings, Action<string>? log = null, TimeSpan? sendTimeout = null, TimeZoneInfo? zone = null)
 {
-    /// <summary>Primera hora de la franja de envío (hora local de Madrid): las 10:00.</summary>
+    /// <summary>Primera hora de la franja de envío (hora local del centro): las 10:00.</summary>
     public const int WindowStartHour = 10;
 
     /// <summary>La franja termina antes de esta hora: la última vuelta posible es a las 18:59.</summary>
@@ -27,17 +27,18 @@ public sealed class ReminderService(
 
     private bool Enabled => settings.Active && settings.Reminder;
 
-    /// <summary>Si <paramref name="now"/> está dentro de la franja de envío (hora de la zona de la aplicación, Europe/Madrid).</summary>
-    public bool InWindow(DateTimeOffset now)
+    /// <summary>Si <paramref name="now"/> está dentro de la franja de envío en la zona dada (la del centro del recordatorio). Con una zona fijada al construir el servicio (las pruebas), manda esa; sin ninguna, la de Madrid.</summary>
+    public bool InWindow(DateTimeOffset now, TimeZoneInfo? centerZone = null)
     {
-        var hour = TimeZoneInfo.ConvertTime(now, zone ?? CenterTime.Zone).Hour;
+        var hour = TimeZoneInfo.ConvertTime(now, zone ?? centerZone ?? CenterTime.Madrid).Hour;
         return hour >= WindowStartHour && hour < WindowEndHour;
     }
 
-    /// <summary>Pide a la base de datos que reserve los recordatorios de las citas de mañana. Devuelve cuántos reservó. Fuera de la franja ni siquiera llama.</summary>
+    /// <summary>Pide a la base de datos que reserve los recordatorios de las citas de mañana. Devuelve cuántos reservó. La franja la decide la base, centro a centro con la zona de cada uno
+    /// (<paramref name="now"/> no se usa: el procedimiento lee su propio reloj).</summary>
     public async Task<int> ReserveDueAsync(DateTimeOffset now, CancellationToken ct = default)
     {
-        if (!Enabled || !InWindow(now))
+        if (!Enabled)
         {
             return 0;
         }
@@ -73,12 +74,19 @@ public sealed class ReminderService(
             return 0;
         }
 
-        var inWindow = InWindow(now);
+        var zones = new Dictionary<Guid, TimeZoneInfo>();
         foreach (var reminder in due)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
+                // La franja es la del centro del recordatorio. Si no se puede leer su zona, no se reclama: se reintenta en la vuelta siguiente.
+                if (zone is null && !zones.ContainsKey(reminder.CenterId.Value))
+                {
+                    zones[reminder.CenterId.Value] = await store.ZoneOfCenterAsync(reminder.CenterId, ct);
+                }
+
+                var inWindow = InWindow(now, zones.GetValueOrDefault(reminder.CenterId.Value));
                 if (!await store.ClaimAsync(reminder.Id, ct))
                 {
                     continue;

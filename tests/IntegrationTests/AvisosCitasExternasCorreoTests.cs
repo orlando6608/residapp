@@ -152,6 +152,49 @@ public class AvisosCitasExternasCorreoTests
         await connection.ExecuteAsync(sql, parameters);
     }
 
+    // ---- La zona de cada centro (script 0110) ----
+
+    [Fact]
+    public async Task CadaCentroReservaYComprueba_ConLaFranjaYElHoyDeSuZona()
+    {
+        var madrid = await WorldAsync("Residente Correo Zona Madrid");
+        var canary = await WorldAsync("Residente Correo Zona Canarias");
+        await RecordatorioCitaTests.SetCenterZoneAsync(canary.Setup, "Atlantic/Canary");
+        var inMadrid = await RegisterAsync(madrid, 1);
+        var inCanary = await RegisterAsync(canary, 1);
+
+        // 10:00 en Madrid son las 09:00 en Canarias: solo el centro de la península está en su franja.
+        await ReserveAsync(Today, 10);
+        var reservedInMadrid = await RowsAsync(inMadrid);
+        Assert.NotEmpty(reservedInMadrid);
+        Assert.Empty(await RowsAsync(inCanary));
+
+        // 19:00 en Madrid son las 18:00 en Canarias: ahora es al revés, y lo de Madrid no se repite.
+        await ReserveAsync(Today, 19);
+        Assert.Equal(reservedInMadrid.Count, (await RowsAsync(inMadrid)).Count);
+        var reservedInCanary = await RowsAsync(inCanary);
+        Assert.NotEmpty(reservedInCanary);
+        Assert.All(reservedInCanary, row => Assert.Equal(($"1D|{Today.AddDays(1):yyyy-MM-dd}", "PENDIENTE"), (row.Key, row.State)));
+
+        // «Hoy» de la comprobación es el del centro: a las 00:30 de Madrid del día siguiente todavía son las 23:30 de hoy en Canarias. La cita de mañana (clave 1D) sigue siendo de
+        // «mañana» para Canarias (el aviso sale) y ya es la de «hoy» para la península (fuera de plazo).
+        var afterMidnightInMadrid = TimeZoneInfo.ConvertTimeToUtc(Today.AddDays(1).ToDateTime(new TimeOnly(0, 30)), Madrid);
+        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            var madridNotice = await connection.ExecuteScalarAsync<Guid>("SELECT TOP (1) id FROM dbo.envios_correo WHERE referencia_id = @inMadrid", new { inMadrid });
+            var canaryNotice = await connection.ExecuteScalarAsync<Guid>("SELECT TOP (1) id FROM dbo.envios_correo WHERE referencia_id = @inCanary", new { inCanary });
+            const string check = "EXEC dbo.comprobar_aviso_cita_externa_en @envio_id = @id, @ahora_utc = @now";
+            Assert.Equal("FUERA_DE_PLAZO", await connection.ExecuteScalarAsync<string>(check, new { id = madridNotice, now = afterMidnightInMadrid }));
+            Assert.Null(await connection.ExecuteScalarAsync<string?>(check, new { id = canaryNotice, now = afterMidnightInMadrid }));
+        }
+
+        // Al enviar, el aviso de Madrid ya está fuera de la franja de su centro (19:00) y se cierra sin comprobar nada más.
+        var sender = new FakeEmailSender();
+        await DrainAsync(new ExternalNoticeService(new SqlExternalNoticeStore(TestDatabase.ConnectionFactory), sender, Active()), Sim(Today, 19));
+        Assert.All(await RowsAsync(inMadrid), row => Assert.Equal(("OMITIDO", "FUERA_DE_PLAZO"), (row.State, row.Reason)));
+        Assert.DoesNotContain(sender.Sent, message => message.To == madrid.First.Address || message.To == madrid.Second.Address);
+    }
+
     // ---- A quién se escribe ----
 
     [Fact]

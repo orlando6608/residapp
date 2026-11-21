@@ -162,6 +162,10 @@ public class RecordatorioCitaTests
             return Task.FromResult(Pending());
         }
 
+        public Func<TimeZoneInfo> Zone { get; set; } = () => Madrid;
+
+        public Task<TimeZoneInfo> ZoneOfCenterAsync(CenterId centerId, CancellationToken ct = default) => Task.FromResult(Zone());
+
         public Task<bool> ClaimAsync(Guid id, CancellationToken ct = default) => Task.FromResult(Claim());
 
         public Task<ChangeNoticePreparation> PrepareAsync(PendingReminder reminder, DateTimeOffset now, CancellationToken ct = default) => Task.FromResult(Prepare());
@@ -250,17 +254,52 @@ public class RecordatorioCitaTests
     }
 
     [Fact]
-    public async Task Reservar_SoloDentroDeLaFranja_ConElIdiomaYLaVersionDeLaPlantilla()
+    public async Task Reservar_PideSiempreALaBase_ConElIdiomaYLaVersionDeLaPlantilla_YLaFranjaLaDecideLaBase()
     {
         var store = new FakeStore();
         var service = Service(store, new FakeSender(), On());
 
-        Assert.Equal(0, await service.ReserveDueAsync(Madrid1(9, 59)));
-        Assert.Equal(0, await service.ReserveDueAsync(Madrid1(19, 0)));
-        Assert.Empty(store.Reserved);
+        // La franja depende de la zona de cada centro y la calcula el procedimiento (script 0110): el servicio no la filtra con una sola hora.
+        Assert.Equal(3, await service.ReserveDueAsync(Madrid1(9, 59)));
+        Assert.Equal(3, await service.ReserveDueAsync(Madrid1(19, 0)));
+        Assert.Equal(2, store.Reserved.Count);
+        Assert.All(store.Reserved, reserved => Assert.Equal(("es", ReminderTemplate.Version), reserved));
+    }
 
-        Assert.Equal(3, await service.ReserveDueAsync(Madrid1(10, 0)));
-        Assert.Equal(("es", ReminderTemplate.Version), Assert.Single(store.Reserved));
+    [Theory]
+    [InlineData(9, 30, false)]
+    [InlineData(10, 30, true)]
+    [InlineData(18, 30, true)]
+    [InlineData(19, 30, false)]
+    public async Task Procesar_UsaLaFranjaDelCentro_NoLaDeMadrid(int canaryHour, int minute, bool sends)
+    {
+        // Canarias va una hora por detrás de la península: las 10:30 allí son las 11:30 en Madrid, y a las 19:30 de Madrid todavía son las 18:30 allí.
+        var canary = TimeZoneInfo.FindSystemTimeZoneById("Atlantic/Canary");
+        var store = WithOnePending();
+        store.Zone = () => canary;
+        var sender = new FakeSender();
+        var now = new DateTimeOffset(2026, 11, 15, canaryHour, minute, 0, TimeSpan.Zero);
+
+        await new ReminderService(store, sender, On()).ProcessDueAsync(now);
+
+        Assert.Equal(sends ? 1 : 0, sender.Sent.Count);
+        Assert.Equal(sends ? "ENVIADO" : "OMITIDO", Assert.Single(store.Resolved).State);
+    }
+
+    [Fact]
+    public async Task Procesar_SiNoSePuedeLeerLaZonaDelCentro_NoReclamaNiEnvia_YSeReintentaDespues()
+    {
+        var store = WithOnePending();
+        store.Zone = () => throw new InvalidOperationException("sin zona");
+        var claimed = false;
+        store.Claim = () => claimed = true;
+        var sender = new FakeSender();
+
+        Assert.Equal(0, await new ReminderService(store, sender, On()).ProcessDueAsync(Madrid1(11)));
+
+        Assert.False(claimed);
+        Assert.Empty(sender.Sent);
+        Assert.Empty(store.Resolved);
     }
 
     [Fact]
