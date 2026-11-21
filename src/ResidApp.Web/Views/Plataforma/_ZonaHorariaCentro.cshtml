@@ -51,7 +51,8 @@
                         <li><strong>@Model.State.Impact.Slots</strong> @(Model.State.Impact.Slots == 1 ? "franja de citas activa" : "franjas de citas activas"): se guardan como hora local («de 10:00 a 12:00»), así que su hora real se mueve con la zona.</li>
                         <li><strong>@Model.State.Impact.Appointments</strong> @(Model.State.Impact.Appointments == 1 ? "cita futura reservada" : "citas futuras reservadas"): no se tocan (están en hora universal), pero se verán a otra hora.</li>
                     </ul>
-                    <p class="mb-0">Las horas ya guardadas del centro, en su historial y en su auditoría, también se verán en la zona nueva.</p>
+                    <p class="mb-2">Las horas ya guardadas del centro, en su historial y en su auditoría, también se verán en la zona nueva.</p>
+                    <p class="mb-0">Los recordatorios y avisos por correo que ya estén reservados para hoy o mañana pueden repetirse o no salir ese día, porque «mañana» cambia con la zona.</p>
                 </div>
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" name="Confirmo" id="zona-confirmo" value="true" required />

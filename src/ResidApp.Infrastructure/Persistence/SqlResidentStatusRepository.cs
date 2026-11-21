@@ -141,7 +141,7 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                 AppointmentReason = AppointmentCancelledReason, RequestReason = AppointmentRequestClosedReason,
             }, transaction, cancellationToken: ct));
 
-            // Citas externas (script 0101, DPO 6.3): las abiertas de hoy en adelante (día de Madrid) se cancelan solas con la causa BAJA_RESIDENTE y el texto fijo, en esta misma
+            // Citas externas (script 0101, DPO 6.3): las abiertas de hoy en adelante (día del centro) se cancelan solas con la causa BAJA_RESIDENTE y el texto fijo, en esta misma
             // transacción (TR_cext_cambios_causa lo admite solo con esta baja). Las pasadas y las ya cerradas no se tocan. La suspensión tampoco las toca.
             var externalCancelled = await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
                 DECLARE @Cancelled TABLE (id UNIQUEIDENTIFIER NOT NULL, fecha DATE NOT NULL, hora TIME(0) NULL, estado_anterior NVARCHAR(24) NOT NULL);
@@ -169,7 +169,7 @@ public sealed class SqlResidentStatusRepository(SqlConnectionFactory connections
                 """, new
             {
                 p.ResidentId, p.CenterId, AccountId = target.AccountId.Value, OccurredAt = occurredAt, AppointmentReason = AppointmentCancelledReason,
-                Today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(occurredAt),
+                Today = CenterTime.TodayAt(occurredAt),
             }, transaction, cancellationToken: ct));
             transaction.Commit();
             return new DischargeOutcome(closed, appointments.Cancelled, appointments.Closed, externalCancelled);

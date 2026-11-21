@@ -3,6 +3,8 @@
 **BORRADOR del agente `dpo-residapp` — lo valida una persona (DPO real o abogado) antes de usarlo con datos reales.** Fecha: 2026-11-14. Segunda lectura experta, no un dictamen.
 
 Etiquetas: **[Hecho]** verificado en el repositorio o en una fuente oficial (con archivo y línea), **[Suposición]** mía, **[Decidir]** lo fija Orlando, CJ, la residencia, el DPO real o un abogado.
+> **Nota (2026-11-21, zonas horarias por centro, F2 y F3):** donde este documento dice «hora de Madrid» o `Europe/Madrid` para la franja de envío, el «mañana» o el día local, hoy vale la zona **del centro** de la cita (script `0110`; Canarias activa desde `0111`). Los procedimientos calculan «mañana» y la franja 10:00–18:59 con la zona de cada centro y el servicio vuelve a mirar la franja con la zona del centro al enviar; los centros sin zona elegida siguen en Madrid. Ver `docs/producto/zonas-horarias-por-centro-estudio.md`, apartado 3.6. El resto del análisis no cambia.
+
 
 Complementa, sin repetirlos: `docs/privacidad/aviso-cita-por-correo.md` (propuesta), `docs/privacidad/aviso-cita-cambio-cancelacion-por-correo.md` (cambio; sobre todo 2.5), `docs/privacidad/direccion-confirmada-familia.md` y `docs/privacidad/tarea-correo-identidad-rls.md`. **No modifico ninguno** de ellos ni el ADR 0012: el apartado 6 lista las frases que habría que tocar. Lo ya resuelto en esos documentos (un solo destinatario, `Para` sin copias, marco y pie comunes, sin seguimiento de aperturas, sin dirección en registros, clave única, interruptor propio, lectura con la misma consulta que el portal) **se hereda tal cual** y aquí solo se enumera cuando cambia o se aplica de otra forma.
 

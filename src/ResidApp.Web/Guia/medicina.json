@@ -202,7 +202,7 @@
         { "texto": "Para terminar el seguimiento, pulsa **Resolver**: vuelves a la conducta, donde cierras el evento o registras una indicación.", "botones": ["Resolver"] }
       ],
       "despues": [
-        { "para": "Medicina", "texto": "El evento queda «En seguimiento médico» en la bandeja de la unidad, con el objetivo, la próxima revisión, la última actuación y quién lo lleva. Si la fecha prevista pasa, consta como **Pendiente** pero sigue abierto. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha: con hora, pasa a **Pendiente** cuando pasa esa hora (hora de Madrid); sin hora, al día siguiente de la fecha." },
+        { "para": "Medicina", "texto": "El evento queda «En seguimiento médico» en la bandeja de la unidad, con el objetivo, la próxima revisión, la última actuación y quién lo lleva. Si la fecha prevista pasa, consta como **Pendiente** pero sigue abierto. La hora es opcional y orientativa (no garantiza que se haga a esa hora) y necesita una fecha: con hora, pasa a **Pendiente** cuando pasa esa hora (hora del centro); sin hora, al día siguiente de la fecha." },
         { "para": "Enfermería", "texto": "Ve el seguimiento en solo lectura en el detalle del evento." }
       ],
       "dudas": [

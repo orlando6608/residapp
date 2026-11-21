@@ -73,7 +73,7 @@ public sealed class SqlResidentStatusDirectory(SqlConnectionFactory connections)
                      WHERE centro_id = @CenterId AND residente_id = @ResidentId AND estado_codigo IN ('PENDIENTE', 'PROPUESTA')) AS OpenRequests,
                    (SELECT COUNT(*) FROM dbo.citas_externas WITH (FORCESEEK)
                      WHERE centro_id = @CenterId AND residente_id = @ResidentId AND estado_codigo IN ('PROGRAMADA', 'CONFIRMADA_HOSPITAL') AND fecha >= @Today) AS ExternalAppointments
-            """, new { CenterId = centerId.Value, ResidentId = residentId.Value, Now = now.UtcDateTime, Today = ResidApp.Domain.Modules.CenterModuleRules.TodayInMadrid(now) }, cancellationToken: ct));
+            """, new { CenterId = centerId.Value, ResidentId = residentId.Value, Now = now.UtcDateTime, Today = CenterTime.TodayAt(now) }, cancellationToken: ct));
     }
 
     private static DischargedResident ToDischarged(DischargedRow r) => new(

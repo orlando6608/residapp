@@ -133,7 +133,7 @@ public static class ExternalAppointmentText
 }
 
 /// <summary>
-/// Lo que se registra de una cita externa (script 0101), ya validado: el día del centro (hora de Madrid, no UTC) y la hora opcional (vacía es «por confirmar»), el tipo y la
+/// Lo que se registra de una cita externa (script 0101), ya validado: el día del centro (su hora, no UTC) y la hora opcional (vacía es «por confirmar»), el tipo y la
 /// especialidad de lista cerrada, el lugar (una línea de 80, solo el nombre del centro sanitario), el transporte y el acompañante con su modo y su estado, qué preparar y qué ve la
 /// familia. Una cita nueva nace programada.
 /// </summary>
@@ -193,7 +193,7 @@ public sealed record ExternalAppointment
         FamilyVisibility = familyVisibility;
     }
 
-    /// <summary>Al registrar o reprogramar, el día no puede ser anterior a hoy en el centro (la hora de Madrid la calcula quien llama; la base no lo impide a propósito).</summary>
+    /// <summary>Al registrar o reprogramar, el día no puede ser anterior a hoy en el centro (la hora del centro la calcula quien llama; la base no lo impide a propósito).</summary>
     public ExternalAppointment RequireNotInPast(DateOnly todayAtCenter) =>
         Date >= todayAtCenter ? this : throw new DomainValidationException(InvalidCode);
 }

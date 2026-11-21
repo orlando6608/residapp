@@ -15,21 +15,22 @@ namespace ResidApp.IntegrationTests;
 /// Zona horaria por centro (script 0109, F1 del estudio de zonas horarias): el catálogo, la fila de alta al crear el centro, la corrección solo por Plataforma con motivo, recuento de
 /// lo afectado y auditoría, y la historia de solo añadir. Canarias está en el catálogo pero inactiva hasta F3: estas pruebas la activan mientras corren y la dejan como estaba.
 /// </summary>
-public class ZonaHorariaCentroTests : IAsyncLifetime
+public class ZonaHorariaCentroTests
 {
     private const string Canarias = "Atlantic/Canary";
     private const string Madrid = "Europe/Madrid";
+    private const string Inactiva = "Test/Inactiva";
 
     private sealed record Operator(string ExternalSubject, AccountId AccountId, Guid ProfileScopeId);
 
-    public Task InitializeAsync() => SetCanariasAsync(true);
-
-    public Task DisposeAsync() => SetCanariasAsync(false);
-
-    private static async Task SetCanariasAsync(bool active)
+    /// <summary>Una zona del catÃ¡logo que no estÃ¡ activa (no se ofrece ni se puede elegir). Se crea una vez y no se toca el estado de las zonas reales.</summary>
+    private static async Task EnsureInactiveZoneAsync()
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
-        await connection.ExecuteAsync("UPDATE dbo.zonas_horarias SET activa = @active WHERE codigo = @code", new { active, code = Canarias });
+        await connection.ExecuteAsync("""
+            IF NOT EXISTS (SELECT 1 FROM dbo.zonas_horarias WHERE codigo = N'Test/Inactiva')
+                INSERT INTO dbo.zonas_horarias (codigo, nombre_windows, etiqueta, orden, activa) VALUES (N'Test/Inactiva', N'GMT Standard Time', N'Zona inactiva de pruebas', 99, 0)
+            """);
     }
 
     private static async Task<Operator> CreateOperatorAsync()
@@ -75,7 +76,29 @@ public class ZonaHorariaCentroTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task El_catalogo_ofrece_Madrid_y_cuando_se_activa_Canarias_pero_no_una_zona_inactiva()
+    public async Task Cada_zona_del_catalogo_la_conoce_el_servidor_y_la_base_de_datos_y_las_dos_dan_la_misma_hora_en_invierno_y_en_verano()
+    {
+        // La aplicación calcula con el nombre estándar (TimeZoneInfo) y los avisos de la base con el de Windows (AT TIME ZONE): si discreparan, un recordatorio saldría en otra hora que las pantallas.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        var zones = (await connection.QueryAsync<(string Code, string WindowsName)>(
+            "SELECT codigo, nombre_windows FROM dbo.zonas_horarias WHERE codigo NOT LIKE N'Test/%'")).ToList();
+        Assert.Contains(zones, zone => zone.Code == Madrid);
+        Assert.Contains(zones, zone => zone.Code == Canarias);
+
+        foreach (var (code, windowsName) in zones)
+        {
+            var net = TimeZoneInfo.FindSystemTimeZoneById(code);
+            foreach (var instant in new[] { new DateTimeOffset(2026, 1, 15, 12, 0, 0, TimeSpan.Zero), new DateTimeOffset(2026, 7, 15, 12, 0, 0, TimeSpan.Zero) })
+            {
+                var sqlMinutes = await connection.ExecuteScalarAsync<int>(
+                    "SELECT DATEPART(TZOFFSET, CAST(@instant AS DATETIME2(0)) AT TIME ZONE 'UTC' AT TIME ZONE @windowsName)", new { instant = instant.UtcDateTime, windowsName });
+                Assert.Equal((int)net.GetUtcOffset(instant).TotalMinutes, sqlMinutes);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task El_catalogo_ofrece_Madrid_y_Canarias_pero_no_una_zona_inactiva()
     {
         var directory = new SqlCenterTimeZones(TestDatabase.ConnectionFactory);
 
@@ -83,8 +106,8 @@ public class ZonaHorariaCentroTests : IAsyncLifetime
         Assert.Equal([Madrid, Canarias], withCanarias.Select(z => z.Code).Where(c => c is Madrid or Canarias));
         Assert.Equal("Península y Baleares (Madrid)", withCanarias.Single(z => z.Code == Madrid).Label);
 
-        await SetCanariasAsync(false);
-        Assert.DoesNotContain(await directory.ListCatalogAsync(), z => z.Code == Canarias);
+        await EnsureInactiveZoneAsync();
+        Assert.DoesNotContain(await directory.ListCatalogAsync(), z => z.Code == Inactiva);
     }
 
     [Fact]
@@ -228,9 +251,9 @@ public class ZonaHorariaCentroTests : IAsyncLifetime
     {
         var op = await CreateOperatorAsync();
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
-        await SetCanariasAsync(false);
+        await EnsureInactiveZoneAsync();
 
-        var result = await BuildPlatform(op.ExternalSubject).ChangeCenterTimeZoneAsync(Change(op, admin.CenterId, Canarias, CenterTimeZoneChangeReason.ErrorDeAlta));
+        var result = await BuildPlatform(op.ExternalSubject).ChangeCenterTimeZoneAsync(Change(op, admin.CenterId, Inactiva, CenterTimeZoneChangeReason.ErrorDeAlta));
 
         Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
     }

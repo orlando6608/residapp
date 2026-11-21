@@ -234,7 +234,7 @@ public static class FollowUpDisplay
 
     public static bool IsOverdue(DateOnly? dueDate) => dueDate < Today;
 
-    /// <summary>Con hora, vence cuando pasa esa hora (hora local del centro, Madrid); sin hora, al día siguiente.</summary>
+    /// <summary>Con hora, vence cuando pasa esa hora (hora local del centro); sin hora, al día siguiente.</summary>
     public static bool IsOverdue(DateOnly? dueDate, TimeOnly? dueTime) => FollowUpPlan.IsOverdue(dueDate, dueTime, CenterTime.Now);
 }
 

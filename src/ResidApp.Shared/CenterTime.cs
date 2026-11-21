@@ -5,7 +5,7 @@ namespace ResidApp.Shared;
 /// como «hoy» sale de la zona del centro de la petición en curso (estudio: docs/producto/zonas-horarias-por-centro-estudio.md). Se acabó <c>TimeZoneInfo.Local</c>,
 /// <c>ToLocalTime()</c>, <c>DateTime.Today</c> y <c>DateTime.Now</c>, que dependen de la zona del servidor: una prueba de arquitectura los prohíbe fuera de esta clase.
 /// La zona es de la petición (<see cref="AsyncLocal{T}"/>, como la cultura): quien conozca el centro la fija con <see cref="Use"/>; sin fijar, es la de la península
-/// (Europe/Madrid), que es la de todos los centros y la de Plataforma.
+/// (Europe/Madrid), que es la de Plataforma y la de los centros que no tienen otra.
 /// </summary>
 public static class CenterTime
 {

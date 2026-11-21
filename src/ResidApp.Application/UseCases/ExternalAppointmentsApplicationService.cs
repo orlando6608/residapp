@@ -206,7 +206,7 @@ public sealed class ExternalAppointmentsApplicationService(
             return all.Where(a => ExternalAppointmentRules.IsOpen(a.Status) && !a.Appointment.Covered).ToList();
         });
 
-    /// <summary>Hoy en el centro (hora de Madrid), para que las pantallas ofrezcan el mismo día que el servicio exige.</summary>
+    /// <summary>Hoy en el centro (hora del centro), para que las pantallas ofrezcan el mismo día que el servicio exige.</summary>
     public DateOnly TodayAtCenter() => Today();
 
     /// <summary>Lo que ve el Auxiliar (PR 3): hoy y mañana (día del centro), solo de sus residentes asignados, y solo los campos de <see cref="ExternalAppointmentForAuxiliar"/>. Para otro perfil, acceso denegado.</summary>
@@ -219,7 +219,7 @@ public sealed class ExternalAppointmentsApplicationService(
             return new AuxiliarExternalAppointments(today, await repository.ListForAuxiliarAsync(actor, today, today.AddDays(1), ct));
         });
 
-    private DateOnly Today() => CenterModuleRules.TodayInMadrid(clock.GetUtcNow());
+    private DateOnly Today() => CenterTime.TodayAt(clock.GetUtcNow());
 
     private static void RequireManage(bool canManage)
     {
