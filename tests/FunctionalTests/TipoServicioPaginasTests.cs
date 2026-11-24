@@ -215,6 +215,59 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
         Assert.NotEmpty(token);
     }
 
+    [Theory]
+    [InlineData("CentroDeDia", "CENTRO_DE_DIA", false)]
+    [InlineData("Residencia", "RESIDENCIA", true)]
+    public async Task La_administracion_de_un_centro_de_dia_no_ve_habitaciones_ni_camas_y_ambos_tipos_llevan_su_etiqueta(string formType, string code, bool hasRooms)
+    {
+        var platform = await LoginPlatformAsync();
+        var (_, _, suffix) = await CreateCenterAsync(platform, formType);
+        var admin = await LoginAsync($"tipo-admin-{suffix}");
+
+        var structure = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Estructura"));
+        var create = WebUtility.HtmlDecode(await admin.GetStringAsync("/Residents/Create"));
+
+        Assert.Equal(hasRooms, structure.Contains("Habitaciones y plazas"));
+        Assert.Equal(hasRooms, create.Contains("la cama es obligatoria"));
+        // La etiqueta del tipo acompaña al centro en el menú del ámbito y en la pantalla de alta.
+        Assert.Contains($"data-tipo-servicio=\"{code}\"", structure);
+        Assert.Contains($"data-tipo-servicio=\"{code}\"", create);
+    }
+
+    [Theory]
+    [InlineData("CentroDeDia", false)]
+    [InlineData("Residencia", true)]
+    public async Task Las_habitaciones_y_plazas_solo_existen_en_una_residencia_aunque_se_escriba_la_direccion_a_mano(string formType, bool allowed)
+    {
+        var platform = await LoginPlatformAsync();
+        var (centerId, _, suffix) = await CreateCenterAsync(platform, formType);
+        var admin = await LoginAsync($"tipo-admin-{suffix}");
+        Guid unitId;
+        using (var connection = await Db.OpenAsync())
+        {
+            unitId = await connection.ExecuteScalarAsync<Guid>("SELECT TOP (1) id FROM dbo.unidades WHERE centro_id = @centerId", new { centerId });
+        }
+
+        var get = await admin.GetAsync($"/Administracion/Habitaciones?unidadId={unitId}");
+        var created = await PostAsync(admin, "/Administracion/Estructura", "/Administracion/NuevaHabitacion",
+            [new("Form.OperacionId", Guid.NewGuid().ToString()), new("Form.UnidadId", unitId.ToString()), new("Form.Nombre", "Habitación escrita a mano")]);
+        using var check = await Db.OpenAsync();
+        var rooms = await check.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.habitaciones WHERE centro_id = @centerId", new { centerId });
+
+        if (allowed)
+        {
+            Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+            Assert.Equal(1, rooms);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.Redirect, get.StatusCode);
+            Assert.EndsWith("/Administracion/Estructura", get.Headers.Location!.OriginalString);
+            Assert.Contains("Un Centro de Día no tiene habitaciones ni plazas.", created);
+            Assert.Equal(0, rooms);
+        }
+    }
+
     [Fact]
     public async Task El_tipo_de_servicio_no_sale_en_los_titulos_de_las_pestanas_ni_viaja_en_la_cookie_del_ambito()
     {
@@ -236,6 +289,9 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
             Assert.DoesNotContain("Residencia", title);
             Assert.DoesNotContain("Centro de Día", title);
         });
+
+        // El centro de Plataforma no es un servicio: su cabecera y su menú no llevan etiqueta (ADR 0017, punto 9).
+        Assert.DoesNotContain("data-tipo-servicio", await platform.GetStringAsync("/Plataforma/Documentos"));
 
         // La cookie del ámbito lleva el centro y el perfil, no el tipo: este lo lee siempre la base de datos (ADR 0008, punto 5; ADR 0017, punto 7).
         Assert.DoesNotContain(typeof(ResidApp.Web.Security.ActiveProfileScopeCookieValue).GetProperties(),

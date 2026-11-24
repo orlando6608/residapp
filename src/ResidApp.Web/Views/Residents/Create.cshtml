@@ -14,7 +14,7 @@
 
 <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"alta-residente"' />Alta de residente</h1>
 <p class="text-muted">
-    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo; la cama es obligatoria si la unidad tiene alguna libre (o «Pendiente de asignar»).
+    Vertical Residente/Basal. La unidad se elige entre las de tu ámbito activo@(ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter ? "." : "; la cama es obligatoria si la unidad tiene alguna libre (o «Pendiente de asignar»).")
 </p>
 
 <div class="card">
@@ -22,7 +22,7 @@
         <div asp-validation-summary="All" class="text-danger"></div>
 
         <p>
-            Ámbito activo: <strong>@ViewBag.AmbitoPerfilLabel</strong> · @ViewBag.AmbitoCentroNombre
+            Ámbito activo: <strong>@ViewBag.AmbitoPerfilLabel</strong> · @ViewBag.AmbitoCentroNombre <partial name="_EtiquetaTipoServicio" model="ResidApp.Domain.Platform.CurrentCenterService.Type" />
             (<a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Url.Action("Create", "Residents")">Cambiar ámbito</a>)
         </p>
 

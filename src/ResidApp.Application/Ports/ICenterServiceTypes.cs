@@ -8,6 +8,14 @@ namespace ResidApp.Application.Ports;
 /// de solo añadir. Corregir es una sola transacción que llama al procedimiento <c>corregir_tipo_servicio_centro</c>, única vía de cambio: comprueba otra vez que el ámbito es de Plataforma, que el
 /// centro no tiene ninguna persona y deja la auditoría <c>CENTER_SERVICE_TYPE_CHANGE</c> sin datos.
 /// </summary>
+/// <summary>El tipo de servicio del centro de un ámbito de perfil, para fijarlo durante toda la petición (<see cref="CurrentCenterService"/>).</summary>
+public interface ICenterServiceTypeDirectory
+{
+    /// <summary>El tipo del centro del ámbito activo de esa cuenta, comprobando en SQL que el ámbito es de esa cuenta y sigue vigente. Nulo si no lo es o si el centro es el de Plataforma (no es un servicio).</summary>
+    Task<CenterServiceType?> FindForScopeAsync(string externalSubject, Guid profileScopeId, CancellationToken ct = default);
+}
+
+/// <summary>El tipo de un centro visto y corregido por Plataforma (ver arriba).</summary>
 public interface ICenterServiceTypeRepository
 {
     /// <summary>El tipo vigente de un centro, su constancia y si tiene personas (sí o no, nunca cuántas). El centro de Plataforma o uno que no existe: CENTER_SERVICE_TYPE_CENTER_INVALID.</summary>

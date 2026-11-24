@@ -34,7 +34,7 @@
         <div asp-validation-summary="All" class="text-danger"></div>
 
         <p>
-            Ámbito activo: <strong>@ViewBag.AmbitoPerfilLabel</strong> · @ViewBag.AmbitoCentroNombre
+            Ámbito activo: <strong>@ViewBag.AmbitoPerfilLabel</strong> · @ViewBag.AmbitoCentroNombre <partial name="_EtiquetaTipoServicio" model="ResidApp.Domain.Platform.CurrentCenterService.Type" />
             (<a asp-controller="ProfileScope" asp-action="Select" asp-route-returnUrl="@Url.Action("Direction", "Baseline")">Cambiar ámbito</a>)
         </p>
 

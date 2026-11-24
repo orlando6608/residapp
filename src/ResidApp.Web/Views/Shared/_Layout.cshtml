@@ -108,13 +108,14 @@
                                     @if (activeScopeLayout is not null)
                                     {
                                         <span class="d-none d-lg-inline-block text-truncate opacity-75 centro-activo">· @centerNameLayout</span>
+                                        <partial name="_EtiquetaTipoServicio" model="ResidApp.Domain.Platform.CurrentCenterService.Type" />
                                     }
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><span class="dropdown-item-text small">Sesión de @User.Identity!.Name</span></li>
                                     @if (activeScopeLayout is not null)
                                     {
-                                        <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @centerNameLayout</span></li>
+                                        <li><span class="dropdown-item-text small">Ámbito: @profileLabelLayout · @centerNameLayout <partial name="_EtiquetaTipoServicio" model="ResidApp.Domain.Platform.CurrentCenterService.Type" /></span></li>
                                     }
                                     <li><hr class="dropdown-divider" /></li>
                                     <li><a class="dropdown-item d-flex align-items-center gap-2" asp-area="" asp-controller="Cuenta" asp-action="Index"><partial name="_Icono" model='"cuenta"' />Mi cuenta</a></li>

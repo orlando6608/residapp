@@ -54,7 +54,7 @@
                     <div id="tipo-servicio-ayuda" class="form-text">Residencia o Centro de Día, según lo que el centro declara en el alta o el contrato. <strong>No se podrá cambiar cuando el centro tenga personas.</strong> Hasta entonces, solo Plataforma puede corregir un error.</div>
                 </div>
                 <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" name="Form.ConfirmoTipo" id="tipo-servicio-confirmo" value="true" required @(Model.Form.ConfirmoTipo ? "checked" : "") />
+                    <input class="form-check-input" type="checkbox" name="Form.ConfirmoTipo" id="tipo-servicio-confirmo" value="true" required data-msg-required="Marca la casilla para confirmar el tipo de servicio: no se podrá cambiar cuando el centro tenga personas." @(Model.Form.ConfirmoTipo ? "checked" : "") />
                     <label class="form-check-label" for="tipo-servicio-confirmo">Confirmo que el tipo de servicio elegido es el correcto y que no se podrá cambiar cuando el centro tenga personas.</label>
                     <span asp-validation-for="Form.ConfirmoTipo" class="text-danger d-block"></span>
                 </div>

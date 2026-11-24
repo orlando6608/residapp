@@ -12,6 +12,7 @@ namespace ResidApp.Web.Controllers;
 /// acceso a nadie ni cambia dónde está ningún residente. Traduce a AdministracionEstructuraApplicationService; la autorización no vive aquí.</summary>
 public sealed partial class AdministracionController
 {
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> Habitaciones(Guid unidadId, CancellationToken ct)
     {
         ModelState.Clear();
@@ -38,6 +39,7 @@ public sealed partial class AdministracionController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> NuevaHabitacion([Bind(Prefix = "Form")] NewLayoutFormModel form, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -66,6 +68,7 @@ public sealed partial class AdministracionController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> NuevaPlaza([Bind(Prefix = "Form")] NewLayoutFormModel form, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -92,6 +95,7 @@ public sealed partial class AdministracionController
             "Ya existe una plaza con ese nombre en la habitación.");
     }
 
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> NombreHabitacion(Guid unidadId, Guid habitacionId, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -109,6 +113,7 @@ public sealed partial class AdministracionController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> NombreHabitacion([Bind(Prefix = "Form")] RenameLayoutFormModel form, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -149,6 +154,7 @@ public sealed partial class AdministracionController
         return View("NombreEstructura", new RenameLayoutViewModel("habitación", room.Name, form));
     }
 
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> NombrePlaza(Guid unidadId, Guid plazaId, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -166,6 +172,7 @@ public sealed partial class AdministracionController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> NombrePlaza([Bind(Prefix = "Form")] RenameLayoutFormModel form, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -208,6 +215,7 @@ public sealed partial class AdministracionController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> EstadoHabitacion(Guid unidadId, Guid habitacionId, bool activa, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
@@ -224,6 +232,7 @@ public sealed partial class AdministracionController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [SoloResidencia(nameof(Estructura))]
     public async Task<IActionResult> EstadoPlaza(Guid unidadId, Guid plazaId, bool activa, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);

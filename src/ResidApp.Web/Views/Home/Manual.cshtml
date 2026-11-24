@@ -383,7 +383,7 @@
         motivo indicado</strong> (en una urgencia hay que saber a quién llamar); después las solicitudes de cita por gestionar, las propuestas
         que esperan la respuesta de la familia y las citas pasadas sin cerrar; las autorizaciones de familiares pendientes de activar,
         caducadas o que caducan en 30 días; los residentes con la <strong>ubicación pendiente</strong> (sin habitación, o sin cama en una
-        unidad que tiene camas); las <strong>fotos de más de 12 meses</strong>, que conviene renovar; y, al final, las <strong>cuentas
+        unidad que tiene camas; en un Centro de Día no se cuenta); las <strong>fotos de más de 12 meses</strong>, que conviene renovar; y, al final, las <strong>cuentas
         profesionales suspendidas o sin ámbito</strong> (sin ningún perfil vigente o con un perfil sin unidades), que llevan a «Usuarios»
         filtrado (las de residentes y autorizaciones, de tu ámbito; las de citas y cuentas, de todo el centro). Las líneas de residentes y de autorizaciones llevan a la lista de residentes ya filtrada por ese motivo; en la lista también puedes elegir el filtro «Requiere atención» a mano, y combinarlo con el nombre y la unidad (la lista cuenta residentes y el inicio cuenta autorizaciones, así que un residente con dos familiares pendientes suma dos en el inicio y una vez en la lista). Debajo, las citas
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
@@ -392,7 +392,7 @@
         ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»), <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»), <strong>Citas con la familia</strong> (ver «Citas con la familia»), <strong>Citas externas</strong> (ver «Citas externas de los residentes»; ahí se explica también el aviso «Citas externas con algo sin cubrir», que sale aparte de «Requiere atención») e <strong>Importar datos</strong> y <strong>Exportar datos</strong> (ver «Importar y exportar datos»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
-        «Sin habitación asignada») y la fecha de alta. Puedes buscar por nombre, sin
+        «Sin habitación asignada»; en un Centro de Día, solo la unidad) y la fecha de alta. Puedes buscar por nombre, sin
         importar mayúsculas ni acentos, y filtrar por unidad si tu ámbito tiene más de una.
     </p>
     <p>
@@ -814,12 +814,12 @@
         cambia dónde está ningún residente.
     </p>
     <p>
-        <strong>Habitaciones y plazas</strong> (botón de cada unidad en Estructura) son de la unidad: creas habitaciones y, dentro de cada
+        <strong>Habitaciones y plazas</strong> (botón de cada unidad en Estructura; en un Centro de Día no existen: el botón no sale y el alta no pide cama) son de la unidad: creas habitaciones y, dentro de cada
         una, plazas; puedes cambiarles el nombre, inactivarlas y reactivarlas (no se borran). Se ve qué plazas están ocupadas. No se puede
         inactivar una habitación o una plaza con un residente ubicado en ella, ni reactivar una plaza de una habitación inactiva. Al dar de
         alta a un residente, si la unidad tiene alguna cama (plaza) libre, tienes que elegir una o la opción <strong>Pendiente de asignar</strong>
         (la habitación sola no basta); si no tiene camas libres, la cama es opcional. Una plaza solo la ocupa un residente a la vez. Un residente
-        sin habitación, o sin cama en una unidad con camas, sale en el inicio como «ubicación pendiente». La importación no exige la cama. La ficha administrativa del residente muestra su habitación y su plaza en la ubicación actual y en el historial de ubicación, y Administración, Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente («Sin habitación asignada» si no la tiene). Cambiar después de
+        sin habitación, o sin cama en una unidad con camas, sale en el inicio como «ubicación pendiente» (solo en una Residencia). La importación no exige la cama. La ficha administrativa del residente muestra su habitación y su plaza en la ubicación actual y en el historial de ubicación, y Administración, Enfermería, Medicina y Auxiliar las ven junto a la unidad en sus listas de residentes y en la ficha o el registro del residente («Sin habitación asignada» si no la tiene). Cambiar después de
         habitación o plaza es un traslado (ficha del residente → <strong>Trasladar</strong>).
     </p>
 </section>
@@ -1050,7 +1050,7 @@
         Solo Plataforma puede corregir un error de alta, y solo mientras el centro no tenga ninguna persona dada de alta (ni residentes, de cualquier estado, ni familiares). Se hace en el detalle del centro
         (<strong>Administraciones y unidades</strong>), en la sección <strong>Tipo de servicio</strong>: ves el «Tipo actual» y la «Constancia del tipo de servicio» (el alta y, si la hay, la corrección) y, en <strong>Corregir un error de alta</strong>,
         marcas «Confirmo que el centro es de tipo «…» y que se eligió mal al darlo de alta.» y pulsas <strong>Cambiar a</strong> el otro tipo. Si el centro ya tiene personas, la pantalla lo dice y no ofrece el cambio: hay que crear un centro nuevo.
-        La Administración no puede cambiarlo; en su Auditoría aparece «Tipo de servicio del centro corregido». Por ahora el tipo solo se ve como una etiqueta de texto: ninguna otra pantalla (habitaciones, camas, vocabulario) cambia por él.
+        La Administración no puede cambiarlo; en su Auditoría aparece «Tipo de servicio del centro corregido». El tipo se ve como una etiqueta de texto junto al nombre del centro (cabecera, menú del ámbito, alta de residente, Dirección). En un Centro de Día, además, no hay habitaciones ni camas: desaparecen el botón «Habitaciones y plazas» y la «ubicación pendiente», y la ubicación de un residente muestra solo la unidad (y la plaza, si consta). El vocabulario y el horario no cambian todavía.
     </p>
 </section>
 
@@ -1307,7 +1307,7 @@
     </h2>
     <p>
         Muestra únicamente los residentes con asignación vigente para tu ámbito de trabajo. Cada tarjeta lleva la foto
-        del residente (o sus iniciales, si no tiene) y su ubicación: unidad, habitación y plaza, o «Sin habitación asignada». También
+        del residente (o sus iniciales, si no tiene) y su ubicación: unidad, habitación y plaza, o «Sin habitación asignada» (en un Centro de Día, solo la unidad). También
         indica, con una franja a la izquierda y una etiqueta, si el residente ya tiene un estado basal vigente (verde)
         o sigue pendiente (rojo). Pulsa en cualquier punto de la tarjeta para abrir el registro cotidiano del
         residente: la foto, la identidad mínima y un resumen del basal vigente con el total de Barthel (nunca versiones históricas,
@@ -1363,7 +1363,7 @@
     <p>
         Muestra los residentes de tu ámbito: por defecto, todos los que están en tus unidades concedidas;
         si tu ámbito tiene restringido el acceso a residentes concretos, solo esos. Cada tarjeta lleva la foto del residente
-        (o sus iniciales) y su ubicación (unidad, habitación y plaza, o «Sin habitación asignada»), e indica, con una
+        (o sus iniciales) y su ubicación (unidad, habitación y plaza, o «Sin habitación asignada»; en un Centro de Día, solo la unidad), e indica, con una
         franja a la izquierda y una etiqueta, si el residente ya tiene un estado basal vigente (verde) o sigue pendiente
         (rojo). Pulsa en cualquier punto de la tarjeta para abrir la ficha del residente.
     </p>

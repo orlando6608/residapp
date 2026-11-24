@@ -12,8 +12,22 @@ namespace ResidApp.Infrastructure.Persistence;
 /// cambio es el procedimiento <c>corregir_tipo_servicio_centro</c>, que comprueba el ámbito de Plataforma y que el centro no tiene personas. <c>tipos_servicio_centro</c> es la constancia de solo añadir.
 /// «Tiene personas» lo contesta <c>centro_tiene_personas</c> (sí o no, nunca cuántas).
 /// </summary>
-public sealed class SqlCenterServiceTypes(SqlConnectionFactory connections) : ICenterServiceTypeRepository
+public sealed class SqlCenterServiceTypes(SqlConnectionFactory connections) : ICenterServiceTypeRepository, ICenterServiceTypeDirectory
 {
+    public async Task<CenterServiceType?> FindForScopeAsync(string externalSubject, Guid profileScopeId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        var code = await connection.ExecuteScalarAsync<string?>(new CommandDefinition(
+            """
+            SELECT center.tipo_de_servicio
+              FROM dbo.cuentas account
+              JOIN dbo.ambitos_perfil profile ON profile.cuenta_id = account.id AND profile.id = @ProfileScopeId AND profile.estado = 'ACTIVE' AND profile.revocado_en IS NULL
+              JOIN dbo.centros center ON center.id = profile.centro_id AND center.codigo <> @PlatformCode
+             WHERE account.sujeto_externo = @ExternalSubject AND account.estado = 'ACTIVE'
+            """, new { ExternalSubject = externalSubject, ProfileScopeId = profileScopeId, PlatformCode = PlatformCenter.Code }, cancellationToken: ct));
+        return code is null ? null : EnumCode.ParseCode<CenterServiceType>(code);
+    }
+
     public async Task<CenterServiceTypeState> GetAsync(PlatformAccess access, CenterId centerId, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
