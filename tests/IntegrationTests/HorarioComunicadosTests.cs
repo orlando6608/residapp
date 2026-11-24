@@ -57,7 +57,8 @@ public class HorarioComunicadosTests
         Assert.Equal(2, back.Value);
         Assert.Equal(FamilyCommunicationScheduleSettings.Default, afterReset.Settings);
         Assert.Equal(2, afterReset.History.Count);
-        Assert.Equal(0, await CountAsync("SELECT COUNT(*) FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = admin.CenterId.Value }));
+        // Volver al horario de siempre ya no borra la fila: el centro conserva la suya (script 0114).
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = admin.CenterId.Value }));
         Assert.Equal(2, await CountAsync(
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'FAMILY_SCHEDULE_UPDATE'", new { a = admin.AccountId.Value }));
     }

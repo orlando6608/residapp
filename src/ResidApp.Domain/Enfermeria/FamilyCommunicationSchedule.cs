@@ -26,6 +26,13 @@ public sealed record FamilyCommunicationScheduleSettings(
 
     public static FamilyCommunicationScheduleSettings Default { get; } = new(new TimeOnly(19, 0), TimeSpan.FromHours(1));
 
+    /// <summary>El horario con el que nace un Centro de Día (Orlando, 2026-11-24; sin validar por CJ): 18:00 y 30 minutos. Lo fija el script 0114; este valor es el sugerido de la pantalla Horario.</summary>
+    public static FamilyCommunicationScheduleSettings DayCenterDefault { get; } = new(new TimeOnly(18, 0), TimeSpan.FromMinutes(30));
+
+    /// <summary>El horario con el que nace un centro de este tipo y el que ofrece «Restablecer lo sugerido». Sin tipo conocido, el de una Residencia (el de CJ).</summary>
+    public static FamilyCommunicationScheduleSettings SuggestedFor(ResidApp.Domain.Platform.CenterServiceType? type) =>
+        type == ResidApp.Domain.Platform.CenterServiceType.CentroDeDia ? DayCenterDefault : Default;
+
     public int MarginMinutes => (int)Margin.TotalMinutes;
 
     /// <summary>La hora (con minutos, sin segundos) y el margen en minutos, de 0 a un día; si no, FAMILY_COMMUNICATION_SCHEDULE_INVALID.</summary>

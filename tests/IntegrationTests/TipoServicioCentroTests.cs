@@ -194,6 +194,38 @@ public class TipoServicioCentroTests
     }
 
     [Theory]
+    [InlineData(CenterServiceType.Residencia, "19:00:00", 60)]
+    [InlineData(CenterServiceType.CentroDeDia, "18:00:00", 30)]
+    public async Task Un_centro_nuevo_nace_con_su_fila_de_horario_de_comunicados_segun_su_tipo_y_sin_historial(CenterServiceType type, string time, int margin)
+    {
+        var op = await CreateOperatorAsync();
+        var center = await CreateCenterAsync(op, BuildPlatform(op), type);
+
+        var row = await ScalarAsync<string>(
+            "SELECT CONCAT(hora_publicacion, '|', margen_minutos, '|', resumen_frecuencia_codigo) FROM dbo.comunicados_horario_centro WHERE centro_id = @CenterId", new { center.CenterId });
+        Assert.Equal($"{time}|{margin}|SEMANAL", row);
+        Assert.Equal(0, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.comunicados_horario_centro_historial WHERE centro_id = @CenterId", new { center.CenterId }));
+        // Es el mismo horario que ofrece la pantalla como sugerido para ese tipo.
+        var suggested = ResidApp.Domain.Enfermeria.FamilyCommunicationScheduleSettings.SuggestedFor(type);
+        Assert.Equal(($"{suggested.PublicationTime:HH:mm}:00", suggested.MarginMinutes), (time, margin));
+    }
+
+    [Fact]
+    public async Task El_procedimiento_del_horario_inicial_solo_lo_ejecuta_Plataforma_no_pisa_una_fila_y_rechaza_el_centro_reservado()
+    {
+        var op = await CreateOperatorAsync();
+        var center = await CreateCenterAsync(op, BuildPlatform(op), CenterServiceType.CentroDeDia);
+        await using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("UPDATE dbo.comunicados_horario_centro SET margen_minutos = 45 WHERE centro_id = @CenterId", new { center.CenterId });
+
+        // Sin ámbito de Plataforma en la sesión (aquí no hay ninguno), rechaza.
+        var forbidden = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(() =>
+            connection.ExecuteAsync("EXEC dbo.fijar_horario_inicial_centro @CenterId", new { center.CenterId }));
+        Assert.Contains("FAMILY_SCHEDULE_INITIAL_FORBIDDEN", forbidden.Message);
+        Assert.Equal(45, await ScalarAsync<int>("SELECT margen_minutos FROM dbo.comunicados_horario_centro WHERE centro_id = @CenterId", new { center.CenterId }));
+    }
+
+    [Theory]
     [InlineData(CenterServiceType.Residencia, true)]
     [InlineData(CenterServiceType.CentroDeDia, false)]
     public async Task Un_residente_sin_habitacion_solo_tiene_la_ubicacion_pendiente_en_una_residencia(CenterServiceType type, bool expectedPending)

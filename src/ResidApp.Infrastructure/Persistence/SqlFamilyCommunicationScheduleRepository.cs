@@ -10,7 +10,7 @@ namespace ResidApp.Infrastructure.Persistence;
 /// <summary>
 /// Hora de publicación y margen de los comunicados por centro (script 0051). Mismo patrón que SqlProcessDeadlineRepository: la versión es el
 /// número de filas de historial del centro y al guardar se lee con UPDLOCK/HOLDLOCK para que dos guardados simultáneos no pasen ambos la
-/// comprobación. La tabla solo guarda lo que difiere del horario de CJ (FamilyCommunicationScheduleSettings.Default). Leer y guardar los hace
+/// comprobación. Todo centro tiene su fila (script 0114); el horario de CJ (FamilyCommunicationScheduleSettings.Default) solo es el respaldo si faltara. Leer y guardar los hace
 /// Administración del centro, comprobado en la misma transacción.
 /// </summary>
 public sealed class SqlFamilyCommunicationScheduleRepository(SqlConnectionFactory connections) : IFamilyCommunicationScheduleRepository
@@ -64,14 +64,13 @@ public sealed class SqlFamilyCommunicationScheduleRepository(SqlConnectionFactor
             PreviousSummary = current.SummaryFrequency.ToCode(), NewSummary = desired.SummaryFrequency.ToCode(),
             OccurredAt = occurredAt, Id = Guid.NewGuid(), AuditId = Guid.NewGuid(),
         };
-        // Sin fila vale el horario de CJ: volver a él borra la fila del centro.
+        // Todo centro tiene su fila (script 0114) y siempre queda una, también al volver al horario de siempre. La aplicación puede borrar e insertar en esta tabla pero no actualizar (0091): se sustituye la
+        // fila dentro de la misma transacción.
         await connection.ExecuteAsync(new CommandDefinition("""
             DELETE FROM dbo.comunicados_horario_centro WHERE centro_id = @CenterId;
-            """ + (desired == FamilyCommunicationScheduleSettings.Default ? "" : """
 
             INSERT INTO dbo.comunicados_horario_centro (centro_id, hora_publicacion, margen_minutos, resumen_frecuencia_codigo)
             VALUES (@CenterId, @NewTime, @NewMargin, @NewSummary);
-            """) + """
 
             INSERT INTO dbo.comunicados_horario_centro_historial
                 (id, centro_id, hora_anterior, margen_anterior_minutos, resumen_anterior_codigo, hora_nueva, margen_nuevo_minutos, resumen_nuevo_codigo,
@@ -91,7 +90,7 @@ public sealed class SqlFamilyCommunicationScheduleRepository(SqlConnectionFactor
         return await ReadEffectiveAsync(connection, null, centerId, ct);
     }
 
-    /// <summary>El horario de CJ con lo que el centro haya cambiado por encima. También lo usa el cierre de un evento, dentro de su transacción,
+    /// <summary>El horario de la fila del centro, o el de CJ si no la tuviera. También lo usa el cierre de un evento, dentro de su transacción,
     /// para fijar la hora del comunicado.</summary>
     internal static async Task<FamilyCommunicationScheduleSettings> ReadEffectiveAsync(
         IDbConnection connection, IDbTransaction? transaction, CenterId centerId, CancellationToken ct)

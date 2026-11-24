@@ -134,7 +134,7 @@ public class ResumenPeriodicoTests
     }
 
     [Fact]
-    public async Task LaFrecuenciaSeGuardaPorCentro_ConHistorialYVersion_YVolverALaDeCJBorraLaFila()
+    public async Task LaFrecuenciaSeGuardaPorCentro_ConHistorialYVersion_YVolverALaDeCJConservaLaFila()
     {
         var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
         var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, admin.CenterId, admin.UnitId);
@@ -156,10 +156,10 @@ public class ResumenPeriodicoTests
         var change = Assert.Single(afterSave.History);
         Assert.Equal((FamilyCommunicationSummaryFrequency.Semanal, FamilyCommunicationSummaryFrequency.Diaria), (change.Previous.SummaryFrequency, change.New.SummaryFrequency));
         Assert.False(byNurse.Ok);
-        // Volver a la frecuencia de partida con la hora y el margen de CJ borra la fila: sin fila vale el horario de CJ.
+        // Volver a la frecuencia de partida con la hora y el margen de CJ ya no borra la fila (script 0114).
         Assert.Equal(FamilyCommunicationScheduleSettings.Default, afterReset.Settings);
         Assert.Equal(2, afterReset.History.Count);
-        Assert.Equal(0, await CountAsync("SELECT COUNT(*) FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = admin.CenterId.Value }));
+        Assert.Equal(1, await CountAsync("SELECT COUNT(*) FROM dbo.comunicados_horario_centro WHERE centro_id = @c", new { c = admin.CenterId.Value }));
     }
 }
 
