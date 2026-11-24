@@ -57,7 +57,7 @@ Falla (comprueba las líneas, que cambian):
 | 0 | Alcance, lectura del DPO y preguntas a CJ. **Hecha** | |
 | 1 | **Construida (rama `feat-tipo-de-servicio`).** Columna `tipo_de_servicio` con historial de solo añadir y procedimiento de corrección (script `0113`, apartado 6.4 de la lectura del DPO; enum en `NewCenter.cs`, alta en `PlataformaController`, `SqlPlatformCenterRepository.cs` y `NuevoCentro.cshtml`, disparador de inmutabilidad, corrección con el centro vacío), la etiqueta del tipo en las listas de Plataforma y ADR 0017 | Las cinco condiciones del apartado 3.1 de la lectura del DPO |
 | 2 | **Construida (rama `fase2-plazas-sin-friccion`).** Plazas sin fricción: «ubicación pendiente» y rótulo según el tipo; ocultar «Habitaciones» y «Cama» en el alta y el menú; la etiqueta del tipo en los selectores de ámbito, las invitaciones y los sitios de contexto | Ninguna del DPO mientras solo oculte; si añade días o jornada, pasa a ser 5a |
-| 3 | Vocabulario por tipo, primero lo que ve la familia y el alta | Decidir cómo se hace el catalán; el DPO lee los textos de cara a personas (`Privacy.cshtml`, correos) |
+| 3 | **Construida (rama `fase3-vocabulario-por-tipo`).** Vocabulario por tipo, primero lo que ve la familia y el alta | Decidir cómo se hace el catalán; el DPO lee los textos de cara a personas (`Privacy.cshtml`, correos) |
 | 4 | Horario: valores por defecto según tipo (publicación a las 18:00 y margen de 0 a 30 min son una propuesta de ingeniería; los valores los fija CJ), y la franja de correo si se hace configurable | Lectura del DPO si hay correo o la franja pasa a configurable |
 | 5a–5d | Asistencia y horas; parte a la familia; correo diario; quién recoge y transporte | **Respuesta de CJ**, ADR propio, resolver la contradicción con los flujos (ya decidida: circuito propio) y lectura del DPO del esquema de cada subfase |
 
@@ -81,6 +81,13 @@ Sin script nuevo (no hay datos nuevos). **El ayudante del tipo** (ADR 0017, punt
 - **Documentación:** Manual, Flujo y Guía de Administración (ADM-05 y «ubicación pendiente»); sin `data-version` ni sellos.
 - **Pruebas (local, 2026-11-24):** unitarias 772, funcionales 619, integración 925 sin las clases de avisos de citas (más las nuevas de esta fase). Navegador como Administración de un Centro de Día, en claro, oscuro y 375 px.
 - **Sin hacer ni probar (de QA):** etiqueta de `Direccion/Ambito`, `Indicadores` y `Baseline/Direction` sin prueba propia (comparten el partial); el contador del inicio y la bandeja «todo en orden» de un Centro de Día se cubren solo por la misma constante SQL (la prueba usa el filtro de la lista); alta de residente por HTTP en un Centro de Día; dos peticiones simultáneas de distinto tipo. **Para la fase 3 (vocabulario), sin tocar:** «Ubicación pendiente (sin habitación o sin cama)» en el filtro y el inicio, «Sin habitación ni plaza» en Reactivar y Trasladar, y la ayuda del alta («Para cambiar después de habitación o cama…»).
+
+## 5 quater. Fase 3 construida (2026-11-24, rama `fase3-vocabulario-por-tipo`)
+
+Sin script nuevo. **Clase única de términos** `CenterVocabulary` (`ResidApp.Domain/Platform`, lee `CurrentCenterService`): «la residencia» o «el centro de día», «fuera de…», cabecera «Unidad» sin «habitación o plaza» y el texto del traslado. Se usa en «Citas fuera del centro» del Portal Familiar, las cuatro casillas de «Ajustes para la familia», la ficha del residente (Administración) y el formulario de traslado; el filtro «Ubicación pendiente» no se ofrece en un Centro de Día. Cuando llegue el catalán, se sustituye solo esa clase. «Residente» no cambia. Manual actualizado (sin `data-version` ni sellos). Pruebas: `CenterVocabularyTests` y `El_vocabulario_de_la_administracion_sigue_al_tipo_de_servicio`.
+
+- **Sin hacer:** lectura del DPO de los textos de cara a personas (`Privacy.cshtml`, correos de citas externas, que corren fuera de la petición y salen como Residencia); dos aclaraciones opcionales de una línea en el Manual (línea de «Citas fuera del centro») y en `Guia/administracion.json` (casilla «La residencia ha informado…»); revisión en navegador.
+- **Respuestas de CJ (2026-11-24, 11 de 18):** afectan a la fase 5 (asistencia sin hora, bloqueo de asistencia por adelantado, perfiles de terapeuta ocupacional y psicólogo, escala de Lawton en el basal): decide Orlando.
 
 ## 6. Verificación al construir
 

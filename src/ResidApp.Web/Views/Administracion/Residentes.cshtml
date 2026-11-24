@@ -44,6 +44,11 @@
                     <option value="">Todos</option>
                     @foreach (var kind in Enum.GetValues<ResidentAttentionKind>())
                     {
+                        @* Un Centro de Día no tiene habitaciones ni camas: «ubicación pendiente» nunca cuenta, así que el filtro no se ofrece. *@
+                        if (kind == ResidentAttentionKind.UbicacionPendiente && ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter)
+                        {
+                            continue;
+                        }
                         <option value="@kind" selected="@(filtro.Atencion == kind)">@AdministrativeResidentDisplay.Label(kind)</option>
                     }
                 </select>
