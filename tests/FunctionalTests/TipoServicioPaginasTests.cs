@@ -216,6 +216,33 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
     }
 
     [Fact]
+    public async Task El_tipo_de_servicio_no_sale_en_los_titulos_de_las_pestanas_ni_viaja_en_la_cookie_del_ambito()
+    {
+        var platform = await LoginPlatformAsync();
+        var (centerId, _, suffix) = await CreateCenterAsync(platform, "CentroDeDia");
+        var admin = await LoginAsync($"tipo-admin-{suffix}");
+
+        string Title(string html) => WebUtility.HtmlDecode(Regex.Match(html, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value);
+        var titles = new[]
+        {
+            Title(await platform.GetStringAsync("/Plataforma")),
+            Title(await platform.GetStringAsync($"/Plataforma/Centro?centroId={centerId}")),
+            Title(await admin.GetStringAsync("/Cuenta")),
+            Title(await admin.GetStringAsync("/Administracion")),
+        };
+        Assert.All(titles, title =>
+        {
+            Assert.NotEmpty(title);
+            Assert.DoesNotContain("Residencia", title);
+            Assert.DoesNotContain("Centro de Día", title);
+        });
+
+        // La cookie del ámbito lleva el centro y el perfil, no el tipo: este lo lee siempre la base de datos (ADR 0008, punto 5; ADR 0017, punto 7).
+        Assert.DoesNotContain(typeof(ResidApp.Web.Security.ActiveProfileScopeCookieValue).GetProperties(),
+            property => property.Name.Contains("Service", StringComparison.OrdinalIgnoreCase) || property.Name.Contains("Type", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task El_selector_de_ambito_Mi_cuenta_y_las_cuentas_de_Plataforma_muestran_el_tipo_de_cada_centro()
     {
         var platform = await LoginPlatformAsync();

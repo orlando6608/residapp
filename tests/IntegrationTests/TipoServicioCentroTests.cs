@@ -166,7 +166,48 @@ public class TipoServicioCentroTests
 
         Assert.False(result.Ok);
         Assert.Equal(ApplicationFailureCode.InvalidInput, result.Error!.Code);
+        Assert.Equal("Elige el tipo de servicio: Residencia o Centro de Día.", result.Error.Message);
         Assert.Equal(0, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.centros WHERE id = @centerId", new { centerId }));
+    }
+
+    [Fact]
+    public async Task Un_reenvio_del_alta_con_el_tipo_original_tras_corregirlo_se_rechaza_y_no_deshace_la_correccion()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op);
+        var centerId = Guid.NewGuid();
+        var adminSubject = $"test-adm-{Guid.NewGuid():N}"[..28];
+        var code = Code();
+        var unit = Code();
+        CreateCenterCommand Create(CenterServiceType type) => new(
+            op.ProfileScopeId, CenterId.From(PlatformCenter.Id), centerId, code, "Centro reenviado (ficticio)", unit, "Sala 1", adminSubject, "Admin Nuevo", TipoDeServicio: type);
+        Assert.True((await service.CreateCenterAsync(Create(CenterServiceType.CentroDeDia))).Ok);
+        Assert.True((await service.ChangeCenterServiceTypeAsync(ChangeOf(op, centerId, CenterServiceType.Residencia))).Ok);
+
+        // El navegador reenvía el formulario original (Centro de Día) con el mismo identificador de operación.
+        var resent = await service.CreateCenterAsync(Create(CenterServiceType.CentroDeDia));
+
+        Assert.False(resent.Ok);
+        Assert.Equal("RESIDENCIA", await TypeOfAsync(centerId));
+        Assert.Equal(2, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.tipos_servicio_centro WHERE centro_id = @centerId", new { centerId }));
+    }
+
+    [Fact]
+    public async Task Dos_correcciones_a_la_vez_a_un_mismo_tipo_dejan_una_sola_fila_y_la_otra_se_rechaza()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op);
+        var center = await CreateCenterAsync(op, service, CenterServiceType.Residencia);
+
+        var results = await Task.WhenAll(
+            Task.Run(() => service.ChangeCenterServiceTypeAsync(ChangeOf(op, center.CenterId, CenterServiceType.CentroDeDia))),
+            Task.Run(() => service.ChangeCenterServiceTypeAsync(ChangeOf(op, center.CenterId, CenterServiceType.CentroDeDia))));
+
+        Assert.Equal(1, results.Count(result => result.Ok));
+        Assert.Equal(ApplicationFailureCode.Conflict, results.Single(result => !result.Ok).Error!.Code);
+        Assert.Equal("CENTRO_DE_DIA", await TypeOfAsync(center.CenterId));
+        Assert.Equal([1, 2], (await service.GetCenterServiceTypeAsync(QueryOf(op, center.CenterId))).Value!.History.Select(row => row.Number).Order());
+        Assert.Equal(1, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.eventos_auditoria WHERE centro_id = @CenterId AND accion_codigo = N'CENTER_SERVICE_TYPE_CHANGE'", new { center.CenterId }));
     }
 
     [Fact]
