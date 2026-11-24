@@ -322,14 +322,25 @@ public class ResidentsFlowTests : IClassFixture<ResidentsFlowTests.WebAppFactory
             ["FuenteInformacionComun"] = "ValoracionDirecta",
             ["FechaInformacionComun"] = "2026-10-06",
         }))).Content.ReadAsStringAsync());
+        // Cambio de perfil en otra pestaña: el formulario se abrió con otro ámbito (campo AmbitoPerfilId) y no se guarda nada; el aviso lo explica.
+        var openedScope = ExtractValue(afterCreate, "AmbitoPerfilId");
+        var afterOtherTab = WebUtility.HtmlDecode(await (await nurse.PostAsync("/EnfermeriaBasal/CancelarBorrador", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ExtractValue(afterCreate, "__RequestVerificationToken"),
+            ["AmbitoPerfilId"] = Guid.NewGuid().ToString(),
+            ["ResidenteId"] = residentId,
+            ["Motivo"] = "Desde otra pestaña",
+        }))).Content.ReadAsStringAsync());
         var afterCancel = WebUtility.HtmlDecode(await (await nurse.PostAsync("/EnfermeriaBasal/CancelarBorrador", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["__RequestVerificationToken"] = ExtractValue(afterCreate, "__RequestVerificationToken"),
+            ["AmbitoPerfilId"] = openedScope,
             ["ResidenteId"] = residentId,
             ["Motivo"] = "Prueba funcional de la seguridad por filas",
         }))).Content.ReadAsStringAsync());
 
         Assert.Contains("Borrador creado.", afterCreate);
+        Assert.Contains("Has cambiado de perfil o de centro en otra pestaña", afterOtherTab);
         Assert.Contains("Borrador cancelado.", afterCancel);
         using var connection = await new SqlConnectionFactory(WebAppFactory.TestConnectionString).OpenAsync();
         Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
