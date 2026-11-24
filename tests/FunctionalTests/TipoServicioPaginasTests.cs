@@ -83,7 +83,7 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
     private async Task<Guid> CenterIdAsync(string name)
     {
         using var connection = await Db.OpenAsync();
-        return await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WHERE nombre_visible = @name", new { name });
+        return await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WITH (NOLOCK) WHERE nombre_visible = @name", new { name });
     }
 
     private async Task<(Guid CenterId, string Name, string Suffix)> CreateCenterAsync(HttpClient platform, string type)
@@ -213,6 +213,33 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
         Assert.Contains($"data-tipo-servicio=\"{code}\"", sheet);
         var token = Regex.Match(sheet, @"/Cuenta/Vincular/([A-Za-z0-9_-]+)").Groups[1].Value;
         Assert.NotEmpty(token);
+    }
+
+    [Fact]
+    public async Task El_tipo_de_servicio_no_sale_en_los_titulos_de_las_pestanas_ni_viaja_en_la_cookie_del_ambito()
+    {
+        var platform = await LoginPlatformAsync();
+        var (centerId, _, suffix) = await CreateCenterAsync(platform, "CentroDeDia");
+        var admin = await LoginAsync($"tipo-admin-{suffix}");
+
+        string Title(string html) => WebUtility.HtmlDecode(Regex.Match(html, "<title>(.*?)</title>", RegexOptions.Singleline).Groups[1].Value);
+        var titles = new[]
+        {
+            Title(await platform.GetStringAsync("/Plataforma")),
+            Title(await platform.GetStringAsync($"/Plataforma/Centro?centroId={centerId}")),
+            Title(await admin.GetStringAsync("/Cuenta")),
+            Title(await admin.GetStringAsync("/Administracion")),
+        };
+        Assert.All(titles, title =>
+        {
+            Assert.NotEmpty(title);
+            Assert.DoesNotContain("Residencia", title);
+            Assert.DoesNotContain("Centro de Día", title);
+        });
+
+        // La cookie del ámbito lleva el centro y el perfil, no el tipo: este lo lee siempre la base de datos (ADR 0008, punto 5; ADR 0017, punto 7).
+        Assert.DoesNotContain(typeof(ResidApp.Web.Security.ActiveProfileScopeCookieValue).GetProperties(),
+            property => property.Name.Contains("Service", StringComparison.OrdinalIgnoreCase) || property.Name.Contains("Type", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
