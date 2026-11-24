@@ -1,4 +1,4 @@
-# ADR 0018 — Asistencia diaria del Centro de Día (fase 5a)
+# ADR 0019 — Asistencia diaria del Centro de Día (fase 5a)
 
 Estado: **propuesta, con las decisiones de Orlando del 2026-11-24 (de una en una)**. Pendiente de construir (script `0115`). **No autoriza todavía ningún tratamiento con datos reales:** lo valida una persona experta (DPO real o abogado) y CJ confirma los valores de «Valores propuestos, sin validar por CJ».
 Lectura de protección de datos previa, que este ADR recoge: `docs/privacidad/centro-de-dia-asistencia-lectura-dpo.md` (borrador del agente `dpo-residapp`; lo valida una persona antes de usarlo con datos reales). Marco general: `docs/privacidad/centro-de-dia-lectura-dpo.md` y el [ADR 0017](0017-tipo-de-servicio-del-centro.md).
