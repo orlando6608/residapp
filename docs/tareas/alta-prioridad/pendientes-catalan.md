@@ -1,6 +1,6 @@
 # La aplicación en catalán y castellano: traspaso
 
-**Estado a 2026-11-20: propuesta de Orlando, sin ADR ni código. CJ contestó las 9 preguntas del documento `docs/pendientes-cj/app-catalan-castellano-cj.html` (bajadas el 2026-11-20; resumen en el apartado 3 bis).** Falta la lectura del DPO sobre el alcance nuevo y las decisiones de Orlando (apartado 6); mientras tanto no se construye nada.
+**Estado a 2026-11-20: propuesta de Orlando, sin ADR ni código. CJ contestó las 9 preguntas del documento `docs/pendientes-cj/app-catalan-castellano-cj.html` (bajadas el 2026-11-20; resumen en el apartado 3 bis).** **Actualización 2026-11-24:** lectura del DPO hecha (`docs/privacidad/app-catalan-castellano-lectura-dpo.md`, borrador por validar) y siete decisiones de Orlando tomadas (apartado 6 bis). Falta el ADR, las decisiones 2 y 3 del apartado 6 (prioridad y módulo base) y la validación experta; todavía no se construye nada.
 
 ## 1. Qué se quiere (Orlando, conversación del 2026-11-19)
 
@@ -92,10 +92,34 @@ Las respuestas viven en el servidor (`respuestas-cj-local/app-catalan-castellano
 ## 6. Decisiones que son de Orlando (se preguntan de una en una)
 
 1. **Quién revisa el catalán:** el ADR 0012 dice ingeniería más traductor externo y el ADR 0013 dice CJ. El documento de CJ pregunta a CJ; queda decidir si hay traductor externo y quién lo paga.
-2. **Prioridad frente al resto:** PR 6 de citas externas (hito 0.5.0), antes de datos reales y esta tarea (que tiene que estar antes del primer centro con personal en catalán).
-3. **Si el catalán es módulo base** (supuesto: sí, no se cobra aparte; ver `docs/producto/` sobre módulos base y opcionales).
+2. **Prioridad frente al resto:** el PR 6 de citas externas y el hito 0.5.0 ya están cerrados (comprobado el 2026-11-24). Queda decidir el orden frente al Centro de Día y a lo demás; esta tarea tiene que estar antes del primer centro con personal en catalán.
+3. **Catalán como módulo base:** decidido el 2026-11-24, sí; no se cobra aparte.
 4. **Dónde se elige el idioma del personal** (supuesto: «Mi cuenta», con el idioma del centro por defecto) y quién fija el idioma por defecto del centro.
 5. **La versión que prevalece** si los textos legales discrepan, ya abierto en el ADR 0013.
+
+## 6 bis. Decisiones de Orlando del 2026-11-24 (tras la lectura del DPO)
+
+1. **Documentos hacia residentes y familias** (PDF, impresión): el idioma se elige al generarlos (castellano o catalán, con el del centro por defecto) y queda impreso en el documento. No se crea un «idioma del residente».
+2. **Textos legales** (privacidad, cookies, cláusulas): las dos versiones son oficiales y se mantienen idénticas; la fórmula la fija un abogado. No se traduce `Privacy.cshtml` hasta que el castellano esté validado (tiene `@Pend` abiertos).
+3. **Idioma del personal:** cada persona elige el suyo en su perfil; si no, el del centro, que fija el administrador del centro. Es dato laboral: ninguna pantalla ni exportación lo lista (LOPDGDD arts. 87 a 91).
+4. **Catalán jurídico:** lo revisa la persona experta que valide el castellano (o un jurista catalán). CJ revisa las pantallas.
+5. **Traductor externo:** no por ahora. Si lo hubiera, solo con ficheros de texto, sin Azure ni datos reales.
+6. **Titularidad y financiación del centro piloto:** se desconoce; preguntar a CJ. Decide AEPD o APDCAT. No bloquea construir.
+7. **Dictado en catalán:** fuera de la primera versión (seguiría en castellano). Antes, probar Voxtral con voz real en catalán y actualizar el ADR 0011 con el DPO.
+
+**Reglas de construcción que salen de la lectura del DPO:**
+- Los textos del sistema que se guardan (registros clínicos, auditoría) se guardan como código, no como frase traducida.
+- Los mensajes de error de acceso y recuperación dicen lo mismo en los dos idiomas.
+- Cuidado con la búsqueda de personas (acentos y ordenación: «Núria») y con el formato de números clínicos.
+- Catálogos: se guarda el código y se traduce la etiqueta.
+- Nunca se pegan capturas, pantallas con datos, respuestas de CJ ni el Manual con imágenes en una herramienta de traducción.
+
+**Comprobado en el código el 2026-11-24:**
+- **Auditoría:** `audit_events` ya guarda códigos (`action_code`, `purpose_code`), no frases. Sin cambio.
+- **Nombres de equipo:** `equipos.nombre_visible` es texto libre por centro y unidad; no se traduce y puede contener nombres de personas. Los tipos de comunicado quedan por mirar.
+- **Números clínicos:** los límites de `Range` usan cultura invariante (`ParseLimitsInInvariantCulture`), pero el valor que escribe la persona se interpreta con la cultura de la petición. `es-ES` y `ca-ES` usan coma decimal, así que no debería cambiar, pero **hay que probarlo** (temperatura, flujo, rangos de referencia) antes de cambiar la cultura. Hay formatos fijos a `es-ES` en `_ComunicadosFrecuencia.cshtml` (líneas 33 y 48) y sin cultura en `DetalleCambio.cshtml:126`.
+- **Mensajes de validación:** 154 `ErrorMessage` con texto fijo en `Models/` que necesitarán clave.
+- **Sin comprobar aún:** qué aceptaciones guarda la aplicación (consentimientos con versión e idioma) y qué mensajes de resultado de la capa de aplicación acaban guardados como frase.
 
 ## 7. Fuentes consultadas el 2026-11-19 (a verificar antes de apoyarse en ellas)
 
@@ -107,7 +131,7 @@ Las respuestas viven en el servidor (`respuestas-cj-local/app-catalan-castellano
 
 ## 8. Qué no hacer
 
-- No construir nada antes de la respuesta de CJ y de la lectura del DPO.
+- No construir nada antes del ADR y de las decisiones que faltan (CJ y el DPO ya han respondido).
 - No traducir ni «normalizar» valores clínicos, rangos ni umbrales; solo los nombres con que se muestran. Un término clínico dudoso se pregunta, no se inventa.
 - No tocar Plataforma.
 - No traducir lo que escribe el personal, ni con IA (el ADR 0011 no lo aprueba).
