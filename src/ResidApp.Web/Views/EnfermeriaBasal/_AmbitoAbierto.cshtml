@@ -1,0 +1,6 @@
+@using ResidApp.Web.Security
+@* El perfil con el que se abrió el formulario: el controlador lo compara con el activo al guardar (ver EnfermeriaBasalController.PerfilCambiado). *@
+@if (ActiveProfileScopeCookie.Read(Context.Request) is { } abierto)
+{
+    <input type="hidden" name="AmbitoPerfilId" value="@abierto.ProfileScopeId" />
+}

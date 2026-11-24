@@ -45,6 +45,10 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CrearBorrador(CreateBaselineDraftFormModel createForm, CancellationToken ct)
     {
+        if (PerfilCambiado(createForm.ResidenteId) is { } cambiado)
+        {
+            return cambiado;
+        }
         var resolved = await ResolveAsync(createForm.ResidenteId, ct);
         if (resolved is null)
         {
@@ -72,6 +76,10 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CancelarBorrador(CancelBaselineDraftFormModel cancelForm, CancellationToken ct)
     {
+        if (PerfilCambiado(cancelForm.ResidenteId) is { } cambiado)
+        {
+            return cambiado;
+        }
         var resolved = await ResolveAsync(cancelForm.ResidenteId, ct);
         if (resolved is null)
         {
@@ -118,6 +126,10 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Area(BaselineAreaFormModel form, CancellationToken ct)
     {
+        if (PerfilCambiado(form.ResidenteId) is { } cambiado)
+        {
+            return cambiado;
+        }
         var resolved = await ResolveAsync(form.ResidenteId, ct);
         if (resolved is null)
         {
@@ -176,6 +188,10 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Barthel(BarthelFormModel form, CancellationToken ct)
     {
+        if (PerfilCambiado(form.ResidenteId) is { } cambiado)
+        {
+            return cambiado;
+        }
         var resolved = await ResolveAsync(form.ResidenteId, ct);
         if (resolved is null)
         {
@@ -249,6 +265,18 @@ public sealed class EnfermeriaBasalController(ResidentBaselineApplicationService
         var findResult = await enfermeriaService.FindScopeResidentAsync(new FindScopeResidentCommand(
             activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), activeScope.Profile), ct);
         return !findResult.Ok || findResult.Value is null ? null : (activeScope, findResult.Value);
+    }
+
+    /// <summary>El perfil activo vive en una cookie compartida por todas las pestañas: si en otra se cambió de perfil o de centro, este formulario (abierto con el anterior) ya no vale. Sin el campo
+    /// (una página abierta antes de este cambio) no se comprueba nada.</summary>
+    private IActionResult? PerfilCambiado(Guid residenteId)
+    {
+        if (!Guid.TryParse(Request.Form["AmbitoPerfilId"], out var abierto) || ActiveProfileScopeCookie.Read(Request)?.ProfileScopeId == abierto)
+        {
+            return null;
+        }
+        TempData["Error"] = "Has cambiado de perfil o de centro en otra pestaña, así que no se ha guardado nada. Vuelve a elegir el perfil con el que empezaste y repite el paso.";
+        return RedirectToAction(nameof(Draft), new { residenteId });
     }
 
     private IActionResult BackToResidents() =>

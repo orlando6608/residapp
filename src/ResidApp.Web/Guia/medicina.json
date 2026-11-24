@@ -455,6 +455,7 @@
         { "p": "«Cancelar borrador»: ¿puedo anular un borrador?", "r": "Sí, antes de firmarlo: escribe el «Motivo de la cancelación» y pulsa «Cancelar borrador»." },
         { "p": "«No tienes un borrador activo para este residente.»", "r": "No hay borrador o ya se firmó o se canceló. Vuelve a la ficha y créalo de nuevo." },
         { "p": "No puedo firmar un borrador creado por otra persona.", "r": "Solo firma la cuenta que lo creó, con el mismo perfil: si lo empezó otra persona, que lo firme ella." },
+        { "p": "«Has cambiado de perfil o de centro en otra pestaña, así que no se ha guardado nada…»", "r": "Cambiaste de perfil o de centro en otra pestaña del mismo navegador mientras tenías el basal abierto, y el perfil activo es uno solo para todas las pestañas. No se guardó nada. Elige otra vez, con «Cambiar ámbito», el perfil con el que empezaste y repite el paso." },
         { "p": "La ficha dice que mi borrador de basal se canceló por un traslado de unidad.", "r": "Alguien trasladó al residente de unidad mientras el borrador seguía a medias, y un borrador no pasa de una unidad a otra. Crea el basal de nuevo en la unidad de destino." }
       ],
       "rutas": ["Medicina/Residente", "EnfermeriaBasal/Draft", "EnfermeriaBasal/Area", "EnfermeriaBasal/Barthel", "EnfermeriaBasal/Confirmar", "Baseline/Sign", "EnfermeriaBasal/CrearBorrador", "EnfermeriaBasal/CancelarBorrador"],
@@ -462,6 +463,7 @@
         "Borrador creado. Completa ahora las nueve áreas y el índice de Barthel.",
         "Índice de Barthel guardado.",
         "No tienes un borrador activo para este residente.",
+        "Has cambiado de perfil o de centro en otra pestaña, así que no se ha guardado nada. Vuelve a elegir el perfil con el que empezaste y repite el paso.",
         "Indica un motivo para cancelar el borrador."
       ],
       "manual": { "id": "firmar-basal", "titulo": "Crear, completar y firmar el estado basal" },

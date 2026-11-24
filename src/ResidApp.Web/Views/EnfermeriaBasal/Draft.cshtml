@@ -38,6 +38,7 @@
             <h2 class="h5 card-title">Crear borrador</h2>
             <p class="text-muted">No hay ningún borrador activo para este residente. Solo puede existir uno a la vez.</p>
             <form asp-controller="EnfermeriaBasal" asp-action="CrearBorrador" method="post">
+                <partial name="_AmbitoAbierto" />
                 <input type="hidden" asp-for="@createForm.ResidenteId" />
                 <input type="hidden" asp-for="@createForm.OperacionId" />
                 <div class="mb-3">
@@ -118,6 +119,7 @@ else
         <div class="card-body">
             <h2 class="h6 card-title">Cancelar borrador</h2>
             <form asp-controller="EnfermeriaBasal" asp-action="CancelarBorrador" method="post">
+                <partial name="_AmbitoAbierto" />
                 <input type="hidden" asp-for="@cancelForm.ResidenteId" />
                 <div class="mb-3">
                     <label asp-for="@cancelForm.Motivo" class="form-label"></label>
