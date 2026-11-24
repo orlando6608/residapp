@@ -235,6 +235,23 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
     }
 
     [Theory]
+    [InlineData("CentroDeDia", "El centro de día ya ha informado", false)]
+    [InlineData("Residencia", "La residencia ya ha informado", true)]
+    public async Task El_vocabulario_de_la_administracion_sigue_al_tipo_de_servicio(string formType, string expected, bool hasLocationFilter)
+    {
+        var platform = await LoginPlatformAsync();
+        var (_, _, suffix) = await CreateCenterAsync(platform, formType);
+        var admin = await LoginAsync($"tipo-admin-{suffix}");
+
+        var settings = WebUtility.HtmlDecode(await admin.GetStringAsync("/CitasExternas/AjustesFamilia"));
+        var residents = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/Residentes"));
+
+        Assert.Contains(expected, settings);
+        Assert.Equal(hasLocationFilter, residents.Contains("Ubicación pendiente"));
+        Assert.Contains("Sin contacto urgente", residents);
+    }
+
+    [Theory]
     [InlineData("CentroDeDia", false)]
     [InlineData("Residencia", true)]
     public async Task Las_habitaciones_y_plazas_solo_existen_en_una_residencia_aunque_se_escriba_la_direccion_a_mano(string formType, bool allowed)

@@ -2,7 +2,7 @@
 @model TransferResidentViewModel
 @* El formulario de traslado, común a Administración y a Enfermería con permiso: cada uno pone su camino de migas y su título. *@
 <p class="text-muted">
-    Cambia al residente de unidad dentro del centro, o de habitación o plaza dentro de su unidad. Los episodios abiertos pasan a la unidad de
+    Cambia al residente @ResidApp.Domain.Platform.CenterVocabulary.TransferChanges. Los episodios abiertos pasan a la unidad de
     destino y la unidad de origen deja de verlos. Si tenía un borrador de basal a medias y cambia de unidad, el borrador se cancela y el basal
     se rehace en la unidad de destino. Los episodios cerrados no cambian de unidad.
 </p>
