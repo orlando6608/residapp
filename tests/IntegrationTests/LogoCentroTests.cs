@@ -157,7 +157,7 @@ public class LogoCentroTests
         var (subject, scopeId) = await CreatePlatformOperatorAsync();
         var platform = new PlatformApplicationService(
             new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedBrandingSessionIdentityProvider(subject),
-            new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.ConnectionFactory),
+            new SqlPlatformCenterDirectory(TestDatabase.ConnectionFactory), new SqlPlatformCenterRepository(TestDatabase.PlatformFactoryFor(subject)),
             new SqlAccessInvitationRepository(TestDatabase.ConnectionFactory), new SqlCenterModuleRepository(TestDatabase.ConnectionFactory), TimeProvider.System,
             new SqlCenterTimeZones(TestDatabase.ConnectionFactory), new SqlCenterTimeZones(TestDatabase.ConnectionFactory),
         new SqlCenterServiceTypes(TestDatabase.ConnectionFactory));
