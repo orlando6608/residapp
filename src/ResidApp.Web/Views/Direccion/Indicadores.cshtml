@@ -67,7 +67,7 @@
 {
     <div class="d-none d-print-block mb-3">
         <p class="h4 mb-1">Informe de actividad agregado</p>
-        <p class="mb-0">@indicators.CenterName · @string.Join(", ", indicators.Units.Select(u => u.UnitName))</p>
+        <p class="mb-0">@indicators.CenterName <partial name="_EtiquetaTipoServicio" model="ResidApp.Domain.Platform.CurrentCenterService.Type" /> · @string.Join(", ", indicators.Units.Select(u => u.UnitName))</p>
         <p class="mb-0">Periodo @period · generado el @Model.GeneratedAt.ToString("dd/MM/yyyy HH:mm")</p>
         <p class="mb-0">Solo cifras agregadas: sin datos de residentes ni de profesionales.</p>
     </div>

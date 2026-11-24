@@ -28,10 +28,11 @@ public sealed class SqlAdministrationOverview(SqlConnectionFactory connections) 
         """;
 
     /// <summary>Ubicación pendiente (CJ, tercera 4.1): sin habitación, o sin cama en una unidad que tiene camas configuradas (en las que no tienen,
-    /// la cama es opcional). Alias scoped.</summary>
+    /// la cama es opcional). Nunca en un Centro de Día (ADR 0017, fase 2): no tiene habitaciones que asignar. Alias scoped.</summary>
     internal const string LocationPending = """
         EXISTS (SELECT 1 FROM dbo.intervalos_ubicacion_residente location
                  WHERE location.residente_id = scoped.ResidentId AND location.centro_id = @CenterId AND location.vigente_hasta IS NULL
+                   AND NOT EXISTS (SELECT 1 FROM dbo.centros service_center WHERE service_center.id = @CenterId AND service_center.tipo_de_servicio = 'CENTRO_DE_DIA')
                    AND (location.habitacion_id IS NULL
                         OR (location.plaza_id IS NULL
                             AND EXISTS (SELECT 1 FROM dbo.plazas place

@@ -6,6 +6,7 @@ using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Audit;
 using ResidApp.Domain.Platform;
+using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -190,6 +191,55 @@ public class TipoServicioCentroTests
         Assert.False(resent.Ok);
         Assert.Equal("RESIDENCIA", await TypeOfAsync(centerId));
         Assert.Equal(2, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.tipos_servicio_centro WHERE centro_id = @centerId", new { centerId }));
+    }
+
+    [Theory]
+    [InlineData(CenterServiceType.Residencia, true)]
+    [InlineData(CenterServiceType.CentroDeDia, false)]
+    public async Task Un_residente_sin_habitacion_solo_tiene_la_ubicacion_pendiente_en_una_residencia(CenterServiceType type, bool expectedPending)
+    {
+        var op = await CreateOperatorAsync();
+        var center = await CreateCenterAsync(op, BuildPlatform(op), type);
+        var scopeId = await ScalarAsync<Guid>("SELECT id FROM dbo.ambitos_perfil WHERE centro_id = @CenterId AND perfil_codigo = 'ADMINISTRACION'", new { center.CenterId });
+        var unitId = await ScalarAsync<Guid>("SELECT TOP (1) id FROM dbo.unidades WHERE centro_id = @CenterId", new { center.CenterId });
+        var resident = (await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+            AccountId.From(center.AdminAccountId), SystemProfile.Administracion, CenterId.From(center.CenterId), UnitId.From(unitId), "Sin habitación (ficticia)",
+            new DateOnly(1940, 5, 20), DocumentedSexCode.NoConsta, null, null, null, null, null, Guid.NewGuid(), LocationPending: true))).ResidentId;
+
+        var attention = await new SqlAdministracionResidentDirectory(TestDatabase.ConnectionFactory)
+            .ListAttentionAsync(scopeId, CenterId.From(center.CenterId), CenterTime.Today);
+
+        Assert.Equal(expectedPending, attention.Single(row => row.ResidentId == resident).LocationPending);
+    }
+
+    [Fact]
+    public async Task La_lectura_del_tipo_para_un_ambito_solo_vale_para_su_cuenta_y_su_ambito_vigente_y_no_da_tipo_a_Plataforma()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op);
+        var day = await CreateCenterAsync(op, service, CenterServiceType.CentroDeDia);
+        var residence = await CreateCenterAsync(op, service, CenterServiceType.Residencia);
+        async Task<Guid> AdminScope(NewCenter center) => await ScalarAsync<Guid>(
+            "SELECT id FROM dbo.ambitos_perfil WHERE centro_id = @CenterId AND perfil_codigo = 'ADMINISTRACION'", new { center.CenterId });
+        var directory = new SqlCenterServiceTypes(TestDatabase.ConnectionFactory);
+        var dayScope = await AdminScope(day);
+
+        Assert.Equal(CenterServiceType.CentroDeDia, await directory.FindForScopeAsync(day.AdminSubject, dayScope));
+        Assert.Equal(CenterServiceType.Residencia, await directory.FindForScopeAsync(residence.AdminSubject, await AdminScope(residence)));
+        // El ámbito de otra cuenta (una cookie manipulada), un ámbito que no existe y el centro de Plataforma no dan tipo.
+        Assert.Null(await directory.FindForScopeAsync(residence.AdminSubject, dayScope));
+        Assert.Null(await directory.FindForScopeAsync(day.AdminSubject, Guid.NewGuid()));
+        Assert.Null(await directory.FindForScopeAsync(op.ExternalSubject, op.ProfileScopeId));
+
+        // Con la cuenta suspendida o el ámbito revocado, tampoco.
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("UPDATE dbo.cuentas SET estado = 'SUSPENDED' WHERE id = @AdminAccountId", new { day.AdminAccountId });
+        Assert.Null(await directory.FindForScopeAsync(day.AdminSubject, dayScope));
+        await connection.ExecuteAsync("UPDATE dbo.cuentas SET estado = 'ACTIVE' WHERE id = @AdminAccountId", new { day.AdminAccountId });
+        Assert.Equal(CenterServiceType.CentroDeDia, await directory.FindForScopeAsync(day.AdminSubject, dayScope));
+        await connection.ExecuteAsync(
+            "UPDATE dbo.ambitos_perfil SET estado = 'REVOKED', revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @Op WHERE id = @dayScope", new { Op = op.AccountId.Value, dayScope });
+        Assert.Null(await directory.FindForScopeAsync(day.AdminSubject, dayScope));
     }
 
     [Fact]

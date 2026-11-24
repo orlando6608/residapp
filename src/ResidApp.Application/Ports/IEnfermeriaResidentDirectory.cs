@@ -23,7 +23,11 @@ public static class ResidentLocationLabel
     public const string WithoutRoom = "Sin habitación asignada";
 
     public static string Format(string? unitName, string? roomName, string? placeName) =>
-        string.Join(" · ", new[] { unitName ?? "Sin unidad", string.IsNullOrEmpty(roomName) ? WithoutRoom : roomName, placeName }
+        Format(unitName, roomName, placeName, ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter);
+
+    /// <summary>En un Centro de Día no hay habitaciones: no se avisa de que falta una (ADR 0017, fase 2); si algún día consta una, se muestra.</summary>
+    public static string Format(string? unitName, string? roomName, string? placeName, bool dayCenter) =>
+        string.Join(" · ", new[] { unitName ?? "Sin unidad", string.IsNullOrEmpty(roomName) ? (dayCenter ? null : WithoutRoom) : roomName, placeName }
             .Where(part => !string.IsNullOrEmpty(part)));
 }
 

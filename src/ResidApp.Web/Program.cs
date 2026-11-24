@@ -95,7 +95,10 @@ builder.Services.AddSingleton<CenterZoneCache>();
 builder.Services.AddScoped<SqlCenterTimeZones>();
 builder.Services.AddScoped<ICenterTimeZoneDirectory>(sp => sp.GetRequiredService<SqlCenterTimeZones>());
 builder.Services.AddScoped<ICenterTimeZoneRepository>(sp => sp.GetRequiredService<SqlCenterTimeZones>());
-builder.Services.AddScoped<ICenterServiceTypeRepository, SqlCenterServiceTypes>();
+builder.Services.AddScoped<SqlCenterServiceTypes>();
+builder.Services.AddScoped<ICenterServiceTypeRepository>(sp => sp.GetRequiredService<SqlCenterServiceTypes>());
+builder.Services.AddScoped<ICenterServiceTypeDirectory>(sp => sp.GetRequiredService<SqlCenterServiceTypes>());
+builder.Services.AddSingleton<CenterServiceTypeCache>();
 builder.Services.AddScoped<IModuleSettings, ModuleSettings>();
 builder.Services.AddScoped<IEnvironmentMarker, SqlEnvironmentMarker>();
 builder.Services.AddScoped<CenterModuleAccess>();
@@ -529,6 +532,8 @@ app.UseRateLimiter();
 app.UseAuthorization();
 // La zona horaria del centro del ámbito activo para toda la petición (CenterTime): vistas, casos de uso y repositorios muestran y calculan con ella.
 app.UseMiddleware<CenterTimeMiddleware>();
+// El tipo de servicio del centro del ámbito activo para toda la petición (CurrentCenterService, ADR 0017): etiqueta, rótulos de ubicación y lo que se oculta en un Centro de Día.
+app.UseMiddleware<CenterServiceTypeMiddleware>();
 
 // Con la política global, los estáticos (CSS, JS, manifest.json, sw.js, flujo-de-trabajo.html) también pedirían sesión.
 app.MapStaticAssets().Add(endpoint => endpoint.Metadata.Add(new AllowAnonymousAttribute()));

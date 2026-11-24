@@ -36,7 +36,7 @@
         "Entrar con tu cuenta y, si tienes varios ámbitos, elegir el de Administración (ver TOD-04)."
       ],
       "pasos": [
-        { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente, fotos de más de 12 meses y cuentas profesionales suspendidas o sin ámbito.", "campos": ["Inicio de Administración", "Requiere atención"] },
+        { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente (solo en una Residencia), fotos de más de 12 meses y cuentas profesionales suspendidas o sin ámbito.", "campos": ["Inicio de Administración", "Requiere atención"] },
         { "texto": "Si no hay nada que atender, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
         { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados en los últimos 7 días." },
         { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Citas externas**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**. Aparte de «Requiere atención», el aviso **Citas externas con algo sin cubrir** (ver ADM-47) lista las citas de los próximos 7 días a las que falta transporte o acompañante.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
@@ -166,6 +166,7 @@
       "permisos": [],
       "antes": [
         "Las habitaciones son de cada unidad y las plazas, de cada habitación. Son opcionales: al dar de alta a un residente se puede elegir una habitación o una plaza libre de su unidad.",
+        "Solo en una Residencia: en un Centro de Día no hay habitaciones ni plazas y el botón no aparece en Estructura.",
         "El nombre de la habitación o la plaza (hasta 200 caracteres)."
       ],
       "pasos": [
@@ -620,7 +621,7 @@
       ],
       "pasos": [
         { "texto": "En el inicio, abre la tarjeta **Residentes**. Ves los residentes activos de tu ámbito, por orden alfabético, con su edad, sexo documentado, ubicación y fecha de alta.", "botones": ["Residentes"] },
-        { "texto": "Para buscar, escribe parte del «Nombre» (sin importar mayúsculas ni acentos) y, si tu ámbito tiene más de una unidad, elige la «Unidad». El filtro «Requiere atención» enseña solo a quienes tienen algo pendiente: sin contacto urgente, ubicación pendiente, foto de más de 12 meses o una autorización de familiar pendiente, caducada o por caducar. Pulsa **Buscar**; **Limpiar** quita el filtro.", "botones": ["Buscar", "Limpiar"], "campos": ["Nombre", "Unidad", "Requiere atención"] },
+        { "texto": "Para buscar, escribe parte del «Nombre» (sin importar mayúsculas ni acentos) y, si tu ámbito tiene más de una unidad, elige la «Unidad». El filtro «Requiere atención» enseña solo a quienes tienen algo pendiente: sin contacto urgente, ubicación pendiente (solo en una Residencia), foto de más de 12 meses o una autorización de familiar pendiente, caducada o por caducar. Pulsa **Buscar**; **Limpiar** quita el filtro.", "botones": ["Buscar", "Limpiar"], "campos": ["Nombre", "Unidad", "Requiere atención"] },
         { "texto": "Pulsa el nombre del residente para abrir su ficha: identidad, ubicación actual, fechas de alta y de ingreso, familiares, contactos urgentes, historial de ubicación y correcciones de identidad." },
         { "texto": "Desde la ficha haces el resto: **Corregir identidad** (ver ADM-21), **Trasladar** (ver ADM-22), **Suspender (ingreso hospitalario)** (ver ADM-23) y **Dar de baja** (ver ADM-24).", "botones": ["Corregir identidad", "Trasladar", "Suspender (ingreso hospitalario)", "Dar de baja"] }
       ],

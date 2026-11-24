@@ -15,7 +15,7 @@ namespace ResidApp.Web.Controllers;
 /// Perfil de plataforma (script 0026): lista de centros y alta de un centro con su primera unidad y su primer administrador.
 /// Ninguna pantalla muestra residentes ni contenido clínico. Traduce a PlatformApplicationService; la autorización no vive aquí.
 /// </summary>
-public sealed partial class PlataformaController(PlatformApplicationService service, IModuleSettings moduleSettings, TimeProvider clock, DocumentosCatalogo documents, CenterZoneCache zoneCache) : Controller
+public sealed partial class PlataformaController(PlatformApplicationService service, IModuleSettings moduleSettings, TimeProvider clock, DocumentosCatalogo documents, CenterZoneCache zoneCache, CenterServiceTypeCache serviceTypeCache) : Controller
 {
     public async Task<IActionResult> Index(CancellationToken ct)
     {
@@ -186,6 +186,11 @@ public sealed partial class PlataformaController(PlatformApplicationService serv
         TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok
             ? "Tipo de servicio corregido. Queda en la auditoría del centro."
             : result.Error!.Message;
+        if (result.Ok)
+        {
+            serviceTypeCache.Clear();
+        }
+
         return RedirectToAction(nameof(Centro), new { centroId = form.CentroId });
     }
 
