@@ -86,7 +86,10 @@ jobs:
           RESIDAPP_TEST_SQL_ERRORS_LOG: ${{ runner.temp }}/sql-errors.log
         run: |
           export RESIDAPP_TEST_APP_CONNECTION_STRING="Server=localhost,1433;Database=ResidAppTest;User Id=residapp_app;Password=$APP_SQL_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=true;"
-          dotnet test src/ResidApp.sln --no-build --configuration Release
+          # Las pruebas de concurrencia (Categoria=Concurrencia) dejan a propósito una transacción parada unos segundos con bloqueos sobre la fila de un centro. En paralelo con las demás
+          # provocaban interbloqueos (1205) en pruebas ajenas (fallos de la CI del 24/11/2026): se ejecutan solas, después.
+          dotnet test src/ResidApp.sln --no-build --configuration Release --filter "Categoria!=Concurrencia"
+          dotnet test tests/IntegrationTests/ResidApp.IntegrationTests.csproj --no-build --configuration Release --filter "Categoria=Concurrencia"
 
       # Si un test falla con «No disponible», el log no dice por qué: aquí quedan las SqlException (número, mensaje y llamadas) que lo provocaron.
       - name: Excepciones de SQL durante las pruebas

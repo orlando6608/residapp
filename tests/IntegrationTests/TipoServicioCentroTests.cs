@@ -451,6 +451,7 @@ public class TipoServicioCentroTests
     }
 
     [Fact]
+    [Trait("Categoria", "Concurrencia")]
     public async Task Un_alta_de_residente_a_medias_se_espera_y_el_centro_ya_no_esta_vacio()
     {
         var op = await CreateOperatorAsync();
@@ -474,6 +475,7 @@ public class TipoServicioCentroTests
     }
 
     [Fact]
+    [Trait("Categoria", "Concurrencia")]
     public async Task Con_una_correccion_a_medias_un_alta_de_residente_espera_a_que_termine_y_nunca_se_cuela_en_medio()
     {
         var op = await CreateOperatorAsync();
@@ -623,6 +625,7 @@ public class TipoServicioCentroTests
     }
 
     [Fact]
+    [Trait("Categoria", "Concurrencia")]
     public async Task Con_la_correccion_parada_antes_de_cambiar_la_columna_un_alta_de_residente_no_se_cuela()
     {
         // La ventana que protege el bloqueo de la fila del centro: ya se ha comprobado que no hay personas y aún no se ha cambiado el tipo. Para parar el procedimiento justo ahí, otra conexión
