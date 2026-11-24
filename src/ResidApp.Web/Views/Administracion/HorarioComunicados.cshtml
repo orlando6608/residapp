@@ -3,7 +3,7 @@
 @model HorarioComunicadosViewModel
 @{
     ViewData["Title"] = "Horario de los comunicados";
-    var defaults = FamilyCommunicationScheduleSettings.Default;
+    var defaults = FamilyCommunicationScheduleSettings.SuggestedFor(ResidApp.Domain.Platform.CurrentCenterService.Type);
     string ResumenLabel(FamilyCommunicationSummaryFrequency frequency) => frequency == FamilyCommunicationSummaryFrequency.Diaria ? "diario" : "semanal";
 }
 

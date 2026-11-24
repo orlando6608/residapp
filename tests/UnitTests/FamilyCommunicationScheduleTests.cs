@@ -163,4 +163,17 @@ public class FamilyCommunicationScheduleTests
         Assert.True(FamilyCommunicationSchedule.IsPublished(scheduled, null, scheduled));
         Assert.True(FamilyCommunicationSchedule.IsPublished(scheduled, scheduled.AddHours(-5), prepared.AddMinutes(1)));
     }
+    [Fact]
+    public void ElHorarioSugeridoDependeDelTipo_YUnCentroDeDiaPublicaAntesDeRecoger()
+    {
+        Assert.Equal(FamilyCommunicationScheduleSettings.Default, FamilyCommunicationScheduleSettings.SuggestedFor(null));
+        Assert.Equal(FamilyCommunicationScheduleSettings.Default, FamilyCommunicationScheduleSettings.SuggestedFor(ResidApp.Domain.Platform.CenterServiceType.Residencia));
+        var day = FamilyCommunicationScheduleSettings.SuggestedFor(ResidApp.Domain.Platform.CenterServiceType.CentroDeDia);
+        Assert.Equal((new TimeOnly(18, 0), 30), (day.PublicationTime, day.MarginMinutes));
+
+        // Guardado a las 17:30, sale a las 18:00 del mismo día; con el horario de una residencia (19:00, 1 h) saldría a las 19:00 y con 17:30 + 1 h pasaría a mañana.
+        var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        var prepared = new DateTimeOffset(2026, 11, 24, 17, 30, 0, TimeSpan.FromHours(1));
+        Assert.Equal(new DateTimeOffset(2026, 11, 24, 18, 0, 0, TimeSpan.FromHours(1)), FamilyCommunicationSchedule.ScheduledAt(prepared, day, zone));
+    }
 }

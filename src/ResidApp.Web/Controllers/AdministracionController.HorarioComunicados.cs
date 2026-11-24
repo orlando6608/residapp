@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ResidApp.Application.Errors;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Enfermeria;
+using ResidApp.Domain.Platform;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -29,7 +30,7 @@ public sealed partial class AdministracionController
         }
 
         return View(new HorarioComunicadosViewModel(
-            result.Value, HorarioComunicadosFormModel.From(sugeridos ? FamilyCommunicationScheduleSettings.Default : result.Value!.Settings, result.Value!.Version),
+            result.Value, HorarioComunicadosFormModel.From(sugeridos ? FamilyCommunicationScheduleSettings.SuggestedFor(CurrentCenterService.Type) : result.Value!.Settings, result.Value!.Version),
             RestoredDefaults: sugeridos));
     }
 

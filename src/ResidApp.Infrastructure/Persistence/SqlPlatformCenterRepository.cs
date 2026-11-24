@@ -109,6 +109,8 @@ public sealed class SqlPlatformCenterRepository(SqlConnectionFactory connections
 
         // La zona horaria elegida al crear el centro (script 0109): la fila 1 de su historia.
         await SqlCenterTimeZones.InsertCreationAsync(connection, transaction, CenterId.From(operationId), data.ZoneCode, access, occurredAt, ct);
+        // El horario inicial de los comunicados (script 0114): todo centro tiene su fila desde que existe, según su tipo. Lo hace un procedimiento con permisos del dueño que comprueba que quien llama es Plataforma.
+        await connection.ExecuteAsync(new CommandDefinition("EXEC dbo.fijar_horario_inicial_centro @CenterId", new { CenterId = operationId }, transaction, cancellationToken: ct));
         // El tipo de servicio elegido al crear el centro (script 0113, ADR 0017): la fila 1 de su constancia, con el mismo tipo que la columna.
         await SqlCenterServiceTypes.InsertCreationAsync(connection, transaction, CenterId.From(operationId), data.ServiceType, access, occurredAt, ct);
 

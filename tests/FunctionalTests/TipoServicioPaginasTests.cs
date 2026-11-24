@@ -252,6 +252,27 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
     }
 
     [Theory]
+    [InlineData("CentroDeDia", "18:00", "30")]
+    [InlineData("Residencia", "19:00", "60")]
+    public async Task El_horario_de_los_comunicados_de_un_centro_nuevo_es_el_de_su_tipo_y_lo_sugerido_tambien(string formType, string time, string margin)
+    {
+        var platform = await LoginPlatformAsync();
+        var (_, _, suffix) = await CreateCenterAsync(platform, formType);
+        var admin = await LoginAsync($"tipo-admin-{suffix}");
+
+        var page = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/HorarioComunicados"));
+        var suggested = WebUtility.HtmlDecode(await admin.GetStringAsync("/Administracion/HorarioComunicados?sugeridos=true"));
+
+        foreach (var html in new[] { page, suggested })
+        {
+            Assert.Matches($"value=\"{time}", html);
+            Assert.Matches($"value=\"{margin}\"", html);
+        }
+
+        Assert.Contains($"{time} y {margin} minutos", suggested);
+    }
+
+    [Theory]
     [InlineData("CentroDeDia", false)]
     [InlineData("Residencia", true)]
     public async Task Las_habitaciones_y_plazas_solo_existen_en_una_residencia_aunque_se_escriba_la_direccion_a_mano(string formType, bool allowed)
