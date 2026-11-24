@@ -83,7 +83,7 @@ public class TipoServicioPaginasTests(WebAppFactory factory) : IClassFixture<Web
     private async Task<Guid> CenterIdAsync(string name)
     {
         using var connection = await Db.OpenAsync();
-        return await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WHERE nombre_visible = @name", new { name });
+        return await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WITH (NOLOCK) WHERE nombre_visible = @name", new { name });
     }
 
     private async Task<(Guid CenterId, string Name, string Suffix)> CreateCenterAsync(HttpClient platform, string type)
