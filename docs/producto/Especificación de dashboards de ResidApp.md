@@ -14,7 +14,7 @@ Hoy cada perfil tiene un Inicio con tarjetas de cifras, Administración tiene el
 
 **Fuera de alcance:**
 
-- Auxiliar y Familia, que no necesitan un cuadro de mando.
+- Auxiliar y Familia, que no necesitan un cuadro de mando. El Inicio de Auxiliar ya es su lista del día (basal vigente o pendiente y «Cerrado hoy» o «Pendiente» por residente), así que no se le añade nada.
 - Medicina y Enfermería, que quedan para una fase posterior como panel de turno (ver «Fases»).
 - **Los gráficos, tendencias y comparativas de Dirección**, que son un módulo opcional de pago (candidato «Dashboard de Dirección» del ADR 0015) y no se diseñan aquí; ver «Dirección».
 - Una vista conjunta de varios centros.
@@ -44,6 +44,7 @@ Todos los dashboards siguen la misma estructura de tres capas, de arriba abajo, 
 - **Un valor que la cifra mínima oculte no aparece en ningún sitio:** ni en la tabla accesible, ni en un `title`, ni en los atributos del SVG.
 - **Orden fijo también en los gráficos y tablas por unidad** (por nombre o por orden de la estructura): nunca de mayor a menor, para que no se lea como un ranking de unidades.
 - **Etiquetas neutras:** «intentos fallidos», no «actividad anómala» ni nada que sugiera perfilar a personas.
+- **Fallo de carga no es «nada pendiente».** Si un bloque no se puede calcular, dice que no se pueden mostrar las cifras y el resto de la pantalla sigue funcionando (como ya hace el Inicio de Administración); nunca se pinta un cero ni «No hay nada pendiente».
 - **Icono:** se reutiliza `indicadores` (`bar-chart-line`) de la guía; no se crea otro.
 
 ## Dashboard de Administración
@@ -59,6 +60,7 @@ Es el primero que conviene construir: casi todos sus avisos ya existen en «Requ
 | Autorizaciones de familiares pendientes, caducadas o que caducan en 30 días | Existe hoy | Lista de residentes filtrada |
 | Residentes con ubicación pendiente (sin habitación o sin cama) | Existe hoy | Lista de residentes filtrada |
 | Fotos de más de 12 meses | Existe hoy | Lista de residentes filtrada |
+| Citas externas que empiezan en los próximos 7 días sin transporte o acompañante confirmado | Existe hoy | Citas externas |
 | Cuentas suspendidas o sin ámbito | Existe hoy | Usuarios filtrado |
 | Invitaciones de acceso pendientes o caducadas (vigencia de 72 h) | Nuevo; se calcula con las fechas que ya guarda cada invitación | Usuarios |
 | Bajas cuyo plazo de conservación vence o está a punto de vencer | Nuevo en el Inicio (la lista de bajas ya lo avisa) | Residentes dados de baja |
@@ -96,6 +98,8 @@ Nuevos avisos y contadores en el Inicio, con la misma forma que los de hoy, que 
 | Indicaciones no realizadas o con incidencia | Existe hoy como contador por unidad | Supervisión de pendientes |
 | Episodios abiertos más antiguos que un umbral | Nuevo (umbral por definir con CJ) | Supervisión de pendientes |
 | Hitos del proceso fuera de plazo | Nuevo en el Inicio; los plazos ya los fija Dirección con permiso | Calidad de proceso |
+| Peticiones de historial tras un traslado sin atender | La pantalla existe; **a comprobar** si hay contador para el Inicio | Peticiones de historial |
+| Episodios con indicaciones sin cumplir, que admiten el cierre excepcional | La acción existe en el episodio; **a comprobar** si hay contador para el Inicio | Supervisión de pendientes |
 
 Los bloques de indicadores y de calidad de proceso solo aparecen si la cuenta tiene el permiso correspondiente. Los cálculos de «Indicadores e informe de actividad» y «Calidad de proceso» se reutilizan tal cual, para no crear cifras que los contradigan, y todo porcentaje muestra su numerador, denominador y periodo (historia DIR-08).
 
@@ -120,12 +124,13 @@ Plataforma es quien opera ResidApp, no el personal de un centro, no ve residente
 | Invitaciones de acceso o de recuperación caducadas sin usar (vigencia de 72 h) | Nuevo; las fechas ya se guardan | Administraciones y unidades del centro |
 | Centros cuya Administración aún no ha hecho su primer acceso (invitación de alta sin usar o caducada) | Nuevo | Centros |
 | Cuentas bloqueadas ahora (5 intentos fallidos bloquean 15 min) | Nuevo; solo la cifra, sin nombres | Cuentas de varios centros |
+| Módulos de centros que vencen en 30 días o vencidos sin renovar en los últimos 90 | Existe hoy como panel «Módulos que vencen» del listado de Centros (ADR 0015); se **sube al Inicio** de Plataforma con los mismos datos, solo metadatos de centro y módulo | Centros |
 
 ### Indicadores y gráficos
 
 | Elemento | Qué muestra | Tipo |
 | --- | --- | --- |
-| Centros | Total y creados en el periodo | Cifra con tendencia |
+| Centros | Total y creados en el periodo, con el desglose por estado y por tipo de servicio (solo metadatos del centro) | Cifra con tendencia |
 | Cuentas por centro | Activas, suspendidas y sin ámbito, por perfil | Barras apiladas por centro |
 | Cuentas en varios centros | Número y centros que comparten | Cifra |
 | Accesos | Entradas correctas y fallidas por día, del servicio entero, con selector de 7 y 30 días (sin 12 meses, para que el gráfico no condicione el plazo de conservación del registro). Con pocos usuarios, «1 entrada ese día» es una persona: mientras haya pocos centros se agrupa por semana | Línea con dos series |
@@ -229,6 +234,10 @@ Quedan abiertos: la redacción final de la cláusula y quién la firma por la re
 
 Quedan **fuera** de este apartado el reparto de costes y el margen por centro, el DAU/WAU por centro, los correos por centro, y leer el coste de Azure por su API: ver «Costes y consumo en Plataforma» en las decisiones abiertas.
 
+## Criterio de aceptación común
+
+Los contadores de un dashboard coinciden con las bandejas o listas filtradas a las que enlazan, para el mismo centro y el mismo ámbito. Cada bloque nuevo lleva una prueba que lo comprueba, porque los cálculos se reutilizan y no se duplican.
+
 ## Datos, histórico y rendimiento
 
 **No hay almacenamiento nuevo, salvo las dos tablas de «Operación técnica»** (latido de las tareas y recuentos de errores), sin datos personales directos. Todo lo demás se calcula al abrir la pantalla; las tendencias salen de datos que ya llevan fecha:
@@ -279,7 +288,7 @@ Reglas de implementación:
 2. **Administración.** Avisos existentes más invitaciones y bajas por vencer; ocupación, altas y bajas, citas y autorizaciones. Se prueba con Los Almendros y Los Olmos. Se añaden sus historias de usuario a `docs\historias-usuarios\administracion.md`.
 3. **Dirección / Coordinación Clínica (solo base).** Los dos avisos nuevos, tras decidir el umbral con CJ y revisar la ausencia de cifra mínima en los indicadores de hoy. El módulo gráfico es una propuesta aparte.
 4. **Plataforma.** Con las cifras de servicio de arriba («Servicio»). Se prueba con los dos centros de pruebas y la cuenta de Plataforma de pruebas. La sección «Operación técnica» tiene sus propias dos fases (ver su apartado) y empieza cuando Orlando lo decida (el PR 6 de las citas externas y el hito 0.5.0 ya están cerrados).
-5. **Panel de turno para Medicina y Enfermería (fase posterior).** No es un cuadro de gestión sino una lista accionable del turno: eventos prioritarios abiertos, escalados recibidos (Medicina), indicaciones sin leer (Enfermería), seguimientos con la fecha pasada, protocolos urgentes activos y residentes sin basal. Casi sin gráficos y sin cifras por profesional, para que no se lea como un ranking de personas.
+5. **Panel de turno para Medicina y Enfermería (fase posterior).** No es un cuadro de gestión sino una lista accionable del turno: eventos prioritarios abiertos, escalados recibidos (Medicina), indicaciones sin leer (Enfermería), seguimientos con la fecha pasada, protocolos urgentes activos y residentes sin basal. Casi sin gráficos y sin cifras por profesional, para que no se lea como un ranking de personas. Borrador de zonas: *Enfermería*, avisos de hitos, bandeja prioritaria (cambios prioritarios), protocolos urgentes, seguimientos pendientes y transferidos entre turnos, indicaciones pendientes o sin leer, episodios que se pueden cerrar, eventos pendientes de valoración, escalados enviados a Medicina y comunicados pendientes de publicar; *Medicina*, solo los escalados a Medicina y los eventos médicos propios (no todos los de Enfermería), protocolos urgentes, seguimientos pendientes, programados y vencidos, e indicaciones sin leer, con incidencia o en seguimiento. Ninguna acción cambia de dueño: Medicina no realiza indicaciones en nombre de Enfermería. Cada zona se contrasta con su pantalla y su permiso actuales antes de construirla.
 
 Cada fase actualiza el Manual, la Guía por perfil y el Flujo de trabajo con el agente que ya mantiene la documentación (`doc-usuario-residapp`), y se revisa con `qa-revisor-residapp` antes de darla por cerrada. Antes de la fase 2 se consulta a `dpo-residapp` sobre la finalidad nueva de los gráficos de Administración.
 
