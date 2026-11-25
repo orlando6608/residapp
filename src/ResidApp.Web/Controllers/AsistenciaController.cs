@@ -181,6 +181,27 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
         return RedirectToAction(nameof(Ausencias));
     }
 
+    /// <summary>Solo Administración. Una consulta: no guarda nada, no avisa a nadie y no se imprime. Sin datos en la dirección ni en el título; la caché del navegador no la guarda.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Seguimiento(CancellationToken ct)
+    {
+        if (Scope() is not { Profile: SystemProfile.Administracion } scope)
+        {
+            TempData["Error"] = "La lista de seguimiento es solo de Administración.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        Response.Headers.CacheControl = "no-store";
+        var result = await attendance.ListFollowUpAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ct);
+        if (!result.Ok)
+        {
+            TempData["Error"] = result.Error!.Message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(new AsistenciaSeguimientoViewModel(result.Value!, CenterTime.Today));
+    }
+
     [HttpGet]
     public async Task<IActionResult> Ajustes(CancellationToken ct)
     {

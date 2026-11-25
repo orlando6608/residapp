@@ -250,4 +250,107 @@ public class AsistenciaCasosDeUsoTests
             "SELECT accion_codigo FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND tipo_recurso = 'ATTENDANCE' ORDER BY ocurrido_en", new { a = staff.Administracion.AccountId.Value })).ToList();
         Assert.Equal(["ATTENDANCE_CENTER_ON", "ABSENCE_REGISTER", "ABSENCE_SHORTEN", "ABSENCE_ANNUL"], actions);
     }
+
+    private static async Task BackdateAsync(Day day, int days)
+    {
+        using var db = await TestDatabase.ConnectionFactory.OpenAsync();
+        await db.ExecuteAsync("UPDATE dbo.residentes SET creado_en = DATEADD(DAY, -@days, creado_en) WHERE id = @id", new { days, id = day.ResidentId });
+    }
+
+    private static async Task<AttendanceFollowUp> FollowUpAsync(SeededProfile who)
+    {
+        var result = await Service(who).ListFollowUpAsync(who.ProfileScopeId, who.CenterId);
+        Assert.True(result.Ok, result.Error?.Message);
+        return result.Value!;
+    }
+
+    [Fact]
+    public async Task La_lista_de_seguimiento_es_solo_de_Administracion_cuenta_las_faltas_seguidas_con_su_causa_y_deja_auditoria_sin_nombres()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 10);
+        var nurse = Service(staff.Enfermeria);
+        foreach (var back in new[] { 3, 2 })
+        {
+            Assert.True((await nurse.RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.NoAsistio, AttendanceCause.AvisoFamilia, date: Today.AddDays(-back)))).Ok);
+        }
+
+        // Con dos días no sale; los demás días de la ventana siguen sin anotar, pero la cadena de faltas no los cuenta.
+        Assert.Empty((await FollowUpAsync(staff.Administracion)).Absences);
+
+        Assert.True((await nurse.RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.NoAsistio, AttendanceCause.SinAviso, date: Today.AddDays(-1)))).Ok);
+        // Hoy no está cerrado: anotarlo no suma.
+        Assert.True((await nurse.RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.NoAsistio, AttendanceCause.Otro, "una nota", Today))).Ok);
+
+        var entry = Assert.Single((await FollowUpAsync(staff.Administracion)).Absences);
+        Assert.Equal(day.ResidentId, entry.ResidentId.Value);
+        Assert.Equal(3, entry.Days);
+        Assert.Equal([AttendanceCause.AvisoFamilia, AttendanceCause.SinAviso], entry.Causes.OrderBy(c => c));
+        Assert.Null(entry.LastCame);
+
+        foreach (var other in new[] { staff.Auxiliar, staff.Enfermeria, staff.Medicina, staff.Direccion })
+        {
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(other).ListFollowUpAsync(other.ProfileScopeId, other.CenterId)).Error!.Code);
+        }
+
+        using var db = await TestDatabase.ConnectionFactory.OpenAsync();
+        var opened = (await db.QueryAsync<(string Action, Guid? ResidentId)>(
+            "SELECT accion_codigo, residente_id FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE cuenta_id = @a AND accion_codigo = 'ATTENDANCE_FOLLOWUP_OPEN'", new { a = staff.Administracion.AccountId.Value })).ToList();
+        Assert.NotEmpty(opened);
+        Assert.All(opened, o => Assert.Null(o.ResidentId));
+    }
+
+    [Fact]
+    public async Task Un_dia_que_vino_o_una_ausencia_programada_sacan_a_la_persona_de_la_lista_y_un_dia_sin_anotar_va_aparte()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 10);
+        var nurse = Service(staff.Enfermeria);
+        foreach (var back in new[] { 4, 3, 2, 1 })
+        {
+            Assert.True((await nurse.RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.NoAsistio, AttendanceCause.SinAviso, date: Today.AddDays(-back)))).Ok);
+        }
+
+        Assert.Equal(4, Assert.Single((await FollowUpAsync(staff.Administracion)).Absences).Days);
+
+        // Ayer vino: la cuenta termina y la persona sale.
+        Assert.True((await nurse.RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: Today.AddDays(-1)))).Ok);
+        Assert.Empty((await FollowUpAsync(staff.Administracion)).Absences);
+
+        // Una persona sin nada anotado ayer sale aparte, con sus días sin anotar, y no como falta.
+        var (other, otherStaff) = await CreateAsync();
+        await BackdateAsync(other, 5);
+        var followUp = await FollowUpAsync(otherStaff.Administracion);
+        Assert.Empty(followUp.Absences);
+        Assert.Equal(5, Assert.Single(followUp.Unmarked).Days);
+
+        // Con una ausencia programada que cubre esos días, tampoco sale como días sin anotar: la ausencia es lo esperado.
+        Assert.True((await Service(otherStaff.Administracion).RegisterAbsenceAsync(new RegisterAbsenceCommand(
+            otherStaff.Administracion.ProfileScopeId, otherStaff.Administracion.CenterId, ResidentId.From(other.ResidentId), Today.AddDays(-5), Today.AddDays(3), AbsenceReason.Vacaciones))).Ok);
+        followUp = await FollowUpAsync(otherStaff.Administracion);
+        Assert.Empty(followUp.Absences);
+        Assert.Empty(followUp.Unmarked);
+    }
+
+    [Fact]
+    public async Task La_lista_de_seguimiento_no_mira_otro_centro_ni_a_una_persona_con_pauta_que_no_toca()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 10);
+        var nurse = Service(staff.Enfermeria);
+        foreach (var back in new[] { 3, 2, 1 })
+        {
+            Assert.True((await nurse.RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.NoAsistio, AttendanceCause.SinAviso, date: Today.AddDays(-back)))).Ok);
+        }
+
+        var (_, otherStaff) = await CreateAsync();
+        Assert.DoesNotContain((await FollowUpAsync(otherStaff.Administracion)).Absences, a => a.ResidentId.Value == day.ResidentId);
+
+        // Con una pauta que no incluye ninguno de esos tres días, ya no suman: quedan los días que sí tocaban, sin anotar.
+        var skipped = Enumerable.Range(1, 3).Select(back => Today.AddDays(-back).DayOfWeek).Distinct().ToHashSet();
+        var mask = Enum.GetValues<DayOfWeek>().Where(d => !skipped.Contains(d)).Aggregate(0, (all, d) => all | AttendanceRules.Mask(d));
+        Assert.True((await Service(staff.Enfermeria).SetPatternAsync(new SetAttendancePatternCommand(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, ResidentId.From(day.ResidentId), 0, mask))).Ok);
+        var followUp = await FollowUpAsync(staff.Administracion);
+        Assert.DoesNotContain(followUp.Absences, a => a.ResidentId.Value == day.ResidentId);
+    }
 }

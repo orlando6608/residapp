@@ -1,0 +1,109 @@
+@using ResidApp.Domain.Attendance
+@using ResidApp.Web.Models
+@model AsistenciaSeguimientoViewModel
+@* Lista de seguimiento (ADR 0019, punto 7): una consulta de Administración sobre lo ya anotado. No guarda nada, no avisa a nadie, no tiene contador y no se imprime. Sin lenguaje clínico ni de riesgo. *@
+@{
+    ViewData["Title"] = "Lista de seguimiento";
+    var data = Model.Data;
+}
+
+<nav aria-label="breadcrumb" class="d-print-none">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Asistencia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Lista de seguimiento</li>
+    </ol>
+</nav>
+
+<p class="d-none d-print-block">Esta pantalla no se imprime.</p>
+
+<div class="d-print-none">
+    <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"planificacion"' />Lista de seguimiento</h1>
+
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger" role="alert">@error</div>
+    }
+
+    <div class="alert alert-secondary" role="note">
+        <strong>Esto no es un aviso de seguridad.</strong> Es una ayuda para decidir a quién llamar: reúne a quien lleva @AttendanceRules.FollowUpDays o más días seguidos en que se le esperaba y está anotado como «No vino»,
+        hasta ayer. No avisa a nadie, no llama a las familias y no sustituye al contacto con ellas. Que una persona no aparezca aquí no significa que esté bien: puede que el día no se haya anotado.
+        Qué hacer con cada caso lo decide el centro según su procedimiento. Se calcula al abrirla, no guarda nada y no se imprime. Solo cuenta los días que tocan según la pauta de cada persona;
+        un día que vino, una ausencia programada o un día sin anotar interrumpen la cuenta.
+    </div>
+
+    <h2 class="h5" id="faltas-titulo">Con @AttendanceRules.FollowUpDays o más días seguidos sin venir</h2>
+    @if (data.Absences.Count == 0)
+    {
+        <div class="alert alert-info" role="status">Nadie lleva @AttendanceRules.FollowUpDays o más días seguidos anotados como «No vino».</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle" aria-labelledby="faltas-titulo">
+                <thead>
+                    <tr>
+                        <th scope="col">Persona</th>
+                        <th scope="col">Días seguidos</th>
+                        <th scope="col">Último día que vino</th>
+                        <th scope="col">Causa anotada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in data.Absences)
+                    {
+                        <tr>
+                            <th scope="row" class="fw-normal">
+                                @entry.ResidentName
+                                @if (entry.UnitName is { } unit)
+                                {
+                                    <span class="d-block small text-body-secondary">@unit</span>
+                                }
+                            </th>
+                            <td>@(entry.Capped ? $"Más de {entry.Days - 1}" : entry.Days.ToString())</td>
+                            <td>@(entry.LastCame is { } day ? AsistenciaDisplay.Date(day) : "No consta en los últimos " + AttendanceRules.FollowUpWindowDays + " días")</td>
+                            <td>@string.Join(", ", entry.Causes.Select(c => EnumDisplay.Label(c)))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <h2 class="h5 mt-4" id="sin-anotar-titulo">Con días sin anotar</h2>
+    <p class="text-body-secondary">Estas personas tienen sin anotar los últimos días en que se las esperaba. «Sin anotar» no es «No vino»: no cuentan como faltas hasta que alguien lo anote.</p>
+    @if (data.Unmarked.Count == 0)
+    {
+        <div class="alert alert-info" role="status">No hay personas con días recientes sin anotar.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle" aria-labelledby="sin-anotar-titulo">
+                <thead>
+                    <tr>
+                        <th scope="col">Persona</th>
+                        <th scope="col">Días sin anotar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in data.Unmarked)
+                    {
+                        <tr>
+                            <th scope="row" class="fw-normal">
+                                @entry.ResidentName
+                                @if (entry.UnitName is { } unit)
+                                {
+                                    <span class="d-block small text-body-secondary">@unit</span>
+                                }
+                            </th>
+                            <td>@entry.Days</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver a la asistencia</a>
+</div>

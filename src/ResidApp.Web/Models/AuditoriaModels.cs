@@ -60,6 +60,7 @@ public static class AuditActionDisplay
         ["ATTENDANCE_MARK"] = "Asistencia anotada",
         ["ATTENDANCE_CORRECT"] = "Asistencia corregida",
         ["ATTENDANCE_PATTERN_SET"] = "Días de asistencia previstos fijados",
+        ["ATTENDANCE_FOLLOWUP_OPEN"] = "Lista de seguimiento de la asistencia abierta",
         ["ABSENCE_REGISTER"] = "Ausencia programada registrada",
         ["ABSENCE_ANNUL"] = "Ausencia programada anulada",
         ["ABSENCE_SHORTEN"] = "Ausencia programada acortada",

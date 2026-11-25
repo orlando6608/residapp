@@ -99,4 +99,78 @@ public class AttendanceRulesTests
         Assert.Equal(AttendanceDayStatus.AusenciaProgramada, AttendanceRules.StatusOf(null, scheduledAbsence: true));
         Assert.Equal(AttendanceDayStatus.SinAnotar, AttendanceRules.StatusOf(null, scheduledAbsence: false));
     }
+
+    private static readonly DateOnly Thursday = new(2026, 11, 26);
+
+    private static FollowUpOutcome Follow(DateOnly today, int? pattern, Dictionary<DateOnly, AttendanceState> marks, params (DateOnly From, DateOnly To)[] absences) =>
+        AttendanceRules.FollowUp(
+            today, new DateOnly(2026, 1, 1), pattern,
+            day => AttendanceRules.StatusOf(marks.TryGetValue(day, out var state) ? state : null, absences.Any(a => a.From <= day && day <= a.To)),
+            day => marks.ContainsKey(day) ? AttendanceCause.SinAviso : null);
+
+    [Fact]
+    public void La_lista_cuenta_dias_esperados_seguidos_anotados_como_no_vino_hasta_ayer()
+    {
+        var marks = new Dictionary<DateOnly, AttendanceState>
+        {
+            [Thursday.AddDays(-1)] = AttendanceState.NoAsistio, [Thursday.AddDays(-2)] = AttendanceState.NoAsistio, [Thursday.AddDays(-3)] = AttendanceState.NoAsistio,
+            [Thursday] = AttendanceState.NoAsistio, // hoy no está cerrado: no cuenta
+        };
+
+        var outcome = Follow(Thursday, null, marks);
+
+        Assert.Equal(3, outcome.AbsentDays);
+        Assert.Equal([AttendanceCause.SinAviso], outcome.Causes);
+        Assert.Null(outcome.LastCame);
+        Assert.Equal(0, outcome.UnmarkedDays);
+    }
+
+    [Fact]
+    public void Los_dias_que_no_tocan_segun_la_pauta_ni_suman_ni_rompen()
+    {
+        var friday = new DateOnly(2026, 11, 27);
+        var mondayWednesdayFriday = AttendanceRules.Mask(DayOfWeek.Monday) | AttendanceRules.Mask(DayOfWeek.Wednesday) | AttendanceRules.Mask(DayOfWeek.Friday);
+        var marks = new Dictionary<DateOnly, AttendanceState>
+        {
+            [new DateOnly(2026, 11, 25)] = AttendanceState.NoAsistio, [new DateOnly(2026, 11, 23)] = AttendanceState.NoAsistio, [new DateOnly(2026, 11, 20)] = AttendanceState.NoAsistio,
+        };
+
+        // El jueves, el martes y el fin de semana no tocan y no están anotados: no rompen la cadena.
+        Assert.Equal(3, Follow(friday, mondayWednesdayFriday, marks).AbsentDays);
+        // Sin pauta se espera todos los días: el jueves sin anotar rompe la cadena y se cuenta aparte.
+        var withoutPattern = Follow(friday, null, marks);
+        Assert.Equal(0, withoutPattern.AbsentDays);
+        Assert.Equal(1, withoutPattern.UnmarkedDays);
+    }
+
+    [Fact]
+    public void Un_dia_que_vino_o_una_ausencia_programada_terminan_la_cuenta_y_un_dia_sin_anotar_no_vale_como_falta()
+    {
+        var yesterday = Thursday.AddDays(-1);
+        var came = Follow(Thursday, null, new() { [yesterday] = AttendanceState.NoAsistio, [yesterday.AddDays(-1)] = AttendanceState.Asistio, [yesterday.AddDays(-2)] = AttendanceState.NoAsistio });
+        Assert.Equal(1, came.AbsentDays);
+        Assert.Equal(yesterday.AddDays(-1), came.LastCame);
+
+        // Ayer cubierto por una ausencia programada: nadie lo sigue.
+        var absent = Follow(Thursday, null, new() { [yesterday.AddDays(-1)] = AttendanceState.NoAsistio, [yesterday.AddDays(-2)] = AttendanceState.NoAsistio }, (yesterday.AddDays(-5), yesterday));
+        Assert.Equal(0, absent.AbsentDays);
+        Assert.Equal(0, absent.UnmarkedDays);
+
+        // Ayer sin anotar: no hay faltas que seguir, hay días que anotar (aunque antes hubiera faltas).
+        var unmarked = Follow(Thursday, null, new() { [yesterday.AddDays(-1)] = AttendanceState.NoAsistio, [yesterday.AddDays(-2)] = AttendanceState.NoAsistio, [yesterday.AddDays(-3)] = AttendanceState.NoAsistio });
+        Assert.Equal(0, unmarked.AbsentDays);
+        Assert.Equal(1, unmarked.UnmarkedDays);
+    }
+
+    [Fact]
+    public void La_lista_no_mira_antes_del_alta_y_avisa_si_hay_mas_dias_de_los_que_mira()
+    {
+        // Alta hace dos días y nada anotado: solo dos días sin anotar, no sesenta.
+        var recent = AttendanceRules.FollowUp(Thursday, Thursday.AddDays(-2), null, _ => AttendanceDayStatus.SinAnotar, _ => null);
+        Assert.Equal(2, recent.UnmarkedDays);
+
+        var longRun = AttendanceRules.FollowUp(Thursday, new DateOnly(2026, 1, 1), null, _ => AttendanceDayStatus.NoVino, _ => AttendanceCause.Otro);
+        Assert.Equal(AttendanceRules.FollowUpWindowDays, longRun.AbsentDays);
+        Assert.True(longRun.Capped);
+    }
 }
