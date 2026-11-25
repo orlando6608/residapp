@@ -76,82 +76,83 @@
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <caption class="visually-hidden">Asistencia del @AsistenciaDisplay.Date(Model.Day)</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Persona</th>
-                    <th scope="col">Estado</th>
+    @* Rejilla y no tabla: con campos de formulario no se duplica para el móvil (guía de diseño). En el móvil cada persona se apila: nombre, estado y anotar. *@
+    var anchoDato = Model.CanRecord ? "col-md-3" : "col-md-6";
+    <div class="row g-2 d-none d-md-flex fw-semibold px-3 mb-1" aria-hidden="true">
+        <div class="@anchoDato">Persona</div>
+        <div class="@anchoDato">Estado</div>
+        @if (Model.CanRecord)
+        {
+            <div class="col-md-6">Anotar</div>
+        }
+    </div>
+    <ul class="list-group mb-3" aria-label="Asistencia del @AsistenciaDisplay.Date(Model.Day)">
+        @foreach (var entry in Model.Entries)
+        {
+            var rowId = entry.ResidentId.Value.ToString("N");
+            <li class="list-group-item">
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 @anchoDato">
+                        <h2 class="h6 mb-0">@entry.ResidentName</h2>
+                        @if (entry.UnitName is { } unit)
+                        {
+                            <span class="d-block small text-body-secondary">@unit</span>
+                        }
+                        @if (!entry.Expected)
+                        {
+                            <span class="d-block small text-body-secondary">No toca este día según su pauta</span>
+                        }
+                        @if (Model.CanManage)
+                        {
+                            <a class="small" asp-action="Pauta" asp-route-residenteId="@entry.ResidentId.Value">@(entry.HasPattern ? "Cambiar su pauta" : "Fijar su pauta")</a>
+                        }
+                        else if (entry.HasPattern)
+                        {
+                            <a class="small" asp-action="Pauta" asp-route-residenteId="@entry.ResidentId.Value">Ver su pauta</a>
+                        }
+                    </div>
+                    <div class="col-12 @anchoDato">
+                        <span class="badge @AsistenciaDisplay.StatusBadge(entry.Status)">@AsistenciaDisplay.Status(entry.Status)</span>
+                        @if (entry.Mark is { State: AttendanceState.NoAsistio } mark)
+                        {
+                            <span class="d-block small text-break">
+                                @(mark.Cause is { } cause ? EnumDisplay.Label(cause) : string.Empty)@if (Model.CanSeeNote && !string.IsNullOrWhiteSpace(mark.Note)) {<text>: @mark.Note</text>}
+                            </span>
+                        }
+                    </div>
                     @if (Model.CanRecord)
                     {
-                        <th scope="col">Anotar</th>
+                        <div class="col-12 col-md-6">
+                            <form method="post" asp-action="Anotar" class="row g-2 align-items-end" aria-label="Anotar la asistencia de @entry.ResidentName">
+                                <input type="hidden" name="residenteId" value="@entry.ResidentId.Value" />
+                                <input type="hidden" name="fecha" value="@Model.Day.ToString("yyyy-MM-dd")" />
+                                <div class="col-12 col-sm-auto">
+                                    <button type="submit" name="estado" value="@AttendanceState.Asistio" class="btn btn-success btn-lg w-100">Vino</button>
+                                </div>
+                                <div class="col-12 col-sm">
+                                    <label class="form-label mb-1 small" for="causa-@rowId">Por qué no vino</label>
+                                    <select class="form-select form-select-lg" id="causa-@rowId" name="causa">
+                                        <option value="">Elige…</option>
+                                        @foreach (var option in Enum.GetValues<AttendanceCause>())
+                                        {
+                                            <option value="@option" selected="@(entry.Mark?.Cause == option)">@EnumDisplay.Label(option)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label mb-1 small" for="nota-@rowId">Nota (solo con «Otro motivo»)</label>
+                                    <input class="form-control form-control-lg" type="text" id="nota-@rowId" name="nota" maxlength="@AttendanceRules.MaxNoteLength"
+                                           value="@(Model.CanSeeNote ? entry.Mark?.Note : null)" autocomplete="off" aria-describedby="ayuda-nota-@rowId" />
+                                    <div class="form-text" id="ayuda-nota-@rowId">Solo el motivo, en pocas palabras. No escribas enfermedades, diagnósticos, ingresos ni nombres de otras personas.</div>
+                                </div>
+                                <div class="col-12 col-sm-auto">
+                                    <button type="submit" name="estado" value="@AttendanceState.NoAsistio" class="btn btn-outline-danger btn-lg w-100">No vino</button>
+                                </div>
+                            </form>
+                        </div>
                     }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var entry in Model.Entries)
-                {
-                    var rowId = entry.ResidentId.Value.ToString("N");
-                    <tr>
-                        <th scope="row" class="fw-normal">
-                            @entry.ResidentName
-                            @if (entry.UnitName is { } unit)
-                            {
-                                <span class="d-block small text-body-secondary">@unit</span>
-                            }
-                            @if (!entry.Expected)
-                            {
-                                <span class="d-block small text-body-secondary">No toca este día según su pauta</span>
-                            }
-                            @if (Model.CanManage)
-                            {
-                                <a class="small" asp-action="Pauta" asp-route-residenteId="@entry.ResidentId.Value">@(entry.HasPattern ? "Cambiar su pauta" : "Fijar su pauta")</a>
-                            }
-                            else if (entry.HasPattern)
-                            {
-                                <a class="small" asp-action="Pauta" asp-route-residenteId="@entry.ResidentId.Value">Ver su pauta</a>
-                            }
-                        </th>
-                        <td>
-                            <span class="badge @AsistenciaDisplay.StatusBadge(entry.Status)">@AsistenciaDisplay.Status(entry.Status)</span>
-                            @if (entry.Mark is { State: AttendanceState.NoAsistio } mark)
-                            {
-                                <span class="d-block small">
-                                    @(mark.Cause is { } cause ? EnumDisplay.Label(cause) : string.Empty)@if (Model.CanSeeNote && !string.IsNullOrWhiteSpace(mark.Note)) {<text>: @mark.Note</text>}
-                                </span>
-                            }
-                        </td>
-                        @if (Model.CanRecord)
-                        {
-                            <td>
-                                <form method="post" asp-action="Anotar" class="d-flex flex-wrap align-items-end gap-2" aria-label="Anotar la asistencia de @entry.ResidentName">
-                                    <input type="hidden" name="residenteId" value="@entry.ResidentId.Value" />
-                                    <input type="hidden" name="fecha" value="@Model.Day.ToString("yyyy-MM-dd")" />
-                                    <button type="submit" name="estado" value="@AttendanceState.Asistio" class="btn btn-success btn-lg">Vino</button>
-                                    <div>
-                                        <label class="form-label mb-1 small" for="causa-@rowId">Por qué no vino</label>
-                                        <select class="form-select form-select-lg" id="causa-@rowId" name="causa">
-                                            <option value="">Elige…</option>
-                                            @foreach (var option in Enum.GetValues<AttendanceCause>())
-                                            {
-                                                <option value="@option" selected="@(entry.Mark?.Cause == option)">@EnumDisplay.Label(option)</option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="form-label mb-1 small" for="nota-@rowId">Nota (solo con «Otro motivo»)</label>
-                                        <input class="form-control form-control-lg" type="text" id="nota-@rowId" name="nota" maxlength="@AttendanceRules.MaxNoteLength"
-                                               value="@(Model.CanSeeNote ? entry.Mark?.Note : null)" autocomplete="off" aria-describedby="ayuda-nota-@rowId" />
-                                        <div class="form-text" id="ayuda-nota-@rowId">Solo el motivo, en pocas palabras. No escribas enfermedades, diagnósticos, ingresos ni nombres de otras personas.</div>
-                                    </div>
-                                    <button type="submit" name="estado" value="@AttendanceState.NoAsistio" class="btn btn-outline-danger btn-lg">No vino</button>
-                                </form>
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </div>
+            </li>
+        }
+    </ul>
 }
