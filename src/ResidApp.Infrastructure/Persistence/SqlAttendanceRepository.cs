@@ -123,7 +123,8 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
                    pattern.dias_esperados AS PatternMask,
                    mark.numero AS MarkNumber, mark.estado_codigo AS MarkState, mark.causa_codigo AS MarkCause,
                    CASE WHEN @ReadNote = 1 THEN mark.nota END AS MarkNote,
-                   CAST(CASE WHEN {AbsenceCoversSql.Replace("{R}", "resident.id").Replace("{D}", "@Date")} THEN 1 ELSE 0 END AS BIT) AS ScheduledAbsence
+                   CAST(CASE WHEN {AbsenceCoversSql.Replace("{R}", "resident.id").Replace("{D}", "@Date")} THEN 1 ELSE 0 END AS BIT) AS ScheduledAbsence,
+                   resident.creado_en AS CreatedAt
               FROM dbo.residentes resident
               LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL
               LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = resident.centro_id
@@ -145,7 +146,8 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             var expected = row.PatternMask is not { } mask || AttendanceRules.Expects(mask, date);
             return new AttendanceDayEntry(
                 ResidentId.From(row.ResidentId), row.ResidentName, row.UnitId, row.UnitName, row.PatternMask is not null, expected, mark, row.ScheduledAbsence,
-                AttendanceRules.StatusOf(mark?.State, row.ScheduledAbsence));
+                // La misma regla que la base: no se anota antes del día, en el centro, en que se creó la ficha.
+                AttendanceRules.StatusOf(mark?.State, row.ScheduledAbsence), date < DateOnly.FromDateTime(CenterTime.Local(row.CreatedAt)));
         }).ToList();
     }
 
@@ -520,7 +522,8 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             {
                 51150 => AttendanceRules.DisabledCode,
                 51153 => AttendanceRules.InvalidCode,
-                51154 => AttendanceRules.DateNotAllowedCode,
+                // La base lanza 51154 por fecha futura o anterior a la ficha; la futura ya la ha rechazado la aplicación antes de llegar aquí.
+                51154 => AttendanceRules.BeforeRecordCode,
                 51156 => AttendanceRules.AbsenceOverlapCode,
                 51157 => AttendanceRules.PatternDateInvalidCode,
                 _ => AttendanceRules.AbsenceInvalidCode,
@@ -555,7 +558,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     private sealed record MarkRow(int Number, string State, string? Cause, string? Note);
 
     private sealed record DayRow(
-        Guid ResidentId, string ResidentName, Guid? UnitId, string? UnitName, byte? PatternMask, int? MarkNumber, string? MarkState, string? MarkCause, string? MarkNote, bool ScheduledAbsence);
+        Guid ResidentId, string ResidentName, Guid? UnitId, string? UnitName, byte? PatternMask, int? MarkNumber, string? MarkState, string? MarkCause, string? MarkNote, bool ScheduledAbsence, DateTime CreatedAt);
 
     private sealed record AbsenceRow(Guid Id, Guid ResidentId, string ResidentName, DateTime FromDate, DateTime ToDate, string? Reason);
 }

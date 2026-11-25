@@ -652,7 +652,7 @@
       "permisos": [],
       "antes": [
         "Que tu centro sea un **Centro de Día** y que Administración haya **activado la asistencia**. En una Residencia no existe esta pantalla.",
-        "Saber que Medicina puede anotar y corregir días anteriores **sin tope**; nunca un día futuro."
+        "Saber que Medicina puede anotar y corregir días anteriores **sin tope** de antigüedad, pero nunca un día futuro ni uno anterior a aquel en que se creó la ficha de la persona en el centro."
       ],
       "pasos": [
         { "texto": "En el Inicio, abre la tarjeta **Asistencia** (solo sale en un Centro de Día)." },
@@ -670,15 +670,16 @@
         { "p": "«La asistencia no está activada en este centro.»", "r": "Administración tiene que activarla en **Asistencia** → **Ajustes**." },
         { "p": "Una persona que debería salir no sale.", "r": "Solo salen las personas de tus unidades. Una persona suspendida por un ingreso hospitalario no sale." },
         { "p": "Una persona tiene una ausencia programada y no sé si anotarla.", "r": "Sale como «Ausencia programada». Si ese día vino, anota **Vino**: lo anotado manda sobre la ausencia." },
-        { "p": "No me deja anotar un día.", "r": "No se anotan días futuros. Medicina puede anotar o corregir días anteriores sin tope." },
+        { "p": "No me deja anotar un día.", "r": "No se anotan días futuros. Tampoco un día anterior a aquel en que se creó la ficha de la persona en el centro: su fila dice «Ese día todavía no tenía ficha en el centro: no se puede anotar.» y no tiene **Vino** ni **No vino**. Fuera de eso, Medicina puede anotar o corregir días anteriores sin tope." },
         { "p": "Una persona no tiene el enlace «Ver su pauta».", "r": "Todavía no tiene pauta: se la espera todos los días. La fijan Enfermería o Administración." }
       ],
       "rutas": ["Asistencia/Index", "Asistencia/Anotar", "Asistencia/Pauta"],
       "mensajes": [
         "Anotado.",
-        "La asistencia no está activada en este centro."
+        "La asistencia no está activada en este centro.",
+        "Ese día todavía no tenía ficha en el centro: no se puede anotar."
       ],
-      "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
+      "manual": { "id": "asistencia","titulo": "Asistencia (solo Centro de Día)" },
       "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
     }
   ]

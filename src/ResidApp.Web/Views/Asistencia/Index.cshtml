@@ -18,13 +18,23 @@
 
 <h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"planificacion"' />Asistencia del @AsistenciaDisplay.Date(Model.Day)</h1>
 
-@if (TempData["Mensaje"] is string mensaje)
-{
-    <div class="alert alert-success" role="status">@mensaje</div>
+@* El resultado de anotar sale en la fila de esa persona; cualquier otro, aquí arriba. En los dos sitios se lleva el foco al aviso (site.js). *@
+@{
+    var mensaje = TempData["Mensaje"] as string;
+    var error = TempData["Error"] as string;
+    var filaAnotada = TempData["Fila"] as string;
+    if (!Model.Entries.Any(e => e.ResidentId.Value.ToString("N") == filaAnotada))
+    {
+        filaAnotada = null;
+    }
 }
-@if (TempData["Error"] is string error)
+@if (filaAnotada is null && mensaje is not null)
 {
-    <div class="alert alert-danger" role="alert">@error</div>
+    <div class="alert alert-success" role="status" tabindex="-1" data-foco-aviso>@mensaje</div>
+}
+@if (filaAnotada is null && error is not null)
+{
+    <div class="alert alert-danger" role="alert" tabindex="-1" data-foco-aviso>@error</div>
 }
 @if (Model.Error is { } listError)
 {
@@ -91,6 +101,12 @@ else
         {
             var rowId = entry.ResidentId.Value.ToString("N");
             <li class="list-group-item">
+                @if (rowId == filaAnotada)
+                {
+                    <div class="alert @(error is null ? "alert-success" : "alert-danger") py-2" role="@(error is null ? "status" : "alert")" tabindex="-1" data-foco-aviso>
+                        @(error ?? mensaje)<span class="visually-hidden"> (@entry.ResidentName)</span>
+                    </div>
+                }
                 <div class="row g-2 align-items-center">
                     <div class="col-12 @anchoDato">
                         <h2 class="h6 mb-0">@entry.ResidentName</h2>
@@ -112,7 +128,14 @@ else
                         }
                     </div>
                     <div class="col-12 @anchoDato">
-                        <span class="badge @AsistenciaDisplay.StatusBadge(entry.Status)">@AsistenciaDisplay.Status(entry.Status)</span>
+                        @if (entry.BeforeRecord)
+                        {
+                            <span class="d-block small text-body-secondary">Ese día todavía no tenía ficha en el centro: no se puede anotar.</span>
+                        }
+                        else
+                        {
+                            <span class="badge @AsistenciaDisplay.StatusBadge(entry.Status)">@AsistenciaDisplay.Status(entry.Status)</span>
+                        }
                         @if (entry.Mark is { State: AttendanceState.NoAsistio } mark)
                         {
                             <span class="d-block small text-break">
@@ -120,7 +143,7 @@ else
                             </span>
                         }
                     </div>
-                    @if (Model.CanRecord)
+                    @if (Model.CanRecord && !entry.BeforeRecord)
                     {
                         <div class="col-12 col-md-6">
                             <form method="post" asp-action="Anotar" class="row g-2 align-items-end" aria-label="Anotar la asistencia de @entry.ResidentName">

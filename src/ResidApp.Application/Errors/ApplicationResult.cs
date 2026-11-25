@@ -135,6 +135,7 @@ public static class ApplicationResultRunner
         ["ATTENDANCE_REVISION_CONFLICT"] = (ApplicationFailureCode.Conflict, "Alguien ha cambiado esto mientras tanto, o ya estaba así: vuelve a cargar la pantalla."),
         ["ATTENDANCE_DATE_NOT_ALLOWED"] = (ApplicationFailureCode.InvalidInput,
             "Esa fecha no se puede anotar: no puede ser futura y, desde Auxiliar, solo hasta 7 días atrás (pídelo a Enfermería o Medicina)."),
+        ["ATTENDANCE_BEFORE_RECORD"] = (ApplicationFailureCode.InvalidInput, "Ese día la persona todavía no tenía ficha en el centro: no se puede anotar."),
         ["ATTENDANCE_ABSENCE_INVALID"] = (ApplicationFailureCode.InvalidInput,
             "Revisa la ausencia: el último día no puede ser anterior al primero, dura 90 días como máximo, y no se puede anular ni acortar una ausencia ya anulada o más allá de su fin."),
         ["ATTENDANCE_PATTERN_DATE_INVALID"] = (ApplicationFailureCode.InvalidInput,

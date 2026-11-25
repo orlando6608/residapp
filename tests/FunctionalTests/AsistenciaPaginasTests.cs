@@ -150,16 +150,9 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
     {
         var admin = await LoginAdminOfNewCenterAsync("CentroDeDia");
         var today = CenterTime.TodayAt(DateTimeOffset.UtcNow);
+        var (resident, accountId, _) = await AddResidentAsync("Persona en seguimiento (ficticia)");
         using (var connection = await Db.OpenAsync())
         {
-            var (accountId, unitId) = await connection.QuerySingleAsync<(Guid, Guid)>("""
-                SELECT (SELECT TOP (1) cuenta_id FROM dbo.ambitos_perfil WHERE centro_id = @centerId AND perfil_codigo = 'ADMINISTRACION'),
-                       (SELECT TOP (1) id FROM dbo.unidades WHERE centro_id = @centerId)
-                """, new { centerId = _centerId });
-            var resident = (await new SqlResidentRepository(Db).CreateWithInitialLocationAsync(new CreateResidentInput(
-                AccountId.From(accountId), SystemProfile.Administracion, CenterId.From(_centerId), UnitId.From(unitId), "Persona en seguimiento (ficticia)",
-                new DateOnly(1940, 5, 20), DocumentedSexCode.NoConsta, null, null, null, null, null, Guid.NewGuid(), LocationPending: true))).ResidentId.Value;
-
             // La ficha es de hace tres días y en los tres consta «No vino».
             await connection.ExecuteAsync("UPDATE dbo.residentes SET creado_en = DATEADD(DAY, -3, creado_en) WHERE id = @resident", new { resident });
             foreach (var (back, cause, note) in new[] { (3, "AVISO_FAMILIA", null), (2, "SIN_AVISO", null), (1, "OTRO", "nota que no sale") })
@@ -185,6 +178,73 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
 
         Assert.Contains("No hay personas con días recientes sin anotar.", page);
         Assert.DoesNotContain("nota que no sale", page);
+    }
+
+    /// <summary>Un residente activo en el último centro creado, con la cuenta de Administración y la unidad usadas.</summary>
+    private async Task<(Guid Resident, Guid AdminAccount, Guid Unit)> AddResidentAsync(string name)
+    {
+        using var connection = await Db.OpenAsync();
+        var (accountId, unitId) = await connection.QuerySingleAsync<(Guid, Guid)>("""
+            SELECT (SELECT TOP (1) cuenta_id FROM dbo.ambitos_perfil WHERE centro_id = @centerId AND perfil_codigo = 'ADMINISTRACION'),
+                   (SELECT TOP (1) id FROM dbo.unidades WHERE centro_id = @centerId)
+            """, new { centerId = _centerId });
+        var resident = await new SqlResidentRepository(Db).CreateWithInitialLocationAsync(new CreateResidentInput(
+            AccountId.From(accountId), SystemProfile.Administracion, CenterId.From(_centerId), UnitId.From(unitId), name,
+            new DateOnly(1940, 5, 20), DocumentedSexCode.NoConsta, null, null, null, null, null, Guid.NewGuid(), LocationPending: true));
+        return (resident.ResidentId.Value, accountId, unitId);
+    }
+
+    [Fact]
+    public async Task Anotar_lleva_el_aviso_a_la_fila_no_ofrece_dias_anteriores_a_la_ficha_y_las_ausencias_no_son_una_tabla()
+    {
+        var nurse = await LoginOfNewCenterAsync("CentroDeDia", "ENFERMERIA");
+        var (resident, adminAccount, unit) = await AddResidentAsync("Persona de la lista (ficticia)");
+        using (var connection = await Db.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                SELECT NEWID(), id, centro_id, @unit, SYSUTCDATETIME(), @adminAccount FROM dbo.ambitos_perfil WHERE centro_id = @centerId AND perfil_codigo = 'ENFERMERIA';
+                INSERT INTO dbo.asistencia_centro (id, centro_id, numero, activa, confirma_informada, confirma_eipd, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+                VALUES (NEWID(), @centerId, 1, 1, 1, 1, @adminAccount, 'ADMINISTRACION', SYSUTCDATETIME())
+                """, new { centerId = _centerId, unit, adminAccount });
+        }
+
+        var today = CenterTime.TodayAt(DateTimeOffset.UtcNow);
+
+        // Un día anterior a la ficha: se dice por qué y no hay botones.
+        var before = WebUtility.HtmlDecode(await nurse.GetStringAsync($"/Asistencia?fecha={today.AddDays(-1):yyyy-MM-dd}"));
+        Assert.Contains("Ese día todavía no tenía ficha en el centro: no se puede anotar.", before);
+        Assert.DoesNotContain("name=\"estado\"", before);
+
+        var list = await nurse.GetStringAsync("/Asistencia");
+        Assert.Contains("name=\"estado\"", list);
+        Assert.DoesNotContain("data-foco-aviso", list);
+
+        // El resultado de anotar, también si falla, sale dentro de la fila de esa persona y es el único aviso que pide el foco.
+        async Task<string> PostAndReadAsync(string url, params (string Key, string Value)[] fields)
+        {
+            var response = await nurse.PostAsync(url, new FormUrlEncodedContent(
+                fields.Select(f => new KeyValuePair<string, string>(f.Key, f.Value)).Prepend(new(Token, ExtractValue(list, Token)))));
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            return WebUtility.HtmlDecode(await nurse.GetStringAsync(response.Headers.Location));
+        }
+
+        foreach (var (state, expected) in new[] { ("NoAsistio", "Revisa lo anotado"), ("Asistio", "Anotado.") })
+        {
+            var page = await PostAndReadAsync("/Asistencia/Anotar", ("residenteId", resident.ToString()), ("fecha", today.ToString("yyyy-MM-dd")), ("estado", state));
+            Assert.Single(Regex.Matches(page, "data-foco-aviso"));
+            var row = Regex.Match(page, "<li class=\"list-group-item\">.*?</li>", RegexOptions.Singleline).Value;
+            Assert.Matches($"data-foco-aviso>\\s*{Regex.Escape(expected)}", row);
+        }
+
+        var absences = await PostAndReadAsync("/Asistencia/RegistrarAusencia",
+            ("residenteId", resident.ToString()), ("desde", today.ToString("yyyy-MM-dd")), ("hasta", today.AddDays(2).ToString("yyyy-MM-dd")), ("motivo", "Vacaciones"));
+        Assert.DoesNotContain("<table", absences);
+        var item = Regex.Match(absences, "<li class=\"list-group-item\">.*?</li>", RegexOptions.Singleline).Value;
+        foreach (var expected in new[] { "Persona de la lista (ficticia)", $"Del {today:dd/MM/yyyy} al {today.AddDays(2):dd/MM/yyyy}", "Motivo: Vacaciones", ">Acortar<", ">Anular<" })
+        {
+            Assert.Contains(expected, item);
+        }
     }
 
     [Theory]

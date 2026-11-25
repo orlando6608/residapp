@@ -151,6 +151,21 @@ public class AsistenciaCasosDeUsoTests
     }
 
     [Fact]
+    public async Task Un_dia_anterior_a_la_ficha_sale_marcado_y_se_rechaza_diciendo_por_que()
+    {
+        var (day, staff) = await CreateAsync();
+        var yesterday = Today.AddDays(-1);
+
+        Assert.True((await EntryAsync(staff.Auxiliar, day, yesterday)).BeforeRecord);
+        Assert.False((await EntryAsync(staff.Auxiliar, day)).BeforeRecord);
+
+        var rejected = await Service(staff.Medicina).RecordAsync(Mark(staff.Medicina, day, AttendanceState.Asistio, date: yesterday));
+
+        Assert.Equal(ApplicationFailureCode.InvalidInput, rejected.Error!.Code);
+        Assert.Contains("todavía no tenía ficha en el centro", rejected.Error.Message);
+    }
+
+    [Fact]
     public async Task Quien_es_de_otro_centro_no_ve_ni_anota_y_un_residente_suspendido_no_sale_en_la_lista()
     {
         var (day, staff) = await CreateAsync();
@@ -218,7 +233,11 @@ public class AsistenciaCasosDeUsoTests
         Assert.True(await Records(aux, staff.Auxiliar, today));
         Assert.True(await Records(aux, staff.Auxiliar, today.AddDays(-7)));
         Assert.False(await Records(aux, staff.Auxiliar, today.AddDays(-8)));
-        // La base tampoco deja anotar antes del día del alta en el centro.
+        // La lista marca lo anterior al día del alta en el centro, y la base tampoco deja anotarlo.
+        async Task<bool> IsBeforeRecord(DateOnly date) =>
+            (await nurse.ListDayAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, date)).Value!.Single(e => e.ResidentId.Value == day.ResidentId).BeforeRecord;
+        Assert.False(await IsBeforeRecord(createdAtCenter));
+        Assert.True(await IsBeforeRecord(createdAtCenter.AddDays(-1)));
         Assert.True(await Records(nurse, staff.Enfermeria, createdAtCenter));
         Assert.False(await Records(nurse, staff.Enfermeria, createdAtCenter.AddDays(-1)));
 

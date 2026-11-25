@@ -49,6 +49,7 @@ public static class AttendanceRules
     public const string DisabledCode = "ATTENDANCE_DISABLED";
     public const string ConflictCode = "ATTENDANCE_REVISION_CONFLICT";
     public const string DateNotAllowedCode = "ATTENDANCE_DATE_NOT_ALLOWED";
+    public const string BeforeRecordCode = "ATTENDANCE_BEFORE_RECORD";
     public const string AbsenceInvalidCode = "ATTENDANCE_ABSENCE_INVALID";
     public const string AbsenceOverlapCode = "ATTENDANCE_ABSENCE_OVERLAP";
     public const string PatternDateInvalidCode = "ATTENDANCE_PATTERN_DATE_INVALID";
