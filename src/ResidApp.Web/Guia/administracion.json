@@ -1653,6 +1653,72 @@
         "Para encender los avisos por correo tienes que marcar la confirmación."
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "ADM-51",
+      "pregunta": "¿Cómo activo la asistencia del centro de día y veo quién ha venido?",
+      "palabras": ["asistencia", "activar", "desactivar", "centro de día", "ajustes", "vino", "no vino", "confirmaciones"],
+      "permisos": [],
+      "antes": [
+        "Que tu centro sea un **Centro de Día**. En una Residencia no existe esta función.",
+        "Que el centro haya **informado** a las personas que acuden, a sus representantes y a sus familias de que se anotará su asistencia, y que haya revisado su evaluación de impacto en protección de datos y su registro de actividades de tratamiento, o dejado por escrito por qué no hacía falta."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Asistencia**. Si todavía está apagada, se abre directamente **Ajustes de la asistencia**.", "botones": ["Asistencia"] },
+        { "texto": "Marca las dos confirmaciones y pulsa **Activar la asistencia**.", "botones": ["Activar la asistencia"], "campos": ["Antes de activarla, confirma estas dos cosas"] },
+        { "texto": "Para ver quién ha venido, abre **Asistencia**: lista del día, con **Día anterior** para los días pasados. Tú la lees pero no anotas.", "botones": ["Día anterior"] },
+        { "texto": "Para apagarla, entra en **Ajustes** y pulsa **Desactivar la asistencia**: no pide confirmación.", "botones": ["Ajustes", "Desactivar la asistencia"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «La asistencia está activada. Ya se puede anotar quién viene cada día.» Queda guardado quién la activa, cuándo y con qué confirmaciones. Al desactivarla, lo ya anotado no se borra, pero no se muestra mientras esté desactivada." },
+        { "para": "Auxiliar", "texto": "Ve el botón **Asistencia de hoy** en «Mis residentes» y anota «Vino» o «No vino»." },
+        { "para": "Enfermería", "texto": "Anota, fija la pauta de cada persona y registra ausencias programadas; ve el motivo de las ausencias." }
+      ],
+      "dudas": [
+        { "p": "«Para activar la asistencia tienes que marcar las dos confirmaciones.»", "r": "Marca las dos casillas antes de pulsar **Activar la asistencia**." },
+        { "p": "No veo la nota de «Otro motivo» ni el motivo de una ausencia.", "r": "Es así a propósito: la nota y el motivo solo los ven quienes atienden a la persona (Enfermería y Medicina; la nota, también el Auxiliar que la anota)." },
+        { "p": "¿Puede la familia ver la asistencia?", "r": "No: por ahora la familia no ve nada de esta función." }
+      ],
+      "rutas": ["Asistencia/Index", "Asistencia/Ajustes"],
+      "mensajes": [
+        "La asistencia está activada. Ya se puede anotar quién viene cada día.",
+        "Para activar la asistencia tienes que marcar las dos confirmaciones."
+      ],
+      "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
+      "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
+    },
+    {
+      "codigo": "ADM-52",
+      "pregunta": "¿Cómo fijo la pauta de asistencia de una persona y registro su ausencia programada desde Administración?",
+      "palabras": ["asistencia", "pauta", "días de la semana", "ausencia programada", "vacaciones", "ingreso hospitalario", "acortar", "anular"],
+      "permisos": [],
+      "antes": [
+        "Que tu centro sea un **Centro de Día** y tenga la asistencia activada.",
+        "Saber que la **pauta** son los días de la semana en que se espera a cada persona (sin horas) y que una **ausencia programada** avisa de que no vendrá unos días: dura 90 días como máximo y el último día cuenta."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Asistencia** (solo sale en un Centro de Día)." },
+        { "texto": "Junto a la persona, pulsa **Fijar su pauta** (o **Cambiar su pauta**), marca los días en que se la espera y pulsa **Guardar la pauta**.", "botones": ["Fijar su pauta", "Cambiar su pauta", "Guardar la pauta"] },
+        { "texto": "Para una ausencia, pulsa **Ausencias programadas**, elige la persona, el primer y el último día y el motivo, y pulsa **Registrar**.", "botones": ["Ausencias programadas", "Registrar"], "campos": ["Primer día", "Último día", "Motivo"] },
+        { "texto": "Para cambiarla más tarde, en la lista de ausencias pulsa **Acortar** (con el nuevo último día) o **Anular**.", "botones": ["Acortar", "Anular"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Pauta guardada.» o «Ausencia registrada. Esos días no saldrán como «sin anotar».». El motivo lo eliges al registrar, pero no lo vuelves a ver: solo lo ven Enfermería y Medicina." },
+        { "para": "Auxiliar", "texto": "Esos días ve «Ausencia programada» y las fechas, sin el motivo. Los días que no tocan según la pauta salen marcados, y aun así puede anotarlos." }
+      ],
+      "dudas": [
+        { "p": "«Esa persona ya tiene una ausencia programada que coincide con esas fechas.»", "r": "Acorta o anula la que ya tiene, o elige otras fechas." },
+        { "p": "La ausencia no se deja registrar.", "r": "El último día no puede ser anterior al primero y no puede pasar de 90 días." },
+        { "p": "Sin pauta, ¿qué días se espera a la persona?", "r": "Todos. Fíjale la pauta para que los días que no tocan salgan marcados." }
+      ],
+      "rutas": ["Asistencia/Index", "Asistencia/Pauta", "Asistencia/Ausencias", "Asistencia/RegistrarAusencia", "Asistencia/AnularAusencia", "Asistencia/AcortarAusencia"],
+      "mensajes": [
+        "Pauta guardada.",
+        "Ausencia registrada. Esos días no saldrán como «sin anotar».",
+        "Esa persona ya tiene una ausencia programada que coincide con esas fechas."
+      ],
+      "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
+      "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
     }
   ]
 }

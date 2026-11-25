@@ -85,6 +85,7 @@
             <a class="list-group-item list-group-item-action" href="#rangos-referencia">Rangos de referencia de constantes</a>
             <a class="list-group-item list-group-item-action" href="#citas-administracion">Citas con la familia (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#citas-externas">Citas externas de los residentes</a>
+            <a class="list-group-item list-group-item-action" href="#asistencia">Asistencia (solo Centro de Día)</a>
             <a class="list-group-item list-group-item-action" href="#portal-familiar">Portal Familiar</a>
             <a class="list-group-item list-group-item-action" href="#glosario">Glosario</a>
             <a class="list-group-item list-group-item-action" href="#proximamente">Próximamente</a>
@@ -711,6 +712,45 @@
         <strong>Residente suspendido o de baja.</strong> Si el residente está suspendido por un ingreso hospitalario, sus citas siguen vivas y llevan la marca «Residente suspendido». Al darlo de baja,
         sus citas externas abiertas de hoy en adelante se cancelan solas; la pantalla de la baja las cuenta y no se restauran al
         reactivarlo. Mientras está suspendido o de baja, su familia no ve ninguna.
+    </p>
+</section>
+
+<section id="asistencia" class="mb-4">
+    <h2 class="h5">
+        Asistencia (solo Centro de Día)
+        <span class="badge text-bg-secondary align-middle">Perfil: Auxiliar, Enfermería, Medicina y Administración</span>
+    </h2>
+    <p>
+        En un <strong>Centro de Día</strong> se anota cada día si cada persona <strong>vino o no vino</strong>. No se anota la hora de llegada ni de salida. Una Residencia no tiene esta función y no la ve.
+        «<strong>Sin anotar</strong>» no es «no vino»: es que nadie lo ha anotado todavía.
+    </p>
+    <p>
+        <strong>Activarla.</strong> Viene apagada. Solo Administración la activa, en <strong>Asistencia</strong> → <strong>Ajustes</strong>, marcando dos confirmaciones (que el centro ha informado a las personas que acuden,
+        a sus representantes y a sus familias, y que ha revisado con esta función su evaluación de impacto en protección de datos y su registro de actividades de tratamiento, o ha dejado por escrito por qué no hacía falta).
+        Queda guardado quién la activa y cuándo. Para desactivarla no hace falta confirmar nada: lo ya anotado no se borra, pero no se muestra mientras esté desactivada. Mientras esté apagada, Administración
+        al abrir <strong>Asistencia</strong> llega directa a los ajustes, y el resto ve que no está activada. La familia no ve nada de esta función.
+    </p>
+    <p>
+        <strong>Anotar.</strong> Auxiliar, Enfermería y Medicina, en la tarjeta o el botón <strong>Asistencia</strong> de su Inicio (el Auxiliar, «Asistencia de hoy» en «Mis residentes»), ven la lista del día con las personas de sus unidades.
+        Para cada una pulsan <strong>Vino</strong>, o eligen <strong>por qué no vino</strong> (avisó la familia, no avisó, otro motivo) y pulsan <strong>No vino</strong>. Con «Otro motivo» se puede añadir una nota de una línea y 80 caracteres
+        como máximo: solo el motivo, nunca enfermedades, diagnósticos, ingresos ni nombres de otras personas. Para corregir, se vuelve a pulsar: queda la última, y las anteriores se conservan. El Auxiliar anota o corrige hasta 7 días atrás;
+        Enfermería y Medicina, sin ese tope. Nunca se anota un día futuro. Una persona suspendida no sale en la lista.
+    </p>
+    <p>
+        <strong>Pauta.</strong> Es el conjunto de días de la semana en que se espera a cada persona (siete casillas, sin horas). En la lista, <strong>Fijar su pauta</strong> o <strong>Cambiar su pauta</strong> (Administración y Enfermería). Los días que no tocan
+        según la pauta salen marcados «No toca este día según su pauta», y aun así se puede anotar. Sin pauta, se espera a la persona todos los días. La familia nunca ve la pauta.
+    </p>
+    <p>
+        <strong>Ausencias programadas.</strong> Para avisar por adelantado de que alguien no vendrá unos días, en <strong>Ausencias programadas</strong> (Administración y Enfermería) se elige la persona, el primer y el último día (el último cuenta; 90 días como
+        máximo) y un motivo de una lista (ingreso hospitalario, vacaciones, otro). Esos días salen «Ausencia programada» y no «Sin anotar»; si alguien anota ese día, manda lo anotado. Se pueden <strong>Acortar</strong> o <strong>Anular</strong>.
+        El motivo solo lo ven Enfermería y Medicina: Administración lo elige al registrar y no lo vuelve a ver, y el Auxiliar solo ve «ausencia programada» y las fechas.
+    </p>
+    <p>
+        <strong>Quién ve qué.</strong> Administración lee la lista pero no anota ni corrige, y no ve la nota de «Otro motivo». Dirección Clínica no tiene asistencia. Queda registrado quién anota cada día; la auditoría guarda solo identificadores, nunca si vino,
+        la causa, la nota ni el motivo de una ausencia.
+    </p>
+    <p>
+        <strong>Valores sin validar.</strong> Los 7 días de corrección, las 80 letras de la nota, los 90 días de una ausencia y qué perfil ve el motivo son propuestos y los confirmará CJ antes de usar la función con datos reales.
     </p>
 </section>
 
