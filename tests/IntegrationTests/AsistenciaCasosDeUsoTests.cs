@@ -228,6 +228,24 @@ public class AsistenciaCasosDeUsoTests
     }
 
     [Fact]
+    public async Task Dos_ausencias_solapadas_a_la_vez_para_la_misma_persona_solo_guardan_una()
+    {
+        var (day, staff) = await CreateAsync();
+        var resident = ResidentId.From(day.ResidentId);
+        var admin = Service(staff.Administracion);
+
+        for (var round = 0; round < 5; round++)
+        {
+            var from = Today.AddDays(1 + round * 20);
+            var results = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => Task.Run(() => admin.RegisterAbsenceAsync(new RegisterAbsenceCommand(
+                staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident, from, from.AddDays(3), AbsenceReason.Otro)))));
+
+            Assert.Single(results, result => result.Ok);
+            Assert.Equal(ApplicationFailureCode.Conflict, Assert.Single(results, result => !result.Ok).Error!.Code);
+        }
+    }
+
+    [Fact]
     public async Task Acortar_y_anular_una_ausencia_siguen_sus_reglas_y_dejan_auditoria_sin_valores()
     {
         var (day, staff) = await CreateAsync();
