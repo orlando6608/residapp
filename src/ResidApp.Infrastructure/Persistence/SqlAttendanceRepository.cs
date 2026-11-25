@@ -341,7 +341,14 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
     // ---- Las ausencias programadas ----
 
-    public async Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default)
+    public Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default) =>
+        ReadAbsencesAsync(actor, residentId, todayAtCenter, ended: false, ct);
+
+    public Task<IReadOnlyList<ScheduledAbsence>> ListEndedAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default) =>
+        AttendanceRules.CanManageAbsences(actor.Profile) ? ReadAbsencesAsync(actor, residentId, todayAtCenter, ended: true, ct) : throw new AccessDeniedException();
+
+    /// <summary>Las ausencias no anuladas del alcance: las que siguen (último día vigente de hoy en adelante, la más próxima primero) o, con <paramref name="ended"/>, las que ya han pasado.</summary>
+    private async Task<IReadOnlyList<ScheduledAbsence>> ReadAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, bool ended, CancellationToken ct)
     {
         using var connection = await connections.OpenAsync(ct);
         await RequireDayCenterAsync(connection, null, actor, ct);
@@ -354,10 +361,10 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
              WHERE absence.centro_id = @CenterId AND absence.tipo_codigo = N'REGISTRADA' AND resident.estado = 'ACTIVE'
                AND (@ResidentId IS NULL OR absence.residente_id = @ResidentId)
                AND NOT EXISTS (SELECT 1 FROM dbo.ausencias_programadas annulled WHERE annulled.ausencia_id = absence.id AND annulled.tipo_codigo = N'ANULADA')
-               AND (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) >= @Today
+               AND (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) {(ended ? "<" : ">=")} @Today
                AND {NotSuspendedSql.Replace("{R}", "resident.id")}
                AND {ResidentScopeSql.Replace("{R}", "resident.id")}
-             ORDER BY absence.desde, resident.nombre_visible
+             ORDER BY {(ended ? "ToDate DESC" : "absence.desde")}, resident.nombre_visible
             """, Params(actor, new
         {
             ResidentId = residentId?.Value, Today = todayAtCenter.ToDateTime(TimeOnly.MinValue), ReadReason = AttendanceRules.CanReadAbsenceReason(actor.Profile),

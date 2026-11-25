@@ -247,6 +247,50 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
         }
     }
 
+    [Fact]
+    public async Task Una_ausencia_ya_terminada_sale_plegada_en_Terminadas_y_se_puede_anular()
+    {
+        var nurse = await LoginOfNewCenterAsync("CentroDeDia", "ENFERMERIA");
+        var (resident, adminAccount, unit) = await AddResidentAsync("Persona con ausencia pasada (ficticia)");
+        using (var connection = await Db.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                SELECT NEWID(), id, centro_id, @unit, SYSUTCDATETIME(), @adminAccount FROM dbo.ambitos_perfil WHERE centro_id = @centerId AND perfil_codigo = 'ENFERMERIA';
+                INSERT INTO dbo.asistencia_centro (id, centro_id, numero, activa, confirma_informada, confirma_eipd, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+                VALUES (NEWID(), @centerId, 1, 1, 1, 1, @adminAccount, 'ADMINISTRACION', SYSUTCDATETIME())
+                """, new { centerId = _centerId, unit, adminAccount });
+        }
+
+        var today = CenterTime.TodayAt(DateTimeOffset.UtcNow);
+        var empty = await nurse.GetStringAsync("/Asistencia/Ausencias");
+        Assert.DoesNotContain("<details", empty);
+
+        async Task<string> PostAndReadAsync(string url, params (string Key, string Value)[] fields)
+        {
+            var response = await nurse.PostAsync(url, new FormUrlEncodedContent(
+                fields.Select(f => new KeyValuePair<string, string>(f.Key, f.Value)).Prepend(new(Token, ExtractValue(empty, Token)))));
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            return WebUtility.HtmlDecode(await nurse.GetStringAsync(response.Headers.Location));
+        }
+
+        var page = await PostAndReadAsync("/Asistencia/RegistrarAusencia",
+            ("residenteId", resident.ToString()), ("desde", today.AddDays(-4).ToString("yyyy-MM-dd")), ("hasta", today.AddDays(-2).ToString("yyyy-MM-dd")), ("motivo", "Vacaciones"));
+
+        Assert.Contains("No hay ausencias programadas vigentes ni próximas.", page);
+        var ended = Regex.Match(page, "<details[^>]*>.*?</details>", RegexOptions.Singleline).Value;
+        Assert.DoesNotContain(" open", ended[..ended.IndexOf('>')]);
+        foreach (var expected in new[]
+                 { "Terminadas (1)", "Persona con ausencia pasada (ficticia)", $"Del {today.AddDays(-4):dd/MM/yyyy} al {today.AddDays(-2):dd/MM/yyyy}", "Motivo: Vacaciones", ">Acortar<", ">Anular<" })
+        {
+            Assert.Contains(expected, ended);
+        }
+
+        var after = await PostAndReadAsync("/Asistencia/AnularAusencia", ("ausenciaId", ExtractValue(ended, "ausenciaId")));
+        Assert.Contains("Ausencia anulada.", after);
+        Assert.DoesNotContain("<details", after);
+    }
+
     [Theory]
     [InlineData("AUXILIAR")]
     [InlineData("ENFERMERIA")]

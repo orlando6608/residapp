@@ -1,0 +1,40 @@
+@using ResidApp.Domain.Attendance
+@using ResidApp.Web.Models
+@model AsistenciaListaAusenciasViewModel
+@* Rejilla y no tabla: lleva campos de formulario, que en el móvil no se duplican (guía de diseño). Las fechas describen los botones: una persona puede tener varias ausencias. *@
+<ul class="list-group mb-3" aria-labelledby="@Model.HeadingId">
+    @foreach (var absence in Model.Absences)
+    {
+        <li class="list-group-item">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 @(Model.CanManage ? "col-md-5" : null)">
+                    <h3 class="h6 mb-0">@absence.ResidentName</h3>
+                    <span class="d-block" id="fechas-@absence.Id">Del @AsistenciaDisplay.Date(absence.From) al @AsistenciaDisplay.Date(absence.To)</span>
+                    @if (Model.CanSeeReason && absence.Reason is { } reason)
+                    {
+                        <span class="d-block small text-body-secondary">Motivo: @EnumDisplay.Label(reason)</span>
+                    }
+                </div>
+                @if (Model.CanManage)
+                {
+                    <div class="col-12 col-md-7">
+                        <div class="d-flex flex-wrap align-items-end justify-content-md-end gap-2">
+                            <form method="post" asp-action="AcortarAusencia" class="d-flex flex-wrap align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
+                                <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                <div>
+                                    <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
+                                    <input class="form-control form-control-lg" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.ToString("yyyy-MM-dd")" required />
+                                </div>
+                                <button type="submit" class="btn btn-outline-primary btn-lg" aria-describedby="fechas-@absence.Id">Acortar</button>
+                            </form>
+                            <form method="post" asp-action="AnularAusencia" aria-label="Anular la ausencia de @absence.ResidentName">
+                                <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                <button type="submit" class="btn btn-outline-danger btn-lg" aria-describedby="fechas-@absence.Id">Anular</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </li>
+    }
+</ul>

@@ -20,7 +20,10 @@ public sealed record AsistenciaPautaViewModel(AttendancePatternState Pattern, bo
 
 /// <summary>Las ausencias programadas y, para quien las registra, las personas entre las que elegir.</summary>
 public sealed record AsistenciaAusenciasViewModel(
-    IReadOnlyList<ScheduledAbsence> Absences, IReadOnlyList<AttendanceDayEntry> Residents, bool CanManage, bool CanSeeReason, DateOnly Today, Guid? ResidentFilter);
+    IReadOnlyList<ScheduledAbsence> Absences, IReadOnlyList<ScheduledAbsence> Ended, IReadOnlyList<AttendanceDayEntry> Residents, bool CanManage, bool CanSeeReason, DateOnly Today, Guid? ResidentFilter);
+
+/// <summary>Una lista de ausencias (las vigentes o las terminadas), con los botones de quien puede cambiarlas. <paramref name="HeadingId"/>: el título que la nombra.</summary>
+public sealed record AsistenciaListaAusenciasViewModel(IReadOnlyList<ScheduledAbsence> Absences, bool CanManage, bool CanSeeReason, string HeadingId);
 
 public sealed record AsistenciaSeguimientoViewModel(AttendanceFollowUp Data, DateOnly Today);
 
