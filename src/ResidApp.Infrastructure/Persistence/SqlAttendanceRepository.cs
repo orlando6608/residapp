@@ -1,0 +1,444 @@
+using System.Data;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using ResidApp.Application.Errors;
+using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Attendance;
+using ResidApp.Shared;
+
+namespace ResidApp.Infrastructure.Persistence;
+
+/// <summary>
+/// La asistencia diaria del Centro de Día (script 0115, ADR 0019). Cada escritura va en una transacción que vuelve a comprobar el ámbito activo, que el centro es un Centro de Día con la función
+/// encendida (leído de la base de datos, nunca de la cookie del ámbito) y que el residente está en el alcance de quien actúa; las tablas son de solo añadir, así que corregir es insertar la versión
+/// siguiente. La auditoría lleva solo identificadores: nunca el estado, la causa, la nota, el motivo, las fechas ni la pauta. Lo que un perfil no debe leer (la nota para Administración; el motivo
+/// de una ausencia para todos menos Enfermería y Medicina) no sale de la consulta.
+/// </summary>
+public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : IAttendanceStore
+{
+    private const string ResourceType = "ATTENDANCE";
+
+    /// <summary>El ámbito activo es de este actor y este centro con el perfil indicado.</summary>
+    private const string ActorScopeSql = """
+        SELECT 1 FROM dbo.ambitos_perfil scope_profile
+         WHERE scope_profile.id = @ProfileScopeId AND scope_profile.centro_id = @CenterId AND scope_profile.cuenta_id = @AccountId
+           AND scope_profile.perfil_codigo = @Profile AND scope_profile.estado = 'ACTIVE' AND scope_profile.revocado_en IS NULL
+        """;
+
+    /// <summary>El residente {R} está en el alcance de quien actúa: Administración ve todo el centro; los demás, sus unidades y, si tienen residentes asignados, solo esos (el mismo criterio que el resto de
+    /// la aplicación: citas externas, ámbito de Auxiliar).</summary>
+    private const string ResidentScopeSql = """
+        EXISTS (
+            SELECT 1 FROM dbo.ambitos_perfil scope_profile
+             WHERE scope_profile.id = @ProfileScopeId AND scope_profile.centro_id = @CenterId AND scope_profile.cuenta_id = @AccountId
+               AND scope_profile.perfil_codigo = @Profile AND scope_profile.estado = 'ACTIVE' AND scope_profile.revocado_en IS NULL
+               AND (scope_profile.perfil_codigo = 'ADMINISTRACION' OR (
+                    EXISTS (
+                        SELECT 1 FROM dbo.ambitos_perfil_unidad scope_unit
+                          JOIN dbo.intervalos_ubicacion_residente scope_location ON scope_location.residente_id = {R} AND scope_location.centro_id = scope_profile.centro_id
+                               AND scope_location.unidad_id = scope_unit.unidad_id AND scope_location.vigente_hasta IS NULL
+                         WHERE scope_unit.ambito_perfil_id = scope_profile.id AND scope_unit.centro_id = scope_profile.centro_id AND scope_unit.revocado_en IS NULL)
+                    AND (EXISTS (
+                            SELECT 1 FROM dbo.ambitos_perfil_residente scope_resident
+                             WHERE scope_resident.ambito_perfil_id = scope_profile.id AND scope_resident.centro_id = scope_profile.centro_id
+                               AND scope_resident.residente_id = {R} AND scope_resident.revocado_en IS NULL)
+                         OR NOT EXISTS (
+                            SELECT 1 FROM dbo.ambitos_perfil_residente restriction
+                             WHERE restriction.ambito_perfil_id = scope_profile.id AND restriction.centro_id = scope_profile.centro_id)))))
+        """;
+
+    private const string NotSuspendedSql = """
+        NOT EXISTS (SELECT 1 FROM dbo.suspensiones_residente suspension
+                     WHERE suspension.residente_id = {R} AND suspension.centro_id = @CenterId AND suspension.finalizada_en IS NULL)
+        """;
+
+    /// <summary>El centro es un Centro de Día y tiene la asistencia encendida (la fila vigente del interruptor).</summary>
+    private const string FeatureOnSql = """
+        SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.centros center WHERE center.id = @CenterId AND center.tipo_de_servicio = N'CENTRO_DE_DIA')
+                     AND ISNULL((SELECT TOP (1) CAST(sw.activa AS INT) FROM dbo.asistencia_centro sw WHERE sw.centro_id = @CenterId ORDER BY sw.numero DESC), 0) = 1
+                    THEN 1 ELSE 0 END
+        """;
+
+    /// <summary>La ausencia {A} (una fila REGISTRADA) cubre el día {D}: no está anulada y su último día vigente (el menor entre su hasta y los de sus acortamientos) no es anterior.</summary>
+    private const string AbsenceCoversSql = """
+        EXISTS (SELECT 1 FROM dbo.ausencias_programadas absence
+                 WHERE absence.centro_id = @CenterId AND absence.residente_id = {R} AND absence.tipo_codigo = N'REGISTRADA' AND absence.desde <= {D}
+                   AND NOT EXISTS (SELECT 1 FROM dbo.ausencias_programadas annulled WHERE annulled.ausencia_id = absence.id AND annulled.tipo_codigo = N'ANULADA')
+                   AND (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) >= {D})
+        """;
+
+    // ---- El interruptor del centro ----
+
+    public async Task<AttendanceCenterState> ReadCenterAsync(AttendanceActor actor, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await RequireScopeAsync(connection, null, actor, ct);
+        var dayCenter = await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+            "SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.centros WHERE id = @CenterId AND tipo_de_servicio = N'CENTRO_DE_DIA') THEN 1 ELSE 0 END", Params(actor), cancellationToken: ct));
+        var latest = await LatestSwitchAsync(connection, null, actor, lockRow: false, ct);
+        return new AttendanceCenterState(dayCenter, latest?.Active ?? false, latest?.Number ?? 0);
+    }
+
+    public async Task<int> SetCenterAsync(AttendanceActor actor, int expectedNumber, bool enable, bool informed, bool impactAssessment, CancellationToken ct = default)
+    {
+        if (actor.Profile != SystemProfile.Administracion)
+        {
+            throw new AccessDeniedException();
+        }
+
+        if (enable && !(informed && impactAssessment))
+        {
+            throw new DomainValidationException(AttendanceRules.InvalidCode);
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await RequireScopeAsync(connection, transaction, actor, ct);
+        var latest = await LatestSwitchAsync(connection, transaction, actor, lockRow: true, ct);
+        if ((latest?.Number ?? 0) != expectedNumber || (latest?.Active ?? false) == enable)
+        {
+            throw new DomainValidationException(AttendanceRules.ConflictCode);
+        }
+
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await InsertAsync(connection, transaction, """
+            INSERT INTO dbo.asistencia_centro (id, centro_id, numero, activa, confirma_informada, confirma_eipd, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (@Id, @CenterId, @Number, @Enable, @Informed, @Impact, @AccountId, @Profile, @Now);
+            """, Params(actor, new { Id = id, Number = expectedNumber + 1, Enable = enable, Informed = enable && informed, Impact = enable && impactAssessment, Now = now.UtcDateTime }), ct);
+        await AuditAsync(connection, transaction, actor, null, null, id, enable ? "ATTENDANCE_CENTER_ON" : "ATTENDANCE_CENTER_OFF", now, ct);
+        transaction.Commit();
+        return expectedNumber + 1;
+    }
+
+    // ---- La lista de un día ----
+
+    public async Task<IReadOnlyList<AttendanceDayEntry>> ListDayAsync(AttendanceActor actor, DateOnly date, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await RequireFeatureAsync(connection, null, actor, ct);
+        var rows = await connection.QueryAsync<DayRow>(new CommandDefinition($"""
+            SELECT resident.id AS ResidentId, resident.nombre_visible AS ResidentName, location.unidad_id AS UnitId, unit.nombre_visible AS UnitName,
+                   pattern.dias_esperados AS PatternMask,
+                   mark.numero AS MarkNumber, mark.estado_codigo AS MarkState, mark.causa_codigo AS MarkCause,
+                   CASE WHEN @ReadNote = 1 THEN mark.nota END AS MarkNote,
+                   CAST(CASE WHEN {AbsenceCoversSql.Replace("{R}", "resident.id").Replace("{D}", "@Date")} THEN 1 ELSE 0 END AS BIT) AS ScheduledAbsence
+              FROM dbo.residentes resident
+              LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL
+              LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = resident.centro_id
+              OUTER APPLY (SELECT TOP (1) p.dias_esperados FROM dbo.asistencia_pauta p
+                            WHERE p.centro_id = resident.centro_id AND p.residente_id = resident.id ORDER BY p.numero DESC) pattern
+              OUTER APPLY (SELECT TOP (1) a.numero, a.estado_codigo, a.causa_codigo, a.nota FROM dbo.asistencia_dia a
+                            WHERE a.centro_id = resident.centro_id AND a.residente_id = resident.id AND a.fecha = @Date ORDER BY a.numero DESC) mark
+             WHERE resident.centro_id = @CenterId AND resident.estado = 'ACTIVE'
+               AND {NotSuspendedSql.Replace("{R}", "resident.id")}
+               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
+             ORDER BY unit.nombre_visible, resident.nombre_visible
+            """, Params(actor, new { Date = date.ToDateTime(TimeOnly.MinValue), ReadNote = AttendanceRules.CanReadNote(actor.Profile) }), cancellationToken: ct));
+
+        return rows.Select(row =>
+        {
+            AttendanceMark? mark = row.MarkNumber is { } number
+                ? new AttendanceMark(number, EnumCode.ParseCode<AttendanceState>(row.MarkState!), row.MarkCause is null ? null : EnumCode.ParseCode<AttendanceCause>(row.MarkCause), row.MarkNote)
+                : null;
+            var expected = row.PatternMask is not { } mask || AttendanceRules.Expects(mask, date);
+            return new AttendanceDayEntry(
+                ResidentId.From(row.ResidentId), row.ResidentName, row.UnitId, row.UnitName, row.PatternMask is not null, expected, mark, row.ScheduledAbsence,
+                AttendanceRules.StatusOf(mark?.State, row.ScheduledAbsence));
+        }).ToList();
+    }
+
+    // ---- Anotar y corregir ----
+
+    public async Task<int> RecordAsync(
+        AttendanceActor actor, ResidentId residentId, DateOnly date, DateOnly todayAtCenter, AttendanceState state, AttendanceCause? cause, string? note, CancellationToken ct = default)
+    {
+        if (!AttendanceRules.CanRecord(actor.Profile))
+        {
+            throw new AccessDeniedException();
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await RequireFeatureAsync(connection, transaction, actor, ct);
+        var unitId = await RequireResidentAsync(connection, transaction, actor, residentId, ct);
+
+        var latest = await connection.QuerySingleOrDefaultAsync<MarkRow?>(new CommandDefinition("""
+            SELECT TOP (1) numero AS Number, estado_codigo AS State, causa_codigo AS Cause, nota AS Note FROM dbo.asistencia_dia WITH (UPDLOCK, HOLDLOCK)
+             WHERE centro_id = @CenterId AND residente_id = @ResidentId AND fecha = @Date ORDER BY numero DESC
+            """, Params(actor, new { ResidentId = residentId.Value, Date = date.ToDateTime(TimeOnly.MinValue) }), transaction, cancellationToken: ct));
+        if (latest is not null && latest.State == state.ToCode() && latest.Cause == cause?.ToCode() && (latest.Note ?? "") == (note ?? ""))
+        {
+            return latest.Number;
+        }
+
+        var number = (latest?.Number ?? 0) + 1;
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await InsertAsync(connection, transaction, """
+            INSERT INTO dbo.asistencia_dia
+                (id, centro_id, residente_id, fecha, numero, estado_codigo, causa_codigo, nota, anotado_por_cuenta_id, anotado_por_perfil, anotado_en)
+            VALUES (@Id, @CenterId, @ResidentId, @Date, @Number, @State, @Cause, @Note, @AccountId, @Profile, @Now);
+            """, Params(actor, new
+        {
+            Id = id, ResidentId = residentId.Value, Date = date.ToDateTime(TimeOnly.MinValue), Number = number, State = state.ToCode(), Cause = cause?.ToCode(), Note = note, Now = now.UtcDateTime,
+        }), ct);
+        await AuditAsync(connection, transaction, actor, residentId.Value, unitId, id, number == 1 ? "ATTENDANCE_MARK" : "ATTENDANCE_CORRECT", now, ct);
+        transaction.Commit();
+        return number;
+    }
+
+    // ---- La pauta ----
+
+    public async Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await RequireFeatureAsync(connection, null, actor, ct);
+        var name = await ResidentNameAsync(connection, null, actor, residentId, ct);
+        var latest = await LatestPatternAsync(connection, null, actor, residentId, lockRow: false, ct);
+        return new AttendancePatternState(residentId, name, latest?.Number ?? 0, latest?.Days ?? 0);
+    }
+
+    public async Task<int> SetPatternAsync(AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, CancellationToken ct = default)
+    {
+        if (!AttendanceRules.CanManageAbsences(actor.Profile))
+        {
+            throw new AccessDeniedException();
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await RequireFeatureAsync(connection, transaction, actor, ct);
+        var unitId = await RequireResidentAsync(connection, transaction, actor, residentId, ct);
+        var latest = await LatestPatternAsync(connection, transaction, actor, residentId, lockRow: true, ct);
+        if ((latest?.Number ?? 0) != expectedNumber)
+        {
+            throw new DomainValidationException(AttendanceRules.ConflictCode);
+        }
+
+        if (latest?.Days == daysMask)
+        {
+            return latest.Number;
+        }
+
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await InsertAsync(connection, transaction, """
+            INSERT INTO dbo.asistencia_pauta (id, centro_id, residente_id, numero, dias_esperados, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (@Id, @CenterId, @ResidentId, @Number, @Days, @AccountId, @Profile, @Now);
+            """, Params(actor, new { Id = id, ResidentId = residentId.Value, Number = expectedNumber + 1, Days = daysMask, Now = now.UtcDateTime }), ct);
+        await AuditAsync(connection, transaction, actor, residentId.Value, unitId, id, "ATTENDANCE_PATTERN_SET", now, ct);
+        transaction.Commit();
+        return expectedNumber + 1;
+    }
+
+    // ---- Las ausencias programadas ----
+
+    public async Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        await RequireFeatureAsync(connection, null, actor, ct);
+        var rows = await connection.QueryAsync<AbsenceRow>(new CommandDefinition($"""
+            SELECT absence.id AS Id, absence.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, absence.desde AS FromDate,
+                   (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) AS ToDate,
+                   CASE WHEN @ReadReason = 1 THEN absence.motivo_codigo END AS Reason
+              FROM dbo.ausencias_programadas absence
+              JOIN dbo.residentes resident ON resident.id = absence.residente_id AND resident.centro_id = absence.centro_id
+             WHERE absence.centro_id = @CenterId AND absence.tipo_codigo = N'REGISTRADA' AND resident.estado = 'ACTIVE'
+               AND (@ResidentId IS NULL OR absence.residente_id = @ResidentId)
+               AND NOT EXISTS (SELECT 1 FROM dbo.ausencias_programadas annulled WHERE annulled.ausencia_id = absence.id AND annulled.tipo_codigo = N'ANULADA')
+               AND (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) >= @Today
+               AND {NotSuspendedSql.Replace("{R}", "resident.id")}
+               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
+             ORDER BY absence.desde, resident.nombre_visible
+            """, Params(actor, new
+        {
+            ResidentId = residentId?.Value, Today = todayAtCenter.ToDateTime(TimeOnly.MinValue), ReadReason = AttendanceRules.CanReadAbsenceReason(actor.Profile),
+        }), cancellationToken: ct));
+        return rows.Select(row => new ScheduledAbsence(
+            row.Id, ResidentId.From(row.ResidentId), row.ResidentName, DateOnly.FromDateTime(row.FromDate), DateOnly.FromDateTime(row.ToDate),
+            row.Reason is null ? null : EnumCode.ParseCode<AbsenceReason>(row.Reason))).ToList();
+    }
+
+    public async Task<Guid> RegisterAbsenceAsync(AttendanceActor actor, ResidentId residentId, DateOnly from, DateOnly to, AbsenceReason reason, CancellationToken ct = default)
+    {
+        if (!AttendanceRules.CanManageAbsences(actor.Profile))
+        {
+            throw new AccessDeniedException();
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await RequireFeatureAsync(connection, transaction, actor, ct);
+        var unitId = await RequireResidentAsync(connection, transaction, actor, residentId, ct);
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await InsertAsync(connection, transaction, """
+            INSERT INTO dbo.ausencias_programadas
+                (id, centro_id, residente_id, tipo_codigo, ausencia_id, desde, hasta, motivo_codigo, causa_codigo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+            VALUES (@Id, @CenterId, @ResidentId, N'REGISTRADA', @Id, @From, @To, @Reason, NULL, @AccountId, @Profile, @Now);
+            """, Params(actor, new
+        {
+            Id = id, ResidentId = residentId.Value, From = from.ToDateTime(TimeOnly.MinValue), To = to.ToDateTime(TimeOnly.MinValue), Reason = reason.ToCode(), Now = now.UtcDateTime,
+        }), ct);
+        await AuditAsync(connection, transaction, actor, residentId.Value, unitId, id, "ABSENCE_REGISTER", now, ct);
+        transaction.Commit();
+        return id;
+    }
+
+    public Task AnnulAbsenceAsync(AttendanceActor actor, Guid absenceId, CancellationToken ct = default) =>
+        ChangeAbsenceAsync(actor, absenceId, "ANULADA", "ERROR", null, "ABSENCE_ANNUL", ct);
+
+    public Task ShortenAbsenceAsync(AttendanceActor actor, Guid absenceId, DateOnly newTo, CancellationToken ct = default) =>
+        ChangeAbsenceAsync(actor, absenceId, "ACORTADA", "REGRESO_ANTES", newTo.ToDateTime(TimeOnly.MinValue), "ABSENCE_SHORTEN", ct);
+
+    private async Task ChangeAbsenceAsync(AttendanceActor actor, Guid absenceId, string type, string cause, DateTime? newTo, string action, CancellationToken ct)
+    {
+        if (!AttendanceRules.CanManageAbsences(actor.Profile))
+        {
+            throw new AccessDeniedException();
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await RequireFeatureAsync(connection, transaction, actor, ct);
+        // La ausencia tiene que ser de un residente del alcance de quien actúa: si no, es el mismo «no existe» de siempre.
+        var found = await connection.QuerySingleOrDefaultAsync<AbsenceTarget?>(new CommandDefinition($"""
+            SELECT absence.residente_id AS ResidentId,
+                   (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
+                     WHERE location.residente_id = absence.residente_id AND location.centro_id = absence.centro_id AND location.vigente_hasta IS NULL) AS UnitId
+              FROM dbo.ausencias_programadas absence
+              JOIN dbo.residentes resident ON resident.id = absence.residente_id AND resident.centro_id = absence.centro_id
+             WHERE absence.id = @AbsenceId AND absence.centro_id = @CenterId AND absence.tipo_codigo = N'REGISTRADA' AND resident.estado = 'ACTIVE'
+               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
+            """, Params(actor, new { AbsenceId = absenceId }), transaction, cancellationToken: ct));
+        if (found is null)
+        {
+            throw new AccessDeniedException();
+        }
+
+        var id = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        await InsertAsync(connection, transaction, """
+            INSERT INTO dbo.ausencias_programadas
+                (id, centro_id, residente_id, tipo_codigo, ausencia_id, desde, hasta, motivo_codigo, causa_codigo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+            VALUES (@Id, @CenterId, @ResidentId, @Type, @AbsenceId, NULL, @To, NULL, @Cause, @AccountId, @Profile, @Now);
+            """, Params(actor, new { Id = id, found.ResidentId, Type = type, AbsenceId = absenceId, To = newTo, Cause = cause, Now = now.UtcDateTime }), ct);
+        await AuditAsync(connection, transaction, actor, found.ResidentId, found.UnitId, id, action, now, ct);
+        transaction.Commit();
+    }
+
+    // ---- Comprobaciones y ayudantes ----
+
+    private static DynamicParameters Params(AttendanceActor actor, object? extra = null)
+    {
+        var parameters = new DynamicParameters(extra ?? new { });
+        parameters.Add("AccountId", actor.AccountId.Value);
+        parameters.Add("ProfileScopeId", actor.ProfileScopeId);
+        parameters.Add("CenterId", actor.CenterId.Value);
+        parameters.Add("Profile", actor.Profile.ToCode());
+        return parameters;
+    }
+
+    private static async Task RequireScopeAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, CancellationToken ct)
+    {
+        if (await connection.QuerySingleOrDefaultAsync<int?>(new CommandDefinition(ActorScopeSql, Params(actor), transaction, cancellationToken: ct)) is null)
+        {
+            throw new AccessDeniedException();
+        }
+    }
+
+    /// <summary>El ámbito vigente y el centro con la función encendida; si no, ATTENDANCE_DISABLED (un Centro de Día con la función apagada, o una Residencia).</summary>
+    private static async Task RequireFeatureAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, CancellationToken ct)
+    {
+        await RequireScopeAsync(connection, transaction, actor, ct);
+        if (!await connection.ExecuteScalarAsync<bool>(new CommandDefinition(FeatureOnSql, Params(actor), transaction, cancellationToken: ct)))
+        {
+            throw new DomainValidationException(AttendanceRules.DisabledCode);
+        }
+    }
+
+    /// <summary>El residente está activo, no suspendido y en el alcance de quien actúa. Devuelve su unidad (para la auditoría).</summary>
+    private static async Task<Guid?> RequireResidentAsync(SqlConnection connection, SqlTransaction transaction, AttendanceActor actor, ResidentId residentId, CancellationToken ct)
+    {
+        var row = await connection.QuerySingleOrDefaultAsync<UnitRow?>(new CommandDefinition($"""
+            SELECT (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
+                     WHERE location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL) AS UnitId
+              FROM dbo.residentes resident WITH (UPDLOCK, ROWLOCK)
+             WHERE resident.id = @ResidentId AND resident.centro_id = @CenterId AND resident.estado = 'ACTIVE'
+               AND {NotSuspendedSql.Replace("{R}", "resident.id")}
+               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
+            """, Params(actor, new { ResidentId = residentId.Value }), transaction, cancellationToken: ct));
+        return row is null ? throw new AccessDeniedException() : row.UnitId;
+    }
+
+    private static async Task<string> ResidentNameAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, ResidentId residentId, CancellationToken ct) =>
+        await connection.ExecuteScalarAsync<string?>(new CommandDefinition($"""
+            SELECT resident.nombre_visible FROM dbo.residentes resident
+             WHERE resident.id = @ResidentId AND resident.centro_id = @CenterId AND resident.estado = 'ACTIVE'
+               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
+            """, Params(actor, new { ResidentId = residentId.Value }), transaction, cancellationToken: ct)) ?? throw new AccessDeniedException();
+
+    private static Task<SwitchRow?> LatestSwitchAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, bool lockRow, CancellationToken ct) =>
+        connection.QuerySingleOrDefaultAsync<SwitchRow?>(new CommandDefinition($"""
+            SELECT TOP (1) numero AS Number, activa AS Active FROM dbo.asistencia_centro {(lockRow ? "WITH (UPDLOCK, HOLDLOCK)" : "")} WHERE centro_id = @CenterId ORDER BY numero DESC
+            """, Params(actor), transaction, cancellationToken: ct));
+
+    private static Task<PatternRow?> LatestPatternAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, ResidentId residentId, bool lockRow, CancellationToken ct) =>
+        connection.QuerySingleOrDefaultAsync<PatternRow?>(new CommandDefinition($"""
+            SELECT TOP (1) numero AS Number, dias_esperados AS Days FROM dbo.asistencia_pauta {(lockRow ? "WITH (UPDLOCK, HOLDLOCK)" : "")}
+             WHERE centro_id = @CenterId AND residente_id = @ResidentId ORDER BY numero DESC
+            """, Params(actor, new { ResidentId = residentId.Value }), transaction, cancellationToken: ct));
+
+    /// <summary>Inserta una fila. Una versión repetida (índice único) o una secuencia que la base rechaza es un conflicto de versión; las demás reglas de la base se traducen a su código de aplicación.</summary>
+    private static async Task InsertAsync(SqlConnection connection, SqlTransaction transaction, string sql, DynamicParameters parameters, CancellationToken ct)
+    {
+        try
+        {
+            await connection.ExecuteAsync(new CommandDefinition(sql, parameters, transaction, cancellationToken: ct));
+        }
+        catch (SqlException error) when (error.Number is 2601 or 2627 or 51151)
+        {
+            throw new DomainValidationException(AttendanceRules.ConflictCode);
+        }
+        catch (SqlException error) when (error.Number is >= 51150 and <= 51156)
+        {
+            throw new DomainValidationException(error.Number switch
+            {
+                51150 => AttendanceRules.DisabledCode,
+                51153 => AttendanceRules.InvalidCode,
+                51154 => AttendanceRules.DateNotAllowedCode,
+                51156 => AttendanceRules.AbsenceOverlapCode,
+                _ => AttendanceRules.AbsenceInvalidCode,
+            });
+        }
+    }
+
+    /// <summary>Auditoría con solo identificadores: el recurso es la fila escrita; el estado, la causa, la nota, el motivo, las fechas y la pauta se leen de ella y no se copian.</summary>
+    private static Task AuditAsync(
+        SqlConnection connection, SqlTransaction transaction, AttendanceActor actor, Guid? residentId, Guid? unitId, Guid rowId, string action, DateTimeOffset now, CancellationToken ct) =>
+        connection.ExecuteAsync(new CommandDefinition("""
+            INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
+            VALUES (NEWID(), @AccountId, @Profile, @CenterId, @UnitId, @ResidentId, @ResourceType, @RowId, @Action, @Now);
+            """, new
+        {
+            AccountId = actor.AccountId.Value, Profile = actor.Profile.ToCode(), CenterId = actor.CenterId.Value, UnitId = unitId, ResidentId = residentId,
+            ResourceType = ResourceType, RowId = rowId, Action = action, Now = now.UtcDateTime,
+        }, transaction, cancellationToken: ct));
+
+    private sealed record SwitchRow(int Number, bool Active);
+
+    private sealed record PatternRow(int Number, byte Days);
+
+    private sealed record UnitRow(Guid? UnitId);
+
+    private sealed record AbsenceTarget(Guid ResidentId, Guid? UnitId);
+
+    private sealed record MarkRow(int Number, string State, string? Cause, string? Note);
+
+    private sealed record DayRow(
+        Guid ResidentId, string ResidentName, Guid? UnitId, string? UnitName, byte? PatternMask, int? MarkNumber, string? MarkState, string? MarkCause, string? MarkNote, bool ScheduledAbsence);
+
+    private sealed record AbsenceRow(Guid Id, Guid ResidentId, string ResidentName, DateTime FromDate, DateTime ToDate, string? Reason);
+}

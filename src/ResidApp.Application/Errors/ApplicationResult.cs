@@ -126,6 +126,20 @@ public static class ApplicationResultRunner
             "Han cambiado las franjas o las citas afectadas desde que las viste: revisa los números y confirma otra vez."),
     };
 
+    /// <summary>Asistencia del Centro de Día (ADR 0019, script 0115): cada fallo dice qué pasa. Los códigos ATTENDANCE_* son los de la aplicación y los disparadores de la base de datos los traducen el almacén.</summary>
+    private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> AttendanceFailures = new()
+    {
+        ["ATTENDANCE_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Revisa lo anotado: si no vino, elige por qué; la nota solo con «Otro motivo», de una línea y de 80 caracteres como máximo; y la pauta necesita al menos un día."),
+        ["ATTENDANCE_DISABLED"] = (ApplicationFailureCode.Conflict, "La asistencia no está activada en este centro."),
+        ["ATTENDANCE_REVISION_CONFLICT"] = (ApplicationFailureCode.Conflict, "Alguien ha cambiado esto mientras tanto, o ya estaba así: vuelve a cargar la pantalla."),
+        ["ATTENDANCE_DATE_NOT_ALLOWED"] = (ApplicationFailureCode.InvalidInput,
+            "Esa fecha no se puede anotar: no puede ser futura y, desde Auxiliar, solo hasta 7 días atrás (pídelo a Enfermería o Medicina)."),
+        ["ATTENDANCE_ABSENCE_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "Revisa la ausencia: el último día no puede ser anterior al primero, dura 90 días como máximo, y no se puede anular ni acortar una ausencia ya anulada o más allá de su fin."),
+        ["ATTENDANCE_ABSENCE_OVERLAP"] = (ApplicationFailureCode.Conflict, "Esa persona ya tiene una ausencia programada que coincide con esas fechas."),
+    };
+
     /// <summary>Tipo de servicio del centro (ADR 0017, script 0113): cada fallo dice qué pasa. El procedimiento y los disparadores de la base de datos lanzan CENTER_SERVICE_TYPE_*.</summary>
     private static readonly Dictionary<string, (ApplicationFailureCode Code, string Text)> CenterServiceTypeFailures = new()
     {
@@ -241,6 +255,11 @@ public static class ApplicationResultRunner
         if (CenterServiceTypeFailures.TryGetValue(message, out var serviceType))
         {
             return new ApplicationFailure(serviceType.Code, serviceType.Text);
+        }
+
+        if (AttendanceFailures.TryGetValue(message, out var attendance))
+        {
+            return new ApplicationFailure(attendance.Code, attendance.Text);
         }
 
         if (PositionFailures.TryGetValue(message, out var position))
