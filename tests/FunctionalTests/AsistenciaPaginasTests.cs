@@ -291,6 +291,51 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
         Assert.DoesNotContain("<details", after);
     }
 
+    [Fact]
+    public async Task Acortar_solo_ofrece_dias_anteriores_al_ultimo_y_no_sale_si_la_ausencia_dura_un_dia()
+    {
+        var nurse = await LoginOfNewCenterAsync("CentroDeDia", "ENFERMERIA");
+        var (resident, adminAccount, unit) = await AddResidentAsync("Persona con ausencias cortas (ficticia)");
+        using (var connection = await Db.OpenAsync())
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                SELECT NEWID(), id, centro_id, @unit, SYSUTCDATETIME(), @adminAccount FROM dbo.ambitos_perfil WHERE centro_id = @centerId AND perfil_codigo = 'ENFERMERIA';
+                INSERT INTO dbo.asistencia_centro (id, centro_id, numero, activa, confirma_informada, confirma_eipd, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+                VALUES (NEWID(), @centerId, 1, 1, 1, 1, @adminAccount, 'ADMINISTRACION', SYSUTCDATETIME())
+                """, new { centerId = _centerId, unit, adminAccount });
+        }
+
+        var today = CenterTime.TodayAt(DateTimeOffset.UtcNow);
+        var form = await nurse.GetStringAsync("/Asistencia/Ausencias");
+        var page = string.Empty;
+        // De un día (vigente y terminada), de tres días (próxima) y de dos (terminada).
+        foreach (var (from, to) in new[] { (0, 0), (-8, -8), (2, 4), (-4, -3) })
+        {
+            var response = await nurse.PostAsync("/Asistencia/RegistrarAusencia", new FormUrlEncodedContent(
+            [
+                new(Token, ExtractValue(form, Token)), new("residenteId", resident.ToString()), new("desde", today.AddDays(from).ToString("yyyy-MM-dd")),
+                new("hasta", today.AddDays(to).ToString("yyyy-MM-dd")), new("motivo", "Vacaciones"),
+            ]));
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            page = WebUtility.HtmlDecode(await nurse.GetStringAsync(response.Headers.Location));
+        }
+
+        var rows = Regex.Matches(page, "<li class=\"list-group-item\">.*?</li>", RegexOptions.Singleline).Select(m => m.Value).ToList();
+        Assert.Equal(4, rows.Count);
+        string Row(int from, int to) => Assert.Single(rows, row => row.Contains($"Del {today.AddDays(from):dd/MM/yyyy} al {today.AddDays(to):dd/MM/yyyy}"));
+        foreach (var oneDay in new[] { Row(0, 0), Row(-8, -8) })
+        {
+            Assert.DoesNotContain("nuevoHasta", oneDay);
+            Assert.DoesNotContain(">Acortar<", oneDay);
+            Assert.Contains(">Anular<", oneDay);
+        }
+
+        // El nuevo último día va del primero al anterior al último: el último se rechazaría.
+        Assert.Contains($"min=\"{today.AddDays(2):yyyy-MM-dd}\" max=\"{today.AddDays(3):yyyy-MM-dd}\"", Row(2, 4));
+        Assert.Contains($"min=\"{today.AddDays(-4):yyyy-MM-dd}\" max=\"{today.AddDays(-4):yyyy-MM-dd}\"", Row(-4, -3));
+    }
+
     [Theory]
     [InlineData("AUXILIAR")]
     [InlineData("ENFERMERIA")]

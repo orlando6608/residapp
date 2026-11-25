@@ -19,14 +19,18 @@
                 {
                     <div class="col-12 col-md-7">
                         <div class="d-flex flex-wrap align-items-end justify-content-md-end gap-2">
-                            <form method="post" asp-action="AcortarAusencia" class="d-flex flex-wrap align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
-                                <input type="hidden" name="ausenciaId" value="@absence.Id" />
-                                <div>
-                                    <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
-                                    <input class="form-control form-control-lg" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.ToString("yyyy-MM-dd")" required />
-                                </div>
-                                <button type="submit" class="btn btn-outline-primary btn-lg" aria-describedby="fechas-@absence.Id">Acortar</button>
-                            </form>
+                            @* El nuevo último día es anterior al actual: una ausencia de un solo día no se acorta, se anula. *@
+                            @if (absence.From < absence.To)
+                            {
+                                <form method="post" asp-action="AcortarAusencia" class="d-flex flex-wrap align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
+                                    <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                    <div>
+                                        <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
+                                        <input class="form-control form-control-lg" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.AddDays(-1).ToString("yyyy-MM-dd")" required />
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-primary btn-lg" aria-describedby="fechas-@absence.Id">Acortar</button>
+                                </form>
+                            }
                             <form method="post" asp-action="AnularAusencia" aria-label="Anular la ausencia de @absence.ResidentName">
                                 <input type="hidden" name="ausenciaId" value="@absence.Id" />
                                 <button type="submit" class="btn btn-outline-danger btn-lg" aria-describedby="fechas-@absence.Id">Anular</button>
