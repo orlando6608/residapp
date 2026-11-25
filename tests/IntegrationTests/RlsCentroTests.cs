@@ -4,6 +4,7 @@ using ResidApp.Application.Authorization;
 using ResidApp.Application.Ports;
 using ResidApp.Domain.Baseline;
 using ResidApp.Domain.Baseline.Catalogs;
+using ResidApp.Domain.Platform;
 using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -89,6 +90,31 @@ public sealed class RlsCentroTests
 
         Assert.Equal([a.ResidentId], visibleA);
         Assert.Equal([b.ResidentId], visibleB);
+    }
+
+    [Fact]
+    public async Task Con_la_seguridad_por_filas_se_registran_acortan_y_anulan_ausencias()
+    {
+        var day = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
+        Guid profileScopeId;
+        using (var admin = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            profileScopeId = await admin.ExecuteScalarAsync<Guid>(
+                "SELECT id FROM dbo.ambitos_perfil WHERE cuenta_id = @AccountId AND centro_id = @CenterId AND perfil_codigo = 'ADMINISTRACION'", new { day.AccountId, day.CenterId });
+        }
+
+        using var connection = await OpenLimitedAsync(new TenantScope(day.AdminSubject, profileScopeId));
+        var id = Guid.NewGuid();
+        Task<int> InsertAsync(Guid row, string type, int? from, int? to, string? reason, string? cause) => connection.ExecuteAsync("""
+            INSERT INTO dbo.ausencias_programadas (id, centro_id, residente_id, tipo_codigo, ausencia_id, desde, hasta, motivo_codigo, causa_codigo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+            VALUES (@row, @CenterId, @ResidentId, @type, @id, DATEADD(DAY, @from, CAST(SYSUTCDATETIME() AS DATE)), DATEADD(DAY, @to, CAST(SYSUTCDATETIME() AS DATE)), @reason, @cause, @AccountId, 'ADMINISTRACION', SYSUTCDATETIME())
+            """, new { row, day.CenterId, day.ResidentId, type, id, from, to, reason, cause, day.AccountId });
+
+        await InsertAsync(id, "REGISTRADA", 1, 10, "OTRO", null);
+        await InsertAsync(Guid.NewGuid(), "ACORTADA", null, 5, null, "REGRESO_ANTES");
+        await InsertAsync(Guid.NewGuid(), "ANULADA", null, null, null, "ERROR");
+
+        Assert.Equal(3, await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.ausencias_programadas WHERE ausencia_id = @id", new { id }));
     }
 
     [Fact]

@@ -191,6 +191,9 @@ Repite estos pasos antes de dar un bloque por cerrado:
   pesar de `IX_ve_evento`. Por eso las sentencias que leen o actualizan la valoración por evento dentro de
   una transacción de escritura llevan `WITH (FORCESEEK)`, y un `UPDATE` con esa pista se escribe
   `UPDATE v ... FROM tabla v WITH (FORCESEEK)`.
+- **Las lecturas de un disparador de solo `INSERT` también interbloquean (script `0117`, 2026-11-25).** `TR_aup_reglas` leía por `id` y por
+  `ausencia_id` y, con `READ_COMMITTED_SNAPSHOT` apagado, dos altas de personas distintas se esperaban entre sí. Remedio: filtrar toda lectura por
+  centro y residente y `WITH (FORCESEEK (<índice> (columnas)))`. Se reproduce siempre con una prueba que haga el ciclo completo con varias personas a la vez.
 - **Cómo reproducir el CI en local:** crea una BD nueva, aplica solo los scripts, sin seed, y ejecuta
   `dotnet test` en Release con `RESIDAPP_TEST_CONNECTION_STRING` apuntando a ella. Hazlo varias veces, con una
   BD nueva en cada vuelta. Los logs del pipeline piden autenticación y `gh` no está instalado. Una vuelta, en

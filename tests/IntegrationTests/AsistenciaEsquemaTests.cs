@@ -185,6 +185,45 @@ public class AsistenciaEsquemaTests
         Assert.Contains("ASSISTANCE_ABSENCE_INVALID", await AbsenceAsync(d, Guid.NewGuid(), "ACORTADA", overlapping, null, start.AddDays(11), null, "REGRESO_ANTES") ?? "");
         var again = Guid.NewGuid();
         Assert.Null(await AbsenceAsync(d, again, "REGISTRADA", again, start.AddDays(10), start.AddDays(12), "OTRO", null));
+
+        // La de otra persona del mismo centro o la de otro centro no se pueden anular ni acortar.
+        var neighbour = d with { ResidentId = await DayCenterFixture.AddResidentAsync(d.AccountId, d.CenterId, d.UnitId, "Otra persona (ficticia)") };
+        var elsewhere = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
+        foreach (var outsider in new[] { neighbour, elsewhere })
+        {
+            Assert.Contains("ASSISTANCE_ABSENCE_INVALID", await AbsenceAsync(outsider, Guid.NewGuid(), "ANULADA", again, null, null, null, "ERROR") ?? "");
+            Assert.Contains("ASSISTANCE_ABSENCE_INVALID", await AbsenceAsync(outsider, Guid.NewGuid(), "ACORTADA", again, null, start.AddDays(11), null, "REGRESO_ANTES") ?? "");
+        }
+    }
+
+    [Fact]
+    public async Task Las_ausencias_de_personas_distintas_se_registran_acortan_y_anulan_a_la_vez_sin_interbloqueos()
+    {
+        var days = new List<Day>();
+        for (var i = 0; i < 8; i++)
+        {
+            days.Add(await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia));
+        }
+
+        // Cada persona repite su propio ciclo mientras las demás hacen el suyo: la regla de la base solo puede leer las filas de esa persona.
+        var errors = await Task.WhenAll(days.Select(async d =>
+        {
+            for (var round = 0; round < 25; round++)
+            {
+                var id = Guid.NewGuid();
+                var error = await AbsenceAsync(d, id, "REGISTRADA", id, Today.AddDays(1), Today.AddDays(10), "OTRO", null)
+                    ?? await AbsenceAsync(d, Guid.NewGuid(), "ACORTADA", id, null, Today.AddDays(5), null, "REGRESO_ANTES")
+                    ?? await AbsenceAsync(d, Guid.NewGuid(), "ANULADA", id, null, null, null, "ERROR");
+                if (error is not null)
+                {
+                    return error;
+                }
+            }
+
+            return null;
+        }));
+
+        Assert.All(errors, Assert.Null);
     }
 
     [Theory]
