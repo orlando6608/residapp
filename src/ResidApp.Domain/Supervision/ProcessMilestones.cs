@@ -119,7 +119,8 @@ public static class ProcessMilestoneRules
     /// <summary>Minutos enteros de un plazo (null: no se mide).</summary>
     public static int? ToMinutes(TimeSpan? term) => term is { } value ? (int)Math.Round(value.TotalMinutes) : null;
 
-    /// <summary>Los plazos de CJ (documento continuidad-supervision-comunicacion, tema 4). Cada centro puede cambiarlos.</summary>
+    /// <summary>Los plazos de CJ (documento continuidad-supervision-comunicacion, tema 4). Cada centro puede cambiarlos. Son los de partida: un centro
+    /// nace con ellos en sus filas (el script 0119 los repite en SQL), así que cambiarlos aquí no mueve a los centros que ya existen.</summary>
     public static IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline> Defaults { get; } = new Dictionary<ProcessMilestone, MilestoneDeadline>
     {
         [ProcessMilestone.ValoracionEnfermeria] = new(TimeSpan.FromHours(8), TimeSpan.FromMinutes(30)),

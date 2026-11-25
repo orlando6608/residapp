@@ -51,7 +51,7 @@ public class ProcessDeadlinesApplicationServiceTests
         Assert.Equal(new MilestoneDeadline(TimeSpan.FromMinutes(30), null), effective[ProcessMilestone.InformeDerivacion]);
         Assert.Equal(ProcessMilestoneRules.Defaults[ProcessMilestone.LlamadaFamilia], effective[ProcessMilestone.LlamadaFamilia]);
 
-        // Volver a los plazos de CJ borra el cambio del centro y deja su rastro en el historial.
+        // Volver a los plazos de CJ conserva la fila del centro (script 0119) y deja su rastro en el historial.
         var second = await service.SaveAsync(Save(direccion, 2,
             new ProcessDeadlineCommandItem(ProcessMilestone.ValoracionMedica, 1440, 30)));
         Assert.Equal(3, second.Value);
@@ -62,11 +62,29 @@ public class ProcessDeadlinesApplicationServiceTests
         Assert.All(view.History, h => Assert.True(h.ChangedByCurrentAccount));
         var latest = view.History.First(h => h.Milestone == ProcessMilestone.ValoracionMedica);
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
-        Assert.Equal(1, await connection.ExecuteScalarAsync<int>(
+        Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.plazos_hitos_centro WHERE centro_id = @c", new { c = direccion.CenterId.Value }));
         Assert.Equal(2, await connection.ExecuteScalarAsync<int>(
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE centro_id = @c AND accion_codigo = 'PROCESS_DEADLINES_UPDATE'", new { c = direccion.CenterId.Value }));
         Assert.Equal(new MilestoneDeadline(TimeSpan.FromHours(12), TimeSpan.FromMinutes(30)), latest.Previous);
+    }
+
+    /// <summary>Script 0119: volver al plazo de CJ deja la fila del centro con ese plazo. Así, si algún día cambia el plazo de partida del código, este centro no se mueve.</summary>
+    [Fact]
+    public async Task VolverAlPlazoDeCJ_ConservaLaFilaDelCentro()
+    {
+        var direccion = await DireccionAsync();
+        var service = BuildService(direccion.ExternalSubject);
+        var initial = ProcessMilestoneRules.Defaults[ProcessMilestone.ValoracionMedica];
+
+        Assert.True((await service.SaveAsync(Save(direccion, 0, new ProcessDeadlineCommandItem(ProcessMilestone.ValoracionMedica, 720, 30)))).Ok);
+        Assert.True((await service.SaveAsync(Save(direccion, 1, new ProcessDeadlineCommandItem(
+            ProcessMilestone.ValoracionMedica, ProcessMilestoneRules.ToMinutes(initial.Normal), ProcessMilestoneRules.ToMinutes(initial.Priority))))).Ok);
+
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        Assert.Equal("1440|30", await connection.ExecuteScalarAsync<string>(
+            "SELECT CONCAT(plazo_minutos, '|', plazo_prioritario_minutos) FROM dbo.plazos_hitos_centro WHERE centro_id = @c AND hito_codigo = 'VALORACION_MEDICA'",
+            new { c = direccion.CenterId.Value }));
     }
 
     /// <summary>CJ, 3.1 de medicina-alergias-y-plazos-cj: Calidad de proceso lee del historial el plazo que valía en cada momento, del más antiguo al
