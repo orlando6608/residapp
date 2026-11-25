@@ -62,7 +62,7 @@ public class AsistenciaCasosDeUsoTests
 
         var initial = (await admin.ReadCenterAsync(staff.Administracion.ProfileScopeId, staff.Administracion.CenterId)).Value!;
         Assert.Equal((true, false, 0), (initial.DayCenter, initial.Active, initial.Number));
-        Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(staff.Enfermeria).ReadCenterAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId)).Error!.Code);
+        Assert.False((await Service(staff.Enfermeria).ReadCenterAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId)).Value!.Active);
         Assert.Equal(ApplicationFailureCode.AccessDenied,
             (await Service(staff.Enfermeria).SetCenterAsync(new SetAttendanceCenterCommand(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, 0, true, true, true))).Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput,
@@ -92,7 +92,8 @@ public class AsistenciaCasosDeUsoTests
 
         var (day, dayStaff) = await CreateAsync(enable: false);
         Assert.Contains("no está activada", (await Service(dayStaff.Auxiliar).RecordAsync(Mark(dayStaff.Auxiliar, day, AttendanceState.Asistio))).Error!.Message);
-        Assert.False((await Service(dayStaff.Auxiliar).ListDayAsync(dayStaff.Auxiliar.ProfileScopeId, dayStaff.Auxiliar.CenterId, null)).Ok);
+        // Leer sí se puede aunque esté apagada (apagarla no oculta lo anotado); lo que no se puede es anotar.
+        Assert.True((await Service(dayStaff.Auxiliar).ListDayAsync(dayStaff.Auxiliar.ProfileScopeId, dayStaff.Auxiliar.CenterId, null)).Ok);
     }
 
     [Fact]
@@ -352,5 +353,33 @@ public class AsistenciaCasosDeUsoTests
         Assert.True((await Service(staff.Enfermeria).SetPatternAsync(new SetAttendancePatternCommand(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, ResidentId.From(day.ResidentId), 0, mask))).Ok);
         var followUp = await FollowUpAsync(staff.Administracion);
         Assert.DoesNotContain(followUp.Absences, a => a.ResidentId.Value == day.ResidentId);
+    }
+
+    [Fact]
+    public async Task Apagar_la_asistencia_impide_anotar_dias_nuevos_pero_no_oculta_lo_ya_anotado()
+    {
+        var (day, staff) = await CreateAsync();
+        var resident = ResidentId.From(day.ResidentId);
+        Assert.True((await Service(staff.Auxiliar).RecordAsync(Mark(staff.Auxiliar, day, AttendanceState.NoAsistio, AttendanceCause.Otro, "una nota"))).Ok);
+        Assert.True((await Service(staff.Enfermeria).SetPatternAsync(new SetAttendancePatternCommand(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident, 0, 21))).Ok);
+        Assert.True((await Service(staff.Administracion).RegisterAbsenceAsync(new RegisterAbsenceCommand(
+            staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident, Today.AddDays(2), Today.AddDays(4), AbsenceReason.Vacaciones))).Ok);
+
+        var off = await Service(staff.Administracion).SetCenterAsync(new SetAttendanceCenterCommand(staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, 1, false, false, false));
+        Assert.True(off.Ok, off.Error?.Message);
+
+        // Se sigue leyendo todo, y cada perfil ve lo suyo (la nota, quien puede leerla).
+        var entry = await EntryAsync(staff.Auxiliar, day);
+        Assert.Equal((AttendanceDayStatus.NoVino, "una nota"), (entry.Status, entry.Mark!.Note));
+        Assert.Null((await EntryAsync(staff.Administracion, day)).Mark!.Note);
+        Assert.Equal(21, (await Service(staff.Enfermeria).ReadPatternAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident)).Value!.DaysMask);
+        Assert.Single((await Service(staff.Enfermeria).ListAbsencesAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, null)).Value!);
+        Assert.True((await Service(staff.Administracion).ListFollowUpAsync(staff.Administracion.ProfileScopeId, staff.Administracion.CenterId)).Ok);
+
+        // Pero no se anota ni se cambia nada nuevo.
+        Assert.Contains("no está activada", (await Service(staff.Auxiliar).RecordAsync(Mark(staff.Auxiliar, day, AttendanceState.Asistio, date: Today))).Error!.Message);
+        Assert.False((await Service(staff.Enfermeria).SetPatternAsync(new SetAttendancePatternCommand(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident, 1, 127))).Ok);
+        Assert.False((await Service(staff.Administracion).RegisterAbsenceAsync(new RegisterAbsenceCommand(
+            staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident, Today.AddDays(10), Today.AddDays(11), AbsenceReason.Otro))).Ok);
     }
 }

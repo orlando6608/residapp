@@ -5,9 +5,9 @@ using ResidApp.Shared;
 namespace ResidApp.Web.Models;
 
 /// <summary>La lista de un día. <paramref name="Error"/> es el motivo por el que no hay lista (función apagada, sin acceso).</summary>
-public sealed record AsistenciaDiaViewModel(DateOnly Day, DateOnly Today, IReadOnlyList<AttendanceDayEntry> Entries, SystemProfile Profile, string? Error)
+public sealed record AsistenciaDiaViewModel(DateOnly Day, DateOnly Today, IReadOnlyList<AttendanceDayEntry> Entries, SystemProfile Profile, string? Error, bool Active = true)
 {
-    public bool CanRecord => AttendanceRules.CanRecord(Profile);
+    public bool CanRecord => Active && AttendanceRules.CanRecord(Profile);
     public bool CanManage => AttendanceRules.CanManageAbsences(Profile);
     public bool CanSeeNote => AttendanceRules.CanReadNote(Profile);
 }

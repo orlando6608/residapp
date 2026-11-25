@@ -1670,7 +1670,7 @@
         { "texto": "Para apagarla, entra en **Ajustes** y pulsa **Desactivar la asistencia**: no pide confirmación.", "botones": ["Ajustes", "Desactivar la asistencia"] }
       ],
       "despues": [
-        { "para": "Tú", "texto": "Verás «La asistencia está activada. Ya se puede anotar quién viene cada día.» Queda guardado quién la activa, cuándo y con qué confirmaciones. Al desactivarla, lo ya anotado no se borra, pero no se muestra mientras esté desactivada." },
+        { "para": "Tú", "texto": "Verás «La asistencia está activada. Ya se puede anotar quién viene cada día.» Queda guardado quién la activa, cuándo y con qué confirmaciones. Al desactivarla, lo ya anotado no se borra y se sigue pudiendo consultar; solo dejan de poder anotarse días nuevos." },
         { "para": "Auxiliar", "texto": "Ve el botón **Asistencia de hoy** en «Mis residentes» y anota «Vino» o «No vino»." },
         { "para": "Enfermería", "texto": "Anota, fija la pauta de cada persona y registra ausencias programadas; ve el motivo de las ausencias." }
       ],

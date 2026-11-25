@@ -30,7 +30,7 @@ public sealed class AttendanceApplicationService(
     IProfileScopeDirectoryProvider scopes, ISessionIdentityProvider session, IAttendanceStore store, TimeProvider clock)
 {
     public Task<ApplicationResult<AttendanceCenterState>> ReadCenterAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
-        ApplicationResultRunner.RunAsync(async () => await store.ReadCenterAsync(await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion], ct), ct));
+        ApplicationResultRunner.RunAsync(async () => await store.ReadCenterAsync(await ActorAsync(profileScopeId, centerId, ReadProfiles, ct), ct));
 
     /// <summary>Solo Administración. Devuelve el número nuevo. Encender sin las dos confirmaciones: entrada no válida; otra persona cambió antes: conflicto de versión.</summary>
     public Task<ApplicationResult<int>> SetCenterAsync(SetAttendanceCenterCommand command, CancellationToken ct = default) =>
