@@ -75,6 +75,7 @@ builder.Services.AddScoped<IHealthBackgroundRepository, SqlHealthBackgroundRepos
 builder.Services.AddScoped<IExternalAppointmentRepository, SqlExternalAppointmentRepository>();
 builder.Services.AddScoped<IExternalAppointmentFamilySettings, SqlExternalAppointmentRepository>();
 builder.Services.AddScoped<IFamilyExternalAppointments, SqlFamilyExternalAppointments>();
+builder.Services.AddScoped<IAttendanceStore, SqlAttendanceRepository>();
 builder.Services.AddScoped<IResidentFamilyRepository, SqlResidentFamilyRepository>();
 builder.Services.AddScoped<IResidentTransferRepository, SqlResidentTransferRepository>();
 builder.Services.AddScoped<IResidentStatusRepository, SqlResidentStatusRepository>();
@@ -410,6 +411,7 @@ builder.Services.AddScoped<ResidentPhotoApplicationService>();
 builder.Services.AddScoped<HealthBackgroundApplicationService>();
 builder.Services.AddScoped<ExternalAppointmentsApplicationService>();
 builder.Services.AddScoped<ExternalAppointmentFamilySettingsApplicationService>();
+builder.Services.AddScoped<AttendanceApplicationService>();
 builder.Services.AddScoped<FamilyExternalAppointmentsApplicationService>();
 builder.Services.AddScoped<SqlAdministrationScope>();
 builder.Services.AddScoped<IAdministrationScopeDirectory>(sp => sp.GetRequiredService<SqlAdministrationScope>());

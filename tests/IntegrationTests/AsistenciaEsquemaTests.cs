@@ -8,6 +8,7 @@ using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
+using Day = ResidApp.IntegrationTests.TestSupport.DayCenterFixture.Day;
 using ResidApp.Shared;
 
 namespace ResidApp.IntegrationTests;
@@ -18,53 +19,6 @@ namespace ResidApp.IntegrationTests;
 /// </summary>
 public class AsistenciaEsquemaTests
 {
-    private sealed record Day(Guid CenterId, Guid AccountId, Guid ResidentId, Guid UnitId);
-
-    private sealed class FixedTenant(TenantScope? scope) : ITenantContext
-    {
-        public Task<TenantScope?> GetAsync(CancellationToken ct = default) => Task.FromResult(scope);
-    }
-
-    private sealed class FixedIdentity(string subject) : ISessionIdentityProvider
-    {
-        public Task<VerifiedIdentity?> GetVerifiedIdentityAsync(CancellationToken ct = default) => Task.FromResult<VerifiedIdentity?>(new VerifiedIdentity(subject));
-    }
-
-    private static async Task<Day> CreateCenterWithResidentAsync(CenterServiceType type)
-    {
-        var accountId = Guid.NewGuid();
-        var scopeId = Guid.NewGuid();
-        var subject = $"test-asist-{Guid.NewGuid():N}"[..28];
-        using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
-        {
-            await connection.ExecuteAsync("""
-                INSERT INTO dbo.cuentas (id, sujeto_externo, nombre_visible, estado, creado_en) VALUES (@accountId, @subject, N'Operador de asistencia', 'ACTIVE', SYSUTCDATETIME());
-                INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
-                VALUES (@scopeId, @accountId, @centerId, 'PLATAFORMA', 'ACTIVE', SYSUTCDATETIME(), @accountId)
-                """, new { accountId, subject, scopeId, centerId = PlatformCenter.Id });
-        }
-
-        var factory = new SqlConnectionFactory(TestDatabase.ConnectionString, new FixedTenant(new TenantScope(subject, scopeId)));
-        var service = new PlatformApplicationService(
-            new SqlProfileScopeDirectoryProvider(factory), new FixedIdentity(subject), new SqlPlatformCenterDirectory(factory), new SqlPlatformCenterRepository(factory),
-            new SqlAccessInvitationRepository(factory), new SqlCenterModuleRepository(factory), TimeProvider.System, new SqlCenterTimeZones(factory), new SqlCenterTimeZones(factory),
-            new SqlCenterServiceTypes(factory));
-        var centerId = Guid.NewGuid();
-        var adminSubject = $"test-adm-{Guid.NewGuid():N}"[..28];
-        string Code() => $"asi-{Guid.NewGuid():N}"[..20];
-        var created = await service.CreateCenterAsync(new CreateCenterCommand(
-            scopeId, CenterId.From(PlatformCenter.Id), centerId, Code(), "Centro de asistencia (ficticio)", Code(), "Sala 1", adminSubject, "Admin Asistencia", TipoDeServicio: type));
-        Assert.True(created.Ok, created.Error?.Message);
-
-        using var db = await TestDatabase.ConnectionFactory.OpenAsync();
-        var admin = await db.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.cuentas WHERE sujeto_externo = @adminSubject", new { adminSubject });
-        var unit = await db.ExecuteScalarAsync<Guid>("SELECT TOP (1) id FROM dbo.unidades WHERE centro_id = @centerId", new { centerId });
-        var resident = (await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
-            AccountId.From(admin), SystemProfile.Administracion, CenterId.From(centerId), UnitId.From(unit), "Persona de asistencia (ficticia)",
-            new DateOnly(1940, 5, 20), DocumentedSexCode.NoConsta, null, null, null, null, null, Guid.NewGuid(), LocationPending: true))).ResidentId;
-        return new Day(centerId, admin, resident.Value, unit);
-    }
-
     private static async Task<string?> TryAsync(string sql, object parameters)
     {
         using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
@@ -103,7 +57,7 @@ public class AsistenciaEsquemaTests
     [InlineData("ausencias_programadas")]
     public async Task Una_residencia_no_admite_ninguna_fila_de_asistencia(string table)
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.Residencia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.Residencia);
         var absence = Guid.NewGuid();
 
         var message = table switch
@@ -126,7 +80,7 @@ public class AsistenciaEsquemaTests
     [Fact]
     public async Task El_interruptor_empieza_apagado_encender_exige_las_dos_confirmaciones_y_cada_fila_cambia_el_valor()
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
         Task<string?> Switch(int number, bool on, bool informed = true, bool eipd = true) => TryAsync("""
             INSERT INTO dbo.asistencia_centro (id, centro_id, numero, activa, confirma_informada, confirma_eipd, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
             VALUES (NEWID(), @CenterId, @number, @on, @informed, @eipd, @AccountId, 'ADMINISTRACION', SYSUTCDATETIME())
@@ -144,7 +98,7 @@ public class AsistenciaEsquemaTests
     [Fact]
     public async Task La_pauta_admite_de_1_a_127_y_cada_version_es_distinta_de_la_anterior()
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
         Task<string?> Pattern(int number, int days) => TryAsync("""
             INSERT INTO dbo.asistencia_pauta (id, centro_id, residente_id, numero, dias_esperados, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
             VALUES (NEWID(), @CenterId, @ResidentId, @number, @days, @AccountId, 'ADMINISTRACION', SYSUTCDATETIME())
@@ -161,7 +115,7 @@ public class AsistenciaEsquemaTests
     [Fact]
     public async Task La_asistencia_exige_causa_con_NO_ASISTIO_nota_solo_con_OTRO_de_una_linea_y_80_caracteres()
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
 
         Assert.Contains("CK_asd_causa", await AttendanceAsync(d, "NO_ASISTIO", null, null) ?? "");
         Assert.Contains("CK_asd_causa", await AttendanceAsync(d, "ASISTIO", "SIN_AVISO", null) ?? "");
@@ -177,7 +131,7 @@ public class AsistenciaEsquemaTests
     [Fact]
     public async Task La_asistencia_no_es_futura_ni_anterior_al_alta_y_cada_correccion_cambia_algo_y_sigue_a_la_anterior()
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
 
         Assert.Contains("ASSISTANCE_DATE_INVALID", await AttendanceAsync(d, "ASISTIO", null, null, date: Today.AddDays(2)) ?? "");
         Assert.Contains("ASSISTANCE_DATE_INVALID", await AttendanceAsync(d, "ASISTIO", null, null, date: Today.AddDays(-2)) ?? "");
@@ -192,7 +146,7 @@ public class AsistenciaEsquemaTests
     [Fact]
     public async Task Un_residente_suspendido_no_admite_asistencia()
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
         Assert.Null(await TryAsync("""
             INSERT INTO dbo.suspensiones_residente (id, residente_id, centro_id, unidad_id, iniciada_por_cuenta_id, iniciada_en)
             VALUES (NEWID(), @ResidentId, @CenterId, @UnitId, @AccountId, SYSUTCDATETIME())
@@ -204,7 +158,7 @@ public class AsistenciaEsquemaTests
     [Fact]
     public async Task Las_ausencias_tienen_hasta_90_dias_como_maximo_sin_solapes_y_anular_o_acortar_siguen_reglas()
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
         var first = Guid.NewGuid();
         var start = Today.AddDays(1);
 
@@ -240,7 +194,7 @@ public class AsistenciaEsquemaTests
     [InlineData("ausencias_programadas")]
     public async Task Ninguna_tabla_de_asistencia_se_actualiza_ni_se_borra(string table)
     {
-        var d = await CreateCenterWithResidentAsync(CenterServiceType.CentroDeDia);
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
         var id = Guid.NewGuid();
         var inserted = table switch
         {
