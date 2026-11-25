@@ -164,9 +164,12 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         await RequireFeatureAsync(connection, transaction, actor, ct);
         var unitId = await RequireResidentAsync(connection, transaction, actor, residentId, ct);
 
+        // Dos anotaciones de la misma persona van una detrás de otra por el bloqueo de arriba: de él depende que esta lectura, ya en su propia sentencia, vea la versión anterior. No se reserva un
+        // tramo de la tabla (HOLDLOCK): abarcaba a otras personas y acababa en interbloqueos. FORCESEEK deja la lectura en las filas de esta persona.
         var latest = await connection.QuerySingleOrDefaultAsync<MarkRow?>(new CommandDefinition("""
-            SELECT TOP (1) numero AS Number, estado_codigo AS State, causa_codigo AS Cause, nota AS Note FROM dbo.asistencia_dia WITH (UPDLOCK, HOLDLOCK)
-             WHERE centro_id = @CenterId AND residente_id = @ResidentId AND fecha = @Date ORDER BY numero DESC
+            SELECT TOP (1) numero AS Number, estado_codigo AS State, causa_codigo AS Cause, nota AS Note
+              FROM dbo.asistencia_dia WITH (FORCESEEK (UX_asd_numero (centro_id, residente_id, fecha)))
+             WHERE centro_id = @CenterId AND residente_id = @ResidentId AND fecha = CAST(@Date AS DATE) ORDER BY numero DESC
             """, Params(actor, new { ResidentId = residentId.Value, Date = date.ToDateTime(TimeOnly.MinValue) }), transaction, cancellationToken: ct));
         if (latest is not null && latest.State == state.ToCode() && latest.Cause == cause?.ToCode() && (latest.Note ?? "") == (note ?? ""))
         {
@@ -196,7 +199,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         using var connection = await connections.OpenAsync(ct);
         await RequireDayCenterAsync(connection, null, actor, ct);
         var name = await ResidentNameAsync(connection, null, actor, residentId, ct);
-        var rows = await PatternVersionsAsync(connection, null, actor, residentId, lockRows: false, ct);
+        var rows = await PatternVersionsAsync(connection, null, actor, residentId, ct);
         var versions = rows.Select(row => new PatternVersion(row.Number, DateOnly.FromDateTime(row.From), row.Days)).ToList();
         var inForce = versions.Where(v => v.From <= todayAtCenter).MaxBy(v => v.Number);
         // El Auxiliar necesita la pauta en vigor y los próximos cambios, no todo el historial (lectura del DPO): un cambio sustituido ya no es un próximo cambio.
@@ -222,7 +225,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await RequireFeatureAsync(connection, transaction, actor, ct);
         var unitId = await RequireResidentAsync(connection, transaction, actor, residentId, ct);
-        var rows = await PatternVersionsAsync(connection, transaction, actor, residentId, lockRows: true, ct);
+        var rows = await PatternVersionsAsync(connection, transaction, actor, residentId, ct);
         var latest = rows.MaxBy(row => row.Number);
         if ((latest?.Number ?? 0) != expectedNumber)
         {
@@ -490,11 +493,13 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             SELECT TOP (1) numero AS Number, activa AS Active FROM dbo.asistencia_centro {(lockRow ? "WITH (UPDLOCK, HOLDLOCK)" : "")} WHERE centro_id = @CenterId ORDER BY numero DESC
             """, Params(actor), transaction, cancellationToken: ct));
 
+    /// <summary>Las versiones de la pauta de una persona. Al cambiarla se llama con la fila del residente ya bloqueada (<see cref="RequireResidentAsync"/>), que es lo que ordena dos cambios sobre la
+    /// misma persona; FORCESEEK deja la lectura en sus filas.</summary>
     private static async Task<List<PatternRow>> PatternVersionsAsync(
-        SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, ResidentId residentId, bool lockRows, CancellationToken ct) =>
-        (await connection.QueryAsync<PatternRow>(new CommandDefinition($"""
+        SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, ResidentId residentId, CancellationToken ct) =>
+        (await connection.QueryAsync<PatternRow>(new CommandDefinition("""
             SELECT residente_id AS ResidentId, numero AS Number, dias_esperados AS Days, vigente_desde AS [From], cambiado_en AS RegisteredAt, cambiado_por_perfil AS Profile
-              FROM dbo.asistencia_pauta {(lockRows ? "WITH (UPDLOCK, HOLDLOCK)" : "")}
+              FROM dbo.asistencia_pauta WITH (FORCESEEK (UX_asp_numero (centro_id, residente_id)))
              WHERE centro_id = @CenterId AND residente_id = @ResidentId
             """, Params(actor, new { ResidentId = residentId.Value }), transaction, cancellationToken: ct))).ToList();
 

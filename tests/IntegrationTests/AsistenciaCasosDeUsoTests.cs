@@ -25,8 +25,13 @@ public class AsistenciaCasosDeUsoTests
 
     private sealed record Staff(SeededProfile Administracion, SeededProfile Auxiliar, SeededProfile Enfermeria, SeededProfile Medicina, SeededProfile Direccion);
 
-    private static AttendanceApplicationService Service(SeededProfile profile) => new(
-        new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedIdentity(profile.ExternalSubject), new SqlAttendanceRepository(TestDatabase.ConnectionFactory), TimeProvider.System);
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private static AttendanceApplicationService Service(SeededProfile profile, TimeProvider? clock = null) => new(
+        new SqlProfileScopeDirectoryProvider(TestDatabase.ConnectionFactory), new FixedIdentity(profile.ExternalSubject), new SqlAttendanceRepository(TestDatabase.ConnectionFactory), clock ?? TimeProvider.System);
 
     private static DateOnly Today => CenterTime.TodayAt(DateTimeOffset.UtcNow);
 
@@ -167,6 +172,167 @@ public class AsistenciaCasosDeUsoTests
 
         Assert.DoesNotContain((await Service(staff.Auxiliar).ListDayAsync(staff.Auxiliar.ProfileScopeId, staff.Auxiliar.CenterId, null)).Value!, e => e.ResidentId.Value == day.ResidentId);
         Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(staff.Auxiliar).RecordAsync(Mark(staff.Auxiliar, day, AttendanceState.Asistio))).Error!.Code);
+    }
+
+    [Theory]
+    [InlineData("Europe/Madrid", 0)]
+    [InlineData("Atlantic/Canary", 1)]
+    public async Task Hoy_y_el_dia_del_alta_de_la_asistencia_son_los_del_centro(string zone, int daysBehindMadrid)
+    {
+        var (day, staff) = await CreateAsync();
+        var madrid = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        DateTimeOffset HalfPastMidnightInMadrid(DateOnly date) => CenterTime.FromLocal(date.ToDateTime(new TimeOnly(0, 30)), madrid);
+        // A las 00:30 de Madrid, en Canarias (siempre una hora menos) todavía es el día anterior. El reloj de la aplicación se fija unos días atrás, para que la base (que usa el suyo) no lo vea futuro.
+        var madridToday = Today.AddDays(-3);
+        var today = madridToday.AddDays(-daysBehindMadrid);
+        var created = madridToday.AddDays(-10);
+        using (var db = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await db.ExecuteAsync("""
+                UPDATE dbo.residentes SET creado_en = @createdUtc WHERE id = @ResidentId;
+                INSERT INTO dbo.zonas_centro (id, centro_id, numero, zona_codigo, motivo_codigo, franjas_afectadas, citas_afectadas, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+                SELECT NEWID(), @CenterId, MAX(numero) + 1, @zone, 'CAMBIO_DE_UBICACION', 0, 0, @AccountId, 'PLATAFORMA', SYSUTCDATETIME() FROM dbo.zonas_centro WHERE centro_id = @CenterId
+                HAVING @zone <> N'Europe/Madrid'
+                """, new { createdUtc = HalfPastMidnightInMadrid(created).UtcDateTime, day.ResidentId, day.CenterId, day.AccountId, zone });
+        }
+
+        using var centerZone = CenterTime.Use(TimeZoneInfo.FindSystemTimeZoneById(zone));
+        var clock = new FixedClock(HalfPastMidnightInMadrid(madridToday));
+        var aux = Service(staff.Auxiliar, clock);
+        var nurse = Service(staff.Enfermeria, clock);
+        var createdAtCenter = created.AddDays(-daysBehindMadrid);
+
+        // La lista de seguimiento cuenta desde el día del alta en el centro hasta ayer en el centro: los mismos 10 días en las dos zonas.
+        var followUp = (await Service(staff.Administracion, clock).ListFollowUpAsync(staff.Administracion.ProfileScopeId, staff.Administracion.CenterId)).Value!;
+        Assert.Equal(10, Assert.Single(followUp.Unmarked).Days);
+
+        async Task<bool> Records(AttendanceApplicationService who, SeededProfile profile, DateOnly date)
+        {
+            var result = await who.RecordAsync(Mark(profile, day, AttendanceState.Asistio, date: date));
+            Assert.True(result.Ok || result.Error!.Code == ApplicationFailureCode.InvalidInput, result.Error?.Message);
+            return result.Ok;
+        }
+
+        // Ni mañana en el centro ni, para el Auxiliar, más de 7 días atrás.
+        Assert.False(await Records(aux, staff.Auxiliar, today.AddDays(1)));
+        Assert.True(await Records(aux, staff.Auxiliar, today));
+        Assert.True(await Records(aux, staff.Auxiliar, today.AddDays(-7)));
+        Assert.False(await Records(aux, staff.Auxiliar, today.AddDays(-8)));
+        // La base tampoco deja anotar antes del día del alta en el centro.
+        Assert.True(await Records(nurse, staff.Enfermeria, createdAtCenter));
+        Assert.False(await Records(nurse, staff.Enfermeria, createdAtCenter.AddDays(-1)));
+
+        // Un cambio de pauta puede empezar como muy tarde 90 días después de hoy en el centro (la primera pauta vale desde siempre).
+        SetAttendancePatternCommand Pattern(int version, int days, DateOnly? from = null) =>
+            new(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, ResidentId.From(day.ResidentId), version, days, from);
+        Assert.True((await nurse.SetPatternAsync(Pattern(0, 21))).Ok);
+        Assert.False((await nurse.SetPatternAsync(Pattern(1, 31, today.AddDays(91)))).Ok);
+        Assert.True((await nurse.SetPatternAsync(Pattern(1, 31, today.AddDays(90)))).Ok);
+    }
+
+    [Theory]
+    [InlineData(AttendanceState.Asistio, 1)]
+    [InlineData(AttendanceState.NoAsistio, 2)]
+    public async Task Dos_anotaciones_a_la_vez_de_la_misma_persona_y_dia_se_guardan_una_detras_de_otra(AttendanceState second, int versions)
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 5);
+
+        for (var back = 0; back < 5; back++)
+        {
+            var date = Today.AddDays(-back);
+            var results = await Task.WhenAll(
+                Task.Run(() => Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: date))),
+                Task.Run(() => Service(staff.Medicina).RecordAsync(Mark(staff.Medicina, day, second, second == AttendanceState.NoAsistio ? AttendanceCause.SinAviso : null, date: date))));
+
+            // Las dos se aceptan: si dicen lo mismo queda una sola versión; si no, quedan las dos y vale la última.
+            Assert.All(results, result => Assert.True(result.Ok, result.Error?.Message));
+            Assert.Equal([1, versions], results.Select(result => result.Value).Order());
+            using var db = await TestDatabase.ConnectionFactory.OpenAsync();
+            Assert.Equal(versions, await db.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM dbo.asistencia_dia WHERE centro_id = @CenterId AND residente_id = @ResidentId AND fecha = @date",
+                new { day.CenterId, day.ResidentId, date = date.ToDateTime(TimeOnly.MinValue) }));
+        }
+    }
+
+    [Fact]
+    public async Task Anotar_y_corregir_a_varias_personas_a_la_vez_no_provoca_interbloqueos()
+    {
+        var (day, staff) = await CreateAsync();
+        var residents = new List<Day> { day };
+        for (var i = 0; i < 7; i++)
+        {
+            residents.Add(day with { ResidentId = await DayCenterFixture.AddResidentAsync(day.AccountId, day.CenterId, day.UnitId, $"Persona simultánea {i} (ficticia)") });
+        }
+
+        foreach (var resident in residents)
+        {
+            await BackdateAsync(resident, 20);
+        }
+
+        var errors = await Task.WhenAll(residents.Select(resident => Task.Run(async () =>
+        {
+            for (var back = 0; back < 20; back++)
+            {
+                foreach (var (state, cause) in new[] { (AttendanceState.Asistio, (AttendanceCause?)null), (AttendanceState.NoAsistio, AttendanceCause.SinAviso) })
+                {
+                    var result = await Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, resident, state, cause, date: Today.AddDays(-back)));
+                    if (!result.Ok)
+                    {
+                        return result.Error!.Message;
+                    }
+                }
+            }
+
+            return null;
+        })));
+
+        Assert.All(errors, Assert.Null);
+    }
+
+    [Fact]
+    public async Task Fijar_la_pauta_de_varias_personas_a_la_vez_no_provoca_interbloqueos()
+    {
+        var (day, staff) = await CreateAsync();
+        var residents = new List<Guid> { day.ResidentId };
+        for (var i = 0; i < 7; i++)
+        {
+            residents.Add(await DayCenterFixture.AddResidentAsync(day.AccountId, day.CenterId, day.UnitId, $"Persona con pauta {i} (ficticia)"));
+        }
+
+        var errors = await Task.WhenAll(residents.Select(resident => Task.Run(async () =>
+        {
+            for (var version = 0; version < 25; version++)
+            {
+                var result = await Service(staff.Enfermeria).SetPatternAsync(new SetAttendancePatternCommand(
+                    staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, ResidentId.From(resident), version, version % 2 == 0 ? 21 : 31));
+                if (!result.Ok)
+                {
+                    return result.Error!.Message;
+                }
+            }
+
+            return null;
+        })));
+
+        Assert.All(errors, Assert.Null);
+    }
+
+    [Fact]
+    public async Task Dos_cambios_de_pauta_a_la_vez_sobre_la_misma_persona_solo_guardan_uno()
+    {
+        var (day, staff) = await CreateAsync();
+        var resident = ResidentId.From(day.ResidentId);
+
+        for (var version = 0; version < 5; version++)
+        {
+            // Los dos vieron la misma versión y piden días distintos.
+            var results = await Task.WhenAll(new[] { 1 + version, 64 + version }.Select(days => Task.Run(() => Service(staff.Enfermeria).SetPatternAsync(
+                new SetAttendancePatternCommand(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident, version, days)))));
+
+            Assert.Equal(version + 1, Assert.Single(results, result => result.Ok).Value);
+            Assert.Equal(ApplicationFailureCode.Conflict, Assert.Single(results, result => !result.Ok).Error!.Code);
+        }
     }
 
     [Fact]

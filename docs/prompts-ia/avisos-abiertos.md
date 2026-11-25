@@ -5,6 +5,10 @@
 Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
 usuario cuando encajen:
 
+- **Interruptor de la asistencia (2026-11-25):** encender o apagar la asistencia en varios centros **en el mismo instante** puede acabar en error 1205 («No se ha podido completar la operación.»;
+  repetir funciona). En bases recién creadas, con 8 centros cambiándolo sin parar, falló en 3 de 4 intentos (con y sin `READ_COMMITTED_SNAPSHOT`). Causas, las mismas que arregló `0118` en la
+  asistencia y la pauta: `LatestSwitchAsync` usa `UPDLOCK, HOLDLOCK` y `TR_asc_reglas` lee sin `FORCESEEK`. Aquí no hay fila de residente que ordene los cambios, así que el arreglo no es el mismo.
+  En uso real es muy improbable: lo cambia la Administración de cada centro, muy de vez en cuando.
 - **Inicio y permisos:** desde el bloque 4 de Administración, «Alta de residente» y «Rangos de referencia» solo salen con
   el permiso, y «Firmar borrador de basal» con el de basal inicial o el de reevaluar (2026-10-01). Si cambian las reglas
   de perfiles o permisos de una pantalla, revisa también los `@if` de `Views/Home/Index.cshtml`.- **Datos de prueba en Azure:** Residente Integrado Dos tiene abierto el escalado «Prueba manual escalados
