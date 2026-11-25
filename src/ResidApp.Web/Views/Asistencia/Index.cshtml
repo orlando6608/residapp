@@ -54,6 +54,11 @@
     }
 </div>
 
+@if (!Model.Active)
+{
+    <div class="alert alert-warning" role="status">La asistencia está desactivada: puedes consultar lo ya anotado, pero no anotar días nuevos. Administración puede activarla en Ajustes.</div>
+}
+
 <p class="text-body-secondary">
     @if (Model.CanRecord)
     {

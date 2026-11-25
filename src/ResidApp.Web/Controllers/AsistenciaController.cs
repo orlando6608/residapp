@@ -32,19 +32,22 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
 
         var today = CenterTime.Today;
         var day = fecha is { } asked && asked <= today && asked >= today.AddYears(-5) ? asked : today;
-        var result = await attendance.ListDayAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), day, ct);
-        if (!result.Ok)
+        // Nunca encendida: Administración, que es quien la enciende, va directa a los ajustes. Apagada después: se sigue pudiendo consultar lo anotado, pero no anotar días nuevos.
+        var state = await attendance.ReadCenterAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), ct);
+        if (!state.Ok)
         {
-            // Apagada: Administración, que es quien la enciende, va directa a los ajustes; los demás ven por qué no hay lista.
-            if (result.Error!.Code == ApplicationFailureCode.Conflict && scope.Profile == SystemProfile.Administracion)
-            {
-                return RedirectToAction(nameof(Ajustes));
-            }
-
-            return View(new AsistenciaDiaViewModel(day, today, [], scope.Profile, result.Error.Message));
+            return View(new AsistenciaDiaViewModel(day, today, [], scope.Profile, state.Error!.Message));
         }
 
-        return View(new AsistenciaDiaViewModel(day, today, result.Value!, scope.Profile, null));
+        if (scope.Profile == SystemProfile.Administracion && state.Value!.Number == 0 && !state.Value.Active)
+        {
+            return RedirectToAction(nameof(Ajustes));
+        }
+
+        var result = await attendance.ListDayAsync(scope.ProfileScopeId, CenterId.From(scope.CenterId), day, ct);
+        return result.Ok
+            ? View(new AsistenciaDiaViewModel(day, today, result.Value!, scope.Profile, null, state.Value!.Active))
+            : View(new AsistenciaDiaViewModel(day, today, [], scope.Profile, result.Error!.Message));
     }
 
     [HttpPost]

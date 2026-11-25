@@ -42,7 +42,7 @@
     <form method="post" asp-action="Ajustes" aria-label="Desactivar la asistencia">
         <input type="hidden" name="version" value="@state.Number" />
         <input type="hidden" name="encender" value="false" />
-        <p>Si la desactivas, dejan de poder anotarse días nuevos. Lo ya anotado no se borra, pero no se muestra mientras esté desactivada.</p>
+        <p>Si la desactivas, dejan de poder anotarse días nuevos. Lo ya anotado no se borra y se sigue pudiendo consultar.</p>
         <button type="submit" class="btn btn-outline-danger btn-lg">Desactivar la asistencia</button>
     </form>
 }

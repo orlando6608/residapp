@@ -117,7 +117,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     public async Task<IReadOnlyList<AttendanceDayEntry>> ListDayAsync(AttendanceActor actor, DateOnly date, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
-        await RequireFeatureAsync(connection, null, actor, ct);
+        await RequireDayCenterAsync(connection, null, actor, ct);
         var rows = await connection.QueryAsync<DayRow>(new CommandDefinition($"""
             SELECT resident.id AS ResidentId, resident.nombre_visible AS ResidentName, location.unidad_id AS UnitId, unit.nombre_visible AS UnitName,
                    pattern.dias_esperados AS PatternMask,
@@ -194,7 +194,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     public async Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
-        await RequireFeatureAsync(connection, null, actor, ct);
+        await RequireDayCenterAsync(connection, null, actor, ct);
         var name = await ResidentNameAsync(connection, null, actor, residentId, ct);
         var latest = await LatestPatternAsync(connection, null, actor, residentId, lockRow: false, ct);
         return new AttendancePatternState(residentId, name, latest?.Number ?? 0, latest?.Days ?? 0);
@@ -243,7 +243,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         }
 
         using var connection = await connections.OpenAsync(ct);
-        await RequireFeatureAsync(connection, null, actor, ct);
+        await RequireDayCenterAsync(connection, null, actor, ct);
         var from = todayAtCenter.AddDays(-AttendanceRules.FollowUpWindowDays);
         var parameters = Params(actor, new { From = from.ToDateTime(TimeOnly.MinValue), Today = todayAtCenter.ToDateTime(TimeOnly.MinValue) });
         var residents = (await connection.QueryAsync<FollowUpResidentRow>(new CommandDefinition($"""
@@ -306,7 +306,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     public async Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
-        await RequireFeatureAsync(connection, null, actor, ct);
+        await RequireDayCenterAsync(connection, null, actor, ct);
         var rows = await connection.QueryAsync<AbsenceRow>(new CommandDefinition($"""
             SELECT absence.id AS Id, absence.residente_id AS ResidentId, resident.nombre_visible AS ResidentName, absence.desde AS FromDate,
                    (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) AS ToDate,
@@ -418,6 +418,17 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     }
 
     /// <summary>El ámbito vigente y el centro con la función encendida; si no, ATTENDANCE_DISABLED (un Centro de Día con la función apagada, o una Residencia).</summary>
+    /// <summary>Para leer: el ámbito vigente y un Centro de Día, aunque la función esté apagada. Apagarla impide anotar días nuevos, pero no oculta lo ya anotado (ADR 0019, punto 8; derecho de acceso).</summary>
+    private static async Task RequireDayCenterAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, CancellationToken ct)
+    {
+        await RequireScopeAsync(connection, transaction, actor, ct);
+        if (!await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.centros center WHERE center.id = @CenterId AND center.tipo_de_servicio = N'CENTRO_DE_DIA') THEN 1 ELSE 0 END", Params(actor), transaction, cancellationToken: ct)))
+        {
+            throw new DomainValidationException(AttendanceRules.DisabledCode);
+        }
+    }
+
     private static async Task RequireFeatureAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, CancellationToken ct)
     {
         await RequireScopeAsync(connection, transaction, actor, ct);
