@@ -271,3 +271,6 @@ document.addEventListener("click", (evento) => {
     boton.disabled = true;
   }
 });
+
+// Un aviso de resultado que llega tras enviar un formulario largo queda lejos del botón: se lleva el foco (y la vista) hasta él.
+document.querySelector("[data-foco-aviso]")?.focus();
