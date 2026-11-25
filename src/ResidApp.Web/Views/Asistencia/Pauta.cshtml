@@ -55,6 +55,19 @@ else
                 </div>
             }
         </fieldset>
+        @if (pattern.Versions.Count > 0)
+        {
+            <div class="mb-3">
+                <label class="form-label" for="valeDesde">Vale desde</label>
+                <input class="form-control form-control-lg w-auto" type="date" id="valeDesde" name="valeDesde" value="@Model.Today.ToString("yyyy-MM-dd")" aria-describedby="ayuda-vale-desde" />
+                <div class="form-text" id="ayuda-vale-desde">
+                    Es el primer día en que esta pauta cuenta. Por defecto es hoy. Los días anteriores siguen con la pauta de antes.
+                    Si eliges una fecha futura, empezará a contar ese día y hasta entonces sigue la de ahora.
+                    Si eliges una fecha pasada, cambiará los días en que se esperaba a esta persona desde esa fecha, y por tanto la lista de personas que llevan varios días sin venir:
+                    úsalo solo para corregir un error. Quedará anotado quién lo hizo y cuándo.
+                </div>
+            </div>
+        }
         <button type="submit" class="btn btn-primary btn-lg">Guardar la pauta</button>
         <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver</a>
     </form>
@@ -62,4 +75,31 @@ else
 else
 {
     <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver</a>
+}
+
+@if (pattern.Versions.Count > 0)
+{
+    <section class="mt-4" aria-labelledby="historial-titulo">
+        <h2 class="h5" id="historial-titulo">@(Model.CanSeeHistory ? "Pautas anteriores" : "Pauta en vigor y próximos cambios")</h2>
+        <ul class="list-unstyled">
+            @foreach (var version in pattern.Versions)
+            {
+                <li class="mb-2">
+                    @(version.From == AttendanceRules.FromTheBeginning ? "Desde el principio" : "Desde el " + AsistenciaDisplay.LongDate(version.From, Model.Today)):
+                    @AsistenciaDisplay.PatternText(version.DaysMask).
+                    @if (version.From > Model.Today)
+                    {
+                        <span class="badge text-bg-info">Todavía no cuenta</span>
+                    }
+                    <span class="d-block small text-body-secondary">
+                        Anotado el @AsistenciaDisplay.LongDate(version.RegisteredOn, Model.Today) por @SystemProfileDisplay.Label(version.RegisteredBy).
+                        @if (version.From != AttendanceRules.FromTheBeginning && version.From < version.RegisteredOn)
+                        {
+                            <text>Con efecto desde una fecha anterior a la del registro.</text>
+                        }
+                    </span>
+                </li>
+            }
+        </ul>
+    </section>
 }

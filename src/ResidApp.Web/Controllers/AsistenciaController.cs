@@ -82,12 +82,12 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
             return RedirectToAction(nameof(Index));
         }
 
-        return View(new AsistenciaPautaViewModel(result.Value!, AttendanceRules.CanManageAbsences(scope.Profile)));
+        return View(new AsistenciaPautaViewModel(result.Value!, AttendanceRules.CanManageAbsences(scope.Profile), CenterTime.Today, scope.Profile));
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Pauta(Guid residenteId, int version, DayOfWeek[]? dias, CancellationToken ct)
+    public async Task<IActionResult> Pauta(Guid residenteId, int version, DayOfWeek[]? dias, DateOnly? valeDesde, CancellationToken ct)
     {
         if (Scope() is not { } scope)
         {
@@ -95,7 +95,7 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
         }
 
         var mask = (dias ?? []).Distinct().Aggregate(0, (all, day) => all | AttendanceRules.Mask(day));
-        var result = await attendance.SetPatternAsync(new SetAttendancePatternCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), version, mask), ct);
+        var result = await attendance.SetPatternAsync(new SetAttendancePatternCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), version, mask, valeDesde), ct);
         if (result.Ok)
         {
             TempData["Mensaje"] = "Pauta guardada.";

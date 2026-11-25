@@ -456,4 +456,73 @@ public class AsistenciaCasosDeUsoTests
         Assert.Equal(ApplicationFailureCode.InvalidInput, (await Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: Today.AddDays(-41)))).Error!.Code);
         Assert.Equal(ApplicationFailureCode.InvalidInput, (await Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: Today.AddDays(1)))).Error!.Code);
     }
+
+    [Fact]
+    public async Task Un_cambio_de_pauta_no_reescribe_el_pasado_de_la_lista_pero_una_fecha_pasada_si_y_queda_a_la_vista()
+    {
+        var all = AttendanceRules.AllDays;
+        var skipped = Enumerable.Range(1, 3).Select(back => Today.AddDays(-back).DayOfWeek).ToHashSet();
+        var other = AttendanceRules.Mask(Enum.GetValues<DayOfWeek>().First(d => !skipped.Contains(d)));
+        async Task<(Day Day, Staff Staff)> WithThreeAbsencesAsync()
+        {
+            var (d, s) = await CreateAsync();
+            await BackdateAsync(d, 10);
+            foreach (var back in new[] { 3, 2, 1 })
+            {
+                Assert.True((await Service(s.Enfermeria).RecordAsync(Mark(s.Enfermeria, d, AttendanceState.NoAsistio, AttendanceCause.SinAviso, date: Today.AddDays(-back)))).Ok);
+            }
+
+            return (d, s);
+        }
+
+        SetAttendancePatternCommand Pattern(SeededProfile who, Day d, int version, int days, DateOnly? from = null) => new(who.ProfileScopeId, who.CenterId, ResidentId.From(d.ResidentId), version, days, from);
+
+        // Un cambio con efecto desde hoy no toca lo anterior: los tres días de falta siguen contando con la pauta de antes (todos los días).
+        var (day, staff) = await WithThreeAbsencesAsync();
+        var nurse = Service(staff.Enfermeria);
+        Assert.True((await nurse.SetPatternAsync(Pattern(staff.Enfermeria, day, 0, all))).Ok);
+        Assert.True((await nurse.SetPatternAsync(Pattern(staff.Enfermeria, day, 1, other))).Ok);
+        Assert.Equal(3, Assert.Single((await FollowUpAsync(staff.Administracion)).Absences).Days);
+        // Una fecha anterior a la pauta que está en vigor (la de hoy) se rechaza, y también una a más de 90 días.
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await nurse.SetPatternAsync(Pattern(staff.Enfermeria, day, 2, all, Today.AddDays(-1)))).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await nurse.SetPatternAsync(Pattern(staff.Enfermeria, day, 2, all, Today.AddDays(91)))).Error!.Code);
+
+        // Con efecto desde hace tres días (la en vigor es la de «desde siempre»), esos días ya no tocaban y la persona sale de la lista.
+        var (retroDay, retroStaff) = await WithThreeAbsencesAsync();
+        var retroNurse = Service(retroStaff.Enfermeria);
+        Assert.True((await retroNurse.SetPatternAsync(Pattern(retroStaff.Enfermeria, retroDay, 0, all))).Ok);
+        var retro = await retroNurse.SetPatternAsync(Pattern(retroStaff.Enfermeria, retroDay, 1, other, Today.AddDays(-3)));
+        Assert.True(retro.Ok, retro.Error?.Message);
+        Assert.Empty((await FollowUpAsync(retroStaff.Administracion)).Absences);
+
+        // El historial, completo para Administración, deja ver la fecha de efecto y cuándo se anotó (con efecto anterior al registro).
+        var history = (await Service(retroStaff.Administracion).ReadPatternAsync(retroStaff.Administracion.ProfileScopeId, retroStaff.Administracion.CenterId, ResidentId.From(retroDay.ResidentId))).Value!;
+        Assert.Equal([2, 1], history.Versions.Select(v => v.Number).ToArray());
+        Assert.Equal(Today.AddDays(-3), history.Versions[0].From);
+        Assert.True(history.Versions[0].From < history.Versions[0].RegisteredOn);
+        Assert.Equal(AttendanceRules.FromTheBeginning, history.Versions[1].From);
+    }
+
+    [Fact]
+    public async Task Una_pauta_futura_puesta_por_error_se_sustituye_con_otra_y_el_Auxiliar_solo_ve_la_en_vigor_y_las_futuras()
+    {
+        var (day, staff) = await CreateAsync();
+        var resident = ResidentId.From(day.ResidentId);
+        var nurse = Service(staff.Enfermeria);
+        SetAttendancePatternCommand Pattern(int version, int days, DateOnly? from = null) =>
+            new(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident, version, days, from);
+        Assert.True((await nurse.SetPatternAsync(Pattern(0, 21))).Ok);
+        // Por error, una pauta que empieza dentro de 80 días; se corrige con otra que empieza dentro de 5 (la versión en vigor sigue siendo la primera).
+        Assert.True((await nurse.SetPatternAsync(Pattern(1, 31, Today.AddDays(80)))).Ok);
+        Assert.True((await nurse.SetPatternAsync(Pattern(2, 63, Today.AddDays(5)))).Ok);
+
+        Assert.Equal(21, (await nurse.ReadPatternAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident)).Value!.DaysMask);
+        var auxiliary = (await Service(staff.Auxiliar).ReadPatternAsync(staff.Auxiliar.ProfileScopeId, staff.Auxiliar.CenterId, resident)).Value!;
+        Assert.Equal(3, auxiliary.Number);
+        Assert.Equal(21, auxiliary.DaysMask);
+        // La primera (en vigor) y las dos futuras: con un solo cambio ya pasado también se vería solo la última en vigor.
+        Assert.Equal([3, 2, 1], auxiliary.Versions.Select(v => v.Number).ToArray());
+        var admin = (await Service(staff.Administracion).ReadPatternAsync(staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident)).Value!;
+        Assert.All(admin.Versions, v => Assert.True(v.RegisteredBy is SystemProfile.Enfermeria));
+    }
 }

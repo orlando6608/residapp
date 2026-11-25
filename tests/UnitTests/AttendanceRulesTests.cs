@@ -104,7 +104,7 @@ public class AttendanceRulesTests
 
     private static FollowUpOutcome Follow(DateOnly today, int? pattern, Dictionary<DateOnly, AttendanceState> marks, params (DateOnly From, DateOnly To)[] absences) =>
         AttendanceRules.FollowUp(
-            today, new DateOnly(2026, 1, 1), pattern,
+            today, new DateOnly(2026, 1, 1), _ => pattern,
             day => AttendanceRules.StatusOf(marks.TryGetValue(day, out var state) ? state : null, absences.Any(a => a.From <= day && day <= a.To)),
             day => marks.ContainsKey(day) ? AttendanceCause.SinAviso : null);
 
@@ -166,11 +166,48 @@ public class AttendanceRulesTests
     public void La_lista_no_mira_antes_del_alta_y_avisa_si_hay_mas_dias_de_los_que_mira()
     {
         // Alta hace dos días y nada anotado: solo dos días sin anotar, no sesenta.
-        var recent = AttendanceRules.FollowUp(Thursday, Thursday.AddDays(-2), null, _ => AttendanceDayStatus.SinAnotar, _ => null);
+        var recent = AttendanceRules.FollowUp(Thursday, Thursday.AddDays(-2), _ => null, _ => AttendanceDayStatus.SinAnotar, _ => null);
         Assert.Equal(2, recent.UnmarkedDays);
 
-        var longRun = AttendanceRules.FollowUp(Thursday, new DateOnly(2026, 1, 1), null, _ => AttendanceDayStatus.NoVino, _ => AttendanceCause.Otro);
+        var longRun = AttendanceRules.FollowUp(Thursday, new DateOnly(2026, 1, 1), _ => null, _ => AttendanceDayStatus.NoVino, _ => AttendanceCause.Otro);
         Assert.Equal(AttendanceRules.FollowUpWindowDays, longRun.AbsentDays);
         Assert.True(longRun.Capped);
+    }
+
+    [Fact]
+    public void La_pauta_que_rige_un_dia_es_la_ultima_version_cuya_fecha_de_efecto_no_es_posterior()
+    {
+        var monday = new DateOnly(2026, 11, 23);
+        var mondayWednesdayFriday = AttendanceRules.Mask(DayOfWeek.Monday) | AttendanceRules.Mask(DayOfWeek.Wednesday) | AttendanceRules.Mask(DayOfWeek.Friday);
+        var versions = new[]
+        {
+            new PatternVersion(1, AttendanceRules.FromTheBeginning, mondayWednesdayFriday),
+            new PatternVersion(2, monday, AttendanceRules.AllDays),
+        };
+
+        Assert.Equal(mondayWednesdayFriday, AttendanceRules.PatternFor(versions, monday.AddDays(-1)));
+        Assert.Equal(AttendanceRules.AllDays, AttendanceRules.PatternFor(versions, monday));
+        Assert.Null(AttendanceRules.PatternFor([], monday));
+
+        // Una versión futura puesta por error se sustituye con otra de mayor número aunque su fecha sea anterior: manda el número, no la fecha más tardía.
+        var corrected = versions.Append(new PatternVersion(3, monday.AddDays(2), mondayWednesdayFriday)).Append(new PatternVersion(4, monday.AddDays(5), 1)).ToList();
+        Assert.Equal(1, AttendanceRules.PatternFor(corrected, monday.AddDays(6)));
+        Assert.Equal(mondayWednesdayFriday, AttendanceRules.PatternFor(corrected, monday.AddDays(3)));
+        // Con la misma fecha vale la de mayor número: así se corrige un error del mismo día.
+        Assert.Equal(1, AttendanceRules.PatternFor([new(1, AttendanceRules.FromTheBeginning, 3), new(2, monday, 5), new(3, monday, 1)], monday));
+    }
+
+    [Fact]
+    public void La_fecha_de_efecto_de_una_pauta_no_es_anterior_a_la_que_esta_en_vigor_ni_pasa_de_90_dias_y_la_primera_vale_desde_siempre()
+    {
+        var today = new DateOnly(2026, 11, 25);
+        var inForce = new DateOnly(2026, 11, 10);
+
+        Assert.Equal(AttendanceRules.FromTheBeginning, AttendanceRules.ValidatePatternDate(today.AddDays(30), today, null));
+        Assert.Equal(today, AttendanceRules.ValidatePatternDate(null, today, inForce));
+        Assert.Equal(inForce, AttendanceRules.ValidatePatternDate(inForce, today, inForce));
+        Assert.Equal(today.AddDays(90), AttendanceRules.ValidatePatternDate(today.AddDays(90), today, inForce));
+        Assert.Throws<DomainValidationException>(() => AttendanceRules.ValidatePatternDate(inForce.AddDays(-1), today, inForce));
+        Assert.Throws<DomainValidationException>(() => AttendanceRules.ValidatePatternDate(today.AddDays(91), today, inForce));
     }
 }

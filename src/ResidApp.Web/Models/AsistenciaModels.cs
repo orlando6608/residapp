@@ -12,7 +12,11 @@ public sealed record AsistenciaDiaViewModel(DateOnly Day, DateOnly Today, IReadO
     public bool CanSeeNote => AttendanceRules.CanReadNote(Profile);
 }
 
-public sealed record AsistenciaPautaViewModel(AttendancePatternState Pattern, bool CanManage);
+public sealed record AsistenciaPautaViewModel(AttendancePatternState Pattern, bool CanManage, DateOnly Today, SystemProfile Profile)
+{
+    /// <summary>El Auxiliar ve la pauta en vigor y los próximos cambios, no todo el historial.</summary>
+    public bool CanSeeHistory => Profile != SystemProfile.Auxiliar;
+}
 
 /// <summary>Las ausencias programadas y, para quien las registra, las personas entre las que elegir.</summary>
 public sealed record AsistenciaAusenciasViewModel(
@@ -70,6 +74,10 @@ public static class AsistenciaDisplay
             _ => string.Join(", ", names.Take(names.Count - 1)) + " y " + names[^1],
         };
     }
+
+    /// <summary>«3 de marzo» (con el año si no es el de hoy): para el historial de la pauta.</summary>
+    public static string LongDate(DateOnly day, DateOnly today) =>
+        day.ToString(day.Year == today.Year ? "d 'de' MMMM" : "d 'de' MMMM 'de' yyyy", System.Globalization.CultureInfo.GetCultureInfo("es-ES"));
 
     public static string Date(DateOnly day) => day.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.GetCultureInfo("es-ES"));
 }

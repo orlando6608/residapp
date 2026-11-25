@@ -972,7 +972,7 @@
       ],
       "pasos": [
         { "texto": "En el Inicio, abre la tarjeta **Asistencia** (solo sale en un Centro de Día)." },
-        { "texto": "Junto a la persona, pulsa **Fijar su pauta** (o **Cambiar su pauta**), marca los días en que se la espera y pulsa **Guardar la pauta**.", "botones": ["Fijar su pauta", "Cambiar su pauta", "Guardar la pauta"] },
+        { "texto": "Junto a la persona, pulsa **Fijar su pauta** (o **Cambiar su pauta**), marca los días en que se la espera, elige **Vale desde** (por defecto, hoy; una fecha pasada solo para corregir un error) y pulsa **Guardar la pauta**.", "botones": ["Fijar su pauta", "Cambiar su pauta", "Guardar la pauta"], "campos": ["Vale desde"] },
         { "texto": "Para una ausencia, pulsa **Ausencias programadas**, elige la persona, el primer y el último día y el motivo, y pulsa **Registrar**.", "botones": ["Ausencias programadas", "Registrar"], "campos": ["Primer día", "Último día", "Motivo"] },
         { "texto": "Para cambiarla más tarde, en la lista de ausencias pulsa **Acortar** (con el nuevo último día) o **Anular**.", "botones": ["Acortar", "Anular"] }
       ],

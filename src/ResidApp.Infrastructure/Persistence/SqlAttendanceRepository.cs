@@ -128,7 +128,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
               LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL
               LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = resident.centro_id
               OUTER APPLY (SELECT TOP (1) p.dias_esperados FROM dbo.asistencia_pauta p
-                            WHERE p.centro_id = resident.centro_id AND p.residente_id = resident.id ORDER BY p.numero DESC) pattern
+                            WHERE p.centro_id = resident.centro_id AND p.residente_id = resident.id AND p.vigente_desde <= @Date ORDER BY p.numero DESC) pattern
               OUTER APPLY (SELECT TOP (1) a.numero, a.estado_codigo, a.causa_codigo, a.nota FROM dbo.asistencia_dia a
                             WHERE a.centro_id = resident.centro_id AND a.residente_id = resident.id AND a.fecha = @Date ORDER BY a.numero DESC) mark
              WHERE resident.centro_id = @CenterId AND resident.estado = 'ACTIVE'
@@ -191,16 +191,26 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
     // ---- La pauta ----
 
-    public async Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, CancellationToken ct = default)
+    public async Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, DateOnly todayAtCenter, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         await RequireDayCenterAsync(connection, null, actor, ct);
         var name = await ResidentNameAsync(connection, null, actor, residentId, ct);
-        var latest = await LatestPatternAsync(connection, null, actor, residentId, lockRow: false, ct);
-        return new AttendancePatternState(residentId, name, latest?.Number ?? 0, latest?.Days ?? 0);
+        var rows = await PatternVersionsAsync(connection, null, actor, residentId, lockRows: false, ct);
+        var versions = rows.Select(row => new PatternVersion(row.Number, DateOnly.FromDateTime(row.From), row.Days)).ToList();
+        var inForce = versions.Where(v => v.From <= todayAtCenter).MaxBy(v => v.Number);
+        // El Auxiliar necesita la pauta en vigor y el próximo cambio, no todo el historial (lectura del DPO).
+        var shown = rows
+            .Where(row => actor.Profile != SystemProfile.Auxiliar || DateOnly.FromDateTime(row.From) > todayAtCenter || row.Number == inForce?.Number)
+            .OrderByDescending(row => row.Number)
+            .Select(row => new PatternVersionEntry(
+                row.Number, DateOnly.FromDateTime(row.From), row.Days, DateOnly.FromDateTime(CenterTime.Local(row.RegisteredAt)), EnumCode.ParseCode<SystemProfile>(row.Profile)))
+            .ToList();
+        return new AttendancePatternState(residentId, name, versions.Count == 0 ? 0 : versions.Max(v => v.Number), inForce?.DaysMask ?? 0, shown);
     }
 
-    public async Task<int> SetPatternAsync(AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, CancellationToken ct = default)
+    public async Task<int> SetPatternAsync(
+        AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, DateOnly? effectiveFrom, DateOnly todayAtCenter, CancellationToken ct = default)
     {
         if (!AttendanceRules.CanManageAbsences(actor.Profile))
         {
@@ -211,7 +221,8 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await RequireFeatureAsync(connection, transaction, actor, ct);
         var unitId = await RequireResidentAsync(connection, transaction, actor, residentId, ct);
-        var latest = await LatestPatternAsync(connection, transaction, actor, residentId, lockRow: true, ct);
+        var rows = await PatternVersionsAsync(connection, transaction, actor, residentId, lockRows: true, ct);
+        var latest = rows.MaxBy(row => row.Number);
         if ((latest?.Number ?? 0) != expectedNumber)
         {
             throw new DomainValidationException(AttendanceRules.ConflictCode);
@@ -222,12 +233,15 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             return latest.Number;
         }
 
+        var inForce = rows.Where(row => DateOnly.FromDateTime(row.From) <= todayAtCenter).MaxBy(row => row.Number);
+        var from = AttendanceRules.ValidatePatternDate(effectiveFrom, todayAtCenter, inForce is null ? null : DateOnly.FromDateTime(inForce.From));
+
         var id = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
         await InsertAsync(connection, transaction, """
-            INSERT INTO dbo.asistencia_pauta (id, centro_id, residente_id, numero, dias_esperados, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
-            VALUES (@Id, @CenterId, @ResidentId, @Number, @Days, @AccountId, @Profile, @Now);
-            """, Params(actor, new { Id = id, ResidentId = residentId.Value, Number = expectedNumber + 1, Days = daysMask, Now = now.UtcDateTime }), ct);
+            INSERT INTO dbo.asistencia_pauta (id, centro_id, residente_id, numero, dias_esperados, vigente_desde, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (@Id, @CenterId, @ResidentId, @Number, @Days, CAST(@From AS DATE), @AccountId, @Profile, @Now);
+            """, Params(actor, new { Id = id, ResidentId = residentId.Value, Number = expectedNumber + 1, Days = daysMask, From = from.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), Now = now.UtcDateTime }), ct);
         await AuditAsync(connection, transaction, actor, residentId.Value, unitId, id, "ATTENDANCE_PATTERN_SET", now, ct);
         transaction.Commit();
         return expectedNumber + 1;
@@ -247,17 +261,19 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         var from = todayAtCenter.AddDays(-AttendanceRules.FollowUpWindowDays);
         var parameters = Params(actor, new { From = from.ToDateTime(TimeOnly.MinValue), Today = todayAtCenter.ToDateTime(TimeOnly.MinValue) });
         var residents = (await connection.QueryAsync<FollowUpResidentRow>(new CommandDefinition($"""
-            SELECT resident.id AS ResidentId, resident.nombre_visible AS ResidentName, unit.nombre_visible AS UnitName, pattern.dias_esperados AS PatternMask,
+            SELECT resident.id AS ResidentId, resident.nombre_visible AS ResidentName, unit.nombre_visible AS UnitName,
                    resident.fecha_ingreso AS AdmissionDate, resident.creado_en AS CreatedAt
               FROM dbo.residentes resident
               LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL
               LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = resident.centro_id
-              OUTER APPLY (SELECT TOP (1) p.dias_esperados FROM dbo.asistencia_pauta p
-                            WHERE p.centro_id = resident.centro_id AND p.residente_id = resident.id ORDER BY p.numero DESC) pattern
              WHERE resident.centro_id = @CenterId AND resident.estado = 'ACTIVE'
                AND {NotSuspendedSql.Replace("{R}", "resident.id")}
                AND {ResidentScopeSql.Replace("{R}", "resident.id")}
             """, parameters, cancellationToken: ct))).ToList();
+        var versions = (await connection.QueryAsync<PatternRow>(new CommandDefinition("""
+            SELECT residente_id AS ResidentId, numero AS Number, dias_esperados AS Days, vigente_desde AS [From], cambiado_en AS RegisteredAt, cambiado_por_perfil AS Profile
+              FROM dbo.asistencia_pauta WHERE centro_id = @CenterId
+            """, parameters, cancellationToken: ct))).ToLookup(row => row.ResidentId);
         // Solo la última versión de cada día.
         var marks = (await connection.QueryAsync<FollowUpMarkRow>(new CommandDefinition("""
             SELECT residente_id AS ResidentId, fecha AS Day, estado_codigo AS State, causa_codigo AS Cause
@@ -284,13 +300,14 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             // Se cuenta desde que existe la ficha en el día del centro, igual que la base (que no deja anotar antes), o desde el ingreso si es posterior.
             var created = DateOnly.FromDateTime(CenterTime.Local(resident.CreatedAt));
             var firstDay = resident.AdmissionDate is { } admission && DateOnly.FromDateTime(admission) > created ? DateOnly.FromDateTime(admission) : created;
-            if (resident.PatternMask is null)
+            var patterns = versions[resident.ResidentId].Select(v => new PatternVersion(v.Number, DateOnly.FromDateTime(v.From), v.Days)).ToList();
+            if (patterns.Count == 0)
             {
                 withoutPattern.Add(new FollowUpWithoutPattern(ResidentId.From(resident.ResidentId), resident.ResidentName, resident.UnitName));
             }
 
             var outcome = AttendanceRules.FollowUp(
-                todayAtCenter, firstDay, resident.PatternMask is { } mask ? mask : (int?)null,
+                todayAtCenter, firstDay, day => AttendanceRules.PatternFor(patterns, day),
                 day => AttendanceRules.StatusOf(
                     byDay.TryGetValue(day, out var m) ? EnumCode.ParseCode<AttendanceState>(m.State) : null, covered.Any(a => a.From <= day && day <= a.To)),
                 day => byDay.TryGetValue(day, out var m) && m.Cause is not null ? EnumCode.ParseCode<AttendanceCause>(m.Cause) : null);
@@ -473,11 +490,13 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             SELECT TOP (1) numero AS Number, activa AS Active FROM dbo.asistencia_centro {(lockRow ? "WITH (UPDLOCK, HOLDLOCK)" : "")} WHERE centro_id = @CenterId ORDER BY numero DESC
             """, Params(actor), transaction, cancellationToken: ct));
 
-    private static Task<PatternRow?> LatestPatternAsync(SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, ResidentId residentId, bool lockRow, CancellationToken ct) =>
-        connection.QuerySingleOrDefaultAsync<PatternRow?>(new CommandDefinition($"""
-            SELECT TOP (1) numero AS Number, dias_esperados AS Days FROM dbo.asistencia_pauta {(lockRow ? "WITH (UPDLOCK, HOLDLOCK)" : "")}
-             WHERE centro_id = @CenterId AND residente_id = @ResidentId ORDER BY numero DESC
-            """, Params(actor, new { ResidentId = residentId.Value }), transaction, cancellationToken: ct));
+    private static async Task<List<PatternRow>> PatternVersionsAsync(
+        SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, ResidentId residentId, bool lockRows, CancellationToken ct) =>
+        (await connection.QueryAsync<PatternRow>(new CommandDefinition($"""
+            SELECT residente_id AS ResidentId, numero AS Number, dias_esperados AS Days, vigente_desde AS [From], cambiado_en AS RegisteredAt, cambiado_por_perfil AS Profile
+              FROM dbo.asistencia_pauta {(lockRows ? "WITH (UPDLOCK, HOLDLOCK)" : "")}
+             WHERE centro_id = @CenterId AND residente_id = @ResidentId
+            """, Params(actor, new { ResidentId = residentId.Value }), transaction, cancellationToken: ct))).ToList();
 
     /// <summary>Inserta una fila. Una versión repetida (índice único) o una secuencia que la base rechaza es un conflicto de versión; las demás reglas de la base se traducen a su código de aplicación.</summary>
     private static async Task InsertAsync(SqlConnection connection, SqlTransaction transaction, string sql, DynamicParameters parameters, CancellationToken ct)
@@ -490,7 +509,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         {
             throw new DomainValidationException(AttendanceRules.ConflictCode);
         }
-        catch (SqlException error) when (error.Number is >= 51150 and <= 51156)
+        catch (SqlException error) when (error.Number is >= 51150 and <= 51157)
         {
             throw new DomainValidationException(error.Number switch
             {
@@ -498,6 +517,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
                 51153 => AttendanceRules.InvalidCode,
                 51154 => AttendanceRules.DateNotAllowedCode,
                 51156 => AttendanceRules.AbsenceOverlapCode,
+                51157 => AttendanceRules.PatternDateInvalidCode,
                 _ => AttendanceRules.AbsenceInvalidCode,
             });
         }
@@ -517,13 +537,13 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
     private sealed record SwitchRow(int Number, bool Active);
 
-    private sealed record FollowUpResidentRow(Guid ResidentId, string ResidentName, string? UnitName, byte? PatternMask, DateTime? AdmissionDate, DateTime CreatedAt);
+    private sealed record FollowUpResidentRow(Guid ResidentId, string ResidentName, string? UnitName, DateTime? AdmissionDate, DateTime CreatedAt);
+
+    private sealed record PatternRow(Guid ResidentId, int Number, byte Days, DateTime From, DateTime RegisteredAt, string Profile);
 
     private sealed record FollowUpMarkRow(Guid ResidentId, DateTime Day, string State, string? Cause);
 
     private sealed record FollowUpAbsenceRow(Guid ResidentId, DateTime FromDate, DateTime ToDate);
-
-    private sealed record PatternRow(int Number, byte Days);
 
     private sealed record UnitRow(Guid? UnitId);
 
