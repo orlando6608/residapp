@@ -10,8 +10,8 @@ namespace ResidApp.Infrastructure.Persistence;
 /// <summary>
 /// Plazos de los hitos del proceso por centro (script 0046). Mismo patrón que SqlReferenceRangeRepository: el permiso
 /// PROCESS_DEADLINES_MANAGE se comprueba en SQL sobre el ámbito concreto, la versión es el número de filas de historial del centro y al
-/// guardar se lee con UPDLOCK/HOLDLOCK para que dos guardados simultáneos no pasen ambos la comprobación. La tabla solo guarda lo que
-/// difiere de los plazos de CJ (ProcessMilestoneRules.Defaults).
+/// guardar se lee con UPDLOCK/HOLDLOCK para que dos guardados simultáneos no pasen ambos la comprobación. Todo centro tiene sus filas
+/// (script 0119); los plazos de CJ (ProcessMilestoneRules.Defaults) solo son el respaldo si faltara alguna.
 /// </summary>
 public sealed class SqlProcessDeadlineRepository(SqlConnectionFactory connections) : IProcessDeadlineRepository
 {
@@ -65,7 +65,6 @@ public sealed class SqlProcessDeadlineRepository(SqlConnectionFactory connection
                 continue;
             }
 
-            var isDefault = after == ProcessMilestoneRules.Defaults[milestone];
             var parameters = new
             {
                 CenterId = access.CenterId.Value, Code = milestone.ToCode(), NewNormal = ProcessMilestoneRules.ToMinutes(after.Normal),
@@ -73,14 +72,13 @@ public sealed class SqlProcessDeadlineRepository(SqlConnectionFactory connection
                 PreviousPriority = ProcessMilestoneRules.ToMinutes(before.Priority), AccountId = access.AccountId.Value,
                 Profile = access.ActiveProfile.ToCode(), OccurredAt = occurredAt, Id = Guid.NewGuid(),
             };
-            // Sin fila vale el plazo de CJ: volver a él borra la fila del centro.
+            // Siempre queda una fila, también al volver al plazo de CJ (script 0119). La aplicación puede borrar e insertar en esta tabla pero no
+            // actualizar (0091): se sustituye la fila dentro de la misma transacción.
             await connection.ExecuteAsync(new CommandDefinition("""
                 DELETE FROM dbo.plazos_hitos_centro WHERE centro_id = @CenterId AND hito_codigo = @Code;
-                """ + (isDefault ? "" : """
 
                 INSERT INTO dbo.plazos_hitos_centro (centro_id, hito_codigo, plazo_minutos, plazo_prioritario_minutos)
                 VALUES (@CenterId, @Code, @NewNormal, @NewPriority);
-                """) + """
 
                 INSERT INTO dbo.plazos_hitos_centro_historial
                     (id, centro_id, hito_codigo, plazo_anterior_minutos, prioritario_anterior_minutos, plazo_nuevo_minutos,
@@ -148,7 +146,7 @@ public sealed class SqlProcessDeadlineRepository(SqlConnectionFactory connection
         }
     }
 
-    /// <summary>Los plazos de CJ con lo que el centro haya cambiado por encima.</summary>
+    /// <summary>Los plazos de las filas del centro; el de CJ para un hito que no la tuviera.</summary>
     private static async Task<IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline>> ReadEffectiveAsync(
         SqlConnection connection, SqlTransaction? transaction, CenterId centerId, CancellationToken ct)
     {

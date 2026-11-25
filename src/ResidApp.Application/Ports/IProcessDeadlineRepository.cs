@@ -9,7 +9,7 @@ public sealed record ProcessDeadlineChange(
     ProcessMilestone Milestone, MilestoneDeadline Previous, MilestoneDeadline New, SystemProfile ChangedByProfile,
     bool ChangedByCurrentAccount, DateTimeOffset ChangedAt);
 
-/// <summary>Plazos vigentes del centro (los de CJ salvo lo que el centro haya cambiado), su historial (el más reciente primero) y la versión
+/// <summary>Plazos vigentes del centro (los de sus filas, que nacen con los de CJ), su historial (el más reciente primero) y la versión
 /// para la concurrencia optimista (número de cambios registrados en el centro).</summary>
 public sealed record ProcessDeadlinesView(
     IReadOnlyDictionary<ProcessMilestone, MilestoneDeadline> Deadlines, IReadOnlyList<ProcessDeadlineChange> History, int Version);

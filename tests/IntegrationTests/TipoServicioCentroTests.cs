@@ -7,6 +7,7 @@ using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Audit;
 using ResidApp.Domain.Platform;
 using ResidApp.Domain.Residents;
+using ResidApp.Domain.Supervision;
 using ResidApp.Infrastructure.Authorization;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.IntegrationTests.TestSupport;
@@ -223,6 +224,76 @@ public class TipoServicioCentroTests
             connection.ExecuteAsync("EXEC dbo.fijar_horario_inicial_centro @CenterId", new { center.CenterId }));
         Assert.Contains("FAMILY_SCHEDULE_INITIAL_FORBIDDEN", forbidden.Message);
         Assert.Equal(45, await ScalarAsync<int>("SELECT margen_minutos FROM dbo.comunicados_horario_centro WHERE centro_id = @CenterId", new { center.CenterId }));
+    }
+
+    /// <summary>Las filas de plazos de un centro en una sola cadena, ordenadas por código de hito.</summary>
+    private static Task<string> DeadlineRowsAsync(Guid centerId) => ScalarAsync<string>("""
+        SELECT ISNULL(STRING_AGG(CONCAT(hito_codigo, '|', plazo_minutos, '|', plazo_prioritario_minutos), ';') WITHIN GROUP (ORDER BY hito_codigo), N'')
+          FROM dbo.plazos_hitos_centro WHERE centro_id = @centerId
+        """, new { centerId });
+
+    private static string DefaultDeadlineRows() => string.Join(';', ProcessMilestoneRules.All
+        .OrderBy(milestone => milestone.ToCode(), StringComparer.Ordinal)
+        .Select(milestone => $"{milestone.ToCode()}|{ProcessMilestoneRules.ToMinutes(ProcessMilestoneRules.Defaults[milestone].Normal)}|{ProcessMilestoneRules.ToMinutes(ProcessMilestoneRules.Defaults[milestone].Priority)}"));
+
+    [Theory]
+    [InlineData(CenterServiceType.Residencia)]
+    [InlineData(CenterServiceType.CentroDeDia)]
+    public async Task Un_centro_nuevo_nace_con_una_fila_por_hito_con_los_plazos_de_CJ_y_sin_historial(CenterServiceType type)
+    {
+        var op = await CreateOperatorAsync();
+        var center = await CreateCenterAsync(op, BuildPlatform(op), type);
+
+        // Los valores que repite el script 0119 son los del código: si se separan, esta prueba lo dice.
+        Assert.Equal(DefaultDeadlineRows(), await DeadlineRowsAsync(center.CenterId));
+        Assert.Equal(0, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.plazos_hitos_centro_historial WHERE centro_id = @CenterId", new { center.CenterId }));
+    }
+
+    [Fact]
+    public async Task El_procedimiento_de_los_plazos_iniciales_solo_lo_ejecuta_Plataforma_no_pisa_filas_y_rechaza_el_centro_reservado()
+    {
+        const string Initial = "EXEC dbo.fijar_plazos_iniciales_centro @centerId";
+        var op = await CreateOperatorAsync();
+        var center = await CreateCenterAsync(op, BuildPlatform(op), CenterServiceType.Residencia);
+        var direction = await SeedFixture.CreateProfileAsync(SystemProfile.DireccionClinica);
+        var revoked = await CreateOperatorAsync();
+        await using var admin = await TestDatabase.ConnectionFactory.OpenAsync();
+        await admin.ExecuteAsync(
+            "UPDATE dbo.ambitos_perfil SET estado = 'REVOKED', revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = cuenta_id WHERE id = @ProfileScopeId", new { revoked.ProfileScopeId });
+        // Una fila cambiada por el centro, otra que «no se mide» y una que falta.
+        await admin.ExecuteAsync("""
+            UPDATE dbo.plazos_hitos_centro SET plazo_minutos = 720 WHERE centro_id = @CenterId AND hito_codigo = 'VALORACION_MEDICA';
+            UPDATE dbo.plazos_hitos_centro SET plazo_minutos = NULL, plazo_prioritario_minutos = NULL WHERE centro_id = @CenterId AND hito_codigo = 'INFORME_DERIVACION';
+            DELETE FROM dbo.plazos_hitos_centro WHERE centro_id = @CenterId AND hito_codigo = 'LLAMADA_FAMILIA';
+            """, new { center.CenterId });
+        var before = await DeadlineRowsAsync(center.CenterId);
+
+        foreach (var scope in new[] { null, new TenantScope(direction.ExternalSubject, direction.ProfileScopeId), ScopeOf(revoked) })
+        {
+            await using var forbidden = await OpenAsAppUserAsync(scope);
+            var error = await Assert.ThrowsAsync<SqlException>(() => forbidden.ExecuteAsync(Initial, new { centerId = center.CenterId }));
+            Assert.Contains("PROCESS_DEADLINES_INITIAL_FORBIDDEN", error.Message);
+        }
+
+        Assert.Equal(before, await DeadlineRowsAsync(center.CenterId));
+
+        foreach (var invalid in new[] { PlatformCenter.Id, Guid.NewGuid() })
+        {
+            await using var platform = await OpenAsAppUserAsync(ScopeOf(op));
+            var error = await Assert.ThrowsAsync<SqlException>(() => platform.ExecuteAsync(Initial, new { centerId = invalid }));
+            Assert.Contains("PROCESS_DEADLINES_INITIAL_CENTER_INVALID", error.Message);
+        }
+
+        // Repone solo la fila que faltaba; repetirlo no cambia nada.
+        var expected = DefaultDeadlineRows()
+            .Replace("VALORACION_MEDICA|1440|30", "VALORACION_MEDICA|720|30")
+            .Replace("INFORME_DERIVACION|30|30", "INFORME_DERIVACION||");
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            await using var platform = await OpenAsAppUserAsync(ScopeOf(op));
+            await platform.ExecuteAsync(Initial, new { centerId = center.CenterId });
+            Assert.Equal(expected, await DeadlineRowsAsync(center.CenterId));
+        }
     }
 
     [Theory]
