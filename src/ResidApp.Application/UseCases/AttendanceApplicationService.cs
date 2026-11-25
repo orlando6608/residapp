@@ -14,7 +14,7 @@ public sealed record RecordAttendanceCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, DateOnly Fecha, AttendanceState Estado, AttendanceCause? Causa, string? Nota);
 
 /// <summary>Fijar la pauta de una persona: la máscara de los días de la semana en que se la espera (lunes = 1 … domingo = 64).</summary>
-public sealed record SetAttendancePatternCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, int DiasEsperados, DateOnly? ValeDesde = null);
+public sealed record SetAttendancePatternCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, int VersionVista, int DiasEsperados, DateOnly? ValeDesde = null, bool SustituirProgramado = false);
 
 public sealed record RegisterAbsenceCommand(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, DateOnly Desde, DateOnly Hasta, AbsenceReason Motivo);
 
@@ -79,7 +79,7 @@ public sealed class AttendanceApplicationService(
         {
             var mask = AttendanceRules.ValidatePattern(command.DiasEsperados);
             return await store.SetPatternAsync(
-                await ActorAsync(command.AmbitoPerfilId, command.CentroId, [SystemProfile.Administracion, SystemProfile.Enfermeria], ct), command.ResidenteId, command.VersionVista, mask, command.ValeDesde, Today(), ct);
+                await ActorAsync(command.AmbitoPerfilId, command.CentroId, [SystemProfile.Administracion, SystemProfile.Enfermeria], ct), command.ResidenteId, command.VersionVista, mask, command.ValeDesde, Today(), command.SustituirProgramado, ct);
         });
 
     /// <summary>Quien lee la asistencia ve las ausencias; el motivo, solo Enfermería y Medicina.</summary>

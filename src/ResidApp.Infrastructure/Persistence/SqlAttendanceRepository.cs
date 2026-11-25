@@ -210,7 +210,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     }
 
     public async Task<int> SetPatternAsync(
-        AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, DateOnly? effectiveFrom, DateOnly todayAtCenter, CancellationToken ct = default)
+        AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, DateOnly? effectiveFrom, DateOnly todayAtCenter, bool replaceScheduled = false, CancellationToken ct = default)
     {
         if (!AttendanceRules.CanManageAbsences(actor.Profile))
         {
@@ -235,6 +235,12 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
         var inForce = rows.Where(row => DateOnly.FromDateTime(row.From) <= todayAtCenter).MaxBy(row => row.Number);
         var from = AttendanceRules.ValidatePatternDate(effectiveFrom, todayAtCenter, inForce is null ? null : DateOnly.FromDateTime(inForce.From));
+
+        var versions = rows.Select(row => new PatternVersion(row.Number, DateOnly.FromDateTime(row.From), row.Days)).ToList();
+        if (!replaceScheduled && AttendanceRules.ScheduledChanges(versions, todayAtCenter).Any(scheduled => from <= scheduled.From))
+        {
+            throw new DomainValidationException(AttendanceRules.PatternReplacesScheduledCode);
+        }
 
         var id = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;

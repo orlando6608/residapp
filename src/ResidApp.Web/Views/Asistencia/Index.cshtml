@@ -108,6 +108,10 @@ else
                             {
                                 <a class="small" asp-action="Pauta" asp-route-residenteId="@entry.ResidentId.Value">@(entry.HasPattern ? "Cambiar su pauta" : "Fijar su pauta")</a>
                             }
+                            else if (entry.HasPattern)
+                            {
+                                <a class="small" asp-action="Pauta" asp-route-residenteId="@entry.ResidentId.Value">Ver su pauta</a>
+                            }
                         </th>
                         <td>
                             <span class="badge @AsistenciaDisplay.StatusBadge(entry.Status)">@AsistenciaDisplay.Status(entry.Status)</span>

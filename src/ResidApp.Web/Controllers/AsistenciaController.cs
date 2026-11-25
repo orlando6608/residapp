@@ -87,7 +87,7 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Pauta(Guid residenteId, int version, DayOfWeek[]? dias, DateOnly? valeDesde, CancellationToken ct)
+    public async Task<IActionResult> Pauta(Guid residenteId, int version, DayOfWeek[]? dias, DateOnly? valeDesde, bool sustituirProgramado, CancellationToken ct)
     {
         if (Scope() is not { } scope)
         {
@@ -95,11 +95,11 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
         }
 
         var mask = (dias ?? []).Distinct().Aggregate(0, (all, day) => all | AttendanceRules.Mask(day));
-        var result = await attendance.SetPatternAsync(new SetAttendancePatternCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), version, mask, valeDesde), ct);
+        var result = await attendance.SetPatternAsync(new SetAttendancePatternCommand(scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), version, mask, valeDesde, sustituirProgramado), ct);
         if (result.Ok && result.Value == version)
         {
             // Mismos días que la pauta actual: no se ha creado ninguna versión, y no se dice que se guardó.
-            TempData["Aviso"] = "No hay cambios: los días son los mismos que los de la pauta actual. Para cambiar la fecha desde la que cuenta, cambia también algún día.";
+            TempData["Aviso"] = "No hay cambios: los días son los mismos que los de la última pauta anotada. Para cambiar la fecha desde la que cuenta, cambia también algún día.";
             return RedirectToAction(nameof(Pauta), new { residenteId });
         }
 

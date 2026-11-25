@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "Pauta de asistencia";
     var pattern = Model.Pattern;
+    var scheduled = AttendanceRules.ScheduledChanges(pattern.Versions.Select(v => new PatternVersion(v.Number, v.From, v.DaysMask)).ToList(), Model.Today);
 }
 
 <nav aria-label="breadcrumb">
@@ -69,6 +70,22 @@ else
                     Si eliges una fecha futura, empezará a contar ese día y hasta entonces sigue la de ahora.
                     Si eliges una fecha pasada, cambiará los días en que se esperaba a esta persona desde esa fecha, y por tanto la lista de personas que llevan varios días sin venir:
                     úsalo solo para corregir un error. Quedará anotado quién lo hizo y cuándo.
+                </div>
+            </div>
+        }
+        @if (scheduled.Count > 0)
+        {
+            <div class="alert alert-warning">
+                @foreach (var change in scheduled)
+                {
+                    <p class="mb-1"><strong>Hay un cambio programado desde el @AsistenciaDisplay.LongDate(change.From, Model.Today):</strong> @AsistenciaDisplay.PatternText(change.DaysMask).</p>
+                }
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="sustituirProgramado" name="sustituirProgramado" value="true" aria-describedby="ayuda-sustituir" />
+                    <label class="form-check-label" for="sustituirProgramado">Sustituir el cambio programado</label>
+                </div>
+                <div class="small" id="ayuda-sustituir">
+                    Márcala solo si quieres que deje de valer. Hace falta cuando la pauta que guardas empieza ese día o antes; sin marcarla no se guarda.
                 </div>
             </div>
         }

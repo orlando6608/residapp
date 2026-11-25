@@ -509,12 +509,19 @@ public class AsistenciaCasosDeUsoTests
         var (day, staff) = await CreateAsync();
         var resident = ResidentId.From(day.ResidentId);
         var nurse = Service(staff.Enfermeria);
-        SetAttendancePatternCommand Pattern(int version, int days, DateOnly? from = null) =>
-            new(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident, version, days, from);
+        SetAttendancePatternCommand Pattern(int version, int days, DateOnly? from = null, bool replace = false) =>
+            new(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident, version, days, from, replace);
         Assert.True((await nurse.SetPatternAsync(Pattern(0, 21))).Ok);
         // Por error, una pauta que empieza dentro de 80 días; se corrige con otra que empieza dentro de 5 (la versión en vigor sigue siendo la primera).
         Assert.True((await nurse.SetPatternAsync(Pattern(1, 31, Today.AddDays(80)))).Ok);
-        Assert.True((await nurse.SetPatternAsync(Pattern(2, 63, Today.AddDays(5)))).Ok);
+        // Sin confirmar no se sustituye: ni empezando antes, ni el mismo día, ni guardando sin tocar la fecha (hoy) los días que están en vigor.
+        foreach (var attempt in new[] { Pattern(2, 63, Today.AddDays(5)), Pattern(2, 63, Today.AddDays(80)), Pattern(2, 21) })
+        {
+            Assert.Equal(ApplicationFailureCode.Conflict, (await nurse.SetPatternAsync(attempt)).Error!.Code);
+        }
+
+        Assert.Equal(2, (await nurse.ReadPatternAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident)).Value!.Number);
+        Assert.True((await nurse.SetPatternAsync(Pattern(2, 63, Today.AddDays(5), replace: true))).Ok);
 
         Assert.Equal(21, (await nurse.ReadPatternAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, resident)).Value!.DaysMask);
         var auxiliary = (await Service(staff.Auxiliar).ReadPatternAsync(staff.Auxiliar.ProfileScopeId, staff.Auxiliar.CenterId, resident)).Value!;
