@@ -527,9 +527,11 @@ public class AsistenciaCasosDeUsoTests
         var auxiliary = (await Service(staff.Auxiliar).ReadPatternAsync(staff.Auxiliar.ProfileScopeId, staff.Auxiliar.CenterId, resident)).Value!;
         Assert.Equal(3, auxiliary.Number);
         Assert.Equal(21, auxiliary.DaysMask);
-        // La primera (en vigor) y las dos futuras: con un solo cambio ya pasado también se vería solo la última en vigor.
-        Assert.Equal([3, 2, 1], auxiliary.Versions.Select(v => v.Number).ToArray());
+        // La primera (en vigor) y la futura que sigue en pie: la que quedó sustituida (la de dentro de 80 días) ya no es un próximo cambio.
+        Assert.Equal([3, 1], auxiliary.Versions.Select(v => v.Number).ToArray());
         var admin = (await Service(staff.Administracion).ReadPatternAsync(staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident)).Value!;
         Assert.All(admin.Versions, v => Assert.True(v.RegisteredBy is SystemProfile.Enfermeria));
+        // El historial completo conserva la sustituida.
+        Assert.Equal([3, 2, 1], admin.Versions.Select(v => v.Number).ToArray());
     }
 }

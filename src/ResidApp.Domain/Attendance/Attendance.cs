@@ -153,11 +153,17 @@ public static class AttendanceRules
         versions.Where(v => v.From <= day).OrderByDescending(v => v.Number).Select(v => (int?)v.DaysMask).FirstOrDefault();
 
     /// <summary>
+    /// Una versión está sustituida cuando no cuenta ningún día: otra de mayor número empieza el mismo día o antes (ver <see cref="PatternFor"/>).
+    /// </summary>
+    public static bool IsReplaced(IEnumerable<PatternVersion> versions, PatternVersion version) =>
+        versions.Any(other => other.Number > version.Number && other.From <= version.From);
+
+    /// <summary>
     /// Los cambios programados que siguen en pie: versiones que empiezan después de hoy y que ninguna de mayor número ha sustituido. Una pauta nueva que empiece ese día o antes los sustituye, y eso solo
     /// se hace si quien la guarda lo confirma.
     /// </summary>
     public static IReadOnlyList<PatternVersion> ScheduledChanges(IReadOnlyCollection<PatternVersion> versions, DateOnly todayAtCenter) =>
-        versions.Where(v => v.From > todayAtCenter && !versions.Any(w => w.Number > v.Number && w.From <= v.From)).OrderBy(v => v.From).ToList();
+        versions.Where(v => v.From > todayAtCenter && !IsReplaced(versions, v)).OrderBy(v => v.From).ToList();
 
     /// <summary>
     /// La fecha de efecto de una versión nueva: por defecto hoy; no anterior a la de la versión que está en vigor hoy (<paramref name="inForceFrom"/>) ni posterior a hoy + <see cref="MaxPatternAheadDays"/> días.

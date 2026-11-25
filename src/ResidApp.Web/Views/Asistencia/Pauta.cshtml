@@ -5,7 +5,8 @@
 @{
     ViewData["Title"] = "Pauta de asistencia";
     var pattern = Model.Pattern;
-    var scheduled = AttendanceRules.ScheduledChanges(pattern.Versions.Select(v => new PatternVersion(v.Number, v.From, v.DaysMask)).ToList(), Model.Today);
+    var allVersions = pattern.Versions.Select(v => new PatternVersion(v.Number, v.From, v.DaysMask)).ToList();
+    var scheduled = AttendanceRules.ScheduledChanges(allVersions, Model.Today);
 }
 
 <nav aria-label="breadcrumb">
@@ -108,7 +109,11 @@ else
                 <li class="mb-2">
                     @(version.From == AttendanceRules.FromTheBeginning ? "Desde el principio" : "Desde el " + AsistenciaDisplay.LongDate(version.From, Model.Today)):
                     @AsistenciaDisplay.PatternText(version.DaysMask).
-                    @if (version.From > Model.Today)
+                    @if (AttendanceRules.IsReplaced(allVersions, new PatternVersion(version.Number, version.From, version.DaysMask)))
+                    {
+                        <span class="badge text-bg-secondary">Sustituida: no cuenta</span>
+                    }
+                    else if (version.From > Model.Today)
                     {
                         <span class="badge text-bg-info">Todavía no cuenta</span>
                     }
