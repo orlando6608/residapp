@@ -2,7 +2,13 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
+using ResidApp.Application.Ports;
+using ResidApp.Domain.Accounts;
+using ResidApp.Domain.Attendance;
+using ResidApp.Domain.Residents;
 using ResidApp.Infrastructure.Persistence;
+using ResidApp.Shared;
+using ResidApp.Web.Models;
 using static ResidApp.FunctionalTests.ResidentsFlowTests;
 
 namespace ResidApp.FunctionalTests;
@@ -50,6 +56,9 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
     /// <summary>Crea un centro del tipo pedido por el alta real de Plataforma y entra con una Administración propia de ese centro.</summary>
     private Task<HttpClient> LoginAdminOfNewCenterAsync(string type) => LoginOfNewCenterAsync(type, "ADMINISTRACION");
 
+    /// <summary>El centro que creó la última llamada a <see cref="LoginOfNewCenterAsync"/>.</summary>
+    private Guid _centerId;
+
     private async Task<HttpClient> LoginOfNewCenterAsync(string type, string profile)
     {
         var platform = await LoginPlatformAsync();
@@ -70,6 +79,7 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
         {
             var centerId = await connection.ExecuteScalarAsync<Guid>("SELECT id FROM dbo.centros WITH (NOLOCK) WHERE nombre_visible = @name", new { name });
             Assert.NotEqual(Guid.Empty, centerId);
+            _centerId = centerId;
             await connection.ExecuteAsync("""
                 INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @subject, 'ACTIVE', SYSUTCDATETIME());
                 INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
@@ -133,6 +143,48 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
         Assert.Contains("Nadie lleva 3 o más días seguidos", followUpPage);
         Assert.Contains("Todas las personas tienen pauta.", followUpPage);
         Assert.DoesNotContain("riesgo", followUpPage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task La_lista_de_seguimiento_pinta_la_fila_de_quien_lleva_tres_dias_sin_venir_con_sus_causas_y_sin_la_nota()
+    {
+        var admin = await LoginAdminOfNewCenterAsync("CentroDeDia");
+        var today = CenterTime.TodayAt(DateTimeOffset.UtcNow);
+        using (var connection = await Db.OpenAsync())
+        {
+            var (accountId, unitId) = await connection.QuerySingleAsync<(Guid, Guid)>("""
+                SELECT (SELECT TOP (1) cuenta_id FROM dbo.ambitos_perfil WHERE centro_id = @centerId AND perfil_codigo = 'ADMINISTRACION'),
+                       (SELECT TOP (1) id FROM dbo.unidades WHERE centro_id = @centerId)
+                """, new { centerId = _centerId });
+            var resident = (await new SqlResidentRepository(Db).CreateWithInitialLocationAsync(new CreateResidentInput(
+                AccountId.From(accountId), SystemProfile.Administracion, CenterId.From(_centerId), UnitId.From(unitId), "Persona en seguimiento (ficticia)",
+                new DateOnly(1940, 5, 20), DocumentedSexCode.NoConsta, null, null, null, null, null, Guid.NewGuid(), LocationPending: true))).ResidentId.Value;
+
+            // La ficha es de hace tres días y en los tres consta «No vino».
+            await connection.ExecuteAsync("UPDATE dbo.residentes SET creado_en = DATEADD(DAY, -3, creado_en) WHERE id = @resident", new { resident });
+            foreach (var (back, cause, note) in new[] { (3, "AVISO_FAMILIA", null), (2, "SIN_AVISO", null), (1, "OTRO", "nota que no sale") })
+            {
+                await connection.ExecuteAsync("""
+                    INSERT INTO dbo.asistencia_dia (id, centro_id, residente_id, fecha, numero, estado_codigo, causa_codigo, nota, anotado_por_cuenta_id, anotado_por_perfil, anotado_en)
+                    VALUES (NEWID(), @centerId, @resident, @date, 1, 'NO_ASISTIO', @cause, @note, @accountId, 'ENFERMERIA', SYSUTCDATETIME())
+                    """, new { centerId = _centerId, resident, date = today.AddDays(-back).ToDateTime(TimeOnly.MinValue), cause, note, accountId });
+            }
+        }
+
+        var page = WebUtility.HtmlDecode(await admin.GetStringAsync("/Asistencia/Seguimiento"));
+
+        var table = Regex.Match(page, "aria-labelledby=\"faltas-titulo\".*?</table>", RegexOptions.Singleline).Value;
+        var cells = Regex.Matches(table, "<t[hd][^>]*>(.*?)</t[hd]>", RegexOptions.Singleline)
+            .Select(cell => Regex.Replace(Regex.Replace(cell.Groups[1].Value, "<[^>]+>", " "), @"\s+", " ").Trim()).Skip(4).ToList();
+        Assert.Equal(4, cells.Count);
+        Assert.Equal(["Persona en seguimiento (ficticia) Sala 1", "3", "No consta en los últimos 60 días"], cells.Take(3));
+        foreach (var cause in new[] { AttendanceCause.AvisoFamilia, AttendanceCause.SinAviso, AttendanceCause.Otro })
+        {
+            Assert.Contains(EnumDisplay.Label(cause), cells[3]);
+        }
+
+        Assert.Contains("No hay personas con días recientes sin anotar.", page);
+        Assert.DoesNotContain("nota que no sale", page);
     }
 
     [Theory]
