@@ -52,6 +52,7 @@ public static class AttendanceRules
     public const string AbsenceInvalidCode = "ATTENDANCE_ABSENCE_INVALID";
     public const string AbsenceOverlapCode = "ATTENDANCE_ABSENCE_OVERLAP";
     public const string PatternDateInvalidCode = "ATTENDANCE_PATTERN_DATE_INVALID";
+    public const string PatternReplacesScheduledCode = "ATTENDANCE_PATTERN_REPLACES_SCHEDULED";
 
     /// <summary>Tope de la nota de «otro motivo»: propuesto, sin validar por CJ (ADR 0019). Igual que en la base de datos.</summary>
     public const int MaxNoteLength = 80;
@@ -150,6 +151,13 @@ public static class AttendanceRules
     /// </summary>
     public static int? PatternFor(IEnumerable<PatternVersion> versions, DateOnly day) =>
         versions.Where(v => v.From <= day).OrderByDescending(v => v.Number).Select(v => (int?)v.DaysMask).FirstOrDefault();
+
+    /// <summary>
+    /// Los cambios programados que siguen en pie: versiones que empiezan después de hoy y que ninguna de mayor número ha sustituido. Una pauta nueva que empiece ese día o antes los sustituye, y eso solo
+    /// se hace si quien la guarda lo confirma.
+    /// </summary>
+    public static IReadOnlyList<PatternVersion> ScheduledChanges(IReadOnlyCollection<PatternVersion> versions, DateOnly todayAtCenter) =>
+        versions.Where(v => v.From > todayAtCenter && !versions.Any(w => w.Number > v.Number && w.From <= v.From)).OrderBy(v => v.From).ToList();
 
     /// <summary>
     /// La fecha de efecto de una versión nueva: por defecto hoy; no anterior a la de la versión que está en vigor hoy (<paramref name="inForceFrom"/>) ni posterior a hoy + <see cref="MaxPatternAheadDays"/> días.

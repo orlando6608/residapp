@@ -198,6 +198,24 @@ public class AttendanceRulesTests
     }
 
     [Fact]
+    public void Los_cambios_programados_son_los_futuros_que_ninguna_version_posterior_ha_sustituido()
+    {
+        var today = new DateOnly(2026, 11, 25);
+        var first = new PatternVersion(1, AttendanceRules.FromTheBeginning, 21);
+        var far = new PatternVersion(2, today.AddDays(80), 31);
+
+        Assert.Empty(AttendanceRules.ScheduledChanges([first, new(2, today, 31)], today));
+        Assert.Equal([far], AttendanceRules.ScheduledChanges([first, far], today));
+        // Una que empieza antes y es posterior en número la sustituye; una que empieza después, no.
+        var sooner = new PatternVersion(3, today.AddDays(5), 63);
+        Assert.Equal([sooner], AttendanceRules.ScheduledChanges([first, far, sooner], today));
+        var later = new PatternVersion(3, today.AddDays(85), 63);
+        Assert.Equal([far, later], AttendanceRules.ScheduledChanges([first, far, later], today));
+        // Sustituida desde hoy: ya no queda nada programado.
+        Assert.Empty(AttendanceRules.ScheduledChanges([first, far, new(3, today, 21)], today));
+    }
+
+    [Fact]
     public void La_fecha_de_efecto_de_una_pauta_no_es_anterior_a_la_que_esta_en_vigor_ni_pasa_de_90_dias_y_la_primera_vale_desde_siempre()
     {
         var today = new DateOnly(2026, 11, 25);

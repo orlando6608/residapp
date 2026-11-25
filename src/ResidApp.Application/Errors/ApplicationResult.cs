@@ -139,6 +139,8 @@ public static class ApplicationResultRunner
             "Revisa la ausencia: el último día no puede ser anterior al primero, dura 90 días como máximo, y no se puede anular ni acortar una ausencia ya anulada o más allá de su fin."),
         ["ATTENDANCE_PATTERN_DATE_INVALID"] = (ApplicationFailureCode.InvalidInput,
             "La fecha de la pauta no puede ser anterior a la de la pauta que está en vigor ni más de 90 días posterior a hoy."),
+        ["ATTENDANCE_PATTERN_REPLACES_SCHEDULED"] = (ApplicationFailureCode.Conflict,
+            "No se ha guardado: hay un cambio programado y esta pauta lo sustituiría. Si es lo que quieres, marca «Sustituir el cambio programado» y guarda otra vez."),
         ["ATTENDANCE_ABSENCE_OVERLAP"] = (ApplicationFailureCode.Conflict, "Esa persona ya tiene una ausencia programada que coincide con esas fechas."),
     };
 

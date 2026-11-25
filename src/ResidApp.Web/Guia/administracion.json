@@ -1699,6 +1699,7 @@
       "pasos": [
         { "texto": "En el Inicio, abre la tarjeta **Asistencia** (solo sale en un Centro de Día)." },
         { "texto": "Junto a la persona, pulsa **Fijar su pauta** (o **Cambiar su pauta**), marca los días en que se la espera, elige **Vale desde** (por defecto, hoy; una fecha pasada solo para corregir un error) y pulsa **Guardar la pauta**.", "botones": ["Fijar su pauta", "Cambiar su pauta", "Guardar la pauta"], "campos": ["Vale desde"] },
+        { "texto": "Si la pantalla avisa de un cambio programado y quieres que deje de valer, marca **Sustituir el cambio programado** antes de guardar. Hace falta cuando tu pauta empieza ese día o antes.", "campos": ["Sustituir el cambio programado"] },
         { "texto": "Para una ausencia, pulsa **Ausencias programadas**, elige la persona, el primer y el último día y el motivo, y pulsa **Registrar**.", "botones": ["Ausencias programadas", "Registrar"], "campos": ["Primer día", "Último día", "Motivo"] },
         { "texto": "Para cambiarla más tarde, en la lista de ausencias pulsa **Acortar** (con el nuevo último día) o **Anular**.", "botones": ["Acortar", "Anular"] }
       ],
@@ -1707,6 +1708,8 @@
         { "para": "Auxiliar", "texto": "Esos días ve «Ausencia programada» y las fechas, sin el motivo. Los días que no tocan según la pauta salen marcados, y aun así puede anotarlos." }
       ],
       "dudas": [
+        { "p": "«No hay cambios: los días son los mismos que los de la última pauta anotada.»", "r": "No se ha guardado nada. Para cambiar la fecha de **Vale desde**, cambia también algún día." },
+        { "p": "«No se ha guardado: hay un cambio programado y esta pauta lo sustituiría.»", "r": "Si quieres que el cambio programado deje de valer, marca **Sustituir el cambio programado**, vuelve a marcar tus días y guarda. Si quieres conservarlo, no guardes." },
         { "p": "«Esa persona ya tiene una ausencia programada que coincide con esas fechas.»", "r": "Acorta o anula la que ya tiene, o elige otras fechas." },
         { "p": "La ausencia no se deja registrar.", "r": "El último día no puede ser anterior al primero y no puede pasar de 90 días." },
         { "p": "Sin pauta, ¿qué días se espera a la persona?", "r": "Todos. Fíjale la pauta para que los días que no tocan salgan marcados." }
@@ -1714,6 +1717,8 @@
       "rutas": ["Asistencia/Index", "Asistencia/Pauta", "Asistencia/Ausencias", "Asistencia/RegistrarAusencia", "Asistencia/AnularAusencia", "Asistencia/AcortarAusencia"],
       "mensajes": [
         "Pauta guardada.",
+        "No hay cambios: los días son los mismos que los de la última pauta anotada. Para cambiar la fecha desde la que cuenta, cambia también algún día.",
+        "No se ha guardado: hay un cambio programado y esta pauta lo sustituiría. Si es lo que quieres, marca «Sustituir el cambio programado» y guarda otra vez.",
         "Ausencia registrada. Esos días no saldrán como «sin anotar».",
         "Esa persona ya tiene una ausencia programada que coincide con esas fechas."
       ],

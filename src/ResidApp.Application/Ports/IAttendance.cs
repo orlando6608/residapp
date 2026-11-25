@@ -58,8 +58,8 @@ public interface IAttendanceStore
 
     Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, DateOnly todayAtCenter, CancellationToken ct = default);
 
-    /// <summary>Administración y Enfermería. Si los días son iguales a los de la última versión, no hace nada. <paramref name="effectiveFrom"/> es el primer día en que cuenta (nulo = hoy; la primera versión vale desde siempre). Devuelve el número vigente.</summary>
-    Task<int> SetPatternAsync(AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, DateOnly? effectiveFrom, DateOnly todayAtCenter, CancellationToken ct = default);
+    /// <summary>Administración y Enfermería. Si los días son iguales a los de la última versión, no hace nada. <paramref name="effectiveFrom"/> es el primer día en que cuenta (nulo = hoy; la primera versión vale desde siempre). Si sustituiría un cambio programado, solo se guarda con <paramref name="replaceScheduled"/>. Devuelve el número vigente.</summary>
+    Task<int> SetPatternAsync(AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, DateOnly? effectiveFrom, DateOnly todayAtCenter, bool replaceScheduled = false, CancellationToken ct = default);
 
     /// <summary>Ausencias vigentes o futuras de una persona (o de todas las del alcance si es nulo), la más próxima primero.</summary>
     Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default);
