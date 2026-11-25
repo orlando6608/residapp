@@ -1,0 +1,69 @@
+@using ResidApp.Web.Models
+@model AsistenciaAjustesViewModel
+@* Ajustes de la asistencia (ADR 0019): el interruptor del centro. Solo Administración. Apagada por defecto. Encender pide dos confirmaciones. *@
+@{
+    ViewData["Title"] = "Ajustes de la asistencia";
+    var state = Model.State;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Asistencia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Ajustes</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"planificacion"' />Ajustes de la asistencia</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+@if (Model.Error is { } formError)
+{
+    <div class="alert alert-danger" role="alert">@formError</div>
+}
+
+<p>
+    Con la asistencia activada, Auxiliar, Enfermería y Medicina anotan cada día si cada persona vino o no vino y, si no vino, por qué (lo eligen de una lista; con «Otro motivo» pueden añadir unas pocas palabras).
+    No se anota la hora de llegada. Administración ve lo anotado, pero no esas palabras de «Otro motivo». Administración y Enfermería fijan los días en que se espera a cada persona (la pauta) y registran
+    las ausencias programadas. El motivo de una ausencia programada solo lo ven Enfermería y Medicina. Queda registrado quién anota cada día. Por ahora la familia no ve nada de esto.
+    La asistencia viene apagada y solo la activas tú.
+</p>
+
+@if (state.Active)
+{
+    <div class="alert alert-info" role="status"><strong>Ahora la asistencia está activada.</strong></div>
+    <form method="post" asp-action="Ajustes" aria-label="Desactivar la asistencia">
+        <input type="hidden" name="version" value="@state.Number" />
+        <input type="hidden" name="encender" value="false" />
+        <p>Si la desactivas, dejan de poder anotarse días nuevos. Lo ya anotado no se borra, pero no se muestra mientras esté desactivada.</p>
+        <button type="submit" class="btn btn-outline-danger btn-lg">Desactivar la asistencia</button>
+    </form>
+}
+else
+{
+    <div class="alert alert-secondary" role="status"><strong>Ahora la asistencia está desactivada.</strong></div>
+    <form method="post" asp-action="Ajustes" aria-label="Activar la asistencia">
+        <input type="hidden" name="version" value="@state.Number" />
+        <input type="hidden" name="encender" value="true" />
+        <fieldset class="mb-3">
+            <legend class="h5">Antes de activarla, confirma estas dos cosas</legend>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="informada" name="informada" value="true" required />
+                <label class="form-check-label" for="informada">@ResidApp.Domain.Platform.CenterVocabulary.TheServiceStart ya ha informado a las personas que acuden, a sus representantes y a sus familias de que se anotará cada día si vienen o no, de que se registrarán sus ausencias programadas y los días en que se las espera, y de quién puede ver esos datos.</label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="eipd" name="eipd" value="true" required />
+                <label class="form-check-label" for="eipd">@ResidApp.Domain.Platform.CenterVocabulary.TheServiceStart ha revisado con esta función su evaluación de impacto en protección de datos (EIPD, el documento donde analiza los riesgos de tratar datos de salud) y su registro de actividades de tratamiento, o ha dejado por escrito por qué no hacía falta.</label>
+            </div>
+        </fieldset>
+        <p class="form-text">Queda guardado quién la activa, cuándo y con qué confirmaciones.</p>
+        <button type="submit" class="btn btn-primary btn-lg">Activar la asistencia</button>
+    </form>
+}
