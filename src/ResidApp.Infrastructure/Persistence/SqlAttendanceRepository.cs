@@ -405,19 +405,12 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await RequireFeatureAsync(connection, transaction, actor, ct);
         // La ausencia tiene que ser de un residente del alcance de quien actúa: si no, es el mismo «no existe» de siempre.
-        var found = await connection.QuerySingleOrDefaultAsync<AbsenceTarget?>(new CommandDefinition($"""
-            SELECT absence.residente_id AS ResidentId,
-                   (SELECT TOP (1) location.unidad_id FROM dbo.intervalos_ubicacion_residente location
-                     WHERE location.residente_id = absence.residente_id AND location.centro_id = absence.centro_id AND location.vigente_hasta IS NULL) AS UnitId
-              FROM dbo.ausencias_programadas absence
-              JOIN dbo.residentes resident ON resident.id = absence.residente_id AND resident.centro_id = absence.centro_id
-             WHERE absence.id = @AbsenceId AND absence.centro_id = @CenterId AND absence.tipo_codigo = N'REGISTRADA' AND resident.estado = 'ACTIVE'
-               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
-            """, Params(actor, new { AbsenceId = absenceId }), transaction, cancellationToken: ct));
-        if (found is null)
-        {
-            throw new AccessDeniedException();
-        }
+        var residentId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition(
+            "SELECT residente_id FROM dbo.ausencias_programadas WHERE id = @AbsenceId AND centro_id = @CenterId AND tipo_codigo = N'REGISTRADA'",
+            Params(actor, new { AbsenceId = absenceId }), transaction, cancellationToken: ct))
+            ?? throw new AccessDeniedException();
+        // Bloquea la fila del residente, como al registrar: dos cambios sobre la misma persona van uno detrás de otro y el segundo ya ve lo que guardó el primero.
+        var unitId = await RequireResidentAsync(connection, transaction, actor, ResidentId.From(residentId), ct);
 
         var id = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
@@ -425,8 +418,8 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
             INSERT INTO dbo.ausencias_programadas
                 (id, centro_id, residente_id, tipo_codigo, ausencia_id, desde, hasta, motivo_codigo, causa_codigo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
             VALUES (@Id, @CenterId, @ResidentId, @Type, @AbsenceId, NULL, @To, NULL, @Cause, @AccountId, @Profile, @Now);
-            """, Params(actor, new { Id = id, found.ResidentId, Type = type, AbsenceId = absenceId, To = newTo, Cause = cause, Now = now.UtcDateTime }), ct);
-        await AuditAsync(connection, transaction, actor, found.ResidentId, found.UnitId, id, action, now, ct);
+            """, Params(actor, new { Id = id, ResidentId = residentId, Type = type, AbsenceId = absenceId, To = newTo, Cause = cause, Now = now.UtcDateTime }), ct);
+        await AuditAsync(connection, transaction, actor, residentId, unitId, id, action, now, ct);
         transaction.Commit();
     }
 
@@ -553,8 +546,6 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
     private sealed record FollowUpAbsenceRow(Guid ResidentId, DateTime FromDate, DateTime ToDate);
 
     private sealed record UnitRow(Guid? UnitId);
-
-    private sealed record AbsenceTarget(Guid ResidentId, Guid? UnitId);
 
     private sealed record MarkRow(int Number, string State, string? Cause, string? Note);
 

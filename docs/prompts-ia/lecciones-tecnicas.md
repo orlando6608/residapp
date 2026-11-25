@@ -194,6 +194,9 @@ Repite estos pasos antes de dar un bloque por cerrado:
 - **Las lecturas de un disparador de solo `INSERT` también interbloquean (script `0117`, 2026-11-25).** `TR_aup_reglas` leía por `id` y por
   `ausencia_id` y, con `READ_COMMITTED_SNAPSHOT` apagado, dos altas de personas distintas se esperaban entre sí. Remedio: filtrar toda lectura por
   centro y residente y `WITH (FORCESEEK (<índice> (columnas)))`. Se reproduce siempre con una prueba que haga el ciclo completo con varias personas a la vez.
+- **La concurrencia falla distinto en local y en Azure (2026-11-25).** Azure tiene `READ_COMMITTED_SNAPSHOT` encendido y las bases locales apagado: una
+  regla de disparador sin bloqueo previo acaba en local en error 1205 y en Azure deja pasar los dos cambios. Para verlo, crea una base temporal con
+  `ALTER DATABASE ... SET READ_COMMITTED_SNAPSHOT ON`, aplica los scripts y apunta ahí las pruebas con `RESIDAPP_TEST_CONNECTION_STRING`.
 - **Cómo reproducir el CI en local:** crea una BD nueva, aplica solo los scripts, sin seed, y ejecuta
   `dotnet test` en Release con `RESIDAPP_TEST_CONNECTION_STRING` apuntando a ella. Hazlo varias veces, con una
   BD nueva en cada vuelta. Los logs del pipeline piden autenticación y `gh` no está instalado. Una vuelta, en

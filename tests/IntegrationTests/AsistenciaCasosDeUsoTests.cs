@@ -245,6 +245,61 @@ public class AsistenciaCasosDeUsoTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Dos_cambios_a_la_vez_sobre_la_misma_ausencia_solo_guardan_uno(bool shorten)
+    {
+        var (day, staff) = await CreateAsync();
+        var resident = ResidentId.From(day.ResidentId);
+        var admin = Service(staff.Administracion);
+        var (profile, center) = (staff.Administracion.ProfileScopeId, staff.Administracion.CenterId);
+
+        for (var round = 0; round < 5; round++)
+        {
+            var from = Today.AddDays(1 + round * 20);
+            var id = (await admin.RegisterAbsenceAsync(new RegisterAbsenceCommand(profile, center, resident, from, from.AddDays(10), AbsenceReason.Otro))).Value;
+            var results = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => Task.Run(() => shorten
+                ? admin.ShortenAbsenceAsync(new ShortenAbsenceCommand(profile, center, id, from.AddDays(3)))
+                : admin.AnnulAbsenceAsync(new AbsenceChangeCommand(profile, center, id)))));
+
+            Assert.Single(results, result => result.Ok);
+            Assert.Equal(ApplicationFailureCode.InvalidInput, Assert.Single(results, result => !result.Ok).Error!.Code);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Cambiar_una_ausencia_espera_a_otro_cambio_en_curso_sobre_la_misma_persona(bool shorten)
+    {
+        var (day, staff) = await CreateAsync();
+        var resident = ResidentId.From(day.ResidentId);
+        var admin = Service(staff.Administracion);
+        var (profile, center) = (staff.Administracion.ProfileScopeId, staff.Administracion.CenterId);
+        var id = (await admin.RegisterAbsenceAsync(new RegisterAbsenceCommand(profile, center, resident, Today, Today.AddDays(10), AbsenceReason.Otro))).Value;
+
+        // El otro cambio, a medias: tiene bloqueada la fila del residente, como la aplicación, y todavía no ha anulado.
+        using var db = await TestDatabase.ConnectionFactory.OpenAsync();
+        using var other = db.BeginTransaction();
+        await db.ExecuteAsync("SELECT id FROM dbo.residentes WITH (UPDLOCK, ROWLOCK) WHERE id = @ResidentId", new { day.ResidentId }, other);
+
+        var change = Task.Run(() => shorten
+            ? admin.ShortenAbsenceAsync(new ShortenAbsenceCommand(profile, center, id, Today.AddDays(3)))
+            : admin.AnnulAbsenceAsync(new AbsenceChangeCommand(profile, center, id)));
+        Assert.True(await Task.WhenAny(change, Task.Delay(TimeSpan.FromSeconds(3))) != change, "El cambio no ha esperado al que estaba en curso.");
+
+        await db.ExecuteAsync("""
+            INSERT INTO dbo.ausencias_programadas
+                (id, centro_id, residente_id, tipo_codigo, ausencia_id, causa_codigo, registrado_por_cuenta_id, registrado_por_perfil, registrado_en)
+            VALUES (NEWID(), @CenterId, @ResidentId, N'ANULADA', @id, N'ERROR', @account, N'ADMINISTRACION', SYSUTCDATETIME())
+            """, new { day.CenterId, day.ResidentId, id, account = staff.Administracion.AccountId.Value }, other);
+        other.Commit();
+
+        // Al seguir, ya ve la anulación del otro y se rechaza.
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await change).Error!.Code);
+    }
+
     [Fact]
     public async Task Acortar_y_anular_una_ausencia_siguen_sus_reglas_y_dejan_auditoria_sin_valores()
     {
