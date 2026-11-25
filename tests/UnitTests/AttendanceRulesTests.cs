@@ -216,6 +216,19 @@ public class AttendanceRulesTests
     }
 
     [Fact]
+    public void Una_pauta_esta_sustituida_cuando_otra_de_mayor_numero_empieza_el_mismo_dia_o_antes()
+    {
+        var today = new DateOnly(2026, 11, 25);
+        PatternVersion first = new(1, AttendanceRules.FromTheBeginning, 21), second = new(2, today, 31), third = new(3, today, 63), future = new(4, today.AddDays(20), 1);
+        PatternVersion[] versions = [first, second, third, future];
+
+        // La segunda no cuenta ningún día (la tercera empieza el mismo día); la primera sigue contando antes de hoy y ni la tercera ni la futura están sustituidas.
+        Assert.Equal([second], versions.Where(v => AttendanceRules.IsReplaced(versions, v)).ToArray());
+        // Una de mayor número que empieza antes que la futura la sustituye.
+        Assert.True(AttendanceRules.IsReplaced([.. versions, new PatternVersion(5, today.AddDays(5), 3)], future));
+    }
+
+    [Fact]
     public void La_fecha_de_efecto_de_una_pauta_no_es_anterior_a_la_que_esta_en_vigor_ni_pasa_de_90_dias_y_la_primera_vale_desde_siempre()
     {
         var today = new DateOnly(2026, 11, 25);

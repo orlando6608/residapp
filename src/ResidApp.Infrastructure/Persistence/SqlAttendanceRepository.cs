@@ -199,9 +199,10 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         var rows = await PatternVersionsAsync(connection, null, actor, residentId, lockRows: false, ct);
         var versions = rows.Select(row => new PatternVersion(row.Number, DateOnly.FromDateTime(row.From), row.Days)).ToList();
         var inForce = versions.Where(v => v.From <= todayAtCenter).MaxBy(v => v.Number);
-        // El Auxiliar necesita la pauta en vigor y el próximo cambio, no todo el historial (lectura del DPO).
+        // El Auxiliar necesita la pauta en vigor y los próximos cambios, no todo el historial (lectura del DPO): un cambio sustituido ya no es un próximo cambio.
+        var scheduled = AttendanceRules.ScheduledChanges(versions, todayAtCenter).Select(v => v.Number).ToHashSet();
         var shown = rows
-            .Where(row => actor.Profile != SystemProfile.Auxiliar || DateOnly.FromDateTime(row.From) > todayAtCenter || row.Number == inForce?.Number)
+            .Where(row => actor.Profile != SystemProfile.Auxiliar || scheduled.Contains(row.Number) || row.Number == inForce?.Number)
             .OrderByDescending(row => row.Number)
             .Select(row => new PatternVersionEntry(
                 row.Number, DateOnly.FromDateTime(row.From), row.Days, DateOnly.FromDateTime(CenterTime.Local(row.RegisteredAt)), EnumCode.ParseCode<SystemProfile>(row.Profile)))
