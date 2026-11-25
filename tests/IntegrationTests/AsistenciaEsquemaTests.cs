@@ -217,4 +217,29 @@ public class AsistenciaEsquemaTests
         Assert.Contains("ASSISTANCE_IMMUTABLE", await TryAsync($"UPDATE dbo.{table} SET centro_id = centro_id WHERE id = @id", new { id }) ?? "");
         Assert.Contains("ASSISTANCE_IMMUTABLE", await TryAsync($"DELETE FROM dbo.{table} WHERE id = @id", new { id }) ?? "");
     }
+
+    [Fact]
+    public async Task La_pauta_tiene_fecha_de_efecto_la_primera_vale_desde_siempre_y_las_siguientes_no_van_antes_de_la_que_esta_en_vigor_ni_pasan_de_90_dias()
+    {
+        var d = await DayCenterFixture.CreateAsync(CenterServiceType.CentroDeDia);
+        Task<string?> Pattern(int number, int days, string from) => TryAsync("""
+            INSERT INTO dbo.asistencia_pauta (id, centro_id, residente_id, numero, dias_esperados, vigente_desde, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @CenterId, @ResidentId, @number, @days, CAST(@from AS DATE), @AccountId, 'ADMINISTRACION', SYSUTCDATETIME())
+            """, new { d.CenterId, d.ResidentId, d.AccountId, number, days, from });
+        string Day(int offset) => DateTime.UtcNow.Date.AddDays(offset).ToString("yyyy-MM-dd");
+
+        // La primera versión vale desde siempre.
+        Assert.Contains("ASSISTANCE_PATTERN_DATE_INVALID", await Pattern(1, 21, Day(0)) ?? "");
+        Assert.Null(await Pattern(1, 21, "0001-01-01"));
+        // La versión en vigor hoy es la 1 (desde siempre): una nueva puede ser de hoy, pasada, futura hasta 90 días, pero no más allá.
+        Assert.Contains("ASSISTANCE_PATTERN_DATE_INVALID", await Pattern(2, 31, Day(95)) ?? "");
+        Assert.Null(await Pattern(2, 31, Day(60)));
+        // La 2 todavía no está en vigor (empieza dentro de 60 días): la en vigor sigue siendo la 1, así que una 3 puede sustituirla con una fecha anterior a la de la 2.
+        Assert.Null(await Pattern(3, 63, Day(10)));
+        // Ahora la en vigor sigue siendo la 1 (la 3 empieza dentro de 10 días). Una versión pasada solo vale si no es anterior a la en vigor.
+        Assert.Null(await Pattern(4, 3, Day(-3)));
+        // La 4 ya está en vigor desde hace 3 días: una 5 anterior a esa fecha se rechaza, la misma fecha o posterior vale.
+        Assert.Contains("ASSISTANCE_PATTERN_DATE_INVALID", await Pattern(5, 5, Day(-4)) ?? "");
+        Assert.Null(await Pattern(5, 5, Day(-3)));
+    }
 }

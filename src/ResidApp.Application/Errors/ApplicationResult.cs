@@ -137,6 +137,8 @@ public static class ApplicationResultRunner
             "Esa fecha no se puede anotar: no puede ser futura y, desde Auxiliar, solo hasta 7 días atrás (pídelo a Enfermería o Medicina)."),
         ["ATTENDANCE_ABSENCE_INVALID"] = (ApplicationFailureCode.InvalidInput,
             "Revisa la ausencia: el último día no puede ser anterior al primero, dura 90 días como máximo, y no se puede anular ni acortar una ausencia ya anulada o más allá de su fin."),
+        ["ATTENDANCE_PATTERN_DATE_INVALID"] = (ApplicationFailureCode.InvalidInput,
+            "La fecha de la pauta no puede ser anterior a la de la pauta que está en vigor ni más de 90 días posterior a hoy."),
         ["ATTENDANCE_ABSENCE_OVERLAP"] = (ApplicationFailureCode.Conflict, "Esa persona ya tiene una ausencia programada que coincide con esas fechas."),
     };
 

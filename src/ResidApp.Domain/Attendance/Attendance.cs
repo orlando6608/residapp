@@ -38,6 +38,9 @@ public enum AttendanceDayStatus
 }
 
 /// <summary>Lo que dice la lista de seguimiento de una persona: días esperados seguidos anotados como «no vino» (con sus causas y el último día que vino) o días sin anotar.</summary>
+/// <summary>Una versión de la pauta de una persona: su número, desde qué día cuenta y los días en que se espera a la persona.</summary>
+public sealed record PatternVersion(int Number, DateOnly From, int DaysMask);
+
 public sealed record FollowUpOutcome(int AbsentDays, bool Capped, DateOnly? LastCame, IReadOnlyList<AttendanceCause> Causes, int UnmarkedDays);
 
 public static class AttendanceRules
@@ -48,6 +51,7 @@ public static class AttendanceRules
     public const string DateNotAllowedCode = "ATTENDANCE_DATE_NOT_ALLOWED";
     public const string AbsenceInvalidCode = "ATTENDANCE_ABSENCE_INVALID";
     public const string AbsenceOverlapCode = "ATTENDANCE_ABSENCE_OVERLAP";
+    public const string PatternDateInvalidCode = "ATTENDANCE_PATTERN_DATE_INVALID";
 
     /// <summary>Tope de la nota de «otro motivo»: propuesto, sin validar por CJ (ADR 0019). Igual que en la base de datos.</summary>
     public const int MaxNoteLength = 80;
@@ -134,6 +138,39 @@ public static class AttendanceRules
 
     public const int AllDays = 127;
 
+    /// <summary>Hasta cuántos días por delante puede empezar a contar una pauta nueva: propuesto, sin validar por CJ (ADR 0019). Igual que en la base de datos.</summary>
+    public const int MaxPatternAheadDays = 90;
+
+    /// <summary>La primera versión de la pauta de una persona vale «desde siempre». No se muestra nunca como fecha.</summary>
+    public static readonly DateOnly FromTheBeginning = DateOnly.MinValue;
+
+    /// <summary>
+    /// La máscara con que se espera a la persona el día <paramref name="day"/>: la de la versión de mayor número cuya fecha de efecto no es posterior (no la de mayor fecha: una versión nueva sustituye a una
+    /// futura puesta por error). Nulo si la persona no tiene pauta (se la espera todos los días).
+    /// </summary>
+    public static int? PatternFor(IEnumerable<PatternVersion> versions, DateOnly day) =>
+        versions.Where(v => v.From <= day).OrderByDescending(v => v.Number).Select(v => (int?)v.DaysMask).FirstOrDefault();
+
+    /// <summary>
+    /// La fecha de efecto de una versión nueva: por defecto hoy; no anterior a la de la versión que está en vigor hoy (<paramref name="inForceFrom"/>) ni posterior a hoy + <see cref="MaxPatternAheadDays"/> días.
+    /// La primera versión de una persona siempre vale desde siempre.
+    /// </summary>
+    public static DateOnly ValidatePatternDate(DateOnly? effectiveFrom, DateOnly todayAtCenter, DateOnly? inForceFrom)
+    {
+        if (inForceFrom is null)
+        {
+            return FromTheBeginning;
+        }
+
+        var date = effectiveFrom ?? todayAtCenter;
+        if (date < inForceFrom || date > todayAtCenter.AddDays(MaxPatternAheadDays))
+        {
+            throw new DomainValidationException(PatternDateInvalidCode);
+        }
+
+        return date;
+    }
+
     public static int Mask(DayOfWeek day) => day switch
     {
         DayOfWeek.Monday => 1,
@@ -170,7 +207,7 @@ public static class AttendanceRules
     /// <paramref name="firstDay"/> es el primer día que se mira (el alta, si es posterior a la ventana).
     /// </summary>
     public static FollowUpOutcome FollowUp(
-        DateOnly todayAtCenter, DateOnly firstDay, int? patternMask, Func<DateOnly, AttendanceDayStatus> statusOf, Func<DateOnly, AttendanceCause?> causeOf)
+        DateOnly todayAtCenter, DateOnly firstDay, Func<DateOnly, int?> patternFor, Func<DateOnly, AttendanceDayStatus> statusOf, Func<DateOnly, AttendanceCause?> causeOf)
     {
         var bound = todayAtCenter.AddDays(-FollowUpWindowDays);
         var start = firstDay > bound ? firstDay : bound;
@@ -181,7 +218,7 @@ public static class AttendanceRules
         var stopped = false;
         for (var day = todayAtCenter.AddDays(-1); day >= start; day = day.AddDays(-1))
         {
-            if (patternMask is { } mask && !Expects(mask, day))
+            if (patternFor(day) is { } mask && !Expects(mask, day))
             {
                 continue;
             }

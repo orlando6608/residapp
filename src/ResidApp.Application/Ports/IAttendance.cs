@@ -21,8 +21,11 @@ public sealed record AttendanceMark(int Number, AttendanceState State, Attendanc
 public sealed record AttendanceDayEntry(
     ResidentId ResidentId, string ResidentName, Guid? UnitId, string? UnitName, bool HasPattern, bool Expected, AttendanceMark? Mark, bool ScheduledAbsence, AttendanceDayStatus Status);
 
-/// <summary>La pauta vigente de una persona: máscara de días de la semana (lunes = 1 … domingo = 64); 0 si nunca se fijó.</summary>
-public sealed record AttendancePatternState(ResidentId ResidentId, string ResidentName, int Number, int DaysMask);
+/// <summary>Una versión de la pauta para mostrarla: desde qué día cuenta (<see cref="AttendanceRules.FromTheBeginning"/> = desde siempre), cuándo se anotó y con qué perfil. Sin nombre de cuenta ni motivo.</summary>
+public sealed record PatternVersionEntry(int Number, DateOnly From, int DaysMask, DateOnly RegisteredOn, SystemProfile RegisteredBy);
+
+/// <summary>La pauta de una persona. <paramref name="Number"/> es el de la última versión (el que ve quien cambia); <paramref name="DaysMask"/> es la que se espera hoy (lunes = 1 … domingo = 64; 0 si nunca se fijó). <paramref name="Versions"/>: las versiones, la más reciente primero (el Auxiliar solo ve la que está en vigor y las futuras).</summary>
+public sealed record AttendancePatternState(ResidentId ResidentId, string ResidentName, int Number, int DaysMask, IReadOnlyList<PatternVersionEntry> Versions);
 
 /// <summary>Una ausencia programada vigente o futura (ni anulada ni terminada). El motivo es nulo para quien no puede leerlo.</summary>
 public sealed record ScheduledAbsence(Guid Id, ResidentId ResidentId, string ResidentName, DateOnly From, DateOnly To, AbsenceReason? Reason);
@@ -53,10 +56,10 @@ public interface IAttendanceStore
     Task<int> RecordAsync(
         AttendanceActor actor, ResidentId residentId, DateOnly date, DateOnly todayAtCenter, AttendanceState state, AttendanceCause? cause, string? note, CancellationToken ct = default);
 
-    Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, CancellationToken ct = default);
+    Task<AttendancePatternState> ReadPatternAsync(AttendanceActor actor, ResidentId residentId, DateOnly todayAtCenter, CancellationToken ct = default);
 
-    /// <summary>Administración y Enfermería. Si es igual a la vigente, no hace nada. Devuelve el número vigente.</summary>
-    Task<int> SetPatternAsync(AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, CancellationToken ct = default);
+    /// <summary>Administración y Enfermería. Si los días son iguales a los de la última versión, no hace nada. <paramref name="effectiveFrom"/> es el primer día en que cuenta (nulo = hoy; la primera versión vale desde siempre). Devuelve el número vigente.</summary>
+    Task<int> SetPatternAsync(AttendanceActor actor, ResidentId residentId, int expectedNumber, int daysMask, DateOnly? effectiveFrom, DateOnly todayAtCenter, CancellationToken ct = default);
 
     /// <summary>Ausencias vigentes o futuras de una persona (o de todas las del alcance si es nulo), la más próxima primero.</summary>
     Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default);
