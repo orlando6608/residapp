@@ -1701,7 +1701,7 @@
         { "texto": "Junto a la persona, pulsa **Fijar su pauta** (o **Cambiar su pauta**), marca los días en que se la espera, elige **Vale desde** (por defecto, hoy; una fecha pasada solo para corregir un error) y pulsa **Guardar la pauta**.", "botones": ["Fijar su pauta", "Cambiar su pauta", "Guardar la pauta"], "campos": ["Vale desde"] },
         { "texto": "Si la pantalla avisa de un cambio programado y quieres que deje de valer, marca **Sustituir el cambio programado** antes de guardar. Hace falta cuando tu pauta empieza ese día o antes.", "campos": ["Sustituir el cambio programado"] },
         { "texto": "Para una ausencia, pulsa **Ausencias programadas**, elige la persona, el primer y el último día y el motivo, y pulsa **Registrar**.", "botones": ["Ausencias programadas", "Registrar"], "campos": ["Primer día", "Último día", "Motivo"] },
-        { "texto": "Para cambiarla más tarde, en la lista de ausencias pulsa **Acortar** (con el nuevo último día) o **Anular**.", "botones": ["Acortar", "Anular"] },
+        { "texto": "Para cambiarla más tarde, en la lista de ausencias pulsa **Acortar** (con el nuevo último día, anterior al que tenía) o **Anular**. Si dura un solo día no sale **Acortar**: solo se puede anular.", "botones": ["Acortar", "Anular"] },
         { "texto": "Si la ausencia ya ha terminado, en **Ausencias programadas** abre **Terminadas** para **Acortar** o **Anular**. Los días que no tengan nada anotado pasan a «sin anotar», y una ausencia anulada no se recupera: hay que registrarla otra vez, con su motivo. Aquí tampoco ves el motivo: si no lo sabes, pregúntalo a Enfermería antes de anular.", "botones": ["Terminadas", "Acortar", "Anular"] }
       ],
       "despues": [
