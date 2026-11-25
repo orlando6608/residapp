@@ -27,7 +27,7 @@ public sealed record PatternVersionEntry(int Number, DateOnly From, int DaysMask
 /// <summary>La pauta de una persona. <paramref name="Number"/> es el de la última versión (el que ve quien cambia); <paramref name="DaysMask"/> es la que se espera hoy (lunes = 1 … domingo = 64; 0 si nunca se fijó). <paramref name="Versions"/>: las versiones, la más reciente primero (el Auxiliar solo ve la que está en vigor y las futuras).</summary>
 public sealed record AttendancePatternState(ResidentId ResidentId, string ResidentName, int Number, int DaysMask, IReadOnlyList<PatternVersionEntry> Versions);
 
-/// <summary>Una ausencia programada vigente o futura (ni anulada ni terminada). El motivo es nulo para quien no puede leerlo.</summary>
+/// <summary>Una ausencia programada no anulada. El motivo es nulo para quien no puede leerlo.</summary>
 public sealed record ScheduledAbsence(Guid Id, ResidentId ResidentId, string ResidentName, DateOnly From, DateOnly To, AbsenceReason? Reason);
 
 /// <summary>Una persona con faltas seguidas. <paramref name="Days"/> son los días esperados seguidos anotados como «no vino» hasta ayer; <paramref name="Capped"/> si hay más de los que se miran. Sin nota ni motivo de ausencia.</summary>
@@ -63,6 +63,9 @@ public interface IAttendanceStore
 
     /// <summary>Ausencias vigentes o futuras de una persona (o de todas las del alcance si es nulo), la más próxima primero.</summary>
     Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default);
+
+    /// <summary>Solo Administración y Enfermería, para corregirlas: las ausencias cuyo último día ya ha pasado, todas, la que terminó más tarde primero.</summary>
+    Task<IReadOnlyList<ScheduledAbsence>> ListEndedAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default);
 
     Task<Guid> RegisterAbsenceAsync(AttendanceActor actor, ResidentId residentId, DateOnly from, DateOnly to, AbsenceReason reason, CancellationToken ct = default);
 

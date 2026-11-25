@@ -86,43 +86,23 @@
 }
 else
 {
-    @* Rejilla y no tabla: lleva campos de formulario, que en el móvil no se duplican (guía de diseño). *@
-    <ul class="list-group mb-3" aria-labelledby="vigentes-titulo">
-        @foreach (var absence in Model.Absences)
-        {
-            <li class="list-group-item">
-                <div class="row g-2 align-items-center">
-                    <div class="col-12 @(Model.CanManage ? "col-md-5" : null)">
-                        <h3 class="h6 mb-0">@absence.ResidentName</h3>
-                        <span class="d-block">Del @AsistenciaDisplay.Date(absence.From) al @AsistenciaDisplay.Date(absence.To)</span>
-                        @if (Model.CanSeeReason && absence.Reason is { } reason)
-                        {
-                            <span class="d-block small text-body-secondary">Motivo: @EnumDisplay.Label(reason)</span>
-                        }
-                    </div>
-                    @if (Model.CanManage)
-                    {
-                        <div class="col-12 col-md-7">
-                            <div class="d-flex flex-wrap align-items-end justify-content-md-end gap-2">
-                                <form method="post" asp-action="AcortarAusencia" class="d-flex flex-wrap align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
-                                    <input type="hidden" name="ausenciaId" value="@absence.Id" />
-                                    <div>
-                                        <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
-                                        <input class="form-control form-control-lg" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.ToString("yyyy-MM-dd")" required />
-                                    </div>
-                                    <button type="submit" class="btn btn-outline-primary btn-lg">Acortar</button>
-                                </form>
-                                <form method="post" asp-action="AnularAusencia" aria-label="Anular la ausencia de @absence.ResidentName">
-                                    <input type="hidden" name="ausenciaId" value="@absence.Id" />
-                                    <button type="submit" class="btn btn-outline-danger btn-lg">Anular</button>
-                                </form>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </li>
-        }
-    </ul>
+    <partial name="_ListaAusencias" model='new AsistenciaListaAusenciasViewModel(Model.Absences, Model.CanManage, Model.CanSeeReason, "vigentes-titulo")' />
+}
+
+@if (Model.Ended.Count > 0)
+{
+    <details class="mb-3">
+        <summary class="h5 py-2" id="terminadas-titulo">Terminadas (@Model.Ended.Count)</summary>
+        <p>
+            Su último día ya ha pasado. Anular o acortar una ausencia terminada cambia cómo se leen esos días: los que no tengan nada anotado pasan a «sin anotar». Una ausencia anulada no se recupera:
+            hay que registrarla otra vez, con su motivo.
+            @if (!Model.CanSeeReason)
+            {
+                <text>Si no sabes el motivo, pregúntalo a Enfermería antes de anular.</text>
+            }
+        </p>
+        <partial name="_ListaAusencias" model='new AsistenciaListaAusenciasViewModel(Model.Ended, Model.CanManage, Model.CanSeeReason, "terminadas-titulo")' />
+    </details>
 }
 
 <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver a la asistencia</a>

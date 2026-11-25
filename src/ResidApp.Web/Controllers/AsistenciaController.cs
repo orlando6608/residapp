@@ -134,8 +134,10 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
 
         var canManage = AttendanceRules.CanManageAbsences(scope.Profile);
         var residents = canManage ? await attendance.ListDayAsync(scope.ProfileScopeId, centerId, null, ct) : null;
+        var ended = canManage ? await attendance.ListEndedAbsencesAsync(scope.ProfileScopeId, centerId, filter, ct) : null;
         return View(new AsistenciaAusenciasViewModel(
-            result.Value!, residents is { Ok: true } ? residents.Value! : [], canManage, AttendanceRules.CanReadAbsenceReason(scope.Profile), CenterTime.Today, residenteId));
+            result.Value!, ended is { Ok: true } ? ended.Value! : [], residents is { Ok: true } ? residents.Value! : [], canManage, AttendanceRules.CanReadAbsenceReason(scope.Profile),
+            CenterTime.Today, residenteId));
     }
 
     [HttpPost]

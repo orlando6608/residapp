@@ -510,6 +510,68 @@ public class AsistenciaCasosDeUsoTests
         Assert.Equal(["ATTENDANCE_CENTER_ON", "ABSENCE_REGISTER", "ABSENCE_SHORTEN", "ABSENCE_ANNUL"], actions);
     }
 
+    [Fact]
+    public async Task Una_ausencia_terminada_la_ven_y_la_corrigen_Administracion_y_Enfermeria()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 30);
+        var resident = ResidentId.From(day.ResidentId);
+        var admin = Service(staff.Administracion);
+        var (profile, center) = (staff.Administracion.ProfileScopeId, staff.Administracion.CenterId);
+        async Task<Guid> Register(int from, int to)
+        {
+            var result = await admin.RegisterAbsenceAsync(new RegisterAbsenceCommand(profile, center, resident, Today.AddDays(from), Today.AddDays(to), AbsenceReason.IngresoHospitalario));
+            Assert.True(result.Ok, result.Error?.Message);
+            return result.Value;
+        }
+
+        async Task<IReadOnlyList<ScheduledAbsence>> Ended(SeededProfile who) => (await Service(who).ListEndedAbsencesAsync(who.ProfileScopeId, who.CenterId, null)).Value!;
+        var older = await Register(-20, -15);
+        var yesterday = await Register(-10, -1);
+        var current = await Register(0, 0);
+
+        // La que termina hoy sigue siendo vigente; las terminadas van aparte, la más reciente primero, y el motivo solo lo lee Enfermería.
+        Assert.Equal(current, Assert.Single((await admin.ListAbsencesAsync(profile, center, null)).Value!).Id);
+        Assert.Equal([yesterday, older], (await Ended(staff.Administracion)).Select(a => a.Id));
+        Assert.All(await Ended(staff.Administracion), a => Assert.Null(a.Reason));
+        Assert.All(await Ended(staff.Enfermeria), a => Assert.Equal(AbsenceReason.IngresoHospitalario, a.Reason));
+        foreach (var other in new[] { staff.Auxiliar, staff.Medicina, staff.Direccion })
+        {
+            Assert.Equal(ApplicationFailureCode.AccessDenied, (await Service(other).ListEndedAbsencesAsync(other.ProfileScopeId, other.CenterId, null)).Error!.Code);
+        }
+
+        // Anular una terminada: esos días dejan de leerse como ausencia y se puede registrar otra en las mismas fechas.
+        async Task<AttendanceDayStatus> StatusAsync(int days) =>
+            (await Service(staff.Enfermeria).ListDayAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, Today.AddDays(days))).Value!.Single().Status;
+        Assert.Equal(AttendanceDayStatus.AusenciaProgramada, await StatusAsync(-5));
+        Assert.True((await admin.AnnulAbsenceAsync(new AbsenceChangeCommand(profile, center, yesterday))).Ok);
+        Assert.Equal(AttendanceDayStatus.SinAnotar, await StatusAsync(-5));
+        Assert.Equal([older], (await Ended(staff.Administracion)).Select(a => a.Id));
+
+        // Acortar una terminada.
+        Assert.True((await admin.ShortenAbsenceAsync(new ShortenAbsenceCommand(profile, center, older, Today.AddDays(-18)))).Ok);
+        Assert.Equal(Today.AddDays(-18), Assert.Single(await Ended(staff.Administracion)).To);
+
+        // Una vigente acortada a un día pasado pasa a las terminadas.
+        Assert.True((await admin.AnnulAbsenceAsync(new AbsenceChangeCommand(profile, center, current))).Ok);
+        var shortened = await Register(-5, 3);
+        Assert.True((await admin.ShortenAbsenceAsync(new ShortenAbsenceCommand(profile, center, shortened, Today.AddDays(-1)))).Ok);
+        Assert.Empty((await admin.ListAbsencesAsync(profile, center, null)).Value!);
+        Assert.Equal([shortened, older], (await Ended(staff.Administracion)).Select(a => a.Id));
+
+        // Fuera del alcance (Enfermería sin esa unidad) y con la persona suspendida, no salen.
+        using var db = await TestDatabase.ConnectionFactory.OpenAsync();
+        await db.ExecuteAsync("UPDATE dbo.ambitos_perfil_unidad SET revocado_en = SYSUTCDATETIME(), revocado_por_cuenta_id = @AccountId WHERE ambito_perfil_id = @scope",
+            new { day.AccountId, scope = staff.Enfermeria.ProfileScopeId });
+        Assert.Empty(await Ended(staff.Enfermeria));
+        Assert.Equal(2, (await Ended(staff.Administracion)).Count);
+        await db.ExecuteAsync("""
+            INSERT INTO dbo.suspensiones_residente (id, residente_id, centro_id, unidad_id, iniciada_por_cuenta_id, iniciada_en)
+            VALUES (NEWID(), @ResidentId, @CenterId, @UnitId, @AccountId, SYSUTCDATETIME())
+            """, new { day.ResidentId, day.CenterId, day.UnitId, day.AccountId });
+        Assert.Empty(await Ended(staff.Administracion));
+    }
+
     private static async Task BackdateAsync(Day day, int days)
     {
         using var db = await TestDatabase.ConnectionFactory.OpenAsync();

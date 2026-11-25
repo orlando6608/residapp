@@ -86,6 +86,11 @@ public sealed class AttendanceApplicationService(
     public Task<ApplicationResult<IReadOnlyList<ScheduledAbsence>>> ListAbsencesAsync(Guid profileScopeId, CenterId centerId, ResidentId? residentId, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () => await store.ListAbsencesAsync(await ActorAsync(profileScopeId, centerId, ReadProfiles, ct), residentId, Today(), ct));
 
+    /// <summary>Las ya terminadas, solo para quien las corrige: Administración y Enfermería; el motivo, solo Enfermería.</summary>
+    public Task<ApplicationResult<IReadOnlyList<ScheduledAbsence>>> ListEndedAbsencesAsync(Guid profileScopeId, CenterId centerId, ResidentId? residentId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () => await store.ListEndedAbsencesAsync(
+            await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion, SystemProfile.Enfermeria], ct), residentId, Today(), ct));
+
     /// <summary>Administración y Enfermería. Administración elige el motivo al registrar y no lo vuelve a ver. Devuelve el identificador de la ausencia.</summary>
     public Task<ApplicationResult<Guid>> RegisterAbsenceAsync(RegisterAbsenceCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
