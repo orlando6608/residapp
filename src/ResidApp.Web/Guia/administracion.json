@@ -1733,6 +1733,7 @@
         { "texto": "En el Inicio, abre la tarjeta **Asistencia** y pulsa **Lista de seguimiento**.", "botones": ["Asistencia", "Lista de seguimiento"] },
         { "texto": "Lee **Con 3 o más días seguidos sin venir**: cada persona con los días seguidos, el último día que vino y la causa anotada.", "campos": ["días seguidos sin venir"] },
         { "texto": "Lee **Con días sin anotar**: son personas a las que nadie ha anotado los últimos días en que se las esperaba. Pide a quien anota que los complete; mientras tanto no cuentan como faltas.", "campos": ["Con días sin anotar"] },
+        { "texto": "Mira **Sin pauta**: son personas a las que todavía no se les ha fijado la pauta. Se las espera todos los días, también el fin de semana, y para ellas la lista puede no ser fiable. Fíjasela desde **Asistencia** (ver ADM-52).", "campos": ["Sin pauta"] },
         { "texto": "Decide tú, según el procedimiento de tu centro, a quién llamar. La lista no guarda que has llamado ni nada más." }
       ],
       "despues": [
@@ -1741,6 +1742,7 @@
       ],
       "dudas": [
         { "p": "Una persona que lleva días sin venir no sale.", "r": "Puede que esos días no estén anotados (salen en «Con días sin anotar»), que no toquen según su pauta, que cubra una ausencia programada o que haya venido algún día. Hoy no cuenta: solo hasta ayer." },
+        { "p": "Una persona tiene días sin anotar de hace más de 7 días y yo no puedo anotarlos.", "r": "Es así: Administración lee la asistencia pero no la anota. Esos días los completan Enfermería o Medicina; pídeselo a ellas." },
         { "p": "Que una persona no salga, ¿significa que está bien?", "r": "No: puede que el día no se haya anotado. La lista no sustituye al contacto con la familia." },
         { "p": "¿Por qué 3 días?", "r": "Es el valor con que se ha empezado: no es un criterio clínico ni de seguridad." }
       ],

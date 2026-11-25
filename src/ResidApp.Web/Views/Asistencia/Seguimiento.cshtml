@@ -71,7 +71,7 @@
     }
 
     <h2 class="h5 mt-4" id="sin-anotar-titulo">Con días sin anotar</h2>
-    <p class="text-body-secondary">Estas personas tienen sin anotar los últimos días en que se las esperaba. «Sin anotar» no es «No vino»: no cuentan como faltas hasta que alguien lo anote.</p>
+    <p class="text-body-secondary">Estas personas tienen sin anotar los últimos días en que se las esperaba. «Sin anotar» no es «No vino»: no cuentan como faltas hasta que alguien lo anote. Los días de hace más de 7 los completan Enfermería o Medicina: pídeselo a ellas.</p>
     @if (data.Unmarked.Count == 0)
     {
         <div class="alert alert-info" role="status">No hay personas con días recientes sin anotar.</div>
@@ -103,6 +103,29 @@
                 </tbody>
             </table>
         </div>
+    }
+
+    <h2 class="h5 mt-4" id="sin-pauta-titulo">Sin pauta</h2>
+    <p class="text-body-secondary">A estas personas todavía no se les ha fijado la pauta, así que se las espera todos los días, también el fin de semana. Para ellas esta lista puede no ser fiable: un fin de semana sin anotar
+        interrumpe la cuenta. Fija su pauta en <a asp-action="Index">Asistencia</a> («Fijar su pauta»).</p>
+    @if (data.WithoutPattern.Count == 0)
+    {
+        <div class="alert alert-info" role="status">Todas las personas tienen pauta.</div>
+    }
+    else
+    {
+        <ul class="list-group mb-3" aria-labelledby="sin-pauta-titulo">
+            @foreach (var entry in data.WithoutPattern)
+            {
+                <li class="list-group-item">
+                    @entry.ResidentName
+                    @if (entry.UnitName is { } unit)
+                    {
+                        <span class="d-block small text-body-secondary">@unit</span>
+                    }
+                </li>
+            }
+        </ul>
     }
 
     <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver a la asistencia</a>

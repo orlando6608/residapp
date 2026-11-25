@@ -248,7 +248,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         var parameters = Params(actor, new { From = from.ToDateTime(TimeOnly.MinValue), Today = todayAtCenter.ToDateTime(TimeOnly.MinValue) });
         var residents = (await connection.QueryAsync<FollowUpResidentRow>(new CommandDefinition($"""
             SELECT resident.id AS ResidentId, resident.nombre_visible AS ResidentName, unit.nombre_visible AS UnitName, pattern.dias_esperados AS PatternMask,
-                   CAST(COALESCE(resident.fecha_ingreso, resident.creado_en) AS DATE) AS FirstDay
+                   resident.fecha_ingreso AS AdmissionDate, resident.creado_en AS CreatedAt
               FROM dbo.residentes resident
               LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL
               LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = resident.centro_id
@@ -276,12 +276,21 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
         var absent = new List<FollowUpAbsence>();
         var unmarked = new List<FollowUpUnmarked>();
+        var withoutPattern = new List<FollowUpWithoutPattern>();
         foreach (var resident in residents.OrderBy(r => r.UnitName).ThenBy(r => r.ResidentName))
         {
             var byDay = marks[resident.ResidentId].ToDictionary(m => DateOnly.FromDateTime(m.Day));
             var covered = absences[resident.ResidentId].Select(a => (From: DateOnly.FromDateTime(a.FromDate), To: DateOnly.FromDateTime(a.ToDate))).ToList();
+            // Se cuenta desde que existe la ficha en el día del centro, igual que la base (que no deja anotar antes), o desde el ingreso si es posterior.
+            var created = DateOnly.FromDateTime(CenterTime.Local(resident.CreatedAt));
+            var firstDay = resident.AdmissionDate is { } admission && DateOnly.FromDateTime(admission) > created ? DateOnly.FromDateTime(admission) : created;
+            if (resident.PatternMask is null)
+            {
+                withoutPattern.Add(new FollowUpWithoutPattern(ResidentId.From(resident.ResidentId), resident.ResidentName, resident.UnitName));
+            }
+
             var outcome = AttendanceRules.FollowUp(
-                todayAtCenter, DateOnly.FromDateTime(resident.FirstDay), resident.PatternMask is { } mask ? mask : (int?)null,
+                todayAtCenter, firstDay, resident.PatternMask is { } mask ? mask : (int?)null,
                 day => AttendanceRules.StatusOf(
                     byDay.TryGetValue(day, out var m) ? EnumCode.ParseCode<AttendanceState>(m.State) : null, covered.Any(a => a.From <= day && day <= a.To)),
                 day => byDay.TryGetValue(day, out var m) && m.Cause is not null ? EnumCode.ParseCode<AttendanceCause>(m.Cause) : null);
@@ -298,7 +307,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
         // Abrir la lista queda registrado sin cifras ni nombres: quién y cuándo (muestra a varias personas a la vez).
         await AuditAsync(connection, null, actor, null, null, actor.CenterId.Value, "ATTENDANCE_FOLLOWUP_OPEN", DateTimeOffset.UtcNow, ct);
-        return new AttendanceFollowUp(absent.OrderByDescending(a => a.Days).ThenBy(a => a.ResidentName).ToList(), unmarked);
+        return new AttendanceFollowUp(absent.OrderByDescending(a => a.Days).ThenBy(a => a.ResidentName).ToList(), unmarked, withoutPattern);
     }
 
     // ---- Las ausencias programadas ----
@@ -508,7 +517,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
     private sealed record SwitchRow(int Number, bool Active);
 
-    private sealed record FollowUpResidentRow(Guid ResidentId, string ResidentName, string? UnitName, byte? PatternMask, DateTime FirstDay);
+    private sealed record FollowUpResidentRow(Guid ResidentId, string ResidentName, string? UnitName, byte? PatternMask, DateTime? AdmissionDate, DateTime CreatedAt);
 
     private sealed record FollowUpMarkRow(Guid ResidentId, DateTime Day, string State, string? Cause);
 

@@ -48,7 +48,9 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
     }
 
     /// <summary>Crea un centro del tipo pedido por el alta real de Plataforma y entra con una Administración propia de ese centro.</summary>
-    private async Task<HttpClient> LoginAdminOfNewCenterAsync(string type)
+    private Task<HttpClient> LoginAdminOfNewCenterAsync(string type) => LoginOfNewCenterAsync(type, "ADMINISTRACION");
+
+    private async Task<HttpClient> LoginOfNewCenterAsync(string type, string profile)
     {
         var platform = await LoginPlatformAsync();
         var suffix = Guid.NewGuid().ToString("N")[..10];
@@ -71,8 +73,8 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
             await connection.ExecuteAsync("""
                 INSERT INTO dbo.cuentas (id, sujeto_externo, estado, creado_en) VALUES (@accountId, @subject, 'ACTIVE', SYSUTCDATETIME());
                 INSERT INTO dbo.ambitos_perfil (id, cuenta_id, centro_id, perfil_codigo, estado, concedido_en, concedido_por_cuenta_id)
-                VALUES (NEWID(), @accountId, @centerId, 'ADMINISTRACION', 'ACTIVE', SYSUTCDATETIME(), @accountId)
-                """, new { accountId, subject, centerId });
+                VALUES (NEWID(), @accountId, @centerId, @profile, 'ACTIVE', SYSUTCDATETIME(), @accountId)
+                """, new { accountId, subject, centerId, profile });
         }
 
         return await LoginAsync(subject);
@@ -129,6 +131,28 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
         Assert.Contains("Esto no es un aviso de seguridad.", followUpPage);
         Assert.Contains("Esta pantalla no se imprime.", followUpPage);
         Assert.Contains("Nadie lleva 3 o más días seguidos", followUpPage);
+        Assert.Contains("Todas las personas tienen pauta.", followUpPage);
         Assert.DoesNotContain("riesgo", followUpPage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("AUXILIAR")]
+    [InlineData("ENFERMERIA")]
+    public async Task Auxiliar_y_Enfermeria_ven_la_asistencia_pero_no_la_lista_de_seguimiento_ni_los_ajustes(string profile)
+    {
+        var client = await LoginOfNewCenterAsync("CentroDeDia", profile);
+
+        // Nunca activada: se lee la lista (vacía) con el aviso, sin botones para anotar.
+        var list = WebUtility.HtmlDecode(await client.GetStringAsync("/Asistencia"));
+        Assert.Contains("La asistencia está desactivada", list);
+        Assert.DoesNotContain("name=\"estado\"", list);
+        Assert.DoesNotContain("Lista de seguimiento", list);
+
+        foreach (var forbidden in new[] { "/Asistencia/Seguimiento", "/Asistencia/Ajustes" })
+        {
+            var response = await client.GetAsync(forbidden);
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Equal("/Asistencia", response.Headers.Location!.OriginalString);
+        }
     }
 }
