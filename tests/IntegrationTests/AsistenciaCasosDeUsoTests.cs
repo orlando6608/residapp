@@ -382,4 +382,78 @@ public class AsistenciaCasosDeUsoTests
         Assert.False((await Service(staff.Administracion).RegisterAbsenceAsync(new RegisterAbsenceCommand(
             staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident, Today.AddDays(10), Today.AddDays(11), AbsenceReason.Otro))).Ok);
     }
+
+    [Fact]
+    public async Task La_lista_de_seguimiento_avisa_de_quien_no_tiene_pauta_y_cuenta_desde_que_existe_la_ficha()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 5);
+        using (var db = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            // Ingreso mucho antes de crear la ficha (por ejemplo, importado de otro programa): la base no deja anotar esos días y la lista no los cuenta.
+            await db.ExecuteAsync("UPDATE dbo.residentes SET fecha_ingreso = DATEADD(DAY, -30, CAST(SYSUTCDATETIME() AS DATE)) WHERE id = @id", new { id = day.ResidentId });
+        }
+
+        var followUp = await FollowUpAsync(staff.Administracion);
+        Assert.Equal(day.ResidentId, Assert.Single(followUp.WithoutPattern).ResidentId.Value);
+        Assert.Equal(5, Assert.Single(followUp.Unmarked).Days);
+
+        Assert.True((await Service(staff.Enfermeria).SetPatternAsync(new SetAttendancePatternCommand(
+            staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, ResidentId.From(day.ResidentId), 0, AttendanceRules.AllDays))).Ok);
+        Assert.Empty((await FollowUpAsync(staff.Administracion)).WithoutPattern);
+    }
+
+    [Fact]
+    public async Task Un_residente_suspendido_o_de_baja_no_sale_en_la_lista_de_seguimiento_ni_en_las_ausencias()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 5);
+        var resident = ResidentId.From(day.ResidentId);
+        Assert.True((await Service(staff.Administracion).RegisterAbsenceAsync(new RegisterAbsenceCommand(
+            staff.Administracion.ProfileScopeId, staff.Administracion.CenterId, resident, Today.AddDays(2), Today.AddDays(3), AbsenceReason.Vacaciones))).Ok);
+        Assert.Single((await FollowUpAsync(staff.Administracion)).Unmarked);
+
+        Guid suspension;
+        using (var db = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            suspension = Guid.NewGuid();
+            await db.ExecuteAsync("""
+                INSERT INTO dbo.suspensiones_residente (id, residente_id, centro_id, unidad_id, iniciada_por_cuenta_id, iniciada_en)
+                VALUES (@suspension, @ResidentId, @CenterId, @UnitId, @AccountId, SYSUTCDATETIME())
+                """, new { suspension, day.ResidentId, day.CenterId, day.UnitId, day.AccountId });
+        }
+
+        Assert.Empty((await FollowUpAsync(staff.Administracion)).Unmarked);
+        Assert.Empty((await FollowUpAsync(staff.Administracion)).WithoutPattern);
+        Assert.Empty((await Service(staff.Enfermeria).ListAbsencesAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, null)).Value!);
+
+        // De baja: otra persona del mismo centro, con la ficha antigua y sin nada anotado.
+        var discharged = await DayCenterFixture.AddResidentAsync(day.AccountId, day.CenterId, day.UnitId, "Persona de baja (ficticia)");
+        await BackdateAsync(day with { ResidentId = discharged }, 5);
+        Assert.Contains((await FollowUpAsync(staff.Administracion)).WithoutPattern, w => w.ResidentId.Value == discharged);
+        using (var db = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await db.ExecuteAsync("UPDATE dbo.residentes SET estado = 'INACTIVE', motivo_inactivacion = N'baja de prueba', inactivado_en = SYSUTCDATETIME(), inactivado_por_cuenta_id = @account, inactivado_por_perfil = 'ADMINISTRACION' WHERE id = @id", new { id = discharged, account = day.AccountId });
+        }
+
+        var afterDischarge = await FollowUpAsync(staff.Administracion);
+        Assert.DoesNotContain(afterDischarge.Unmarked, u => u.ResidentId.Value == discharged);
+        Assert.DoesNotContain(afterDischarge.WithoutPattern, w => w.ResidentId.Value == discharged);
+        Assert.DoesNotContain((await Service(staff.Enfermeria).ListDayAsync(staff.Enfermeria.ProfileScopeId, staff.Enfermeria.CenterId, null)).Value!, e => e.ResidentId.Value == discharged);
+    }
+
+    [Fact]
+    public async Task El_Auxiliar_corrige_hasta_7_dias_y_Enfermeria_y_Medicina_mas_atras_por_el_caso_de_uso()
+    {
+        var (day, staff) = await CreateAsync();
+        await BackdateAsync(day, 40);
+
+        Assert.True((await Service(staff.Auxiliar).RecordAsync(Mark(staff.Auxiliar, day, AttendanceState.Asistio, date: Today.AddDays(-7)))).Ok);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await Service(staff.Auxiliar).RecordAsync(Mark(staff.Auxiliar, day, AttendanceState.Asistio, date: Today.AddDays(-8)))).Error!.Code);
+        Assert.True((await Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: Today.AddDays(-30)))).Ok);
+        Assert.True((await Service(staff.Medicina).RecordAsync(Mark(staff.Medicina, day, AttendanceState.Asistio, date: Today.AddDays(-31)))).Ok);
+        // Nunca anterior al alta (la ficha existe desde hace 40 días) ni futura.
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: Today.AddDays(-41)))).Error!.Code);
+        Assert.Equal(ApplicationFailureCode.InvalidInput, (await Service(staff.Enfermeria).RecordAsync(Mark(staff.Enfermeria, day, AttendanceState.Asistio, date: Today.AddDays(1)))).Error!.Code);
+    }
 }

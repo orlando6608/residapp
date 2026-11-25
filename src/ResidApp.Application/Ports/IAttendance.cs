@@ -34,7 +34,10 @@ public sealed record FollowUpAbsence(ResidentId ResidentId, string ResidentName,
 public sealed record FollowUpUnmarked(ResidentId ResidentId, string ResidentName, string? UnitName, int Days);
 
 /// <summary>La lista de seguimiento de Administración: se calcula al abrirla y no se guarda.</summary>
-public sealed record AttendanceFollowUp(IReadOnlyList<FollowUpAbsence> Absences, IReadOnlyList<FollowUpUnmarked> Unmarked);
+/// <summary>Una persona sin pauta: se la espera todos los días, también el fin de semana, y la lista puede no ser fiable para ella hasta que se le fije.</summary>
+public sealed record FollowUpWithoutPattern(ResidentId ResidentId, string ResidentName, string? UnitName);
+
+public sealed record AttendanceFollowUp(IReadOnlyList<FollowUpAbsence> Absences, IReadOnlyList<FollowUpUnmarked> Unmarked, IReadOnlyList<FollowUpWithoutPattern> WithoutPattern);
 
 public interface IAttendanceStore
 {
