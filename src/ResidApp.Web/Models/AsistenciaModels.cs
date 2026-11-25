@@ -18,6 +18,8 @@ public sealed record AsistenciaPautaViewModel(AttendancePatternState Pattern, bo
 public sealed record AsistenciaAusenciasViewModel(
     IReadOnlyList<ScheduledAbsence> Absences, IReadOnlyList<AttendanceDayEntry> Residents, bool CanManage, bool CanSeeReason, DateOnly Today, Guid? ResidentFilter);
 
+public sealed record AsistenciaSeguimientoViewModel(AttendanceFollowUp Data, DateOnly Today);
+
 public sealed record AsistenciaAjustesViewModel(AttendanceCenterState State, string? Error);
 
 /// <summary>Los textos en español de lo que la asistencia muestra: un solo sitio para todas las vistas.</summary>

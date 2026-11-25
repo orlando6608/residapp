@@ -1719,6 +1719,38 @@
       ],
       "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
       "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
+    },
+    {
+      "codigo": "ADM-53",
+      "pregunta": "¿Cómo veo quién lleva varios días sin venir al centro de día?",
+      "palabras": ["asistencia", "lista de seguimiento", "faltas", "días seguidos", "sin venir", "llamar a la familia", "sin anotar"],
+      "permisos": [],
+      "antes": [
+        "Que tu centro sea un **Centro de Día** y tenga la asistencia activada (ver ADM-51).",
+        "Saber qué es: una ayuda para decidir a quién llamar, **no un aviso de seguridad**. No avisa a nadie, no llama a las familias y no cuenta nada que nadie haya anotado: un día sin anotar no es «No vino»."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Asistencia** y pulsa **Lista de seguimiento**.", "botones": ["Asistencia", "Lista de seguimiento"] },
+        { "texto": "Lee **Con 3 o más días seguidos sin venir**: cada persona con los días seguidos, el último día que vino y la causa anotada.", "campos": ["días seguidos sin venir"] },
+        { "texto": "Lee **Con días sin anotar**: son personas a las que nadie ha anotado los últimos días en que se las esperaba. Pide a quien anota que los complete; mientras tanto no cuentan como faltas.", "campos": ["Con días sin anotar"] },
+        { "texto": "Decide tú, según el procedimiento de tu centro, a quién llamar. La lista no guarda que has llamado ni nada más." }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Solo ves la lista. No se guarda nada, no sale un contador en el Inicio y no se puede imprimir. Queda registrado que la abriste, sin nombres." },
+        { "para": "Auxiliar", "texto": "No ve la lista. Si faltan días sin anotar, es quien puede completarlos." }
+      ],
+      "dudas": [
+        { "p": "Una persona que lleva días sin venir no sale.", "r": "Puede que esos días no estén anotados (salen en «Con días sin anotar»), que no toquen según su pauta, que cubra una ausencia programada o que haya venido algún día. Hoy no cuenta: solo hasta ayer." },
+        { "p": "Que una persona no salga, ¿significa que está bien?", "r": "No: puede que el día no se haya anotado. La lista no sustituye al contacto con la familia." },
+        { "p": "¿Por qué 3 días?", "r": "Es el valor con que se ha empezado: no es un criterio clínico ni de seguridad." }
+      ],
+      "rutas": ["Asistencia/Index", "Asistencia/Seguimiento"],
+      "mensajes": [
+        "La lista de seguimiento es solo de Administración.",
+        "Esto no es un aviso de seguridad."
+      ],
+      "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
+      "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
     }
   ]
 }

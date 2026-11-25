@@ -119,5 +119,16 @@ public class AsistenciaPaginasTests(WebAppFactory factory) : IClassFixture<WebAp
         Assert.Contains("Asistencia del", list);
         Assert.DoesNotContain("name=\"estado\"", list);
         Assert.Contains("Ausencias programadas", WebUtility.HtmlDecode(await admin.GetStringAsync("/Asistencia/Ausencias")));
+
+        // La lista de seguimiento: solo una consulta, con el texto fijo que dice lo que no es, sin caché y sin contador ni lenguaje de riesgo.
+        Assert.Contains("href=\"/Asistencia/Seguimiento\"", list);
+        var followUp = await admin.GetAsync("/Asistencia/Seguimiento");
+        Assert.Equal(HttpStatusCode.OK, followUp.StatusCode);
+        Assert.Contains("no-store", followUp.Headers.CacheControl!.ToString());
+        var followUpPage = WebUtility.HtmlDecode(await followUp.Content.ReadAsStringAsync());
+        Assert.Contains("Esto no es un aviso de seguridad.", followUpPage);
+        Assert.Contains("Esta pantalla no se imprime.", followUpPage);
+        Assert.Contains("Nadie lleva 3 o más días seguidos", followUpPage);
+        Assert.DoesNotContain("riesgo", followUpPage, StringComparison.OrdinalIgnoreCase);
     }
 }

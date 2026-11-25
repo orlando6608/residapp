@@ -37,6 +37,9 @@ public enum AttendanceDayStatus
     AusenciaProgramada,
 }
 
+/// <summary>Lo que dice la lista de seguimiento de una persona: días esperados seguidos anotados como «no vino» (con sus causas y el último día que vino) o días sin anotar.</summary>
+public sealed record FollowUpOutcome(int AbsentDays, bool Capped, DateOnly? LastCame, IReadOnlyList<AttendanceCause> Causes, int UnmarkedDays);
+
 public static class AttendanceRules
 {
     public const string InvalidCode = "ATTENDANCE_INVALID";
@@ -155,4 +158,65 @@ public static class AttendanceRules
         AttendanceState.NoAsistio => AttendanceDayStatus.NoVino,
         _ => scheduledAbsence ? AttendanceDayStatus.AusenciaProgramada : AttendanceDayStatus.SinAnotar,
     };
+
+    // ---- La lista de seguimiento: se calcula, no se guarda (ADR 0019, punto 7) ----
+
+    /// <summary>Hasta cuántos días atrás se mira al calcular la lista de seguimiento.</summary>
+    public const int FollowUpWindowDays = 60;
+
+    /// <summary>
+    /// Las faltas seguidas de una persona hasta ayer (hoy no está cerrado). Solo cuentan los días en que se la espera según su pauta; los otros ni suman ni rompen. Cuenta <c>NO_ASISTIO</c> anotado:
+    /// un día que vino o que cubre una ausencia programada termina la cuenta, y un día sin anotar la rompe y se cuenta aparte (<see cref="FollowUpOutcome.UnmarkedDays"/>): no vale como falta.
+    /// <paramref name="firstDay"/> es el primer día que se mira (el alta, si es posterior a la ventana).
+    /// </summary>
+    public static FollowUpOutcome FollowUp(
+        DateOnly todayAtCenter, DateOnly firstDay, int? patternMask, Func<DateOnly, AttendanceDayStatus> statusOf, Func<DateOnly, AttendanceCause?> causeOf)
+    {
+        var bound = todayAtCenter.AddDays(-FollowUpWindowDays);
+        var start = firstDay > bound ? firstDay : bound;
+        var absent = 0;
+        var unmarked = 0;
+        var causes = new List<AttendanceCause>();
+        DateOnly? lastCame = null;
+        var stopped = false;
+        for (var day = todayAtCenter.AddDays(-1); day >= start; day = day.AddDays(-1))
+        {
+            if (patternMask is { } mask && !Expects(mask, day))
+            {
+                continue;
+            }
+
+            var status = statusOf(day);
+            if (status == AttendanceDayStatus.SinAnotar && absent == 0)
+            {
+                unmarked++;
+                continue;
+            }
+
+            if (unmarked > 0 || status != AttendanceDayStatus.NoVino)
+            {
+                if (status == AttendanceDayStatus.Vino)
+                {
+                    lastCame = day;
+                }
+
+                stopped = true;
+                break;
+            }
+
+            absent++;
+            if (causeOf(day) is { } cause && !causes.Contains(cause))
+            {
+                causes.Add(cause);
+            }
+        }
+
+        // Con días sin anotar al principio la cadena está rota: no hay faltas que seguir, solo días que anotar.
+        if (unmarked > 0)
+        {
+            return new FollowUpOutcome(0, false, null, [], unmarked);
+        }
+
+        return new FollowUpOutcome(absent, !stopped && start == bound && absent > 0, lastCame, causes, 0);
+    }
 }

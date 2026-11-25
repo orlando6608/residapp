@@ -27,6 +27,15 @@ public sealed record AttendancePatternState(ResidentId ResidentId, string Reside
 /// <summary>Una ausencia programada vigente o futura (ni anulada ni terminada). El motivo es nulo para quien no puede leerlo.</summary>
 public sealed record ScheduledAbsence(Guid Id, ResidentId ResidentId, string ResidentName, DateOnly From, DateOnly To, AbsenceReason? Reason);
 
+/// <summary>Una persona con faltas seguidas. <paramref name="Days"/> son los días esperados seguidos anotados como «no vino» hasta ayer; <paramref name="Capped"/> si hay más de los que se miran. Sin nota ni motivo de ausencia.</summary>
+public sealed record FollowUpAbsence(ResidentId ResidentId, string ResidentName, string? UnitName, int Days, bool Capped, DateOnly? LastCame, IReadOnlyList<AttendanceCause> Causes);
+
+/// <summary>Una persona con días recientes sin anotar: no se cuentan como faltas.</summary>
+public sealed record FollowUpUnmarked(ResidentId ResidentId, string ResidentName, string? UnitName, int Days);
+
+/// <summary>La lista de seguimiento de Administración: se calcula al abrirla y no se guarda.</summary>
+public sealed record AttendanceFollowUp(IReadOnlyList<FollowUpAbsence> Absences, IReadOnlyList<FollowUpUnmarked> Unmarked);
+
 public interface IAttendanceStore
 {
     Task<AttendanceCenterState> ReadCenterAsync(AttendanceActor actor, CancellationToken ct = default);
@@ -54,4 +63,7 @@ public interface IAttendanceStore
     Task AnnulAbsenceAsync(AttendanceActor actor, Guid absenceId, CancellationToken ct = default);
 
     Task ShortenAbsenceAsync(AttendanceActor actor, Guid absenceId, DateOnly newTo, CancellationToken ct = default);
+
+    /// <summary>Solo Administración. Quién lleva faltas seguidas hasta ayer y quién tiene días sin anotar. Registra que se abrió, sin cifras ni nombres.</summary>
+    Task<AttendanceFollowUp> ListFollowUpAsync(AttendanceActor actor, DateOnly todayAtCenter, CancellationToken ct = default);
 }

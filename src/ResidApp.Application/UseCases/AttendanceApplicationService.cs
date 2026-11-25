@@ -110,6 +110,10 @@ public sealed class AttendanceApplicationService(
             return true;
         });
 
+    /// <summary>Solo Administración: quién lleva <see cref="AttendanceRules.FollowUpDays"/> o más días esperados seguidos sin venir, y quién tiene días sin anotar. Es una consulta: no guarda nada ni avisa a nadie.</summary>
+    public Task<ApplicationResult<AttendanceFollowUp>> ListFollowUpAsync(Guid profileScopeId, CenterId centerId, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () => await store.ListFollowUpAsync(await ActorAsync(profileScopeId, centerId, [SystemProfile.Administracion], ct), Today(), ct));
+
     private static readonly SystemProfile[] ReadProfiles = [SystemProfile.Administracion, SystemProfile.Auxiliar, SystemProfile.Enfermeria, SystemProfile.Medicina];
 
     private DateOnly Today() => CenterTime.TodayAt(clock.GetUtcNow());

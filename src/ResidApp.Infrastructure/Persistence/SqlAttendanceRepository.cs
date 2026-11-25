@@ -233,6 +233,74 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         return expectedNumber + 1;
     }
 
+// ---- La lista de seguimiento (se calcula, no se guarda) ----
+
+    public async Task<AttendanceFollowUp> ListFollowUpAsync(AttendanceActor actor, DateOnly todayAtCenter, CancellationToken ct = default)
+    {
+        if (actor.Profile != SystemProfile.Administracion)
+        {
+            throw new AccessDeniedException();
+        }
+
+        using var connection = await connections.OpenAsync(ct);
+        await RequireFeatureAsync(connection, null, actor, ct);
+        var from = todayAtCenter.AddDays(-AttendanceRules.FollowUpWindowDays);
+        var parameters = Params(actor, new { From = from.ToDateTime(TimeOnly.MinValue), Today = todayAtCenter.ToDateTime(TimeOnly.MinValue) });
+        var residents = (await connection.QueryAsync<FollowUpResidentRow>(new CommandDefinition($"""
+            SELECT resident.id AS ResidentId, resident.nombre_visible AS ResidentName, unit.nombre_visible AS UnitName, pattern.dias_esperados AS PatternMask,
+                   CAST(COALESCE(resident.fecha_ingreso, resident.creado_en) AS DATE) AS FirstDay
+              FROM dbo.residentes resident
+              LEFT JOIN dbo.intervalos_ubicacion_residente location ON location.residente_id = resident.id AND location.centro_id = resident.centro_id AND location.vigente_hasta IS NULL
+              LEFT JOIN dbo.unidades unit ON unit.id = location.unidad_id AND unit.centro_id = resident.centro_id
+              OUTER APPLY (SELECT TOP (1) p.dias_esperados FROM dbo.asistencia_pauta p
+                            WHERE p.centro_id = resident.centro_id AND p.residente_id = resident.id ORDER BY p.numero DESC) pattern
+             WHERE resident.centro_id = @CenterId AND resident.estado = 'ACTIVE'
+               AND {NotSuspendedSql.Replace("{R}", "resident.id")}
+               AND {ResidentScopeSql.Replace("{R}", "resident.id")}
+            """, parameters, cancellationToken: ct))).ToList();
+        // Solo la última versión de cada día.
+        var marks = (await connection.QueryAsync<FollowUpMarkRow>(new CommandDefinition("""
+            SELECT residente_id AS ResidentId, fecha AS Day, estado_codigo AS State, causa_codigo AS Cause
+              FROM (SELECT a.residente_id, a.fecha, a.estado_codigo, a.causa_codigo,
+                           ROW_NUMBER() OVER (PARTITION BY a.residente_id, a.fecha ORDER BY a.numero DESC) AS rank
+                      FROM dbo.asistencia_dia a WHERE a.centro_id = @CenterId AND a.fecha >= @From AND a.fecha < @Today) latest
+             WHERE rank = 1
+            """, parameters, cancellationToken: ct))).ToLookup(row => row.ResidentId);
+        var absences = (await connection.QueryAsync<FollowUpAbsenceRow>(new CommandDefinition("""
+            SELECT absence.residente_id AS ResidentId, absence.desde AS FromDate,
+                   (SELECT MIN(x.hasta) FROM dbo.ausencias_programadas x WHERE x.ausencia_id = absence.id AND x.tipo_codigo IN (N'REGISTRADA', N'ACORTADA')) AS ToDate
+              FROM dbo.ausencias_programadas absence
+             WHERE absence.centro_id = @CenterId AND absence.tipo_codigo = N'REGISTRADA' AND absence.desde < @Today
+               AND NOT EXISTS (SELECT 1 FROM dbo.ausencias_programadas annulled WHERE annulled.ausencia_id = absence.id AND annulled.tipo_codigo = N'ANULADA')
+            """, parameters, cancellationToken: ct))).Where(row => DateOnly.FromDateTime(row.ToDate) >= from).ToLookup(row => row.ResidentId);
+
+        var absent = new List<FollowUpAbsence>();
+        var unmarked = new List<FollowUpUnmarked>();
+        foreach (var resident in residents.OrderBy(r => r.UnitName).ThenBy(r => r.ResidentName))
+        {
+            var byDay = marks[resident.ResidentId].ToDictionary(m => DateOnly.FromDateTime(m.Day));
+            var covered = absences[resident.ResidentId].Select(a => (From: DateOnly.FromDateTime(a.FromDate), To: DateOnly.FromDateTime(a.ToDate))).ToList();
+            var outcome = AttendanceRules.FollowUp(
+                todayAtCenter, DateOnly.FromDateTime(resident.FirstDay), resident.PatternMask is { } mask ? mask : (int?)null,
+                day => AttendanceRules.StatusOf(
+                    byDay.TryGetValue(day, out var m) ? EnumCode.ParseCode<AttendanceState>(m.State) : null, covered.Any(a => a.From <= day && day <= a.To)),
+                day => byDay.TryGetValue(day, out var m) && m.Cause is not null ? EnumCode.ParseCode<AttendanceCause>(m.Cause) : null);
+            if (outcome.UnmarkedDays > 0)
+            {
+                unmarked.Add(new FollowUpUnmarked(ResidentId.From(resident.ResidentId), resident.ResidentName, resident.UnitName, outcome.UnmarkedDays));
+            }
+            else if (outcome.AbsentDays >= AttendanceRules.FollowUpDays)
+            {
+                absent.Add(new FollowUpAbsence(
+                    ResidentId.From(resident.ResidentId), resident.ResidentName, resident.UnitName, outcome.AbsentDays, outcome.Capped, outcome.LastCame, outcome.Causes));
+            }
+        }
+
+        // Abrir la lista queda registrado sin cifras ni nombres: quién y cuándo (muestra a varias personas a la vez).
+        await AuditAsync(connection, null, actor, null, null, actor.CenterId.Value, "ATTENDANCE_FOLLOWUP_OPEN", DateTimeOffset.UtcNow, ct);
+        return new AttendanceFollowUp(absent.OrderByDescending(a => a.Days).ThenBy(a => a.ResidentName).ToList(), unmarked);
+    }
+
     // ---- Las ausencias programadas ----
 
     public async Task<IReadOnlyList<ScheduledAbsence>> ListAbsencesAsync(AttendanceActor actor, ResidentId? residentId, DateOnly todayAtCenter, CancellationToken ct = default)
@@ -417,7 +485,7 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
 
     /// <summary>Auditoría con solo identificadores: el recurso es la fila escrita; el estado, la causa, la nota, el motivo, las fechas y la pauta se leen de ella y no se copian.</summary>
     private static Task AuditAsync(
-        SqlConnection connection, SqlTransaction transaction, AttendanceActor actor, Guid? residentId, Guid? unitId, Guid rowId, string action, DateTimeOffset now, CancellationToken ct) =>
+        SqlConnection connection, SqlTransaction? transaction, AttendanceActor actor, Guid? residentId, Guid? unitId, Guid rowId, string action, DateTimeOffset now, CancellationToken ct) =>
         connection.ExecuteAsync(new CommandDefinition("""
             INSERT INTO dbo.eventos_auditoria (id, cuenta_id, perfil_activo, centro_id, unidad_id, residente_id, tipo_recurso, recurso_id, accion_codigo, ocurrido_en)
             VALUES (NEWID(), @AccountId, @Profile, @CenterId, @UnitId, @ResidentId, @ResourceType, @RowId, @Action, @Now);
@@ -428,6 +496,12 @@ public sealed class SqlAttendanceRepository(SqlConnectionFactory connections) : 
         }, transaction, cancellationToken: ct));
 
     private sealed record SwitchRow(int Number, bool Active);
+
+    private sealed record FollowUpResidentRow(Guid ResidentId, string ResidentName, string? UnitName, byte? PatternMask, DateTime FirstDay);
+
+    private sealed record FollowUpMarkRow(Guid ResidentId, DateTime Day, string State, string? Cause);
+
+    private sealed record FollowUpAbsenceRow(Guid ResidentId, DateTime FromDate, DateTime ToDate);
 
     private sealed record PatternRow(int Number, byte Days);
 
