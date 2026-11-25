@@ -79,66 +79,50 @@
     </section>
 }
 
-<h2 class="h5">Vigentes y próximas</h2>
+<h2 class="h5" id="vigentes-titulo">Vigentes y próximas</h2>
 @if (Model.Absences.Count == 0)
 {
     <div class="alert alert-info" role="status">No hay ausencias programadas vigentes ni próximas.</div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <caption class="visually-hidden">Ausencias programadas vigentes y próximas</caption>
-            <thead>
-                <tr>
-                    <th scope="col">Persona</th>
-                    <th scope="col">Desde</th>
-                    <th scope="col">Hasta</th>
-                    @if (Model.CanSeeReason)
-                    {
-                        <th scope="col">Motivo</th>
-                    }
+    @* Rejilla y no tabla: lleva campos de formulario, que en el móvil no se duplican (guía de diseño). *@
+    <ul class="list-group mb-3" aria-labelledby="vigentes-titulo">
+        @foreach (var absence in Model.Absences)
+        {
+            <li class="list-group-item">
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 @(Model.CanManage ? "col-md-5" : null)">
+                        <h3 class="h6 mb-0">@absence.ResidentName</h3>
+                        <span class="d-block">Del @AsistenciaDisplay.Date(absence.From) al @AsistenciaDisplay.Date(absence.To)</span>
+                        @if (Model.CanSeeReason && absence.Reason is { } reason)
+                        {
+                            <span class="d-block small text-body-secondary">Motivo: @EnumDisplay.Label(reason)</span>
+                        }
+                    </div>
                     @if (Model.CanManage)
                     {
-                        <th scope="col">Cambiar</th>
+                        <div class="col-12 col-md-7">
+                            <div class="d-flex flex-wrap align-items-end justify-content-md-end gap-2">
+                                <form method="post" asp-action="AcortarAusencia" class="d-flex flex-wrap align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
+                                    <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                    <div>
+                                        <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
+                                        <input class="form-control form-control-lg" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.ToString("yyyy-MM-dd")" required />
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-primary btn-lg">Acortar</button>
+                                </form>
+                                <form method="post" asp-action="AnularAusencia" aria-label="Anular la ausencia de @absence.ResidentName">
+                                    <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-lg">Anular</button>
+                                </form>
+                            </div>
+                        </div>
                     }
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var absence in Model.Absences)
-                {
-                    <tr>
-                        <th scope="row" class="fw-normal">@absence.ResidentName</th>
-                        <td>@AsistenciaDisplay.Date(absence.From)</td>
-                        <td>@AsistenciaDisplay.Date(absence.To)</td>
-                        @if (Model.CanSeeReason)
-                        {
-                            <td>@(absence.Reason is { } reason ? EnumDisplay.Label(reason) : string.Empty)</td>
-                        }
-                        @if (Model.CanManage)
-                        {
-                            <td>
-                                <div class="d-flex flex-wrap align-items-end gap-2">
-                                    <form method="post" asp-action="AcortarAusencia" class="d-flex align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
-                                        <input type="hidden" name="ausenciaId" value="@absence.Id" />
-                                        <div>
-                                            <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
-                                            <input class="form-control" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.ToString("yyyy-MM-dd")" required />
-                                        </div>
-                                        <button type="submit" class="btn btn-outline-primary">Acortar</button>
-                                    </form>
-                                    <form method="post" asp-action="AnularAusencia" aria-label="Anular la ausencia de @absence.ResidentName">
-                                        <input type="hidden" name="ausenciaId" value="@absence.Id" />
-                                        <button type="submit" class="btn btn-outline-danger">Anular</button>
-                                    </form>
-                                </div>
-                            </td>
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </div>
+            </li>
+        }
+    </ul>
 }
 
 <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver a la asistencia</a>

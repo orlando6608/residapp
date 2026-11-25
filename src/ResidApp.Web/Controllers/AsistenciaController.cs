@@ -64,6 +64,8 @@ public sealed class AsistenciaController(AttendanceApplicationService attendance
             scope.ProfileScopeId, CenterId.From(scope.CenterId), ResidentId.From(residenteId), fecha,
             estado, estado == AttendanceState.Asistio ? null : causa, estado == AttendanceState.Asistio ? null : nota), ct);
         TempData[result.Ok ? "Mensaje" : "Error"] = result.Ok ? "Anotado." : result.Error!.Message;
+        // El aviso sale junto a la persona anotada y se lleva allí el foco: en una lista larga no hay que volver a buscar la fila.
+        TempData["Fila"] = residenteId.ToString("N");
         return RedirectToAction(nameof(Index), new { fecha });
     }
 

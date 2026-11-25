@@ -17,9 +17,9 @@ public sealed record AttendanceCenterState(bool DayCenter, bool Active, int Numb
 /// <summary>Lo último anotado de un día. La nota es nula para quien no puede leerla.</summary>
 public sealed record AttendanceMark(int Number, AttendanceState State, AttendanceCause? Cause, string? Note);
 
-/// <summary>Una persona en la lista de un día. <paramref name="Expected"/> es verdadero si su pauta incluye ese día o si no tiene pauta todavía.</summary>
+/// <summary>Una persona en la lista de un día. <paramref name="Expected"/> es verdadero si su pauta incluye ese día o si no tiene pauta todavía. <paramref name="BeforeRecord"/>: ese día es anterior al día en que se creó su ficha (en el centro), así que no se puede anotar.</summary>
 public sealed record AttendanceDayEntry(
-    ResidentId ResidentId, string ResidentName, Guid? UnitId, string? UnitName, bool HasPattern, bool Expected, AttendanceMark? Mark, bool ScheduledAbsence, AttendanceDayStatus Status);
+    ResidentId ResidentId, string ResidentName, Guid? UnitId, string? UnitName, bool HasPattern, bool Expected, AttendanceMark? Mark, bool ScheduledAbsence, AttendanceDayStatus Status, bool BeforeRecord);
 
 /// <summary>Una versión de la pauta para mostrarla: desde qué día cuenta (<see cref="AttendanceRules.FromTheBeginning"/> = desde siempre), cuándo se anotó y con qué perfil. Sin nombre de cuenta ni motivo.</summary>
 public sealed record PatternVersionEntry(int Number, DateOnly From, int DaysMask, DateOnly RegisteredOn, SystemProfile RegisteredBy);
