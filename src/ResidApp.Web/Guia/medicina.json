@@ -644,6 +644,40 @@
         "La nota «al terminar» la escribe Enfermería"
       ],
       "manual": { "id": "citas-externas", "titulo": "Citas externas de los residentes" }
+    },
+    {
+      "codigo": "MED-19",
+      "pregunta": "¿Cómo anoto la asistencia de mis residentes y corrijo un día anterior en el centro de día?",
+      "palabras": ["asistencia", "vino", "no vino", "ha venido", "centro de día", "falta", "sin anotar", "causa"],
+      "permisos": [],
+      "antes": [
+        "Que tu centro sea un **Centro de Día** y que Administración haya **activado la asistencia**. En una Residencia no existe esta pantalla.",
+        "Saber que Medicina puede anotar y corregir días anteriores **sin tope**; nunca un día futuro."
+      ],
+      "pasos": [
+        { "texto": "En el Inicio, abre la tarjeta **Asistencia** (solo sale en un Centro de Día)." },
+        { "texto": "Para cada persona que vino, pulsa **Vino**.", "botones": ["Vino"] },
+        { "texto": "Para cada persona que no vino, elige **Por qué no vino** (avisó la familia, no avisó u otro motivo) y pulsa **No vino**.", "botones": ["No vino"], "campos": ["Por qué no vino"] },
+        { "texto": "Si eliges «Otro motivo», puedes escribir una **Nota** de una línea y 80 caracteres como máximo: solo el motivo, nunca enfermedades, diagnósticos, ingresos ni nombres de otras personas.", "campos": ["Nota (solo con «Otro motivo»)"] },
+        { "texto": "Para otro día, usa **Día anterior** o elige la fecha y pulsa **Ver**.", "botones": ["Día anterior", "Ver"] }
+      ],
+      "despues": [
+        { "para": "Tú", "texto": "Verás «Anotado.» y el estado de la persona cambia a «Vino» o «No vino». Para corregir, vuelve a pulsar: queda la última y las anteriores se conservan. «Sin anotar» no es «no vino»: es que nadie lo ha anotado todavía." },
+        { "para": "Administración", "texto": "Ve lo anotado y la causa, pero no la nota de «Otro motivo»." }
+      ],
+      "dudas": [
+        { "p": "«La asistencia no está activada en este centro.»", "r": "Administración tiene que activarla en **Asistencia** → **Ajustes**." },
+        { "p": "Una persona que debería salir no sale.", "r": "Solo salen las personas de tus unidades. Una persona suspendida por un ingreso hospitalario no sale." },
+        { "p": "Una persona tiene una ausencia programada y no sé si anotarla.", "r": "Sale como «Ausencia programada». Si ese día vino, anota **Vino**: lo anotado manda sobre la ausencia." },
+        { "p": "No me deja anotar un día.", "r": "No se anotan días futuros. Medicina puede anotar o corregir días anteriores sin tope." }
+      ],
+      "rutas": ["Asistencia/Index", "Asistencia/Anotar"],
+      "mensajes": [
+        "Anotado.",
+        "La asistencia no está activada en este centro."
+      ],
+      "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
+      "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
     }
   ]
 }

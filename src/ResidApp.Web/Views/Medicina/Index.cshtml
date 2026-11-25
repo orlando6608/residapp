@@ -83,6 +83,17 @@
             </div>
         </a>
     </div>
+    @if (ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter)
+    {
+        <div class="col-6 col-lg-4">
+            <a asp-controller="Asistencia" asp-action="Index" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h6 card-title d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2"><partial name="_Icono" model='"planificacion"' />Asistencia</h2>
+                    <p class="card-text text-body-secondary mb-0">Quién ha venido hoy al centro y quién no.</p>
+                </div>
+            </a>
+        </div>
+    }
     <div class="col-6 col-lg-4">
         <a asp-action="Comunicaciones" class="card text-decoration-none h-100">
             <div class="card-body">

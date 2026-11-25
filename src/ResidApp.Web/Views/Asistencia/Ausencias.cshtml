@@ -1,0 +1,144 @@
+@using ResidApp.Domain.Attendance
+@using ResidApp.Web.Models
+@model AsistenciaAusenciasViewModel
+@* Ausencias programadas (ADR 0019, punto 4): un ingreso, unas vacaciones… registrados por adelantado para no marcar «no vino» cada día. El motivo solo lo ven Enfermería y Medicina. *@
+@{
+    ViewData["Title"] = "Ausencias programadas";
+    var today = Model.Today.ToString("yyyy-MM-dd");
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Asistencia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Ausencias programadas</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"planificacion"' />Ausencias programadas</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<p>
+    Una ausencia programada avisa de que una persona no vendrá unos días. Esos días salen como «ausencia programada» y no como «sin anotar». Dura @AttendanceRules.MaxAbsenceDays días como máximo
+    y el último día cuenta. Si alguien anota ese día que vino o no vino, manda lo anotado.
+    @if (Model.CanManage && !Model.CanSeeReason)
+    {
+        <text>El motivo lo eliges al registrarla, pero después solo lo ven Enfermería y Medicina.</text>
+    }
+</p>
+
+@if (Model.CanManage)
+{
+    <section aria-labelledby="registrar-titulo" class="mb-4">
+        <h2 class="h5" id="registrar-titulo">Registrar una ausencia</h2>
+        <form method="post" asp-action="RegistrarAusencia" class="row g-2 align-items-end" aria-label="Registrar una ausencia programada">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="residenteId">Persona</label>
+                <select class="form-select form-select-lg" id="residenteId" name="residenteId" required>
+                    <option value="">Elige…</option>
+                    @foreach (var person in Model.Residents)
+                    {
+                        <option value="@person.ResidentId.Value" selected="@(Model.ResidentFilter == person.ResidentId.Value)">@person.ResidentName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="desde">Primer día</label>
+                <input class="form-control form-control-lg" type="date" id="desde" name="desde" value="@today" required />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label" for="hasta">Último día</label>
+                <input class="form-control form-control-lg" type="date" id="hasta" name="hasta" value="@today" required />
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label" for="motivo">Motivo</label>
+                <select class="form-select form-select-lg" id="motivo" name="motivo" required aria-describedby="@(Model.CanSeeReason ? null : "ayuda-motivo")">
+                    <option value="">Elige…</option>
+                    @foreach (var reason in Enum.GetValues<AbsenceReason>())
+                    {
+                        <option value="@reason">@EnumDisplay.Label(reason)</option>
+                    }
+                </select>
+                @if (!Model.CanSeeReason)
+                {
+                    <div class="form-text" id="ayuda-motivo">Solo lo verán Enfermería y Medicina.</div>
+                }
+            </div>
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-primary btn-lg w-100">Registrar</button>
+            </div>
+        </form>
+    </section>
+}
+
+<h2 class="h5">Vigentes y próximas</h2>
+@if (Model.Absences.Count == 0)
+{
+    <div class="alert alert-info" role="status">No hay ausencias programadas vigentes ni próximas.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <caption class="visually-hidden">Ausencias programadas vigentes y próximas</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Persona</th>
+                    <th scope="col">Desde</th>
+                    <th scope="col">Hasta</th>
+                    @if (Model.CanSeeReason)
+                    {
+                        <th scope="col">Motivo</th>
+                    }
+                    @if (Model.CanManage)
+                    {
+                        <th scope="col">Cambiar</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var absence in Model.Absences)
+                {
+                    <tr>
+                        <th scope="row" class="fw-normal">@absence.ResidentName</th>
+                        <td>@AsistenciaDisplay.Date(absence.From)</td>
+                        <td>@AsistenciaDisplay.Date(absence.To)</td>
+                        @if (Model.CanSeeReason)
+                        {
+                            <td>@(absence.Reason is { } reason ? EnumDisplay.Label(reason) : string.Empty)</td>
+                        }
+                        @if (Model.CanManage)
+                        {
+                            <td>
+                                <div class="d-flex flex-wrap align-items-end gap-2">
+                                    <form method="post" asp-action="AcortarAusencia" class="d-flex align-items-end gap-2" aria-label="Acortar la ausencia de @absence.ResidentName">
+                                        <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                        <div>
+                                            <label class="form-label mb-1 small" for="nuevo-@absence.Id">Nuevo último día</label>
+                                            <input class="form-control" type="date" id="nuevo-@absence.Id" name="nuevoHasta" min="@absence.From.ToString("yyyy-MM-dd")" max="@absence.To.ToString("yyyy-MM-dd")" required />
+                                        </div>
+                                        <button type="submit" class="btn btn-outline-primary">Acortar</button>
+                                    </form>
+                                    <form method="post" asp-action="AnularAusencia" aria-label="Anular la ausencia de @absence.ResidentName">
+                                        <input type="hidden" name="ausenciaId" value="@absence.Id" />
+                                        <button type="submit" class="btn btn-outline-danger">Anular</button>
+                                    </form>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver a la asistencia</a>

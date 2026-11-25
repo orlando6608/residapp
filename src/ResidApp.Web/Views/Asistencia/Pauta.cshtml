@@ -1,0 +1,65 @@
+@using ResidApp.Domain.Attendance
+@using ResidApp.Web.Models
+@model AsistenciaPautaViewModel
+@* Pauta de una persona (ADR 0019, punto 5): qué días de la semana se la espera. Sin horas ni jornada; la familia nunca la ve. Solo Administración y Enfermería la cambian. *@
+@{
+    ViewData["Title"] = "Pauta de asistencia";
+    var pattern = Model.Pattern;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Asistencia</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Pauta</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2"><partial name="_Icono" model='"planificacion"' />Pauta de @pattern.ResidentName</h1>
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<p>
+    La pauta son los días de la semana en que se espera a esta persona. Sirve para saber qué días «toca»: quien viene lunes, miércoles y viernes no está ausente el martes. La familia no la ve.
+</p>
+
+@if (pattern.DaysMask == 0)
+{
+    <div class="alert alert-secondary" role="status">Todavía no tiene pauta: hasta que se fije, se espera a esta persona todos los días.</div>
+}
+else
+{
+    <p><strong>Ahora se espera a esta persona:</strong> @AsistenciaDisplay.PatternText(pattern.DaysMask).</p>
+}
+
+@if (Model.CanManage)
+{
+    <form method="post" asp-action="Pauta" aria-label="Fijar la pauta">
+        <input type="hidden" name="residenteId" value="@pattern.ResidentId.Value" />
+        <input type="hidden" name="version" value="@pattern.Number" />
+        <fieldset class="mb-3">
+            <legend class="h5">Días en que se espera a esta persona</legend>
+            @foreach (var day in AsistenciaDisplay.WeekDays)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="dia-@day" name="dias" value="@day"
+                           checked="@((pattern.DaysMask & AttendanceRules.Mask(day)) != 0)" />
+                    <label class="form-check-label" for="dia-@day">@AsistenciaDisplay.DayName(day)</label>
+                </div>
+            }
+        </fieldset>
+        <button type="submit" class="btn btn-primary btn-lg">Guardar la pauta</button>
+        <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver</a>
+    </form>
+}
+else
+{
+    <a class="btn btn-outline-secondary btn-lg" asp-action="Index">Volver</a>
+}
