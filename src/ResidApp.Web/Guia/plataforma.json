@@ -457,7 +457,7 @@
         { "texto": "Sale un aviso verde: «Tipo de servicio corregido. Queda en la auditoría del centro.» y la constancia suma una fila con el motivo «Corrección de un error de alta»." }
       ],
       "despues": [
-        { "para": "Administración", "texto": "Ve en su Auditoría «Tipo de servicio del centro corregido». Las pantallas del centro no cambian todavía por el tipo: solo la etiqueta que lo muestra." },
+        { "para": "Administración", "texto": "Ve en su Auditoría «Tipo de servicio del centro corregido». Las pantallas del centro pasan a las del tipo nuevo (en un Centro de Día, por ejemplo, no hay habitaciones ni camas). Si **nunca ha cambiado** el horario de los comunicados, pasa al sugerido del tipo nuevo (Residencia: 19:00 y 60 minutos; Centro de Día: 18:00 y 30 minutos; resumen semanal), sin fila en el «Historial de cambios»; si lo cambió alguna vez, se queda como esté." },
         { "para": "Plataforma", "texto": "Sigues viendo el tipo de cada centro en «Centros», en la ficha del centro, en las cuentas de varios centros y en los módulos que vencen. La constancia no muestra la cuenta de quien lo cambió, pero la acción queda en la auditoría." }
       ],
       "dudas": [

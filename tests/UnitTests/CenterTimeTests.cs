@@ -117,7 +117,7 @@ public class CenterTimeTests
 
     private static readonly string[] Allowed = ["CenterTime.cs", "ServerTimeZone.cs"];
 
-    private static string Raiz()
+    internal static string Raiz()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "src", "ResidApp.Shared", "CenterTime.cs")))

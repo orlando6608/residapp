@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using ResidApp.Application.Errors;
 using ResidApp.Domain.Platform;
 using ResidApp.Shared;
@@ -39,6 +40,22 @@ public class CenterServiceTypeTests
     {
         // Los centros anteriores al script 0113 y las pruebas que no lo dicen: lo que lleva el registro del alta por defecto, nunca un Centro de Día.
         Assert.Equal(CenterServiceType.Residencia, NewCenter.Validate("cen-1", "Centro", "u1", "Unidad", "admin-1", "Ana").ServiceType);
+    }
+
+    [Fact]
+    public void Ningun_codigo_de_la_aplicacion_crea_un_centro_sin_indicar_su_tipo()
+    {
+        // La columna tiene DEFAULT 'RESIDENCIA' (0113): un INSERT que la omita no falla y deja una Residencia sin que nadie lo haya dicho.
+        var src = Path.Combine(CenterTimeTests.Raiz(), "src");
+        var inserts = Directory.EnumerateFiles(src, "*.cs", SearchOption.AllDirectories)
+            .Where(file => !Path.GetRelativePath(src, file).Split(Path.DirectorySeparatorChar).Any(part => part is "obj" or "bin"))
+            .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"INSERT\s+(?:INTO\s+)?(?:\[?dbo\]?\.)?\[?centros\b\]?\s*(?<columns>\([^)]*\))?", RegexOptions.IgnoreCase)
+                .Select(match => (File: Path.GetRelativePath(src, file), Columns: match.Groups["columns"].Value)))
+            .ToList();
+
+        Assert.NotEmpty(inserts);
+        Assert.All(inserts, insert => Assert.True(insert.Columns.Contains("tipo_de_servicio", StringComparison.OrdinalIgnoreCase),
+            $"{insert.File}: el INSERT en dbo.centros tiene que indicar tipo_de_servicio."));
     }
 
     [Theory]
