@@ -5,6 +5,9 @@
 Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
 usuario cuando encajen:
 
+- **El registro público del despliegue lista cuentas y centros de Azure dev (2026-11-26):** la consulta final de `database/seed/centros_prueba.sql` saca cada cuenta de prueba (la elige por el
+  prefijo de su nombre) con el nombre de **todos** los centros donde tiene perfil, también los creados a mano. El repositorio es público, y los registros del CI también. Opción: limitar la consulta a
+  los centros de la semilla; si algún nombre no debía publicarse, borrar además los registros de las ejecuciones que lo muestran (no se ha mirado desde cuándo aparece).
 - **Texto mal codificado en una prueba (2026-11-26):** `tests/IntegrationTests/ZonaHorariaCentroTests.cs` tiene cinco líneas (comentarios y mensajes de fallo) con las tildes dobladas («catÃ¡logo»). No afecta al resultado.
 - **Interruptor de la asistencia (2026-11-25):** encender o apagar la asistencia en varios centros **en el mismo instante** puede acabar en error 1205 («No se ha podido completar la operación.»;
   repetir funciona). En bases recién creadas, con 8 centros cambiándolo sin parar, falló en 3 de 4 intentos (con y sin `READ_COMMITTED_SNAPSHOT`). Causas, las mismas que arregló `0118` en la
