@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using ResidApp.Application.Ports;
+using ResidApp.Domain.Families;
 
 namespace ResidApp.Application.Errors;
 
@@ -225,6 +226,9 @@ public static class ApplicationResultRunner
     public const string FamilyEmailRequiredMessage =
         "Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.";
 
+    public const string FamilyNoticesRequestRequiredMessage =
+        "Para volver a activar los avisos, marca «Esta persona me ha pedido volver a recibir los avisos».";
+
     public static ApplicationFailure Normalize(Exception error)
     {
         var message = error.Message;
@@ -233,6 +237,11 @@ public static class ApplicationResultRunner
         if (message == FamilyAccessCodes.EmailRequired)
         {
             return new ApplicationFailure(ApplicationFailureCode.InvalidInput, FamilyEmailRequiredMessage);
+        }
+
+        if (message == FamilyMember.NoticesRequestRequiredCode)
+        {
+            return new ApplicationFailure(ApplicationFailureCode.InvalidInput, FamilyNoticesRequestRequiredMessage);
         }
 
         if (message == "PLACE_REQUIRED")

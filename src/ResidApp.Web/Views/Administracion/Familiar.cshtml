@@ -102,8 +102,8 @@
                             Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Dígale también que
                             los correos salen de no-responder@avisos.residapp.es y que, si no ve alguno, mire el correo no deseado y añada esa dirección a sus contactos. Sin la casilla
                             marcada no se le envía ningún aviso, pero el código para entrar le llega igual. Si cambia o borra la dirección, la confirmación se quita y hay que volver a
-                            confirmarla. Si no quiere avisos, quite la confirmación de la dirección; no la borre, porque dejaría de poder entrar. El correo no sustituye al teléfono: si
-                            algo es urgente, llame.
+                            confirmarla. Si no quiere avisos, dela de baja en «Avisos por correo», en la pantalla de editar sus datos; no borre la dirección, porque dejaría de poder
+                            entrar. El correo no sustituye al teléfono: si algo es urgente, llame.
                         </p>
                     }
                     else
@@ -112,13 +112,13 @@
                         Este correo solo sirve para mandar a esa persona avisos de ResidApp: que tiene una propuesta de cita pendiente, que el centro ha cambiado o cancelado
                         una cita que reservó, un recordatorio el día antes de una cita o, si el centro ha encendido los avisos de citas externas, un aviso sobre una cita fuera del centro de la persona a la que cuida, sin decir cuándo, dónde ni de qué. Los avisos no dicen el nombre del residente, ni el centro, ni la hora, ni el motivo: solo que entre en ResidApp;
                         el recordatorio, además, dice que tiene una cita mañana. Es voluntario:
-                        puede pedir que se quite cuando quiera y entonces lo verá todo al entrar en ResidApp.
+                        puede pedir dejar de recibirlos cuando quiera y lo verá todo al entrar en ResidApp.
                     </p>
                     <p class="mb-0">
                         Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Dígale también que los avisos salen de no-responder@avisos.residapp.es y que, si no ve alguno, mire el correo no deseado y añada esa dirección a sus
                         contactos. Si no ha podido
                         hacerlo, deje la casilla sin marcar: es correcto y simplemente no se enviará ningún aviso a esa dirección. Si cambia o borra la dirección, la confirmación se quita y hay que volver a
-                        confirmarla. Si alguien le pide que no le manden más avisos, borre la dirección; si solo quiere dejar de recibir los de citas externas, désela de baja desde «Lo que ve la familia» de su residente en Citas externas. El correo no sustituye al teléfono: si algo
+                        confirmarla. Si alguien le pide que no le manden más avisos, dela de baja en «Avisos por correo», en la pantalla de editar sus datos; no hace falta borrar la dirección. Si solo quiere dejar de recibir los de citas externas, dela de baja desde «Lo que ve la familia» de su residente en Citas externas. El correo no sustituye al teléfono: si algo
                         es urgente, llame.
                     </p>
                     }
@@ -155,6 +155,56 @@
                 <button type="submit" class="btn btn-primary btn-lg">@(editing ? "Guardar cambios" : "Añadir familiar")</button>
             </div>
         </form>
+        @if (editing)
+        {
+            var optedOutAt = Model.NoticesOptOutAt;
+            <hr />
+            <section aria-labelledby="avisos-correo">
+                <h2 class="h5" id="avisos-correo">Avisos por correo</h2>
+                @if (optedOutAt is { } since)
+                {
+                    <div class="alert alert-warning py-2 mb-2" role="status">
+                        De baja de los avisos desde el @CenterTime.Local(since).ToString("dd/MM/yyyy"). No se le envía ningún aviso sobre citas de ninguno de sus residentes en este centro.
+                        @if (FamilyAccess.EmailCode)
+                        {
+                            <text>El código para entrar y el aviso de seguridad por cambio de correo le siguen llegando.</text>
+                        }
+                    </div>
+                }
+                else if (Model.EmailConfirmedAt is null)
+                {
+                    <p class="mb-2">No está de baja, pero no se le envían avisos porque no tiene una dirección confirmada.</p>
+                }
+                else
+                {
+                    <p class="mb-2">No está de baja de los avisos.</p>
+                }
+                <p class="form-text" id="ayuda-avisos">
+                    Dala de baja cuando pida no recibir más avisos; no tiene que explicar por qué. No borres la dirección ni quites la confirmación para esto: si el correo es dudoso o un
+                    aviso llegó a quien no debía, corrígelo o quita la confirmación. Si esta persona figura en dos fichas distintas, dala de baja en las dos. Lo que no se envíe mientras
+                    está de baja no se enviará después, salvo el aviso de una cita fuera del centro que toque el mismo día en que se reactive. Si algo es urgente, llama. Este botón no
+                    guarda los cambios de la ficha: guárdalos antes.
+                </p>
+                <form asp-action="AvisosFamiliar" method="post">
+                    <input type="hidden" name="residenteId" value="@Model.Form.ResidenteId" />
+                    <input type="hidden" name="vinculoId" value="@Model.Form.VinculoId" />
+                    <input type="hidden" name="baja" value="@(optedOutAt is null ? "true" : "false")" />
+                    <input type="hidden" name="bajaVista" value="@optedOutAt?.UtcTicks" />
+                    @if (optedOutAt is not null)
+                    {
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input" id="pedida" name="pedida" value="true" required />
+                            <label class="form-check-label" for="pedida">Esta persona me ha pedido volver a recibir los avisos</label>
+                        </div>
+                    }
+                    <div class="d-grid d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-lg @(optedOutAt is null ? "btn-outline-danger" : "btn-outline-primary")" aria-describedby="ayuda-avisos">
+                            @(optedOutAt is null ? "Dar de baja de los avisos" : "Volver a activar los avisos")
+                        </button>
+                    </div>
+                </form>
+            </section>
+        }
         @if (editing && Privacidad.Value.AnonimizarFamiliarActivo)
         {
             <hr />

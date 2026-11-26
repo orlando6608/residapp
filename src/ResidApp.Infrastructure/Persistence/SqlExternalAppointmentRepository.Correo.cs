@@ -83,14 +83,15 @@ public sealed partial class SqlExternalAppointmentRepository
         var rows = await connection.QueryAsync<MemberRow>(new CommandDefinition("""
             SELECT fam.id AS FamilyId, fam.nombre_visible AS Name, link.relacion AS Relationship,
                    CAST(CASE WHEN fam.correo IS NOT NULL AND fam.correo_confirmado_en IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS HasConfirmedAddress,
-                   CAST(ISNULL(latest.sin_avisos, 0) AS BIT) AS OptedOut, ISNULL(latest.numero, 0) AS Number
+                   CAST(ISNULL(latest.sin_avisos, 0) AS BIT) AS OptedOut, ISNULL(latest.numero, 0) AS Number,
+                   CAST(CASE WHEN fam.avisos_baja_en IS NULL THEN 0 ELSE 1 END AS BIT) AS OptedOutOfAll
               FROM dbo.residentes_familiares link
               JOIN dbo.familiares fam ON fam.id = link.familiar_id AND fam.centro_id = link.centro_id
               OUTER APPLY (SELECT TOP (1) o.numero, o.sin_avisos FROM dbo.citas_externas_correo_familiar o WHERE o.centro_id = fam.centro_id AND o.familiar_id = fam.id ORDER BY o.numero DESC) latest
              WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
              ORDER BY fam.nombre_visible
             """, Params(actor, new { ResidentId = residentId.Value }), cancellationToken: ct));
-        return [.. rows.Select(r => new ExternalFamilyMember(r.FamilyId, r.Name, r.Relationship, r.HasConfirmedAddress, r.OptedOut, r.Number))];
+        return [.. rows.Select(r => new ExternalFamilyMember(r.FamilyId, r.Name, r.Relationship, r.HasConfirmedAddress, r.OptedOut, r.Number, r.OptedOutOfAll))];
     }
 
     public async Task<int> SetFamilyMemberMailAsync(
@@ -218,7 +219,7 @@ public sealed partial class SqlExternalAppointmentRepository
 
     private sealed record OptOutRow(int Number, bool OptedOut);
 
-    private sealed record MemberRow(Guid FamilyId, string Name, string Relationship, bool HasConfirmedAddress, bool OptedOut, int Number);
+    private sealed record MemberRow(Guid FamilyId, string Name, string Relationship, bool HasConfirmedAddress, bool OptedOut, int Number, bool OptedOutOfAll);
 
     private sealed record OfferRow(string Scope, string Name);
 }

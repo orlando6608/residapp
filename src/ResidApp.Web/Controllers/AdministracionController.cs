@@ -353,7 +353,8 @@ public sealed partial class AdministracionController(
         }
 
         return View("Familiar", new FamilyMemberViewModel(
-            detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks, member.EmailConfirmedAt, member.PortalAccount is not null));
+            detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks, member.EmailConfirmedAt, member.PortalAccount is not null,
+            member.NoticesOptOutAt));
     }
 
     /// <summary>El formulario de edición con los datos actuales del familiar y su versión (ver FamilyMemberData.Version).</summary>
@@ -421,7 +422,8 @@ public sealed partial class AdministracionController(
                 ModelState.AddModelError(string.Empty,
                     "Otra persona ha cambiado los datos de este familiar mientras los editabas. Aquí tienes los datos actuales: revísalos y vuelve a guardar si aún hace falta.");
                 return View("Familiar", new FamilyMemberViewModel(
-                    fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks, current.EmailConfirmedAt, current.PortalAccount is not null));
+                    fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks, current.EmailConfirmedAt, current.PortalAccount is not null,
+                    current.NoticesOptOutAt));
             }
 
             ModelState.AddModelError(string.Empty, FamilyMemberError(result.Error, editing: true));
@@ -429,7 +431,7 @@ public sealed partial class AdministracionController(
 
         var shown = detail.Family.FirstOrDefault(f => f.LinkId == linkId);
         return View("Familiar", new FamilyMemberViewModel(
-            detail.Resident, form, shown?.OtherResidentLinks ?? 0, shown?.EmailConfirmedAt, shown?.PortalAccount is not null));
+            detail.Resident, form, shown?.OtherResidentLinks ?? 0, shown?.EmailConfirmedAt, shown?.PortalAccount is not null, shown?.NoticesOptOutAt));
     }
 
     /// <summary>Tras cambiar el correo con el que entra un familiar, Administración tiene que saber si la dirección anterior se ha enterado.</summary>
@@ -448,8 +450,38 @@ public sealed partial class AdministracionController(
             + (removed ? " Sin correo no podrá entrar en el portal." : string.Empty);
     }
 
-    /// <summary>Quitar solo la confirmación de la dirección del familiar (CJ, 2026-11-02): ante una queja o una dirección dudosa. Con la versión de los datos que enseñaba
-    /// la pantalla. Para «no quiero más avisos» se borra la dirección, no basta quitar la marca.</summary>
+    /// <summary>Baja de avisos por familiar (script 0123). bajaVista son los instantes (ticks UTC) de la baja que enseñaba la pantalla; vacío si no estaba de baja.</summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AvisosFamiliar(Guid residenteId, Guid vinculoId, bool baja, long? bajaVista, bool pedida, CancellationToken ct)
+    {
+        var activeScope = ActiveProfileScopeCookie.Read(Request);
+        if (activeScope is null)
+        {
+            return RedirectToAction("Select", "ProfileScope");
+        }
+
+        var seen = bajaVista is { } ticks && ticks >= 0 && ticks <= DateTimeOffset.MaxValue.Ticks ? new DateTimeOffset(ticks, TimeSpan.Zero) : (DateTimeOffset?)null;
+        var result = await service.SetFamilyNoticesOptOutAsync(new SetFamilyNoticesOptOutCommand(
+            activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ResidentId.From(residenteId), vinculoId, baja, seen, pedida), ct);
+        if (result.Ok)
+        {
+            TempData["Mensaje"] = baja
+                ? "Baja anotada: no se le enviarán avisos por correo sobre citas."
+                : "Baja quitada: esta persona puede volver a recibir los avisos por correo.";
+        }
+        else
+        {
+            TempData["Error"] = result.Error!.Code == ApplicationFailureCode.Conflict
+                ? "Los avisos de esta persona ya habían cambiado. Revisa cómo están ahora."
+                : result.Error.Message;
+        }
+
+        return RedirectToAction(nameof(Residente), new { residenteId });
+    }
+
+    /// <summary>Quitar solo la confirmación de la dirección del familiar (CJ, 2026-11-02): ante una dirección dudosa o un aviso que llegó a quien no debía. Con la versión
+    /// de los datos que enseñaba la pantalla. No es la forma de dejar de recibir avisos: para eso está la baja (AvisosFamiliar).</summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> QuitarConfirmacionCorreo(Guid residenteId, Guid vinculoId, string? version, CancellationToken ct)

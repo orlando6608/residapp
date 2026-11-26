@@ -94,6 +94,9 @@ public static class FamilyMember
     public const int MaxEmailLength = 254;
     public const string InvalidCode = "FAMILY_MEMBER_INVALID";
 
+    /// <summary>Volver a activar los avisos de una persona sin marcar que ella lo ha pedido (script 0123).</summary>
+    public const string NoticesRequestRequiredCode = "FAMILY_NOTICES_REQUEST_REQUIRED";
+
     public static FamilyMemberData Validate(
         string? displayName, string? relationship, string? phone, string? email, bool isReferent = false, bool isLegalGuardian = false)
     {

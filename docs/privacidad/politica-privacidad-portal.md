@@ -120,18 +120,22 @@ La base legal exacta la fija **cada centro** y te la explica en su información 
 
 ## 5. Avisos por correo
 
-ResidApp puede enviar avisos genéricos por correo a las familias cuya dirección el centro haya anotado y **confirmado con ellas**. Es una función general del servicio, no un módulo opcional: no se contrata aparte ni se enciende centro por centro. **[PENDIENTE: confirmar si está encendida al publicar; viene apagada de fábrica y cada aviso tiene su propio interruptor.]** En la práctica, en tu centro solo se envían si el centro ha anotado tu dirección y la ha confirmado contigo. Hoy hay dos:
+ResidApp puede enviar avisos genéricos por correo a las familias cuya dirección el centro haya anotado y **confirmado con ellas**. Es una función general del servicio, no un módulo opcional: no se contrata aparte ni se enciende centro por centro. **[PENDIENTE: confirmar si está encendida al publicar; viene apagada de fábrica y cada aviso tiene su propio interruptor.]** En la práctica, en tu centro solo se envían si el centro ha anotado tu dirección y la ha confirmado contigo. Hoy hay cinco:
 
 - «Tienes una propuesta de cita pendiente»: cuando el centro propone una cita.
 - «Tienes un cambio en una cita»: cuando el centro cambia o cancela una cita que reservaste (se envía a quien la reservó).
+- «Tienes una cita mañana»: el día antes de una cita confirmada, entre las 10:00 y las 19:00 (se envía a quien la reservó y solo si la cita sigue confirmada).
+- «Tienes un aviso sobre una cita en ResidApp»: solo si el centro ha activado los avisos de citas fuera del centro; siete días antes y el día antes de una cita de la persona residente, entre las 10:00 y las 19:00 (a quien de la familia se haya encargado de ella y, si nadie lo ha hecho, a los familiares con acceso).
+- «Una cita en ResidApp todavía necesita ayuda»: con la misma condición, dos días antes y solo si sigue sin cubrirse algo que le toca a la familia (no se envía a quien ya se ha encargado ni a quien ha dicho que no puede).
 
-Estos avisos **no dicen** el nombre de la persona residente, ni el centro, ni la fecha, ni el motivo, ni nada de salud. Solo te piden que entres en ResidApp. El remitente es «ResidApp» y no se puede responder al correo: si necesitas algo, llama al centro.
+Estos avisos **no dicen** el nombre de la persona residente, ni el centro, ni la hora, ni el motivo, ni nada de salud. Solo te piden que entres en ResidApp; el recordatorio dice, además, que tienes una cita mañana. El remitente es «ResidApp» y no se puede responder al correo: si necesitas algo, llama al centro.
 
 - El aviso solo se envía a una dirección que el centro **ha confirmado contigo** y mientras tengas acceso al Portal Familiar.
-- Es **voluntario**. Para dejar de recibirlos, pide al centro que borre tu dirección. Verás las novedades igualmente al entrar en ResidApp.
+- Es **voluntario**. Para dejar de recibirlos, díselo a tu centro: no tienes que explicar por qué ni hace falta borrar tu dirección. La baja vale para ese centro y el centro anota desde cuándo. Verás las novedades igualmente al entrar en ResidApp.
+- Los avisos que no se envíen mientras estás de baja no se mandan después, salvo el de una cita fuera del centro que toque el mismo día en que se vuelvan a activar. Para volver a recibirlos, pídeselo a tu centro.
 - ResidApp **no** mide si abres el correo ni si pulsas el enlace.
 - **Por tu seguridad:** ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje. Si recibes un aviso que no esperabas, ignóralo y cuéntaselo al centro.
-- Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío **sin el contenido ni la dirección**: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió.
+- Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío **sin el contenido ni la dirección**: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió y, en el recordatorio y en los avisos de citas fuera del centro, el día de la cita.
 
 ## 6. Dictado por voz (módulo opcional)
 

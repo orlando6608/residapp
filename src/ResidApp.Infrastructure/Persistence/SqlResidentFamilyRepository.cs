@@ -261,8 +261,41 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         return true;
     }
 
-    /// <summary>Quita la confirmación de la dirección (queja de la familia, dirección dudosa) sin tocar nada más. Con la versión que vio quien la quita; si la dirección
-    /// ya no estaba confirmada, FAMILY_MEMBER_CONFLICT. Para «no quiero más avisos» no basta quitar la marca: se borra la dirección.</summary>
+    /// <summary>La baja es de la persona en el centro (script 0123): una sola fila, con su auditoría y sin tocar el correo ni su confirmación. Se bloquea la ficha antes de
+    /// comparar, así que de dos pulsaciones a la vez gana una y la otra recibe FAMILY_MEMBER_CONFLICT.</summary>
+    public async Task SetNoticesOptOutAsync(
+        AdministrativeResidentTarget target, Guid linkId, bool optOut, DateTimeOffset? seenOptOutAt, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
+        await EnsureNotAnonymizedAsync(connection, transaction, linkId, target.CenterId.Value, ct);
+        var current = await connection.QuerySingleOrDefaultAsync<NoticesRow>(new CommandDefinition("""
+            SELECT f.id AS FamilyId, f.avisos_baja_en AS OptedOutAt
+              FROM dbo.residentes_familiares link WITH (UPDLOCK, ROWLOCK)
+              JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
+             WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
+            """, new { LinkId = linkId, ResidentId = target.ResidentId.Value, CenterId = target.CenterId.Value }, transaction, cancellationToken: ct))
+            ?? throw new AccessDeniedException();
+        if (current.OptedOutAt != seenOptOutAt?.UtcDateTime || (current.OptedOutAt is not null) == optOut)
+        {
+            throw new DomainValidationException("FAMILY_MEMBER_CONFLICT");
+        }
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE dbo.familiares SET avisos_baja_en = @OptedOutAt, avisos_baja_por_cuenta_id = @OptedOutBy
+             WHERE id = @FamilyId AND centro_id = @CenterId
+            """, new
+        {
+            current.FamilyId, CenterId = target.CenterId.Value, OptedOutAt = optOut ? occurredAt.UtcDateTime : (DateTime?)null,
+            OptedOutBy = optOut ? target.AccountId.Value : (Guid?)null,
+        }, transaction, cancellationToken: ct));
+        await AuditFamilyAsync(connection, transaction, target, current.FamilyId, optOut ? "FAMILY_NOTICES_OPT_OUT" : "FAMILY_NOTICES_OPT_IN", occurredAt, ct);
+        transaction.Commit();
+    }
+
+    /// <summary>Quita la confirmación de la dirección (dirección dudosa, un aviso que llegó a quien no debía) sin tocar nada más. Con la versión que vio quien la quita; si
+    /// la dirección ya no estaba confirmada, FAMILY_MEMBER_CONFLICT. No es la forma de dejar de recibir avisos: para eso está la baja (SetNoticesOptOutAsync).</summary>
     public async Task RemoveEmailConfirmationAsync(
         AdministrativeResidentTarget target, Guid linkId, string expectedVersion, CancellationToken ct = default)
     {
@@ -666,6 +699,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         var updated = await connection.ExecuteAsync(new CommandDefinition("""
             UPDATE dbo.familiares
                SET nombre_visible = @Name, telefono = @Phone, correo = NULL, correo_confirmado_en = NULL, correo_confirmado_por_cuenta_id = NULL,
+                   avisos_baja_en = NULL, avisos_baja_por_cuenta_id = NULL,
                    anonimizado_en = @OccurredAt, anonimizado_por_cuenta_id = @ActorId, anonimizado_motivo_codigo = @ReasonCode
              WHERE id = @FamilyId AND centro_id = @CenterId AND anonimizado_en IS NULL
             """, new
@@ -765,6 +799,8 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         DateTime? EmailConfirmedAt, Guid? EmailConfirmedBy);
 
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
+
+    private sealed record NoticesRow(Guid FamilyId, DateTime? OptedOutAt);
 
     private sealed record PortalFamilyRow(Guid FamilyId, string DisplayName, Guid? AccountId, string? Email);
 

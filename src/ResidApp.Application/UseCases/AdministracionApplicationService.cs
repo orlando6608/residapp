@@ -43,6 +43,11 @@ public sealed record UpdateFamilyMemberCommand(
 public sealed record RemoveFamilyEmailConfirmationCommand(
     Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, string VersionEsperada);
 
+/// <summary>Dar de baja al familiar de los avisos por correo (Baja) o volver a activarlos (script 0123). BajaVista es la fecha de la baja que enseñaba la pantalla (null si
+/// no estaba de baja); PedidaPorLaPersona, la casilla obligatoria para volver a activarlos.</summary>
+public sealed record SetFamilyNoticesOptOutCommand(
+    Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId, bool Baja, DateTimeOffset? BajaVista, bool PedidaPorLaPersona = false);
+
 /// <summary>Lo que hay que decir antes de anonimizar al familiar de un vínculo (script 0087).</summary>
 public sealed record PreviewFamilyAnonymizationQuery(Guid AmbitoPerfilId, CenterId CentroId, ResidentId ResidenteId, Guid VinculoId);
 
@@ -212,6 +217,20 @@ public sealed class AdministracionApplicationService(
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             await families.RemoveEmailConfirmationAsync(target, command.VinculoId, command.VersionEsperada, ct);
+            return true;
+        });
+
+    /// <summary>Baja de avisos por familiar (script 0123): dar de baja no pide nada; volver a activarlos exige marcar que la persona lo ha pedido.</summary>
+    public Task<ApplicationResult<bool>> SetFamilyNoticesOptOutAsync(SetFamilyNoticesOptOutCommand command, CancellationToken ct = default) =>
+        ApplicationResultRunner.RunAsync(async () =>
+        {
+            var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
+            if (!command.Baja && !command.PedidaPorLaPersona)
+            {
+                throw new DomainValidationException(FamilyMember.NoticesRequestRequiredCode);
+            }
+
+            await families.SetNoticesOptOutAsync(target, command.VinculoId, command.Baja, command.BajaVista, ct);
             return true;
         });
 

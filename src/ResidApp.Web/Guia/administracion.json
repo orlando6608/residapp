@@ -878,10 +878,12 @@
         { "texto": "Cambia el «Nombre», la «Relación», el «Teléfono» o el «Correo para avisos de ResidApp (opcional)».", "campos": ["Teléfono", "Correo para avisos de ResidApp (opcional)"] },
         { "texto": "Solo si ya se la has leído y la persona ha dicho que es correcta, marca la casilla de confirmación de la dirección. Sin ella, ResidApp no envía ningún aviso a ese correo.", "campos": ["Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta"] },
         { "texto": "Marca «Familiar referente» o «Tutor legal» si procede y pulsa **Guardar cambios**.", "botones": ["Guardar cambios"], "campos": ["Familiar referente", "Tutor legal"] },
-        { "texto": "Si la persona pide que no le manden más avisos, pulsa **Quitar la confirmación de la dirección** (está en la pantalla de edición, solo si la dirección está confirmada) o borra el correo.", "botones": ["Quitar la confirmación de la dirección"] }
+        { "texto": "Si la persona pide que no le manden más avisos, en la misma pantalla de edición, en «Avisos por correo», pulsa **Dar de baja de los avisos**. No tiene que explicar por qué. No borres el correo ni quites la confirmación para esto. El botón no guarda los cambios de la ficha: guárdalos antes.", "botones": ["Dar de baja de los avisos"] },
+        { "texto": "Para volver a activarlos, solo si esa persona te lo pide: marca «Esta persona me ha pedido volver a recibir los avisos» y pulsa **Volver a activar los avisos**.", "botones": ["Volver a activar los avisos"] },
+        { "texto": "Si la dirección es dudosa o un aviso llegó a quien no debía, corrígela o pulsa **Quitar la confirmación de la dirección** (solo sale si está confirmada). Eso no es una baja.", "botones": ["Quitar la confirmación de la dirección"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "Si el correo está confirmado, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). Si te pide no recibir solo los de citas fuera del centro, ver ADM-50. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla." }
+        { "para": "Familia", "texto": "Si el correo está confirmado y la persona no está de baja, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). La baja vale para todos sus residentes del centro y corta todos los avisos sobre citas; lo que no se envíe mientras tanto no se manda después, salvo el aviso de una cita fuera del centro que toque el mismo día en que se reactive. Si te pide no recibir solo los de citas fuera del centro, ver ADM-50. Si figura en dos fichas distintas, dala de baja en las dos. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla; la baja se mantiene." }
       ],
       "dudas": [
         { "p": "«Escribe un correo válido.»", "r": "La dirección no tiene forma de correo (falta la @ o el dominio): corrígela o bórrala." },
@@ -889,10 +891,13 @@
         { "p": "«Correo sin confirmar: ResidApp no enviará avisos a esta dirección.»", "r": "Confirma la dirección con la persona y marca la casilla, o déjala así si no ha podido hacerse: es correcto y simplemente no se enviará ningún aviso." },
         { "p": "«Este familiar está anonimizado: ya no se puede cambiar.»", "r": "En la fila de un familiar anonimizado ya solo queda «Desvincular»: verás este aviso solo si tenías abierta de antes la pantalla de edición (ver ADM-33)." }
       ],
-      "rutas": ["Administracion/Residente", "Administracion/EditarFamiliar", "Administracion/QuitarConfirmacionCorreo"],
+      "rutas": ["Administracion/Residente", "Administracion/EditarFamiliar", "Administracion/AvisosFamiliar", "Administracion/QuitarConfirmacionCorreo"],
       "mensajes": [
         "Datos del familiar guardados.",
         "Escribe un correo válido.",
+        "Baja anotada: no se le enviarán avisos por correo sobre citas.",
+        "Baja quitada: esta persona puede volver a recibir los avisos por correo.",
+        "Los avisos de esta persona ya habían cambiado. Revisa cómo están ahora.",
         "Confirmación de la dirección quitada: no se enviarán avisos a ese correo hasta que se vuelva a confirmar.",
         "Correo sin confirmar: ResidApp no enviará avisos a esta dirección.",
         "Este familiar está anonimizado: ya no se puede cambiar."
@@ -1642,7 +1647,7 @@
         { "p": "«Los avisos por correo están apagados. Para poder encenderlos, abre primero las citas externas a las familias.»", "r": "Primero abre las citas externas a las familias en la misma pantalla (ver ADM-49)." },
         { "p": "Sale «Las citas externas están cerradas a las familias, así que ahora no sale ningún aviso.»", "r": "Los avisos estaban encendidos, pero cerraste las citas. Si las vuelves a abrir, los avisos se reanudan con este ajuste." },
         { "p": "Lo he encendido y no sale ningún correo.", "r": "Mira que el aviso esté encendido en la aplicación (por defecto está apagado), que la persona tenga la dirección confirmada (ver ADM-28), que no esté de baja y que haya una cita que avisar a 7, 2 o 1 días." },
-        { "p": "Una persona pide no recibir más estos avisos.", "r": "Dala de baja con **Dar de baja de los avisos**. Si prefieres que no reciba ningún aviso de ResidApp, quita la confirmación de su dirección (ver ADM-28)." }
+        { "p": "Una persona pide no recibir más estos avisos.", "r": "Dala de baja con **Dar de baja de los avisos**. Si no quiere ningún aviso sobre citas, dala de baja en «Avisos por correo», al editar sus datos en la ficha del residente (ver ADM-28)." }
       ],
       "rutas": ["CitasExternas/AjustesFamilia", "CitasExternas/AjustesCorreo", "CitasExternas/FamiliaResidente", "CitasExternas/FamiliaCorreo"],
       "mensajes": [

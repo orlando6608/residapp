@@ -176,7 +176,8 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
                    (SELECT account.sujeto_externo FROM dbo.cuentas account WHERE account.id = f.cuenta_id) AS PortalAccount,
                    f.correo_confirmado_en AS EmailConfirmedAt, f.anonimizado_en AS AnonymizedAt,
                    (SELECT COUNT(*) FROM dbo.residentes_familiares o
-                     WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id AND o.desvinculado_en IS NULL) AS OtherResidentLinks
+                     WHERE o.familiar_id = link.familiar_id AND o.centro_id = link.centro_id AND o.id <> link.id AND o.desvinculado_en IS NULL) AS OtherResidentLinks,
+                   f.avisos_baja_en AS NoticesOptOutAt
               FROM dbo.residentes_familiares link
               JOIN dbo.familiares f ON f.id = link.familiar_id AND f.centro_id = link.centro_id
              WHERE link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
@@ -185,7 +186,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
             .Select(f => new ResidentFamilyMember(
                 f.LinkId, f.DisplayName, f.Relationship, f.Phone, f.Email, changes[f.LinkId].ToList(), f.OtherResidentLinks,
                 f.IsReferent, f.IsLegalGuardian, f.PortalAccount, f.EmailConfirmedAt is { } confirmedAt ? Utc(confirmedAt) : null,
-                f.AnonymizedAt is { } anonymizedAt ? Utc(anonymizedAt) : null))
+                f.AnonymizedAt is { } anonymizedAt ? Utc(anonymizedAt) : null, f.NoticesOptOutAt is { } optedOutAt ? Utc(optedOutAt) : null))
             .ToList();
         var contacts = (await connection.QueryAsync<ContactRow>(new CommandDefinition("""
             SELECT d.numero AS Number, d.accion_codigo AS Action, d.vinculo_id AS LinkId, f.nombre_visible AS DisplayName, d.designado_en AS At,
@@ -236,7 +237,7 @@ public sealed class SqlAdministracionResidentDirectory(SqlConnectionFactory conn
 
     private sealed record FamilyRow(
         Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email, bool IsReferent, bool IsLegalGuardian, string? PortalAccount,
-        DateTime? EmailConfirmedAt, DateTime? AnonymizedAt, int OtherResidentLinks);
+        DateTime? EmailConfirmedAt, DateTime? AnonymizedAt, int OtherResidentLinks, DateTime? NoticesOptOutAt);
 
     private sealed record LinkableRow(Guid FamilyId, string DisplayName, string Phone, int ActiveLinks);
 

@@ -294,6 +294,28 @@ public class AnonimizarFamiliarTests
         Assert.Contains("FAMILY_MEMBER_DELETE_FORBIDDEN", await FailsAsync("DELETE FROM dbo.familiares WHERE id = @Id"));
     }
 
+    [Fact]
+    public async Task Anonimizar_BorraLaBajaDeAvisos_YLaBaseNoLaAdmiteEnUnaFichaAnonimizada()
+    {
+        // Script 0123: sin correo no puede salir ningún aviso, así que la ficha anonimizada no conserva la baja (queda la auditoría).
+        var setup = await SetupAsync();
+        Assert.True((await Build(setup.Admin.ExternalSubject).SetFamilyNoticesOptOutAsync(new SetFamilyNoticesOptOutCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, setup.LinkId, true, null))).Ok);
+
+        Assert.True((await AnonymizeAsync(setup)).Ok);
+
+        var center = new { C = setup.Admin.CenterId.Value };
+        Assert.Null(await QueryAsync<DateTime?>("SELECT avisos_baja_en FROM dbo.familiares WHERE centro_id = @C", center));
+        Assert.Null(await QueryAsync<Guid?>("SELECT avisos_baja_por_cuenta_id FROM dbo.familiares WHERE centro_id = @C", center));
+        var direct = await Assert.ThrowsAsync<SqlException>(() => ExecuteAsync(
+            "UPDATE dbo.familiares SET avisos_baja_en = SYSUTCDATETIME(), avisos_baja_por_cuenta_id = @Account WHERE centro_id = @C",
+            new { C = setup.Admin.CenterId.Value, Account = setup.Admin.AccountId.Value }));
+        Assert.Contains("CK_fam_anonimizado", direct.Message);
+        var after = await Build(setup.Admin.ExternalSubject).SetFamilyNoticesOptOutAsync(new SetFamilyNoticesOptOutCommand(
+            setup.Admin.ProfileScopeId, setup.Admin.CenterId, setup.ResidentId, setup.LinkId, true, null));
+        Assert.Equal(ApplicationFailureCode.Conflict, after.Error!.Code);
+    }
+
     [Theory]
     [InlineData(FamilyAnonymizationReason.PeticionDelInteresado, "PETICION_DEL_INTERESADO")]
     [InlineData(FamilyAnonymizationReason.PeticionDeRepresentante, "PETICION_DE_REPRESENTANTE")]

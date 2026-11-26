@@ -91,6 +91,8 @@ public static class AdministrativeAudit
         ("FAMILY_EMAIL_CONFIRM", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_ANONYMIZE", AuditCategory.ResidentesYFamilias),
         ("FAMILY_EMAIL_UNCONFIRM", AuditCategory.ResidentesYFamilias),
+        ("FAMILY_NOTICES_OPT_OUT", AuditCategory.ResidentesYFamilias),
+        ("FAMILY_NOTICES_OPT_IN", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_LINK", AuditCategory.ResidentesYFamilias),
         ("FAMILY_PORTAL_ACCESS_GRANT", AuditCategory.ResidentesYFamilias),
         ("FAMILY_MEMBER_UNLINK", AuditCategory.ResidentesYFamilias),

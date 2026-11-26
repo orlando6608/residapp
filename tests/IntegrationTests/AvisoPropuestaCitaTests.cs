@@ -152,6 +152,31 @@ public class AvisoPropuestaCitaTests
         Assert.Equal(("OMITIDO", "SIN_CORREO", 0), (row.Estado, row.Motivo, row.Intentos));
     }
 
+    [Theory]
+    [InlineData(FamilyAddress)]
+    [InlineData(null)] // la baja manda sobre no tener correo
+    public async Task DeBajaDeLosAvisos_SeAnotaOmitidoConEseMotivo_SinEnvio(string? address)
+    {
+        var (setup, request) = await WithRequestAsync("Residente Aviso Correo Baja", address);
+        await OptOutAsync(setup.LinkId);
+        var sender = new FakeEmailSender();
+
+        var proposed = await ProposeAsync(setup, request.Id, await FarSlotAsync(setup, request.Id), Notice(sender, Active()));
+
+        Assert.True(proposed.Ok, proposed.Error?.Message);
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(request.Id));
+        Assert.Equal(("OMITIDO", "BAJA_DE_AVISOS", 0), (row.Estado, row.Motivo, row.Intentos));
+    }
+
+    private static async Task OptOutAsync(Guid linkId)
+    {
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync(
+            "UPDATE dbo.familiares SET avisos_baja_en = SYSUTCDATETIME(), avisos_baja_por_cuenta_id = creado_por_cuenta_id WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)",
+            new { linkId });
+    }
+
     [Fact]
     public async Task SinLaDireccionConfirmada_SeAnotaOmitido_SinEnvio_YConfirmarDespuesNoLoMandaAtrasado()
     {

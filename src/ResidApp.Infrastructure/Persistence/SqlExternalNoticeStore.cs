@@ -65,6 +65,12 @@ public sealed class SqlExternalNoticeStore(SqlConnectionFactory connections) : I
             return new(null, EmailLog.NoAccess);
         }
 
+        // La baja general ya la decide el procedimiento; se vuelve a mirar en la misma lectura que la dirección.
+        if (recipient.OptedOutAt is not null)
+        {
+            return new(null, EmailLog.OptedOut);
+        }
+
         if (string.IsNullOrWhiteSpace(recipient.Address))
         {
             return new(null, EmailLog.NoAddress);
@@ -89,5 +95,5 @@ public sealed class SqlExternalNoticeStore(SqlConnectionFactory connections) : I
     private sealed record PendingRow(Guid Id, Guid CenterId, Guid AppointmentId, string Key, string Language, string Template);
 
 
-    private sealed record Recipient(string? Address, DateTime? ConfirmedAt);
+    private sealed record Recipient(string? Address, DateTime? ConfirmedAt, DateTime? OptedOutAt);
 }
