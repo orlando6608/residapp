@@ -352,7 +352,8 @@ public sealed partial class AdministracionController(
             return RedirectToAction(nameof(Residente), new { residenteId });
         }
 
-        return View("Familiar", new FamilyMemberViewModel(detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks, member.EmailConfirmedAt));
+        return View("Familiar", new FamilyMemberViewModel(
+            detail!.Resident, EditForm(residenteId, member), member.OtherResidentLinks, member.EmailConfirmedAt, member.PortalAccount is not null));
     }
 
     /// <summary>El formulario de edición con los datos actuales del familiar y su versión (ver FamilyMemberData.Version).</summary>
@@ -397,7 +398,7 @@ public sealed partial class AdministracionController(
                 form.NombreVisible, form.Relacion, form.Telefono, form.Correo, form.Version ?? string.Empty, form.Referente, form.TutorLegal, form.ConfirmarCorreo), ct);
             if (result.Ok)
             {
-                TempData["Mensaje"] = "Datos del familiar guardados.";
+                TempData["Mensaje"] = FamilyMemberSavedMessage(result.Value, removed: string.IsNullOrWhiteSpace(form.Correo));
                 return RedirectToAction(nameof(Residente), new { residenteId = form.ResidenteId });
             }
 
@@ -419,14 +420,32 @@ public sealed partial class AdministracionController(
                 ModelState.Clear();
                 ModelState.AddModelError(string.Empty,
                     "Otra persona ha cambiado los datos de este familiar mientras los editabas. Aquí tienes los datos actuales: revísalos y vuelve a guardar si aún hace falta.");
-                return View("Familiar", new FamilyMemberViewModel(fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks, current.EmailConfirmedAt));
+                return View("Familiar", new FamilyMemberViewModel(
+                    fresh.Resident, EditForm(form.ResidenteId, current), current.OtherResidentLinks, current.EmailConfirmedAt, current.PortalAccount is not null));
             }
 
             ModelState.AddModelError(string.Empty, FamilyMemberError(result.Error, editing: true));
         }
 
         var shown = detail.Family.FirstOrDefault(f => f.LinkId == linkId);
-        return View("Familiar", new FamilyMemberViewModel(detail.Resident, form, shown?.OtherResidentLinks ?? 0, shown?.EmailConfirmedAt));
+        return View("Familiar", new FamilyMemberViewModel(
+            detail.Resident, form, shown?.OtherResidentLinks ?? 0, shown?.EmailConfirmedAt, shown?.PortalAccount is not null));
+    }
+
+    /// <summary>Tras cambiar el correo con el que entra un familiar, Administración tiene que saber si la dirección anterior se ha enterado.</summary>
+    private static string FamilyMemberSavedMessage(FamilyEmailNotice notice, bool removed)
+    {
+        const string Saved = "Datos del familiar guardados.";
+        if (notice == FamilyEmailNotice.NotNeeded)
+        {
+            return Saved;
+        }
+
+        return Saved + " Se han cerrado sus sesiones abiertas. "
+            + (notice == FamilyEmailNotice.Sent
+                ? "Aviso enviado a la dirección anterior; no podemos asegurar que llegue."
+                : "No consta que el aviso a la dirección anterior haya salido: avise por teléfono.")
+            + (removed ? " Sin correo no podrá entrar en el portal." : string.Empty);
     }
 
     /// <summary>Quitar solo la confirmación de la dirección del familiar (CJ, 2026-11-02): ante una queja o una dirección dudosa. Con la versión de los datos que enseñaba
@@ -566,6 +585,7 @@ public sealed partial class AdministracionController(
         {
             TempData["Error"] = result.Error!.Code switch
             {
+                ApplicationFailureCode.InvalidInput when result.Error.Message == ApplicationResultRunner.FamilyEmailRequiredMessage => result.Error.Message,
                 ApplicationFailureCode.InvalidInput =>
                     "Revisa el usuario: de 3 a 200 caracteres, sin espacios (letras, números y . _ - @).",
                 ApplicationFailureCode.Conflict => "Ese usuario ya existe o este familiar ya tiene acceso. Recarga la pantalla para ver su estado.",

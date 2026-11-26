@@ -144,6 +144,8 @@ builder.Services.AddSingleton<AccessFailureThrottle>();
 // Código de acceso por correo para la familia (ADR 0012, pieza 3; script 0121). Apagado por defecto (Acceso:CodigoFamiliarActivo); necesita además la clave del resumen
 // (Acceso:CodigoFamiliarClave) y el correo operativo. Falla cerrado: ver FamilyAccessGate y FamilyAccessCodeService.
 builder.Services.AddSingleton<FamilyAccessGate>();
+// Lo que cambia en Administración, en «Mi cuenta» y en el portal cuando la familia entra con código (correo obligatorio, efectos de cambiarlo, última entrada).
+builder.Services.AddSingleton(sp => new FamilyAccessPolicy(sp.GetRequiredService<FamilyAccessGate>().Entry == FamilyEntry.EmailCode));
 builder.Services.AddScoped<IFamilyAccessCodeStore>(sp => new SqlFamilyAccessCodeStore(sp.GetRequiredService<SqlConnectionFactory>(), connectionString));
 builder.Services.AddScoped(sp => new FamilyAccessCodeService(
     sp.GetRequiredService<IFamilyAccessCodeStore>(), sp.GetRequiredService<IEmailSender>(),
@@ -152,6 +154,12 @@ builder.Services.AddScoped(sp => new FamilyAccessCodeService(
     sp.GetRequiredService<TimeProvider>(),
     message => sp.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 // ADR 0007, incremento I2: invitaciones de acceso de un solo uso que entregan Administración y Plataforma.
+// Aviso a la dirección anterior cuando Administración cambia el correo con el que entra un familiar (script 0122).
+builder.Services.AddScoped<IFamilyEmailChangeLog, SqlFamilyEmailChangeLog>();
+builder.Services.AddScoped(sp => new FamilyEmailChangeNoticeService(
+    sp.GetRequiredService<IFamilyEmailChangeLog>(), sp.GetRequiredService<IEmailSender>(),
+    sp.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(), sp.GetRequiredService<TimeProvider>(),
+    message => sp.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 builder.Services.AddScoped<IAccessInvitationRepository, SqlAccessInvitationRepository>();
 builder.Services.AddScoped<AccessInvitationsApplicationService>();
 builder.Services.AddScoped<IAccountLinkRepository, SqlAccountLinkRepository>();

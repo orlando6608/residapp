@@ -1,6 +1,7 @@
 @using ResidApp.Domain.Families
 @using ResidApp.Web.Models
 @model FamilyAuthorizationViewModel
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     var resident = Model.Resident;
     var member = Model.Member;
@@ -52,6 +53,13 @@
         else
         {
             <p class="text-muted">Todavía no tiene cuenta para entrar al portal. El usuario es el identificador con el que entrará (de 3 a 200 caracteres, sin espacios). Dar el acceso no abre ni activa la autorización.</p>
+            @if (FamilyAccess.EmailCode && string.IsNullOrWhiteSpace(member.Email))
+            {
+                <div class="alert alert-warning" role="status">
+                    Para entrar necesita un correo en su ficha: allí recibe el código.
+                    <a class="alert-link" asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId">Añadir el correo</a>
+                </div>
+            }
             <form asp-action="AccesoPortalFamiliar" method="post" class="row g-2 align-items-end">
                 <input type="hidden" name="residenteId" value="@Model.Form.ResidenteId" />
                 <input type="hidden" name="vinculoId" value="@Model.Form.VinculoId" />

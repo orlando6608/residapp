@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using ResidApp.Application.Errors;
 using ResidApp.Application.Ports;
+using ResidApp.Application.Sessions;
 using ResidApp.Domain.Families;
 using ResidApp.Shared;
 
@@ -155,9 +156,9 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
 
     /// <summary>confirmEmail es la casilla «Dirección confirmada con la familia» (CJ, 2026-11-02): solo cuenta si hay correo y lo confirma como está en este guardado. Si el
     /// correo cambia o se quita, la confirmación anterior se pierde (la base de datos lo garantiza aunque este código no lo hiciera, script 0084); si no cambia, se conserva.</summary>
-    public async Task UpdateAsync(
+    public async Task<FamilyEmailChanged?> UpdateAsync(
         AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, bool confirmEmail = false,
-        CancellationToken ct = default)
+        bool emailGivesAccess = false, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -221,7 +222,43 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
             await AuditFamilyAsync(connection, transaction, target, current.FamilyId, "FAMILY_EMAIL_UNCONFIRM", occurredAt, ct);
         }
 
+        // Cambiar solo las mayúsculas no cambia el buzón: el código se resume con la dirección en minúsculas.
+        var previous = current.Email?.Trim();
+        var accessEnded = emailGivesAccess && !string.IsNullOrEmpty(previous)
+            && !string.Equals(previous, data.Email?.Trim(), StringComparison.OrdinalIgnoreCase)
+            && await EndFamilyAccessAsync(connection, transaction, current.FamilyId, target.CenterId.Value, occurredAt.UtcDateTime, ct);
+
         transaction.Commit();
+        return accessEnded ? new FamilyEmailChanged(current.FamilyId, previous!) : null;
+    }
+
+    /// <summary>Si el familiar tiene una cuenta que solo es de familia (la que entra con el código), cierra sus sesiones y anula su código sin usar, en la
+    /// transacción del cambio de dirección. Devuelve si la tenía. FORCESEEK: buscar por la cuenta, sin bloquear las filas de otras. El cierre nunca queda antes de la
+    /// apertura (CK_sesiones_cierre): un desfase de relojes entre copias de la aplicación no debe impedir guardar el cambio.</summary>
+    private static async Task<bool> EndFamilyAccessAsync(
+        SqlConnection connection, SqlTransaction transaction, Guid familyId, Guid centerId, DateTime now, CancellationToken ct)
+    {
+        var accountId = await connection.ExecuteScalarAsync<Guid?>(new CommandDefinition("""
+            SELECT f.cuenta_id
+              FROM dbo.familiares f
+             WHERE f.id = @FamilyId AND f.centro_id = @CenterId
+               AND EXISTS (SELECT 1 FROM dbo.ambitos_perfil p WHERE p.cuenta_id = f.cuenta_id AND p.estado = 'ACTIVE' AND p.perfil_codigo = 'FAMILIAR')
+               AND NOT EXISTS (SELECT 1 FROM dbo.ambitos_perfil p WHERE p.cuenta_id = f.cuenta_id AND p.estado = 'ACTIVE' AND p.perfil_codigo <> 'FAMILIAR')
+            """, new { FamilyId = familyId, CenterId = centerId }, transaction, cancellationToken: ct));
+        if (accountId is null)
+        {
+            return false;
+        }
+
+        await connection.ExecuteAsync(new CommandDefinition("""
+            UPDATE session SET cerrada_en = CASE WHEN session.creada_en > @Now THEN session.creada_en ELSE @Now END, motivo_cierre = @Reason
+              FROM dbo.sesiones session WITH (FORCESEEK)
+             WHERE session.cuenta_id = @AccountId AND session.cerrada_en IS NULL;
+            UPDATE code SET resumen = NULL, cerrado_en = @Now, motivo_cierre = N'ANULADO'
+              FROM dbo.codigos_acceso_correo code WITH (FORCESEEK)
+             WHERE code.cuenta_id = @AccountId AND code.cerrado_en IS NULL;
+            """, new { AccountId = accountId, Now = now, Reason = SessionCloseReason.CambioCorreo.ToCode() }, transaction, cancellationToken: ct));
+        return true;
     }
 
     /// <summary>Quita la confirmación de la dirección (queja de la familia, dirección dudosa) sin tocar nada más. Con la versión que vio quien la quita; si la dirección
@@ -311,14 +348,15 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         return number;
     }
 
-    public async Task GrantPortalAccessAsync(AdministrativeResidentTarget target, Guid linkId, string subject, CancellationToken ct = default)
+    public async Task GrantPortalAccessAsync(
+        AdministrativeResidentTarget target, Guid linkId, string subject, bool requireEmail = false, CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
         await EnsureNotAnonymizedAsync(connection, transaction, linkId, target.CenterId.Value, ct);
         // El bloqueo del familiar ordena dos altas simultáneas de su acceso: la segunda ya lo ve con cuenta.
         var family = await connection.QuerySingleOrDefaultAsync<PortalFamilyRow>(new CommandDefinition("""
-            SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.cuenta_id AS AccountId
+            SELECT f.id AS FamilyId, f.nombre_visible AS DisplayName, f.cuenta_id AS AccountId, f.correo AS Email
               FROM dbo.residentes_familiares link
               JOIN dbo.familiares f WITH (UPDLOCK, ROWLOCK) ON f.id = link.familiar_id AND f.centro_id = link.centro_id
              WHERE link.id = @LinkId AND link.residente_id = @ResidentId AND link.centro_id = @CenterId AND link.desvinculado_en IS NULL
@@ -327,6 +365,11 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
         if (family.AccountId is not null)
         {
             throw new DomainValidationException("FAMILY_PORTAL_ACCESS_CONFLICT");
+        }
+
+        if (requireEmail && string.IsNullOrWhiteSpace(family.Email))
+        {
+            throw new DomainValidationException(FamilyAccessCodes.EmailRequired);
         }
 
         var accountId = Guid.NewGuid();
@@ -723,7 +766,7 @@ public sealed class SqlResidentFamilyRepository(SqlConnectionFactory connections
 
     private sealed record AuthorizationRow(int Number, string StatusCode, DateTime? ValidUntil);
 
-    private sealed record PortalFamilyRow(Guid FamilyId, string DisplayName, Guid? AccountId);
+    private sealed record PortalFamilyRow(Guid FamilyId, string DisplayName, Guid? AccountId, string? Email);
 
     private sealed record DesignationRow(int Number, string Action, Guid? LinkId);
 

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using ResidApp.Application.Ports;
 
 namespace ResidApp.Application.Errors;
 
@@ -220,10 +221,19 @@ public static class ApplicationResultRunner
     /// <summary>El alta sin cama en una unidad con camas libres (CJ, foto 3.1): el formulario lo reconoce por este texto.</summary>
     public const string PlaceRequiredMessage = "Esta unidad tiene camas libres: elige una o «Pendiente de asignar».";
 
+    /// <summary>Con el código por correo, dar acceso o invitar a un familiar sin dirección: las pantallas lo reconocen por este texto.</summary>
+    public const string FamilyEmailRequiredMessage =
+        "Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.";
+
     public static ApplicationFailure Normalize(Exception error)
     {
         var message = error.Message;
         var code = ApplicationFailureCode.Unavailable;
+
+        if (message == FamilyAccessCodes.EmailRequired)
+        {
+            return new ApplicationFailure(ApplicationFailureCode.InvalidInput, FamilyEmailRequiredMessage);
+        }
 
         if (message == "PLACE_REQUIRED")
         {

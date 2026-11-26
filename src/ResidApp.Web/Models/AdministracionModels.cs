@@ -154,7 +154,8 @@ public sealed class FamilyMemberFormModel
 /// <summary>SharedWith es a cuántos otros residentes está vinculado también el familiar que se edita (sus datos de contacto valen para todos).</summary>
 /// <summary>EmailConfirmedAt es cuándo se confirmó la dirección que tiene hoy el familiar (null: sin confirmar o sin correo).</summary>
 public sealed record FamilyMemberViewModel(
-    AdministrativeResidentSummary Resident, FamilyMemberFormModel Form, int SharedWith = 0, DateTimeOffset? EmailConfirmedAt = null);
+    AdministrativeResidentSummary Resident, FamilyMemberFormModel Form, int SharedWith = 0, DateTimeOffset? EmailConfirmedAt = null,
+    bool HasPortalAccount = false);
 
 /// <summary>Vincular a un residente un familiar que ya existe: se elige entre los vinculables y se escribe la relación con este residente.
 /// OperacionId nace con el formulario y es el identificador del vínculo.</summary>

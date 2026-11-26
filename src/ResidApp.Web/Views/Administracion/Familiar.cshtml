@@ -1,10 +1,12 @@
 @using ResidApp.Web.Models
 @model FamilyMemberViewModel
 @inject Microsoft.Extensions.Options.IOptions<ResidApp.Web.Security.PrivacidadOptions> Privacidad
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     var resident = Model.Resident;
     var editing = Model.Form.VinculoId is not null;
     var title = editing ? "Editar familiar" : "Añadir familiar";
+    var warnsEmailAccess = FamilyAccess.EmailCode && editing && Model.HasPortalAccount;
     ViewData["Title"] = title;
 }
 
@@ -69,10 +71,43 @@
                 <span asp-validation-for="Form.Telefono" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="Form.Correo" class="form-label"></label>
-                <input asp-for="Form.Correo" type="email" class="form-control form-control-lg" autocomplete="off" aria-describedby="ayuda-correo" />
+                @if (FamilyAccess.EmailCode)
+                {
+                    <label asp-for="Form.Correo" class="form-label">Correo para entrar en el portal y para avisos de ResidApp</label>
+                }
+                else
+                {
+                    <label asp-for="Form.Correo" class="form-label"></label>
+                }
+                @if (warnsEmailAccess)
+                {
+                    <div class="alert alert-warning py-2 mb-2" id="aviso-correo-acceso">
+                        Esta persona entra con un código enviado a este correo. Compruebe que es ella quien pide el cambio (en persona o llamando al teléfono que ya
+                        consta). Al cambiarlo se cierran sus sesiones y se avisa a la dirección anterior. Si lo borra, no podrá entrar.
+                    </div>
+                }
+                <input asp-for="Form.Correo" type="email" class="form-control form-control-lg" autocomplete="off"
+                       aria-describedby="@(warnsEmailAccess ? "aviso-correo-acceso ayuda-correo" : "ayuda-correo")" />
                 <span asp-validation-for="Form.Correo" class="text-danger"></span>
                 <div id="ayuda-correo" class="form-text">
+                    @if (FamilyAccess.EmailCode)
+                    {
+                        <p class="mb-1">
+                            Se usa para el código con el que esta persona entra en el portal y para avisos genéricos: que tiene una propuesta de cita pendiente, que el centro ha cambiado
+                            o cancelado una cita que reservó, un recordatorio el día antes de una cita o, si el centro ha encendido los avisos de citas externas, un aviso sobre una cita
+                            fuera del centro de la persona a la que cuida, sin decir cuándo, dónde ni de qué. Los avisos no dicen el nombre del residente, ni el centro, ni la hora, ni el
+                            motivo. Sin correo no puede entrar en el portal. Antes de cambiarlo, compruebe que es ella quien lo pide.
+                        </p>
+                        <p class="mb-0">
+                            Antes de marcar la casilla, cuéntele esto, léale la dirección despacio (letra a letra si hace falta) y espere a que le diga que es correcta. Dígale también que
+                            los correos salen de no-responder@avisos.residapp.es y que, si no ve alguno, mire el correo no deseado y añada esa dirección a sus contactos. Sin la casilla
+                            marcada no se le envía ningún aviso, pero el código para entrar le llega igual. Si cambia o borra la dirección, la confirmación se quita y hay que volver a
+                            confirmarla. Si no quiere avisos, quite la confirmación de la dirección; no la borre, porque dejaría de poder entrar. El correo no sustituye al teléfono: si
+                            algo es urgente, llame.
+                        </p>
+                    }
+                    else
+                    {
                     <p class="mb-1">
                         Este correo solo sirve para mandar a esa persona avisos de ResidApp: que tiene una propuesta de cita pendiente, que el centro ha cambiado o cancelado
                         una cita que reservó, un recordatorio el día antes de una cita o, si el centro ha encendido los avisos de citas externas, un aviso sobre una cita fuera del centro de la persona a la que cuida, sin decir cuándo, dónde ni de qué. Los avisos no dicen el nombre del residente, ni el centro, ni la hora, ni el motivo: solo que entre en ResidApp;
@@ -86,6 +121,7 @@
                         confirmarla. Si alguien le pide que no le manden más avisos, borre la dirección; si solo quiere dejar de recibir los de citas externas, désela de baja desde «Lo que ve la familia» de su residente en Citas externas. El correo no sustituye al teléfono: si algo
                         es urgente, llame.
                     </p>
+                    }
                 </div>
                 @if (Model.EmailConfirmedAt is { } confirmedAt)
                 {

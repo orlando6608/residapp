@@ -115,7 +115,11 @@
             <div class="card-body">
                 @if (!Model.SegundoFactorActivo)
                 {
-                    <p class="mb-0">Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.</p>
+                    <p class="mb-0">
+                        @(Model.CodigoPorCorreo
+                            ? "Entras con tu contraseña y un código que te llega por correo, así que no tienes códigos de recuperación."
+                            : "Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.")
+                    </p>
                 }
                 else
                 {

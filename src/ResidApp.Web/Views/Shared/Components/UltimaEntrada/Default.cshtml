@@ -1,0 +1,13 @@
+@model ResidApp.Web.ViewComponents.UltimaEntradaViewModel
+
+<p class="small text-muted" data-ultima-entrada>
+    @if (Model.Otra is { } otra)
+    {
+        <text>Última entrada, sin contar esta: @CenterTime.Local(otra).ToString("dd/MM/yyyy HH:mm"). Si no fuiste tú, cambia tu contraseña en
+        <a asp-controller="Cuenta" asp-action="Index">Mi cuenta</a> y avisa a tu centro.</text>
+    }
+    else
+    {
+        <text>No consta otra entrada.</text>
+    }
+</p>

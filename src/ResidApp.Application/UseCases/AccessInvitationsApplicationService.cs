@@ -17,7 +17,8 @@ public sealed record IssuedInvitation(string Token, IssuedAccessInvitation Detai
 /// centro, como el resto de la gestión de cuentas, y el repositorio lo repite dentro de la transacción.
 /// </summary>
 public sealed class AccessInvitationsApplicationService(
-    AdministrationAccessResolver administrationAccess, IAccessInvitationRepository invitations, TimeProvider clock)
+    AdministrationAccessResolver administrationAccess, IAccessInvitationRepository invitations, TimeProvider clock,
+    FamilyAccessPolicy? familyAccess = null)
 {
     public Task<ApplicationResult<IssuedInvitation>> IssueAsync(AccountInvitationCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
@@ -25,7 +26,8 @@ public sealed class AccessInvitationsApplicationService(
             var subject = ProfessionalAccount.ValidateSubject(command.Usuario);
             var (access, _) = await administrationAccess.ResolveAsync(command.AmbitoPerfilId, command.CentroId, ct);
             var token = AccessInvitation.NewToken();
-            return new IssuedInvitation(token, await invitations.IssueAsync(access, subject, AccessInvitation.Hash(token), Now, ct));
+            return new IssuedInvitation(token, await invitations.IssueAsync(
+                access, subject, AccessInvitation.Hash(token), Now, familyAccess?.EmailCode == true, ct));
         });
 
     public Task<ApplicationResult<bool>> CancelAsync(AccountInvitationCommand command, CancellationToken ct = default) =>

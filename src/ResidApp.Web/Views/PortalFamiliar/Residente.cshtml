@@ -13,6 +13,7 @@
 
 <h1 class="h3">@resident.ResidentName</h1>
 <p class="text-muted">@resident.Relationship</p>
+@await Component.InvokeAsync("UltimaEntrada")
 
 @if (Model.Home.ProposalRequestId is { } proposalRequestId)
 {
