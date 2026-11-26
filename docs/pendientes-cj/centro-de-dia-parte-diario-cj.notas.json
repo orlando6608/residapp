@@ -2,7 +2,7 @@
   "documento": "centro-de-dia-parte-diario-cj",
   "notas": {
     "1.1": "Anotado. Que también pueda haber personas más jóvenes se tendrá en cuenta al decidir quién ve cada dato. La escala de Lawton la comentamos en la 1.2.",
-    "1.2": "Hoy la aplicación tiene Auxiliar, Enfermería, Medicina, Dirección y Administración. Terapeuta ocupacional, fisioterapeuta y psicólogo no están construidos y falta decidir si se hacen y cuándo.\n• De cada uno de esos tres: ¿qué necesita leer, qué escribe y cada cuánto?\n• En un centro sin médico propio, ¿a quién debe llegar lo que hoy Enfermería escala a Medicina?\n• Escala de Lawton: queda como propuesta. Dinos qué versión usas, quién la pasa, cada cuánto se repite y si es solo para Centro de Día.",
+    "1.2": "Hoy la aplicación tiene Auxiliar, Enfermería, Medicina, Dirección y Administración. Terapeuta ocupacional, fisioterapeuta y psicólogo no están construidos y falta decidir si se hacen y cuándo.\n• De cada uno de esos tres: ¿qué necesita leer, qué escribe y cada cuánto?\n• En un centro sin médico propio, ¿a quién debe llegar lo que hoy Enfermería escala a Medicina?\n• Escala de Lawton: queda como propuesta, sin construir. Las preguntas están en el tema 7.",
     "1.3": "Anotado. Hoy, pasar a alguien de un centro de día a una residencia es un alta nueva: la ficha no se traslada. Si los dos fueran del mismo grupo, ¿qué necesitaría saber la residencia desde el primer día?",
     "2.1": "Hecho, en el entorno de pruebas y apagado hasta que Administración lo activa: se anota «Vino» o «No vino», sin hora. Confirma o cambia estos valores de partida:\n• Anotan Auxiliar, Enfermería y Medicina; Administración lo consulta, pero no anota.\n• Auxiliar corrige hasta 7 días atrás; Enfermería y Medicina, sin ese límite.\n• Cada persona tiene su pauta (qué días de la semana se la espera). La fijan Enfermería o Administración, y un cambio puede programarse hasta con 90 días de adelanto.\n• Dirección no ve la asistencia.",
     "2.2": "Hecho: «Avisó la familia», «No avisó» u «Otro motivo». También las ausencias programadas (ingreso hospitalario, vacaciones u otro): esos días salen como «Ausencia programada» y no hay que marcarlos. Confirma o cambia:\n• La nota de «Otro motivo» es opcional, de una línea y 80 caracteres; se pide no escribir enfermedades ni diagnósticos, y Administración no la ve.\n• Las ausencias las registran Administración y Enfermería, con 90 días como máximo cada una.\n• El motivo de la ausencia solo lo ven Enfermería y Medicina.",
@@ -14,6 +14,7 @@
     "3.5": "Anotado: no se añade ningún apartado para esto.",
     "4.1": "Para seguir con el parte a la familia, el aviso por correo y la recogida faltan los temas 4 y 5. Si alguna pregunta no te corresponde, dínoslo.",
     "6.1": "Pregunta nueva. Las 18:00 y los 30 minutos son una propuesta de Orlando sin tu visto bueno. También se aplican cuando se corrige el tipo de un centro dado de alta por error y nadie ha cambiado su horario.",
-    "6.2": "Pregunta nueva. Si contestas que cambian, dilo plazo a plazo. Cambiar el valor de partida no mueve los centros que ya existen: en ellos lo cambia Dirección."
+    "6.2": "Pregunta nueva. Si contestas que cambian, dilo plazo a plazo. Cambiar el valor de partida no mueve los centros que ya existen: en ellos lo cambia Dirección.",
+    "7.1": "Tema nuevo (7.1 a 7.6) sobre la escala de Lawton. No damos por buena ninguna hoja hasta que la revises."
   }
 }
