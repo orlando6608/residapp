@@ -366,6 +366,8 @@ Base normativa local (comprobada el 2026-11-20; textos consolidados, no oficiale
 7. **Avisar** a quien prueba: si además se marca «Dirección confirmada», puede recibir avisos de citas; y si cambia o borra el correo de la cuenta de familia, dejará de poder entrar.
 8. **Primera prueba:** el registro de la Web App debe decir `CODIGO_ACCESO_FAMILIA: ENVIADO`, sin dirección ni código.
 
+**Paso 1 para las cuentas de CJ (2026-11-26):** Orlando comunica que CJ está conforme con que su dirección se use en sus cuentas de familia de prueba; la hoja de acceso de CJ ya lo dice. Aquí no se copia la dirección ni la respuesta.
+
 Recomendado: comprobar que `ResidAppTareas` está configurada (si sale «Códigos de acceso: no se purgan», los 30 días no se cumplen), seguimiento de aperturas apagado en Azure y retirar las direcciones de prueba al terminar.
 
 ### Solo antes de datos reales
