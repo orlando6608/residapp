@@ -5,6 +5,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Audit;
+using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Platform;
 using ResidApp.Domain.Residents;
 using ResidApp.Domain.Supervision;
@@ -224,6 +225,94 @@ public class TipoServicioCentroTests
             connection.ExecuteAsync("EXEC dbo.fijar_horario_inicial_centro @CenterId", new { center.CenterId }));
         Assert.Contains("FAMILY_SCHEDULE_INITIAL_FORBIDDEN", forbidden.Message);
         Assert.Equal(45, await ScalarAsync<int>("SELECT margen_minutos FROM dbo.comunicados_horario_centro WHERE centro_id = @CenterId", new { center.CenterId }));
+    }
+
+    private static Task<string> ScheduleRowAsync(Guid centerId) => ScalarAsync<string>(
+        "SELECT CONCAT(hora_publicacion, '|', margen_minutos, '|', resumen_frecuencia_codigo) FROM dbo.comunicados_horario_centro WHERE centro_id = @centerId", new { centerId });
+
+    private static Task<int> ScheduleChangesAsync(Guid centerId) =>
+        ScalarAsync<int>("SELECT COUNT(*) FROM dbo.comunicados_horario_centro_historial WHERE centro_id = @centerId", new { centerId });
+
+    [Theory]
+    [InlineData(CenterServiceType.Residencia, CenterServiceType.CentroDeDia, "18:00:00|30|SEMANAL")]
+    [InlineData(CenterServiceType.CentroDeDia, CenterServiceType.Residencia, "19:00:00|60|SEMANAL")]
+    public async Task Al_corregir_el_tipo_un_horario_de_comunicados_nunca_cambiado_pasa_al_inicial_del_tipo_nuevo_sin_historial(
+        CenterServiceType from, CenterServiceType to, string expected)
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op);
+        var center = await CreateCenterAsync(op, service, from);
+
+        Assert.True((await service.ChangeCenterServiceTypeAsync(ChangeOf(op, center.CenterId, to))).Ok);
+
+        Assert.Equal(expected, await ScheduleRowAsync(center.CenterId));
+        Assert.Equal(0, await ScheduleChangesAsync(center.CenterId));
+    }
+
+    [Theory]
+    [InlineData(false, "20:00:00|45|DIARIA")]
+    [InlineData(true, "19:00:00|60|SEMANAL")]
+    public async Task Al_corregir_el_tipo_un_horario_que_la_Administracion_cambio_alguna_vez_no_se_toca_ni_aunque_volviera_al_inicial(bool restored, string expected)
+    {
+        var op = await CreateOperatorAsync();
+        var center = await CreateCenterAsync(op, BuildPlatform(op), CenterServiceType.Residencia);
+        var adminScopeId = await ScalarAsync<Guid>(
+            "SELECT id FROM dbo.ambitos_perfil WHERE centro_id = @CenterId AND perfil_codigo = 'ADMINISTRACION'", new { center.CenterId });
+        var admin = new AccountAdministrationAccess(adminScopeId, AccountId.From(center.AdminAccountId), CenterId.From(center.CenterId));
+        var schedules = new SqlFamilyCommunicationScheduleRepository(TestDatabase.ConnectionFactory);
+        var version = await schedules.SaveAsync(admin, 0, new FamilyCommunicationScheduleSettings(new TimeOnly(20, 0), TimeSpan.FromMinutes(45), FamilyCommunicationSummaryFrequency.Diaria));
+        if (restored)
+        {
+            version = await schedules.SaveAsync(admin, version, FamilyCommunicationScheduleSettings.Default);
+        }
+
+        // Como el usuario de la aplicación: la seguridad por filas no deja a Plataforma ver el historial del centro, y el procedimiento tiene que verlo igualmente.
+        using (var asOperator = await OpenAsAppUserAsync(ScopeOf(op)))
+        {
+            await asOperator.ExecuteAsync(Correct, new { centerId = center.CenterId, type = "CENTRO_DE_DIA", accountId = op.AccountId.Value });
+        }
+
+        Assert.Equal("CENTRO_DE_DIA", await TypeOfAsync(center.CenterId));
+        Assert.Equal(expected, await ScheduleRowAsync(center.CenterId));
+        Assert.Equal(version, await ScheduleChangesAsync(center.CenterId));
+    }
+
+    [Fact]
+    public async Task Al_corregir_el_tipo_de_un_centro_sin_fila_de_horario_queda_la_del_tipo_nuevo()
+    {
+        var op = await CreateOperatorAsync();
+        var oldCenter = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+
+        Assert.True((await BuildPlatform(op).ChangeCenterServiceTypeAsync(ChangeOf(op, oldCenter.CenterId.Value, CenterServiceType.CentroDeDia))).Ok);
+
+        Assert.Equal("18:00:00|30|SEMANAL", await ScheduleRowAsync(oldCenter.CenterId.Value));
+    }
+
+    [Fact]
+    [Trait("Categoria", "Concurrencia")]
+    public async Task Un_cambio_de_horario_a_medias_se_espera_y_la_correccion_del_tipo_no_lo_pisa()
+    {
+        var op = await CreateOperatorAsync();
+        var service = BuildPlatform(op);
+        var center = await CreateCenterAsync(op, service, CenterServiceType.Residencia);
+
+        using var inFlight = await TestDatabase.ConnectionFactory.OpenAsync();
+        using var transaction = inFlight.BeginTransaction();
+        await inFlight.ExecuteAsync("""
+            UPDATE dbo.comunicados_horario_centro SET hora_publicacion = '20:00' WHERE centro_id = @CenterId;
+            INSERT INTO dbo.comunicados_horario_centro_historial
+                (id, centro_id, hora_anterior, margen_anterior_minutos, resumen_anterior_codigo, hora_nueva, margen_nuevo_minutos, resumen_nuevo_codigo, cambiado_por_cuenta_id, cambiado_por_perfil, cambiado_en)
+            VALUES (NEWID(), @CenterId, '19:00', 60, 'SEMANAL', '20:00', 60, 'SEMANAL', @AdminAccountId, 'ADMINISTRACION', SYSUTCDATETIME())
+            """, new { center.CenterId, center.AdminAccountId }, transaction);
+
+        var change = Task.Run(() => service.ChangeCenterServiceTypeAsync(ChangeOf(op, center.CenterId, CenterServiceType.CentroDeDia)));
+        await Task.Delay(1500);
+        Assert.False(change.IsCompleted, "La corrección debe esperar al cambio de horario que está a medias");
+        transaction.Commit();
+
+        var result = await change.WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.True(result.Ok, result.Error?.Message);
+        Assert.Equal("20:00:00|60|SEMANAL", await ScheduleRowAsync(center.CenterId));
     }
 
     /// <summary>Las filas de plazos de un centro en una sola cadena, ordenadas por código de hito.</summary>

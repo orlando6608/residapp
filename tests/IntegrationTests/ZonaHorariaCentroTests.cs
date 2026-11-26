@@ -201,6 +201,22 @@ public class ZonaHorariaCentroTests
     }
 
     [Fact]
+    public async Task La_base_de_datos_da_a_un_centro_sin_fila_la_misma_zona_por_defecto_que_la_aplicacion()
+    {
+        // La vista de los avisos por correo (0110) tiene la zona por defecto escrita aparte de CenterTime.DefaultZoneId: si una cambia sin la otra, avisos y pantallas usarían horas distintas.
+        var admin = await SeedFixture.CreateProfileAsync(SystemProfile.Administracion);
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+
+        var fromView = await connection.QuerySingleAsync<(string Code, string WindowsName)>(
+            "SELECT zona_codigo, nombre_windows FROM dbo.zonas_vigentes_centros WHERE centro_id = @center", new { center = admin.CenterId.Value });
+        var windowsNameInCatalog = await connection.ExecuteScalarAsync<string>(
+            "SELECT nombre_windows FROM dbo.zonas_horarias WHERE codigo = @zone", new { zone = CenterTime.DefaultZoneId });
+
+        Assert.Equal(CenterTime.DefaultZoneId, fromView.Code);
+        Assert.Equal(windowsNameInCatalog, fromView.WindowsName);
+    }
+
+    [Fact]
     public async Task Un_centro_que_ya_existia_no_tiene_fila_usa_Madrid_y_Plataforma_ve_lo_que_se_veria_afectado()
     {
         var op = await CreateOperatorAsync();

@@ -5,6 +5,7 @@
 Se detectaron durante otros bloques. No se han corregido porque quedaban fuera de su alcance; propónselos al
 usuario cuando encajen:
 
+- **Texto mal codificado en una prueba (2026-11-26):** `tests/IntegrationTests/ZonaHorariaCentroTests.cs` tiene cinco líneas (comentarios y mensajes de fallo) con las tildes dobladas («catÃ¡logo»). No afecta al resultado.
 - **Interruptor de la asistencia (2026-11-25):** encender o apagar la asistencia en varios centros **en el mismo instante** puede acabar en error 1205 («No se ha podido completar la operación.»;
   repetir funciona). En bases recién creadas, con 8 centros cambiándolo sin parar, falló en 3 de 4 intentos (con y sin `READ_COMMITTED_SNAPSHOT`). Causas, las mismas que arregló `0118` en la
   asistencia y la pauta: `LatestSwitchAsync` usa `UPDLOCK, HOLDLOCK` y `TR_asc_reglas` lee sin `FORCESEEK`. Aquí no hay fila de residente que ordene los cambios, así que el arreglo no es el mismo.
