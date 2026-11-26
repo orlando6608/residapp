@@ -141,6 +141,16 @@ builder.Services.AddScoped<IAccessEventLog, SqlAccessEventLog>();
 builder.Services.AddSingleton<PendingAccessCookie>();
 builder.Services.AddSingleton<InvitationCookie>();
 builder.Services.AddSingleton<AccessFailureThrottle>();
+// Código de acceso por correo para la familia (ADR 0012, pieza 3; script 0121). Apagado por defecto (Acceso:CodigoFamiliarActivo); necesita además la clave del resumen
+// (Acceso:CodigoFamiliarClave) y el correo operativo. Falla cerrado: ver FamilyAccessGate y FamilyAccessCodeService.
+builder.Services.AddSingleton<FamilyAccessGate>();
+builder.Services.AddScoped<IFamilyAccessCodeStore>(sp => new SqlFamilyAccessCodeStore(sp.GetRequiredService<SqlConnectionFactory>(), connectionString));
+builder.Services.AddScoped(sp => new FamilyAccessCodeService(
+    sp.GetRequiredService<IFamilyAccessCodeStore>(), sp.GetRequiredService<IEmailSender>(),
+    sp.GetRequiredService<IOptions<CorreoOptions>>().Value.ToSettings(),
+    new FamilyAccessCodeKey(sp.GetRequiredService<IOptions<AccesoOptions>>().Value.CodigoFamiliarClave),
+    sp.GetRequiredService<TimeProvider>(),
+    message => sp.GetRequiredService<ILoggerFactory>().CreateLogger("Correo").LogWarning("{Mensaje}", message)));
 // ADR 0007, incremento I2: invitaciones de acceso de un solo uso que entregan Administración y Plataforma.
 builder.Services.AddScoped<IAccessInvitationRepository, SqlAccessInvitationRepository>();
 builder.Services.AddScoped<AccessInvitationsApplicationService>();
@@ -345,6 +355,9 @@ builder.Services.AddHostedService<ExternalNoticeWorker>();
 // La purga del registro de envíos (script 0085) usa la misma conexión propia de la tarea: el rol solo puede ejecutar el procedimiento que borra lo de más de 12 meses.
 builder.Services.AddScoped<IEmailLogPurge>(_ => new SqlEmailLogPurge(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
 builder.Services.AddHostedService<EmailLogPurgeWorker>();
+// La purga de los códigos de acceso de la familia (script 0121), con la misma conexión propia de la tarea.
+builder.Services.AddScoped<IAccessCodePurge>(_ => new SqlAccessCodePurge(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
+builder.Services.AddHostedService<AccessCodePurgeWorker>();
 // El cierre de los avisos que quedaron PENDIENTE (script 0089): el rol solo puede ejecutar el procedimiento que los marca FALLIDO / RESULTADO_DESCONOCIDO.
 builder.Services.AddScoped<IUnresolvedNoticeCloser>(_ => new SqlUnresolvedNoticeCloser(new SqlConnectionFactory(tasksConnectionString ?? connectionString)));
 builder.Services.AddHostedService<UnresolvedNoticeWorker>();
@@ -484,6 +497,14 @@ TechnicalFailureLog.Register(app.Services.GetRequiredService<ILoggerFactory>().C
 ServerTimeZone.Verify(app.Environment, app.Logger);
 // El servidor tiene que conocer todas las zonas activas del catálogo: si no, un centro vería las horas en la zona de la península (en producción no arranca).
 await CatalogZoneVerifier.VerifyAsync(app.Services, app.Environment, app.Logger);
+// Código de la familia encendido sin lo que necesita: la aplicación arranca, la familia no entra y se dice por qué.
+var accessSettings = app.Services.GetRequiredService<IOptions<AccesoOptions>>().Value;
+if (accessSettings.CodigoFamiliarActivo
+    && (!new FamilyAccessCodeKey(accessSettings.CodigoFamiliarClave).IsUsable || !app.Services.GetRequiredService<IOptions<CorreoOptions>>().Value.Operativo))
+{
+    app.Logger.LogError(
+        "Acceso:CodigoFamiliarActivo está encendido, pero falta Acceso:CodigoFamiliarClave (32 caracteres o más) o el correo no está operativo: las familias no podrán entrar.");
+}
 // Un proveedor de IA que no esté en la lista autorizada (ADR 0011) impide arrancar.
 IaOptions.Validate(app.Services.GetRequiredService<IOptions<IaOptions>>().Value);
 // Módulos con todo activo solo en un entorno que declara ser de desarrollo; un entorno desconocido cuenta como producción y no arranca (ADR 0015).

@@ -5,6 +5,9 @@ namespace ResidApp.Web.Models;
 /// <summary>Inicio de sesión con contraseña. SesionCaducada: se llegó aquí al guardar un formulario con la sesión ya terminada.</summary>
 public sealed record AccesoEntrarViewModel(string? Usuario, string? ReturnUrl, bool SesionCaducada, bool PasskeysActivas);
 
+/// <summary>La pantalla donde la familia escribe el código que le ha llegado por correo (ADR 0012, pieza 3). No lleva la dirección.</summary>
+public sealed record CodigoCorreoViewModel(string? Aviso);
+
 /// <summary>Alta del segundo factor: la clave para escribirla a mano (en grupos de 4) y la dirección otpauth:// del QR.</summary>
 public sealed record ActivarSegundoFactorViewModel(string Usuario, string ClaveAgrupada, string DireccionAutenticador);
 

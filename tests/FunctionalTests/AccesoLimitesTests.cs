@@ -25,6 +25,8 @@ public class AccesoLimitesTests(AccesoLimitesTests.StagingFactory factory) : ICl
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Staging");
+            // Se declara de desarrollo, como Azure dev: sin eso y con el código por correo apagado, la familia de estas pruebas no entraría (ADR 0012, pieza 3).
+            builder.UseSetting("Entorno:Tipo", "Desarrollo");
             // Los valores de Development (sin límite) no se aplican en Staging: se usan los de appsettings.json.
         }
     }

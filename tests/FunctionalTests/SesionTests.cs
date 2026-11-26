@@ -260,7 +260,9 @@ public class SesionFueraDeDesarrolloTests(SesionFueraDeDesarrolloTests.StagingFa
 
     public sealed class StagingFactory : ResidentsFlowTests.WebAppFactory
     {
-        protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseEnvironment("Staging");
+        // Se declara de desarrollo, como Azure dev: sin eso y con el código por correo apagado, la familia no entraría (ADR 0012, pieza 3).
+        protected override void ConfigureWebHost(IWebHostBuilder builder) =>
+            builder.UseEnvironment("Staging").UseSetting("Entorno:Tipo", "Desarrollo");
     }
 
     [Fact]
