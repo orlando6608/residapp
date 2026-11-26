@@ -13,7 +13,7 @@ namespace ResidApp.Web.Controllers;
 /// afectan a los comunicados que se guarden después: la hora de los ya guardados queda fijada.</summary>
 public sealed partial class AdministracionController
 {
-    /// <summary>Con <paramref name="sugeridos"/> el formulario trae el horario sugerido (19:00 y 60 minutos, resumen semanal), sin guardarlo.</summary>
+    /// <summary>Con <paramref name="sugeridos"/> el formulario trae el horario sugerido para el tipo de centro, sin guardarlo.</summary>
     public async Task<IActionResult> HorarioComunicados(bool sugeridos = false, CancellationToken ct = default)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);

@@ -151,7 +151,7 @@
       "palabras": ["comunicados", "publicar ahora", "frecuencia", "hora de publicación", "familia"],
       "permisos": [],
       "antes": [
-        "Saber que cada comunicado se publica a la hora que tenía fijada el centro al guardarlo (por defecto, las 19:00) y que lo prepara y lo aprueba Enfermería o Medicina.",
+        "Saber que cada comunicado se publica a la hora que tenía fijada el centro al guardarlo (por defecto, las 19:00 en una Residencia y las 18:00 en un Centro de Día) y que lo prepara y lo aprueba Enfermería o Medicina.",
         "Si la información es urgente, este no es el canal: avisa también por teléfono."
       ],
       "pasos": [
