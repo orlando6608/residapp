@@ -51,6 +51,8 @@ public sealed class CuentaViewModel
     public required IReadOnlyList<PasskeyViewModel> Passkeys { get; init; }
     public bool PasskeysActivas { get; init; }
     public bool PasskeyObligatoria { get; init; }
+    /// <summary>La cuenta solo es de familia y entra con la contraseña y un código que le llega por correo.</summary>
+    public bool CodigoPorCorreo { get; init; }
     public string? Aviso { get; init; }
     public string? ErrorContrasena { get; init; }
     public string? ErrorCodigos { get; init; }
@@ -59,12 +61,13 @@ public sealed class CuentaViewModel
 
 public static class AccesoRecienteDisplay
 {
-    public static string Descripcion(AccessEventType type) => type switch
+    /// <summary>Con codigoPorCorreo (cuenta de familia que entra con código), el segundo paso que falla es el del correo, no el del móvil.</summary>
+    public static string Descripcion(AccessEventType type, bool codigoPorCorreo = false) => type switch
     {
         AccessEventType.Entrada => "Entrada",
         AccessEventType.ContrasenaFallida => "Contraseña incorrecta",
         AccessEventType.Bloqueo => "Cuenta bloqueada por demasiados intentos",
-        AccessEventType.SegundoFactorFallido => "Código del móvil incorrecto",
+        AccessEventType.SegundoFactorFallido => codigoPorCorreo ? "Código del correo incorrecto" : "Código del móvil incorrecto",
         AccessEventType.SegundoFactorAlta => "Código del móvil preparado",
         AccessEventType.CodigoRecuperacionUsado => "Entrada con un código de recuperación",
         AccessEventType.InvitacionUsada => "Invitación de acceso usada",

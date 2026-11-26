@@ -115,7 +115,8 @@ public sealed class AdministracionApplicationService(
     AdministrationAccessResolver administrationAccess, IProfileScopeDirectoryProvider scopes,
     IAdministracionResidentDirectory directory, ISessionIdentityProvider session,
     IAuthorizationEvidenceProvider evidenceProvider, IResidentIdentityRepository identities, IResidentFamilyRepository families,
-    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts)
+    IProfessionalAccountDirectory accountDirectory, IProfessionalAccountRepository accounts,
+    FamilyAccessPolicy? familyAccess = null, FamilyEmailChangeNoticeService? emailNotices = null)
 {
     public Task<ApplicationResult<IReadOnlyList<AdministrativeResidentSummary>>> ListResidentsAsync(
         AdministracionQuery query, CancellationToken ct = default) =>
@@ -188,13 +189,21 @@ public sealed class AdministracionApplicationService(
             return await families.LinkExistingAsync(target, command.AmbitoPerfilId, command.OperacionId, command.FamiliarId, relationship, ct);
         });
 
-    public Task<ApplicationResult<bool>> UpdateFamilyMemberAsync(UpdateFamilyMemberCommand command, CancellationToken ct = default) =>
+    /// <summary>Dice si hubo que avisar a la dirección anterior (solo cuando la familia entra con un código por correo) y si el aviso salió. El aviso va
+    /// después de guardar: su fallo no deshace el cambio.</summary>
+    public Task<ApplicationResult<FamilyEmailNotice>> UpdateFamilyMemberAsync(UpdateFamilyMemberCommand command, CancellationToken ct = default) =>
         ApplicationResultRunner.RunAsync(async () =>
         {
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
             var data = FamilyMember.Validate(command.NombreVisible, command.Relacion, command.Telefono, command.Correo, command.Referente, command.TutorLegal);
-            await families.UpdateAsync(target, command.VinculoId, data, command.VersionEsperada, command.ConfirmarCorreo, ct);
-            return true;
+            var changed = await families.UpdateAsync(
+                target, command.VinculoId, data, command.VersionEsperada, command.ConfirmarCorreo, familyAccess?.EmailCode == true, ct);
+            if (changed is null)
+            {
+                return FamilyEmailNotice.NotNeeded;
+            }
+
+            return emailNotices is null ? FamilyEmailNotice.NotSent : await emailNotices.NotifyAsync(target.CenterId, changed);
         });
 
     /// <summary>CJ, 2026-11-02: quitar la confirmación de la dirección (sin tocar el resto). Sin ella no se envía ningún aviso a esa dirección.</summary>
@@ -252,7 +261,7 @@ public sealed class AdministracionApplicationService(
         {
             var subject = ProfessionalAccount.ValidateSubject(command.Usuario);
             var target = await ResolveResidentAsync(command.AmbitoPerfilId, command.CentroId, command.ResidenteId, ct);
-            await families.GrantPortalAccessAsync(target, command.VinculoId, subject, ct);
+            await families.GrantPortalAccessAsync(target, command.VinculoId, subject, familyAccess?.EmailCode == true, ct);
             return true;
         });
 

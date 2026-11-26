@@ -26,7 +26,7 @@ public sealed class CuentaController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, ISessionStore sessions, IAccessEventLog accessLog,
     AccessFailureThrottle throttle, SessionPolicy policy, AccountLinksApplicationService links, TimeProvider clock,
     IPasskeyHandler<CredentialAccount> passkeyHandler, PasskeyStateCookie passkeyState, IOptions<AccesoOptions> acceso,
-    ILogger<CuentaController> logger) : Controller
+    ILogger<CuentaController> logger, FamilyAccessPolicy familyAccess) : Controller
 {
     /// <summary>Tope de passkeys por cuenta: un móvil, un portátil, una llave y alguna de reserva.</summary>
     public const int MaxPasskeys = 10;
@@ -168,7 +168,9 @@ public sealed class CuentaController(
         }
         if (!account.TwoFactorEnabled)
         {
-            return PasskeyError("Tu perfil entra solo con la contraseña: las passkeys son para el personal.");
+            return PasskeyError(EntersWithEmailCode(account, await directory.ListActiveAsync(account.UserName, ct))
+                ? "Las passkeys son para el personal: tú entras con tu contraseña y un código que te llega por correo."
+                : "Tu perfil entra solo con la contraseña: las passkeys son para el personal.");
         }
         if (string.IsNullOrEmpty(contrasena) || string.IsNullOrWhiteSpace(codigo))
         {
@@ -435,6 +437,10 @@ public sealed class CuentaController(
     private async Task<CredentialAccount?> CurrentAccountAsync() =>
         SessionAuthentication.Subject(User) is { } subject ? await users.FindByNameAsync(subject) : null;
 
+    /// <summary>La cuenta solo es de familia, no tiene la aplicación de códigos y la familia entra con un código por correo.</summary>
+    private bool EntersWithEmailCode(CredentialAccount account, IReadOnlyList<ActiveProfileScope> scopes) =>
+        familyAccess.EmailCode && !account.TwoFactorEnabled && scopes.Count > 0 && scopes.All(scope => scope.Profile == SystemProfile.Familiar);
+
     private ObjectResult TooManyFailures() => StatusCode(StatusCodes.Status429TooManyRequests,
         "Demasiados accesos fallidos desde esta red. Espera unos minutos y vuelve a intentarlo.");
 
@@ -482,8 +488,10 @@ public sealed class CuentaController(
         var current = SessionAuthentication.SessionId(User);
         var open = (await sessions.ListOpenAsync(accountId, now, ct)).Where(s => now - s.LastActivityAt <= policy.IdleTimeout);
         var events = await accessLog.ListRecentAsync(accountId, RecentEvents, ct);
+        var emailCode = EntersWithEmailCode(account, scopes);
         return new CuentaViewModel
         {
+            CodigoPorCorreo = emailCode,
             Usuario = account.UserName,
             Nombre = scopes.Select(s => s.AccountDisplayName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? account.UserName,
             Ambitos = scopes.Select(s => $"{SystemProfileDisplay.Label(s.Profile)} · {s.CenterName}{(s.ServiceType is { } type ? $" ({CenterServiceTypeDisplay.Label(type)})" : "")}").ToList(),
@@ -492,7 +500,7 @@ public sealed class CuentaController(
             CodigosRestantes = account.TwoFactorEnabled ? await users.CountRecoveryCodesAsync(account) : 0,
             Sesiones = open.Select(s => new SesionAbiertaViewModel(s.Id, s.CreatedAt, s.LastActivityAt, s.ExpiresAt, s.Ip, s.Id == current)).ToList(),
             Accesos = events.Select(e => new AccesoRecienteViewModel(
-                e.OccurredAt, AccesoRecienteDisplay.Descripcion(e.Type), AccesoRecienteDisplay.EsFallo(e.Type), e.Ip)).ToList(),
+                e.OccurredAt, AccesoRecienteDisplay.Descripcion(e.Type, emailCode), AccesoRecienteDisplay.EsFallo(e.Type), e.Ip)).ToList(),
             Passkeys = (await users.GetPasskeysAsync(account)).Select(p => new PasskeyViewModel(
                 PasskeyId(p), p.Name ?? "Passkey", p.CreatedAt.UtcDateTime, p.IsBackedUp)).ToList(),
             PasskeysActivas = acceso.Value.PasskeysActivas,

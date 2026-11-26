@@ -36,4 +36,8 @@ public interface IAccessEventLog
 
     /// <summary>Los últimos eventos de la cuenta, del más reciente al más antiguo.</summary>
     Task<IReadOnlyList<AccessEventEntry>> ListRecentAsync(AccountId accountId, int take, CancellationToken ct = default);
+
+    /// <summary>Cuándo fue la última entrada (con contraseña o con passkey) en la cuenta de la sesión indicada que no sea esa misma sesión; null si no hay
+    /// otra. Fecha UTC.</summary>
+    Task<DateTime?> FindOtherEntryAsync(Guid sessionId, CancellationToken ct = default);
 }

@@ -79,6 +79,7 @@ public sealed partial class AdministracionController
 
         TempData["Error"] = error.Code switch
         {
+            ApplicationFailureCode.InvalidInput when error.Message == ApplicationResultRunner.FamilyEmailRequiredMessage => error.Message,
             ApplicationFailureCode.InvalidInput =>
                 "No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.",
             ApplicationFailureCode.Conflict => "La cuenta está suspendida, o la invitación ya se había usado o anulado.",

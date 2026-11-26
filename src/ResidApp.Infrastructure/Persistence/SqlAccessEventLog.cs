@@ -28,4 +28,16 @@ public sealed class SqlAccessEventLog(SqlConnectionFactory connections) : IAcces
             """, new { Take = take, AccountId = accountId.Value }, cancellationToken: ct));
         return rows.Select(row => new AccessEventEntry(row.OccurredAt, EnumCode.ParseCode<AccessEventType>(row.Type), row.Ip)).ToList();
     }
+
+    public async Task<DateTime?> FindOtherEntryAsync(Guid sessionId, CancellationToken ct = default)
+    {
+        using var connection = await connections.OpenAsync(ct);
+        return await connection.ExecuteScalarAsync<DateTime?>(new CommandDefinition("""
+            SELECT MAX(entry.ocurrido_en)
+              FROM dbo.sesiones current_session
+              JOIN dbo.eventos_acceso entry WITH (NOLOCK) ON entry.cuenta_id = current_session.cuenta_id
+             WHERE current_session.id = @SessionId AND entry.tipo IN ('ENTRADA', 'ENTRADA_PASSKEY')
+               AND entry.sesion_id <> @SessionId
+            """, new { SessionId = sessionId }, cancellationToken: ct));
+    }
 }

@@ -31,7 +31,8 @@ public sealed class SqlAccessInvitationRepository(SqlConnectionFactory connectio
         """;
 
     public async Task<IssuedAccessInvitation> IssueAsync(
-        AccountAdministrationAccess access, string subject, string tokenHash, DateTime now, CancellationToken ct = default)
+        AccountAdministrationAccess access, string subject, string tokenHash, DateTime now, bool requireFamilyEmail = false,
+        CancellationToken ct = default)
     {
         using var connection = await connections.OpenAsync(ct);
         using var transaction = (SqlTransaction)connection.BeginTransaction(IsolationLevel.ReadCommitted);
@@ -40,6 +41,17 @@ public sealed class SqlAccessInvitationRepository(SqlConnectionFactory connectio
         if (!account.Active)
         {
             throw new DomainValidationException("ACCOUNT_CHANGE_CONFLICT");
+        }
+
+        if (requireFamilyEmail && await connection.ExecuteScalarAsync<int>(new CommandDefinition("""
+                SELECT CASE WHEN EXISTS (SELECT 1 FROM dbo.ambitos_perfil p WHERE p.cuenta_id = @AccountId AND p.estado = 'ACTIVE' AND p.perfil_codigo = 'FAMILIAR')
+                             AND NOT EXISTS (SELECT 1 FROM dbo.ambitos_perfil p WHERE p.cuenta_id = @AccountId AND p.estado = 'ACTIVE' AND p.perfil_codigo <> 'FAMILIAR')
+                             AND NOT EXISTS (SELECT 1 FROM dbo.familiares f
+                                              WHERE f.cuenta_id = @AccountId AND f.centro_id = @CenterId AND LEN(LTRIM(RTRIM(ISNULL(f.correo, '')))) > 0)
+                            THEN 1 ELSE 0 END
+                """, new { AccountId = account.Id, CenterId = access.CenterId.Value }, transaction, cancellationToken: ct)) == 1)
+        {
+            throw new DomainValidationException(FamilyAccessCodes.EmailRequired);
         }
 
         var issued = await InsertAsync(connection, transaction, account, access.CenterId, access.AccountId, "ADMINISTRACION", tokenHash, now, ct);

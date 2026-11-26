@@ -298,3 +298,22 @@ DMARC en cuarentena o rechazo; vigilancia del porcentaje de envíos fallidos; re
 ## Fuentes (consultadas el 2026-11-26)
 
 Base normativa local (comprobada el 2026-11-20; textos consolidados, no oficiales): RGPD (versión 2016-05-04), LOPDGDD (BOE 2026-10-08), RD 311/2022 (BOE 2026-10-30), Llei 32/2010 (BOE 2026-11-17), Llei 12/2007 (BOE 2026-11-18), lista de la AEPD del art. 35.4. Web, leídas por herramienta (contrastar antes de citarlas fuera): NIST SP 800-63B-4 y la explicación del criterio 3.3.8 de WCAG 2.2. No he encontrado resolución de la AEPD ni guía del CCN sobre el código por correo.
+
+## PR 2: Administración y última entrada
+
+**Borrador del agente `dpo-residapp` (2026-11-26), por validar por una persona.** Lectura del diseño antes de construirlo: **admisible con condiciones**. Se construyó con ellas (script `0122`).
+
+**Correcciones al diseño, aplicadas:** motivo propio `CORREO_APAGADO` en `envios_correo` (`AVISOS_DESACTIVADOS` significa otra cosa); la plantilla `AVISO_CAMBIO_CORREO` no admite filas `PENDIENTE`; «solo familia» es tener algún perfil familiar activo y ningún otro activo; con el código encendido ya no se pide borrar la dirección para dejar de recibir avisos. **La baja de avisos (C18) sigue siendo requisito para encender.**
+
+| Id | Condición | Prueba |
+|---|---|---|
+| C22 | Cambio de mayúsculas o espacios, sin cuenta o sin dirección anterior, perfiles mixtos o anonimización: ni cierre ni aviso | Una por caso |
+| C23 | Conflicto o reversión: sin efectos; el mismo formulario enviado dos veces: un solo aviso | Reenvío con la versión anterior |
+| C24 | Tras guardar, dejan de valer las sesiones y el código anteriores; las otras cuentas, intactas | Dos familias |
+| C25 | El aviso va solo a la dirección anterior, aunque haya baja, falte la marca o estén apagados otros avisos | Mensaje construido |
+| C26 | Se envía tras el guardado, con tiempo límite propio; un fallo del envío o del registro no deshace nada; sin direcciones en tabla ni registros | Fallo, excepción, tiempo agotado |
+| C27 | Dar acceso e invitar comprueban el correo dentro de su transacción; si falta, no crean ni anulan nada | La invitación viva sigue viva |
+| C28 | Advertencia visible antes de guardar | Pantalla |
+| C29 | «Última entrada» solo de la cuenta autenticada, sin la sesión actual ni IP, en la hora del centro | Dos cuentas y dos sesiones |
+
+**Textos:** el aviso a la dirección anterior no dice que la dirección sea de quien lo recibe (tras una errata puede ser una persona ajena). **Por validar:** el pie, por el DPO real o un abogado; antes de datos reales, añadirle el titular y el contacto de ResidApp (ADR 0012). El catalán, por una persona traductora. No se revisaron normas nuevas.

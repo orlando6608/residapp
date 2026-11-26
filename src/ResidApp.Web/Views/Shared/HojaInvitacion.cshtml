@@ -1,4 +1,5 @@
 @model ResidApp.Web.Models.HojaInvitacionViewModel
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     var recuperacion = Model.Tipo == ResidApp.Domain.Accounts.AccessInvitationKind.Recuperacion;
     ViewData["Title"] = recuperacion ? "Invitación de recuperación" : "Invitación de acceso";
@@ -43,6 +44,11 @@
                             {
                                 <li class="mb-2">Si trabajas en el centro, vuelve a preparar el código del móvil: el anterior deja de valer, y
                                     también la contraseña anterior y las sesiones abiertas.</li>
+                            }
+                            @if (FamilyAccess.EmailCode)
+                            {
+                                <li class="mb-2">Si eres familiar, para entrar necesitas además un código que te llega cada vez al correo de tu ficha.
+                                    Usa en ResidApp una contraseña distinta de la de tu correo.</li>
                             }
                         </ol>
                     </div>

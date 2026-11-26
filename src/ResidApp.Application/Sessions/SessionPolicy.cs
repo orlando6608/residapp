@@ -14,6 +14,8 @@ public enum SessionCloseReason
     [Code("RECUPERACION")] Recuperacion,
     /// <summary>La propia persona cierra sus otras sesiones o las cierra al cambiar la contraseña (script 0064).</summary>
     [Code("CIERRE_PROPIO")] CierrePropio,
+    /// <summary>Administración cambió o borró el correo con el que entra el familiar (script 0122).</summary>
+    [Code("CAMBIO_CORREO")] CambioCorreo,
 }
 
 /// <summary>Resultado de comprobar una sesión en una petición.</summary>

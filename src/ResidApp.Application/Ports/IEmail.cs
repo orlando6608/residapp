@@ -41,6 +41,7 @@ public static class EmailLog
     public const string ReminderTemplate = "RECORDATORIO_CITA";
     public const string ExternalNoticeTemplate = "AVISO_CITA_EXTERNA";
     public const string ExternalNoticeUncoveredTemplate = "AVISO_CITA_EXTERNA_SIN_CUBRIR";
+    public const string EmailChangeTemplate = "AVISO_CAMBIO_CORREO";
 
     public const string Pending = "PENDIENTE";
     public const string Sent = "ENVIADO";
@@ -59,6 +60,8 @@ public static class EmailLog
     public const string ProviderRejected = "ACS_RECHAZADO";
     public const string ProviderUnavailable = "ACS_NO_DISPONIBLE";
     public const string TimedOut = "TIEMPO_AGOTADO";
+    /// <summary>El correo del entorno está apagado o sin configurar (script 0122; solo lo usa el aviso de cambio de correo).</summary>
+    public const string MailOff = "CORREO_APAGADO";
 }
 
 /// <summary>La purga del registro de envíos (script 0085): borra lo que lleva más de 12 meses con el procedimiento de la base de datos, que fija el plazo. Devuelve cuántas filas borró.

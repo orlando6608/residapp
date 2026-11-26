@@ -182,10 +182,12 @@ public interface IResidentFamilyRepository
 
     /// <summary>expectedVersion es FamilyMemberData.Version de los datos que vio quien edita; si ya no coincide con los actuales,
     /// FAMILY_MEMBER_CONFLICT. confirmEmail es la casilla «Dirección confirmada con la familia» (CJ, 2026-11-02): confirma el correo tal como queda
-    /// tras este guardado; si el correo cambia o se quita sin ella, la confirmación anterior se pierde.</summary>
-    Task UpdateAsync(
+    /// tras este guardado; si el correo cambia o se quita sin ella, la confirmación anterior se pierde. Con emailGivesAccess (la familia entra con un código por
+    /// correo), cambiar o borrar la dirección que tenía un familiar con acceso cierra en la misma transacción las sesiones de su cuenta y anula su código, y se
+    /// devuelve la dirección anterior para avisarla; en cualquier otro caso devuelve null.</summary>
+    Task<FamilyEmailChanged?> UpdateAsync(
         AdministrativeResidentTarget target, Guid linkId, FamilyMemberData data, string expectedVersion, bool confirmEmail = false,
-        CancellationToken ct = default);
+        bool emailGivesAccess = false, CancellationToken ct = default);
 
     /// <summary>Quita solo la confirmación de la dirección. Con la versión que vio quien la quita; si ya no estaba confirmada, FAMILY_MEMBER_CONFLICT.</summary>
     Task RemoveEmailConfirmationAsync(
@@ -212,8 +214,10 @@ public interface IResidentFamilyRepository
 
     /// <summary>Da al familiar del vínculo acceso al Portal Familiar (script 0052): crea su cuenta con el usuario subject, con un ámbito FAMILIAR en
     /// el centro y sin unidades, y la enlaza al familiar. No toca la autorización, que se abre y se activa aparte. Si el familiar ya tiene cuenta,
-    /// FAMILY_PORTAL_ACCESS_CONFLICT; si el usuario ya existe, ACCOUNT_SUBJECT_TAKEN; un vínculo que no es del residente, acceso denegado.</summary>
-    Task GrantPortalAccessAsync(AdministrativeResidentTarget target, Guid linkId, string subject, CancellationToken ct = default);
+    /// FAMILY_PORTAL_ACCESS_CONFLICT; si el usuario ya existe, ACCOUNT_SUBJECT_TAKEN; un vínculo que no es del residente, acceso denegado. Con requireEmail,
+    /// un familiar sin correo en la ficha no recibe acceso (FAMILY_EMAIL_REQUIRED).</summary>
+    Task GrantPortalAccessAsync(
+        AdministrativeResidentTarget target, Guid linkId, string subject, bool requireEmail = false, CancellationToken ct = default);
 
     /// <summary>Lo que la pantalla de «Anonimizar a este familiar» tiene que decir antes de confirmar (script 0087): sin cambiar nada.</summary>
     Task<FamilyAnonymizationPreview> PreviewAnonymizationAsync(

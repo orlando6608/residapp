@@ -21,8 +21,11 @@ public sealed record LiveAccessInvitation(Guid Id, AccountId AccountId, AccessIn
 /// </summary>
 public interface IAccessInvitationRepository
 {
+    /// <summary>Con requireFamilyEmail, una cuenta que solo es de familia y no tiene correo en su ficha del centro no recibe invitación
+    /// (FAMILY_EMAIL_REQUIRED): no podría entrar.</summary>
     Task<IssuedAccessInvitation> IssueAsync(
-        AccountAdministrationAccess access, string subject, string tokenHash, DateTime now, CancellationToken ct = default);
+        AccountAdministrationAccess access, string subject, string tokenHash, DateTime now, bool requireFamilyEmail = false,
+        CancellationToken ct = default);
 
     Task<IssuedAccessInvitation> IssueForAdministratorAsync(
         PlatformAccess access, CenterId centerId, Guid administrationScopeId, string tokenHash, DateTime now, CancellationToken ct = default);
