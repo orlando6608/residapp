@@ -208,7 +208,7 @@ Se entra como en un centro real: cada cuenta usa su invitación, elige contrase�
 
 ### Tests
 
-Los tests usan por defecto su propia base local, `ResidAppPruebas` (`tests/IntegrationTests/TestSupport/TestDatabase.cs`), con todos los scripts aplicados y sin semillas; se puede apuntar a otra con `RESIDAPP_TEST_CONNECTION_STRING`. Las pruebas funcionales abren sesión con una entrada que solo existe en su servidor de pruebas (`tests/FunctionalTests/EntradaDePruebas.cs`).
+Los tests usan por defecto su propia base local, `ResidAppPruebas` (`tests/IntegrationTests/TestSupport/TestDatabase.cs`), con todos los scripts aplicados y sin semillas; se puede apuntar a otra con `RESIDAPP_TEST_CONNECTION_STRING`. Cada pasada deja datos en ella: cuando la suite se vuelva lenta o dé tiempos de espera, se recrea vacía con `.\tools\recrear-bd-pruebas.ps1` (con `-Copia` guarda antes una copia de seguridad). Las pruebas funcionales abren sesión con una entrada que solo existe en su servidor de pruebas (`tests/FunctionalTests/EntradaDePruebas.cs`).
 
 Detalle completo, incluidos los bugs de producción encontrados y corregidos al ejecutar por primera vez contra un motor real, en [`docs/tareas/alta-prioridad/pendientes-migracion-inicial.md`](docs/tareas/alta-prioridad/pendientes-migracion-inicial.md).
 
