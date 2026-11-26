@@ -327,6 +327,28 @@ public class AvisoCambioCitaTests
     }
 
     [Fact]
+    public async Task SiLaDanDeBajaEntreLaReservaYElEnvio_NoSeEnvia_YReactivarDespuesNoLoMandaAtrasado()
+    {
+        var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Baja");
+        var sender = new FakeEmailSender();
+        var notice = Notice(sender, Active());
+        Assert.True((await CancelAsync(setup, appointments[0], notice)).Ok);
+        const string family = "WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @linkId)";
+        using var connection = await TestDatabase.ConnectionFactory.OpenAsync();
+        await connection.ExecuteAsync("UPDATE dbo.familiares SET avisos_baja_en = SYSUTCDATETIME(), avisos_baja_por_cuenta_id = creado_por_cuenta_id " + family, new { linkId = setup.LinkId });
+
+        await ProcessAsync(notice);
+
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(appointments[0]));
+        Assert.Equal(("OMITIDO", "BAJA_DE_AVISOS"), (row.Estado, row.Motivo));
+
+        await connection.ExecuteAsync("UPDATE dbo.familiares SET avisos_baja_en = NULL, avisos_baja_por_cuenta_id = NULL " + family, new { linkId = setup.LinkId });
+        await ProcessAsync(notice);
+        Assert.Empty(sender.Sent);
+    }
+
+    [Fact]
     public async Task SiSeQuitaLaConfirmacionEntreLaReservaYElEnvio_NoSeEnvia()
     {
         var (setup, appointments) = await WithAppointmentsAsync("Residente Aviso Cambio Confirmacion Quitada");

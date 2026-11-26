@@ -391,11 +391,11 @@
         { "texto": "A los 7 días de una cita y la víspera puedes recibir «Tienes un aviso sobre una cita en ResidApp». No dice qué cita es ni de qué: entra en ResidApp y mira **Citas fuera del centro** (ver FAM-09).", "botones": ["Citas fuera del centro"] },
         { "texto": "A los 2 días puedes recibir «Una cita en ResidApp todavía necesita ayuda», solo si falta algo (transporte o acompañante) que la familia puede cubrir y nadie se ha ofrecido todavía. Abre la cita y mira si puedes ayudar (ver FAM-10)." },
         { "texto": "Si ya te has ofrecido a una cita, a 7 días y la víspera el aviso va solo a ti (y a nadie más); si nadie se ha ofrecido, llega a todas las personas autorizadas, un correo a cada una." },
-        { "texto": "Para dejar de recibir estos avisos, díselo a la Administración del centro: te da de baja (vale para todos tus residentes). Puede volver a darte de alta." }
+        { "texto": "Para dejar de recibir estos avisos, díselo a la Administración del centro: puede darte de baja solo de los de citas fuera del centro o de todos los avisos sobre citas (en los dos casos vale para todos tus residentes). Para volver a recibirlos, pídeselo." }
       ],
       "despues": [
         { "para": "Familia", "texto": "Los correos salen de no-responder@avisos.residapp.es; si no los ves, mira el correo no deseado. No se pueden responder y no sustituyen al teléfono." },
-        { "para": "Administración", "texto": "Da de baja o de alta a la persona en «Avisos por correo de las personas de la familia», dentro de «Lo que ve la familia» del residente." }
+        { "para": "Administración", "texto": "Para los de citas fuera del centro, da de baja o de alta a la persona en «Avisos por correo de las personas de la familia», dentro de «Lo que ve la familia» del residente. Para todos los avisos sobre citas, en «Editar familiar», en «Avisos por correo»; si tiene esa baja general, el alta de citas fuera del centro no la devuelve a los avisos." }
       ],
       "dudas": [
         { "p": "El correo no dice qué cita es.", "r": "Es a propósito, para proteger tu privacidad: el correo solo avisa de que hay algo en ResidApp. Los detalles los ves al entrar." },

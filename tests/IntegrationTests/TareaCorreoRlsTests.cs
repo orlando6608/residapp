@@ -102,6 +102,29 @@ public sealed class TareaCorreoRlsTests
     }
 
     [Fact]
+    public async Task ElRolDeLaTarea_LeeDesdeCuandoEstaDeBaja_PeroNoQuienLaAnotoNiPuedeCambiarla()
+    {
+        // Script 0123: la tarea comprueba la baja justo antes de enviar, con la misma consulta que la dirección.
+        var notice = await SeedAsync("Residente Tarea Correo Baja");
+        using (var admin = await TestDatabase.ConnectionFactory.OpenAsync())
+        {
+            await admin.ExecuteAsync(
+                "UPDATE dbo.familiares SET avisos_baja_en = SYSUTCDATETIME(), avisos_baja_por_cuenta_id = creado_por_cuenta_id WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @LinkId)",
+                new { notice.LinkId });
+        }
+
+        using var task = await OpenAsAsync(TaskUser);
+        var recipient = await task.QuerySingleAsync(SqlChangeNoticeStore.RecipientSql, new
+        {
+            AccountId = notice.AccountId, CenterId = notice.CenterId, Today = CenterTime.Today.ToDateTime(TimeOnly.MinValue), LinkId = notice.LinkId,
+        });
+
+        Assert.NotNull((DateTime?)recipient.OptedOutAt);
+        await AssertDeniedAsync(task, "SELECT avisos_baja_por_cuenta_id FROM dbo.familiares");
+        await AssertDeniedAsync(task, "UPDATE dbo.familiares SET avisos_baja_en = NULL, avisos_baja_por_cuenta_id = NULL");
+    }
+
+    [Fact]
     public async Task ElRolDeLaTarea_NoPuedeLeerElMotivo_NiNombresNiTelefonos_NiTablasClinicas_NiCuentas()
     {
         await SeedAsync("Residente Tarea Correo Tres");

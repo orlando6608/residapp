@@ -153,9 +153,10 @@ public sealed class FamilyMemberFormModel
 /// <summary>ADM-09: el residente junto al formulario del familiar.</summary>
 /// <summary>SharedWith es a cuántos otros residentes está vinculado también el familiar que se edita (sus datos de contacto valen para todos).</summary>
 /// <summary>EmailConfirmedAt es cuándo se confirmó la dirección que tiene hoy el familiar (null: sin confirmar o sin correo).</summary>
+/// <summary>NoticesOptOutAt es desde cuándo está de baja de los avisos por correo (script 0123; null: no lo está).</summary>
 public sealed record FamilyMemberViewModel(
     AdministrativeResidentSummary Resident, FamilyMemberFormModel Form, int SharedWith = 0, DateTimeOffset? EmailConfirmedAt = null,
-    bool HasPortalAccount = false);
+    bool HasPortalAccount = false, DateTimeOffset? NoticesOptOutAt = null);
 
 /// <summary>Vincular a un residente un familiar que ya existe: se elige entre los vinculables y se escribe la relación con este residente.
 /// OperacionId nace con el formulario y es el identificador del vínculo.</summary>
@@ -254,6 +255,9 @@ public static class AdministrativeResidentDisplay
     public static string EmailConfirmation(ResidentFamilyMember member) => member.EmailConfirmedAt is { } at
         ? $"Dirección confirmada el {CenterTime.Local(at):dd/MM/yyyy}."
         : "Correo sin confirmar: ResidApp no enviará avisos a esta dirección.";
+
+    /// <summary>La baja de avisos por correo (script 0123): solo la fecha, no la cuenta que la anotó.</summary>
+    public static string NoticesOptOut(DateTimeOffset at) => $"De baja de los avisos por correo desde el {CenterTime.Local(at):dd/MM/yyyy}.";
 
     /// <summary>ADM-08: la autorización tal como cuenta hoy, p. ej. «Activa hasta el 31/10/2026» o «Sin autorización».</summary>
     public static string Authorization(ResidentFamilyMember member, DateOnly today)

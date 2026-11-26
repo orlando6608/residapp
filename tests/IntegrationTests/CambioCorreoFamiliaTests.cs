@@ -163,6 +163,23 @@ public class CambioCorreoFamiliaTests
             "SELECT COUNT(*) FROM dbo.eventos_auditoria WITH (NOLOCK) WHERE residente_id = @id AND accion_codigo = 'FAMILY_EMAIL_CHANGE'", new { id = family.ResidentId.Value }));
     }
 
+    [Fact]
+    public async Task DeBajaDeLosAvisos_ElDeSeguridadPorCambioDeCorreoSeEnviaIgual()
+    {
+        // Script 0123: la baja corta los avisos sobre citas, no los correos de seguridad.
+        var family = await FamilyWithAccessAsync();
+        Assert.True((await Service(family.Admin, emailCode: true).SetFamilyNoticesOptOutAsync(new SetFamilyNoticesOptOutCommand(
+            family.Admin.ProfileScopeId, family.Admin.CenterId, family.ResidentId, family.LinkId, true, null))).Ok);
+        var sender = new Sender();
+
+        var result = await Service(family.Admin, emailCode: true, sender).UpdateFamilyMemberAsync(Update(family, await MemberAsync(family), Next));
+
+        Assert.True(result.Ok, result.Error?.Message);
+        Assert.Equal(FamilyEmailNotice.Sent, result.Value);
+        Assert.Equal(Old, Assert.Single(sender.Sent).To);
+        Assert.Equal("ENVIADO", Assert.Single(await LogAsync(family.FamilyId)).State);
+    }
+
     [Theory]
     [InlineData("apagado")]
     [InlineData("solo-mayusculas")]

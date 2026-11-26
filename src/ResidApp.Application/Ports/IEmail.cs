@@ -51,6 +51,8 @@ public static class EmailLog
     public const string NoAddress = "SIN_CORREO";
     public const string NoAccess = "SIN_ACCESO";
     public const string AddressNotConfirmed = "DIRECCION_NO_CONFIRMADA";
+    /// <summary>La persona está de baja de los avisos (script 0105 para las citas externas; script 0123 para todos).</summary>
+    public const string OptedOut = "BAJA_DE_AVISOS";
     public const string ProposalNotCurrent = "PROPUESTA_NO_VIGENTE";
     public const string AppointmentNotCurrent = "CITA_NO_VIGENTE";
     public const string AppointmentPassed = "CITA_PASADA";

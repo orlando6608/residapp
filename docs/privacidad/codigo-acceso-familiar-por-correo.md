@@ -317,3 +317,31 @@ Base normativa local (comprobada el 2026-11-20; textos consolidados, no oficiale
 | C29 | «Última entrada» solo de la cuenta autenticada, sin la sesión actual ni IP, en la hora del centro | Dos cuentas y dos sesiones |
 
 **Textos:** el aviso a la dirección anterior no dice que la dirección sea de quien lo recibe (tras una errata puede ser una persona ajena). **Por validar:** el pie, por el DPO real o un abogado; antes de datos reales, añadirle el titular y el contacto de ResidApp (ADR 0012). El catalán, por una persona traductora. No se revisaron normas nuevas.
+
+## PR 3: baja de avisos
+
+**Borrador del agente `dpo-residapp` (2026-11-26), por validar por una persona.** Lectura del diseño antes de construirlo: **admisible con condiciones** (arts. 5.1.c, 21 y 25.2 RGPD). El riesgo principal es una baja que no detenga de verdad los avisos: un camino que no la mire, una persona con dos fichas o una reactivación que nadie pidió. Se construyó con ellas (script `0123`).
+
+**Diseño.** Dos columnas en `familiares` (desde cuándo y qué cuenta de Administración la anotó), con el historial en la auditoría (decisión de Orlando, 2026-11-26): se guarda el estado vigente y no cuántas veces cambió de opinión. No se guarda motivo, canal ni quién la pidió. Un futuro apagado desde el portal necesitará su propio estado, que Administración no pueda levantar.
+
+| Id | Condición | Prueba |
+|---|---|---|
+| C30 | De baja no sale ninguna de las cinco plantillas de avisos; sí el código y el aviso de cambio de correo | Una por plantilla, y otra que falla si aparece una plantilla sin clasificar |
+| C31 | La baja se lee justo antes de enviar, junto a la dirección; orden: sin acceso, baja, sin correo, sin confirmar | Baja entre reservar y enviar: omitido |
+| C32 | Citas externas: quien está de baja no cuenta como alcanzable y el aviso llega a los demás | Combinaciones de baja general y de citas externas |
+| C33 | Sobrevive a editar, cambiar, borrar o confirmar el correo y a desvincular | También con un cambio directo en la base de datos |
+| C34 | La baja es de la ficha de un centro | Otras fichas, intactas |
+| C35 | Quitar la baja no reenvía lo omitido. Excepción: en citas externas, como no hubo fila, reactivar el mismo día puede generar el aviso de ese día (lo dicen las pantallas) | Reactivación el mismo día |
+| C36 | Solo Administración, sin acción masiva; permitida sin correo; rechazada si está anonimizada; repetir o usar una pantalla vieja es conflicto, sin segunda auditoría | Una por caso |
+| C37 | Auditoría `FAMILY_NOTICES_OPT_OUT` y `_OPT_IN` solo con identificadores; en pantalla la fecha, no la cuenta | Auditoría y pantallas |
+| C38 | La tarea programada lee la fecha y no quién la anotó, ni puede cambiarla | Con el usuario del rol |
+| C39 | Anonimizar borra la baja, y la base de datos lo exige | Anonimización y cambio directo |
+| C40 | Ninguna pantalla, guía ni Manual propone borrar la dirección o quitar la confirmación para dejar de recibir avisos | Revisión de textos |
+
+**Desvincular, expurgo y supresión.** Desvincular no la toca. El expurgo de un residente no la borra mientras la ficha del familiar exista. Una ficha nueva tras una supresión nace sin baja y sin confirmar; no se propone una lista de exclusión. Pedir que se borre solo la dirección la borra (art. 17) y conserva la baja.
+
+**Por validar por una persona (DPO real o abogado):** base jurídica de los avisos y si la baja es oposición (art. 21.1) o retirada de consentimiento; si el pie común de los avisos debe destacar la oposición aparte (art. 21.4); que el código y el aviso de cambio de correo queden fuera por ser de seguridad; que las columnas con la auditoría basten como historial, y su plazo; reactivar sin guardar canal ni solicitante, y quién puede pedirlo en nombre de otra persona; anonimización frente a bloqueo (art. 32 LOPDGDD).
+
+**La residencia** fija quién atiende estas peticiones, cómo comprueba la identidad por teléfono y cómo trata dos fichas de la misma persona.
+
+**Visto y no corregido aquí:** `expurgo-y-supresion.md` dice que la baja de citas externas se borra con la anonimización definitiva; la aplicación no lo hace y la base de datos lo impide (script `0105`). Antes de datos reales, comprobar que nadie quedó «de baja» solo por haberle quitado la confirmación o borrado la dirección.

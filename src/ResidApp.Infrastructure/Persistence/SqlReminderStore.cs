@@ -91,6 +91,11 @@ public sealed class SqlReminderStore(SqlConnectionFactory connections, TimeZoneI
             return new(null, EmailLog.NoAccess);
         }
 
+        if (recipient.OptedOutAt is not null)
+        {
+            return new(null, EmailLog.OptedOut);
+        }
+
         if (string.IsNullOrWhiteSpace(recipient.Address))
         {
             return new(null, EmailLog.NoAddress);
@@ -116,5 +121,5 @@ public sealed class SqlReminderStore(SqlConnectionFactory connections, TimeZoneI
 
     private sealed record AppointmentRow(string Status, DateTime StartsAt, Guid AccountId, Guid LinkId);
 
-    private sealed record Recipient(string? Address, DateTime? ConfirmedAt);
+    private sealed record Recipient(string? Address, DateTime? ConfirmedAt, DateTime? OptedOutAt);
 }

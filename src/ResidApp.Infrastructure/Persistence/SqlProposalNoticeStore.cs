@@ -58,6 +58,10 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
             {
                 reason = EmailLog.NoAccess;
             }
+            else if (recipient.OptedOutAt is not null)
+            {
+                reason = EmailLog.OptedOut;
+            }
             else if (string.IsNullOrWhiteSpace(recipient.Address))
             {
                 reason = EmailLog.NoAddress;
@@ -107,7 +111,7 @@ public sealed class SqlProposalNoticeStore(SqlConnectionFactory connections) : I
             """, new { id, state, reason, operationId, attempts, now = now.UtcDateTime }, cancellationToken: ct));
     }
 
-    private sealed record Recipient(string? Address, DateTime? ConfirmedAt);
+    private sealed record Recipient(string? Address, DateTime? ConfirmedAt, DateTime? OptedOutAt);
 
     private sealed record NoticeRequestRow(
         string Status, Guid AccountId, Guid LinkId, DateTime? ProposedStart, DateTime? ProposedAt, int? LastNumber, string? LastAction)

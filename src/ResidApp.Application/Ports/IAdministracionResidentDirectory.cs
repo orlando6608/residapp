@@ -33,11 +33,13 @@ public sealed record FamilyAuthorizationChangeEntry(
 /// primero al último y está vacía si la autorización no se ha abierto.</summary>
 /// <summary>OtherResidentLinks es a cuántos otros residentes del centro está vinculado también el familiar (sus datos de contacto
 /// son compartidos); no dice cuáles. PortalAccount es el usuario con el que entra al Portal Familiar (script 0052), null si aún no tiene acceso.
-/// EmailConfirmedAt es cuándo se confirmó la dirección con la familia (script 0084); null si no hay correo o no está confirmado, y entonces no se le envía ningún aviso.</summary>
+/// EmailConfirmedAt es cuándo se confirmó la dirección con la familia (script 0084); null si no hay correo o no está confirmado, y entonces no se le envía ningún aviso.
+/// NoticesOptOutAt es desde cuándo está de baja de los avisos por correo (script 0123); null si no lo está.</summary>
 public sealed record ResidentFamilyMember(
     Guid LinkId, string DisplayName, string Relationship, string Phone, string? Email,
     IReadOnlyList<FamilyAuthorizationChangeEntry> AuthorizationChanges, int OtherResidentLinks = 0, bool IsReferent = false,
-    bool IsLegalGuardian = false, string? PortalAccount = null, DateTimeOffset? EmailConfirmedAt = null, DateTimeOffset? AnonymizedAt = null)
+    bool IsLegalGuardian = false, string? PortalAccount = null, DateTimeOffset? EmailConfirmedAt = null, DateTimeOffset? AnonymizedAt = null,
+    DateTimeOffset? NoticesOptOutAt = null)
 {
     /// <summary>Cuándo se anonimizó (script 0087): su nombre, teléfono y correo están borrados, no tiene acceso y ya no se puede editar.</summary>
     public bool IsAnonymized => AnonymizedAt is not null;
@@ -192,6 +194,12 @@ public interface IResidentFamilyRepository
     /// <summary>Quita solo la confirmación de la dirección. Con la versión que vio quien la quita; si ya no estaba confirmada, FAMILY_MEMBER_CONFLICT.</summary>
     Task RemoveEmailConfirmationAsync(
         AdministrativeResidentTarget target, Guid linkId, string expectedVersion, CancellationToken ct = default);
+
+    /// <summary>Da de baja al familiar de los avisos por correo (optOut), o vuelve a activarlos (script 0123). La baja es de la persona en el centro, para todos sus
+    /// residentes, y no depende de que tenga correo. seenOptOutAt es la fecha de la baja que enseñaba la pantalla (null si no estaba de baja): si ya no es la
+    /// actual, o la persona ya está como se pide, FAMILY_MEMBER_CONFLICT.</summary>
+    Task SetNoticesOptOutAsync(
+        AdministrativeResidentTarget target, Guid linkId, bool optOut, DateTimeOffset? seenOptOutAt, CancellationToken ct = default);
 
     /// <summary>Registra el cambio si el vínculo sigue teniendo expectedChanges cambios (si no, conflicto) y es válido desde
     /// su estado efectivo de hoy. Devuelve cuántos cambios tiene ya.</summary>

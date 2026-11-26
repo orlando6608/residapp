@@ -41,7 +41,7 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
     /// <summary>A quién se escribe, para los tres avisos (propuesta, cambio y recordatorio): el vínculo con el acceso del portal más que la CUENTA siga activa. La sesión del familiar ya
     /// exige cuenta activa (seguridad por filas, 0030) pero <see cref="SqlFamilyPortalReader.AccessibleLinks"/> no la mira, y una cuenta suspendida (script 0093: la tarea puede leer id y estado
     /// de <c>cuentas</c>, nada más) con la autorización aún Activa seguiría recibiendo avisos de algo que ya no puede ver.</summary>
-    internal const string RecipientSql = $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId AND EXISTS (SELECT 1 FROM dbo.cuentas account WHERE account.id = fam.cuenta_id AND account.estado = 'ACTIVE')";
+    internal const string RecipientSql = $"SELECT fam.correo AS Address, fam.correo_confirmado_en AS ConfirmedAt, fam.avisos_baja_en AS OptedOutAt {SqlFamilyPortalReader.AccessibleLinks} AND link.id = @LinkId AND EXISTS (SELECT 1 FROM dbo.cuentas account WHERE account.id = fam.cuenta_id AND account.estado = 'ACTIVE')";
 
     internal const string IdentitySql = "SELECT CASE WHEN IS_MEMBER(N'residapp_tareas') = 1 OR IS_MEMBER(N'db_owner') = 1 THEN 1 ELSE 0 END";
 
@@ -114,6 +114,12 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
             return new(null, EmailLog.NoAccess);
         }
 
+        // Baja de avisos (script 0123): manda sobre tener correo y tenerlo confirmado.
+        if (recipient.OptedOutAt is not null)
+        {
+            return new(null, EmailLog.OptedOut);
+        }
+
         if (string.IsNullOrWhiteSpace(recipient.Address))
         {
             return new(null, EmailLog.NoAddress);
@@ -138,7 +144,7 @@ public sealed class SqlChangeNoticeStore(SqlConnectionFactory connections) : ICh
 
     private sealed record DueRow(Guid Id, Guid CenterId, Guid AppointmentId, string ChangeKey, string Language);
 
-    private sealed record Recipient(string? Address, DateTime? ConfirmedAt);
+    private sealed record Recipient(string? Address, DateTime? ConfirmedAt, DateTime? OptedOutAt);
 
     private sealed record ChangeRow(
         string Status, DateTime StartsAt, Guid AccountId, Guid LinkId, int? LastNumber, string? Action, string? ActorProfile, string? Cause, DateTime? PreviousStart, DateTime? NewStart)

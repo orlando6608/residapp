@@ -236,6 +236,30 @@ public class RecordatorioCitaTests
     }
 
     [Fact]
+    public async Task DeBajaDeLosAvisos_ElRecordatorioSeOmiteConEseMotivo_YReactivarNoLoRepite()
+    {
+        var setup = await SetupWithAddressAsync("Residente Recordatorio Baja");
+        var sim = Sim(Today.AddDays(2), 11);
+        var appointment = await InsertAsync(setup, "MEDICO", LocalUtc(Today.AddDays(3), 12));
+        await ReserveAsync(sim, appointment);
+        const string family = "WHERE id = (SELECT familiar_id FROM dbo.residentes_familiares WHERE id = @link)";
+        await ExecuteAsync("UPDATE dbo.familiares SET avisos_baja_en = SYSUTCDATETIME(), avisos_baja_por_cuenta_id = creado_por_cuenta_id " + family, new { link = setup.LinkId });
+        var sender = new FakeEmailSender();
+
+        await Service(sender, Active()).ProcessDueAsync(sim);
+
+        Assert.Empty(sender.Sent);
+        var row = Assert.Single(await RowsAsync(appointment));
+        Assert.Equal(("OMITIDO", "BAJA_DE_AVISOS"), (row.Estado, row.Motivo));
+
+        await ExecuteAsync("UPDATE dbo.familiares SET avisos_baja_en = NULL, avisos_baja_por_cuenta_id = NULL " + family, new { link = setup.LinkId });
+        await ReserveAsync(sim.AddMinutes(1), appointment);
+        await Service(sender, Active()).ProcessDueAsync(sim.AddMinutes(1));
+        Assert.Empty(sender.Sent);
+        Assert.Single(await RowsAsync(appointment));
+    }
+
+    [Fact]
     public async Task SiLaCitaSeMueveAOtraHoraElMismoDia_SigueEnviandose()
     {
         var setup = await SetupWithAddressAsync("Residente Recordatorio Otra Hora");

@@ -60,8 +60,9 @@ public interface IExternalAppointmentFamilySettings
 /// <summary>El interruptor de los avisos por correo del centro: si está encendido, su número de cambio (0 si nunca se tocó) y si las familias ven las citas externas (sin eso no se pueden encender los correos).</summary>
 public sealed record ExternalFamilyMailState(bool Enabled, int Number, bool FamilyEnabled);
 
-/// <summary>Una persona de la familia de un residente con el estado de sus avisos por correo de citas externas: si tiene una dirección confirmada, si está dada de baja de los avisos y su número de cambio (0 si nunca se tocó). Nunca la dirección.</summary>
-public sealed record ExternalFamilyMember(Guid FamilyId, string Name, string Relationship, bool HasConfirmedAddress, bool OptedOut, int Number);
+/// <summary>Una persona de la familia de un residente con el estado de sus avisos por correo de citas externas: si tiene una dirección confirmada, si está dada de baja de los avisos y su número de cambio (0 si nunca se tocó). Nunca la dirección.
+/// OptedOutOfAll es la baja de todos los avisos (script 0123), que se cambia en la ficha del familiar y no con estos botones.</summary>
+public sealed record ExternalFamilyMember(Guid FamilyId, string Name, string Relationship, bool HasConfirmedAddress, bool OptedOut, int Number, bool OptedOutOfAll = false);
 
 /// <summary>Una parte de una cita que ha asumido alguien de la familia. Name solo se rellena para quien puede ver el nombre (Administración y Enfermería con permiso de citas): para el resto, null.</summary>
 public sealed record ExternalFamilyOffer(ExternalArrangementScope Scope, string? Name);

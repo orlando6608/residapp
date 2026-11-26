@@ -269,6 +269,100 @@ public class AvisosCitasExternasCorreoTests
         Assert.Empty(await RowsAsync(covered));
     }
 
+    // ---- La baja de todos los avisos (script 0123) ----
+
+    private static async Task SetGeneralOptOutAsync(World world, Person person, bool optOut)
+    {
+        var admin = world.Setup.Admin;
+        var service = Build(admin.ExternalSubject);
+        var seen = (await service.FindResidentAsync(new FindAdministrativeResidentQuery(admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId)))
+            .Value!.Family.Single(m => m.LinkId == person.LinkId).NoticesOptOutAt;
+        var result = await service.SetFamilyNoticesOptOutAsync(new SetFamilyNoticesOptOutCommand(
+            admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId, person.LinkId, optOut, seen, PedidaPorLaPersona: !optOut));
+        Assert.True(result.Ok, result.Error?.Message);
+    }
+
+    [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, true, false)]
+    public async Task ConLaBajaGeneralOLaDeCitasExternas_NoRecibeNinguno_YLosDemasSi(bool general, bool onlyExternal, bool receives)
+    {
+        var world = await WorldAsync($"Residente Correo Bajas {Guid.NewGuid():N}"[..40]);
+        var admin = world.Setup.Admin;
+        if (general)
+        {
+            await SetGeneralOptOutAsync(world, world.First, true);
+        }
+
+        if (onlyExternal)
+        {
+            Assert.True((await Settings(admin).SetFamilyMemberMailAsync(new SetExternalFamilyMemberMailCommand(
+                admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId, world.First.FamilyId, 0, true))).Ok);
+        }
+
+        var members = (await Settings(admin).ListFamilyMembersAsync(admin.ProfileScopeId, admin.CenterId, world.Setup.ResidentId)).Value!;
+        var shown = members.Single(m => m.FamilyId == world.First.FamilyId);
+        Assert.Equal((onlyExternal, general), (shown.OptedOut, shown.OptedOutOfAll));
+
+        var sevenDays = await RegisterAsync(world, 7);
+        var twoDays = await RegisterAsync(world, 2);
+        await ReserveAsync(Today, 11);
+
+        foreach (var id in new[] { sevenDays, twoDays })
+        {
+            var rows = await RowsAsync(id);
+            Assert.Equal(receives, rows.Any(r => r.FamilyId == world.First.FamilyId));
+            Assert.Contains(rows, r => r.FamilyId == world.Second.FamilyId);
+        }
+    }
+
+    [Fact]
+    public async Task SiQuienSeEncargoEstaDeBaja_ElAvisoLlegaALosDemas()
+    {
+        var world = await WorldAsync("Residente Correo Encargada De Baja");
+        var id = await RegisterAsync(world, 1);
+        Assert.Equal(FamilyArrangementOutcome.Done, await ActAsync(world.Second, id, FamilyArrangementAction.Take));
+        await SetGeneralOptOutAsync(world, world.Second, true);
+
+        await ReserveAsync(Today, 11);
+        var sender = new FakeEmailSender();
+        await DrainAsync(Service(sender, Active()), Sim(Today, 11));
+
+        var row = Assert.Single(await RowsAsync(id));
+        Assert.Equal((world.First.FamilyId, "ENVIADO"), (row.FamilyId, row.State));
+        Assert.DoesNotContain(sender.Sent, m => m.To == world.Second.Address);
+    }
+
+    [Fact]
+    public async Task LaBajaGeneralEntreReservarYEnviar_LoOmite_YAlReactivarSoloSaleElDeEseDiaQueNoSeHabiaReservado()
+    {
+        var world = await WorldAsync("Residente Correo Baja Y Alta");
+        var reserved = await RegisterAsync(world, 7);
+        await ReserveAsync(Today, 11);
+        await SetGeneralOptOutAsync(world, world.First, true);
+        var whileOptedOut = await RegisterAsync(world, 1);
+        await ReserveAsync(Today, 12);
+        var sender = new FakeEmailSender();
+
+        await DrainAsync(Service(sender, Active()), Sim(Today, 12));
+
+        var omitted = Assert.Single(await RowsAsync(reserved), r => r.FamilyId == world.First.FamilyId);
+        Assert.Equal(("OMITIDO", "BAJA_DE_AVISOS"), (omitted.State, omitted.Reason));
+        Assert.DoesNotContain(await RowsAsync(whileOptedOut), r => r.FamilyId == world.First.FamilyId);
+        Assert.DoesNotContain(sender.Sent, m => m.To == world.First.Address);
+
+        // Reactivar el mismo día: el omitido no vuelve; el aviso de hoy que no se llegó a reservar sí sale (lo dice la pantalla).
+        await SetGeneralOptOutAsync(world, world.First, false);
+        await ReserveAsync(Today, 13);
+        await DrainAsync(Service(sender, Active()), Sim(Today, 13));
+
+        Assert.Equal("OMITIDO", Assert.Single(await RowsAsync(reserved), r => r.FamilyId == world.First.FamilyId).State);
+        Assert.Equal("ENVIADO", Assert.Single(await RowsAsync(whileOptedOut), r => r.FamilyId == world.First.FamilyId).State);
+        Assert.Single(sender.Sent, m => m.To == world.First.Address);
+    }
+
     // ---- Lo que cambia entre reservar y enviar ----
 
     [Theory]
