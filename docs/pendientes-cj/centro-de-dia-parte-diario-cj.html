@@ -282,9 +282,9 @@
   </header>
 
   <div class="keyfacts" role="list">
-    <div role="listitem"><span class="k">Qué bloquea</span><span>El parte del día no se puede diseñar sin tus respuestas. Nada de esto toca a las residencias.</span></div>
+    <div role="listitem"><span class="k">Qué bloquea</span><span>Sin tus respuestas no se puede diseñar el parte del día ni añadir la escala de Lawton. Nada de esto cambia hoy las residencias.</span></div>
     <div role="listitem"><span class="k">Qué no cambia</span><span>El registro del Auxiliar, la revisión de Enfermería y los comunicados a la familia de las residencias siguen igual.</span></div>
-    <div role="listitem"><span class="k">Preguntas</span><span>20 preguntas en 6 temas. Sin datos personales reales en los comentarios.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>26 preguntas en 7 temas. Sin datos personales reales en los comentarios.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -523,6 +523,76 @@
           <label class="choice"><input type="radio" name="r-6-2" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
         </fieldset>
         <label class="field">Comentario (opcional)<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-7">
+    <h2>Tema 7 · Escala de Lawton y Brody</h2>
+    <div class="stack prose">
+      <p>Estas preguntas son del 26/11/2026. En la 1.2 propusiste añadir la escala de Lawton junto al basal y el Barthel. No está construida.</p>
+      <p>Tenemos <a href="https://github.com/orlando6608/residapp/blob/main/docs/anexo-3-escala-lawton-i-brody.pdf" target="_blank" rel="noopener noreferrer">esta hoja (PDF, se abre en otra pestaña)</a>,
+        «Escala de Lawton y Brody para las actividades instrumentales de la vida diaria». Valora 8 actividades (teléfono, compras, comida, casa, ropa, transporte, medicación y dinero); cada una puntúa 0 o 1 y el total, de 0 a 8,
+        se lee así: 0-1 dependencia total, 2-3 importante, 4-5 moderada, 6-7 ligera y 8 independencia. La hoja no dice de dónde sale. Ingeniería no cambiará ni completará ningún texto ni ningún punto.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="7.1">
+        <div class="q-head"><span class="n">7.1</span><h3 class="q-title" id="t-7-1">¿Es esta la hoja que hay que usar, con sus opciones, sus puntos y sus tramos?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La aplicación copiaría los textos y los puntos tal cual. Dinos también de qué documento o protocolo sale y, si lo sabes, si se puede usar en una aplicación.</p>
+        <fieldset class="choices" aria-labelledby="t-7-1">
+          <label class="choice"><input type="radio" name="r-7-1" value="A"><span class="letter">A</span><span class="txt">Sí, tal cual.</span></label>
+          <label class="choice"><input type="radio" name="r-7-1" value="B"><span class="letter">B</span><span class="txt">Sí, con cambios (escríbelos en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-7-1" value="C"><span class="letter">C</span><span class="txt">No, hay que usar otra versión (di cuál y de dónde sale).</span></label>
+          <label class="choice"><input type="radio" name="r-7-1" value="D"><span class="letter">D</span><span class="txt">No lo sé todavía.</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional): ¿de dónde sale?<textarea data-field="texto" rows="3"></textarea></label>
+      </article>
+      <article class="q" data-q="7.2">
+        <div class="q-head"><span class="n">7.2</span><h3 class="q-title" id="t-7-2">¿Se puntúa igual a hombres y a mujeres?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">La hoja pregunta el sexo, pero tiene una sola tabla. Hay versiones que en los hombres puntúan menos actividades, y entonces cambian el total y cómo se lee.</p>
+        <fieldset class="choices" aria-labelledby="t-7-2">
+          <label class="choice"><input type="radio" name="r-7-2" value="A"><span class="letter">A</span><span class="txt">Sí: las 8 actividades para todas las personas, con los tramos de la hoja.</span></label>
+          <label class="choice"><input type="radio" name="r-7-2" value="B"><span class="letter">B</span><span class="txt">No: en los hombres se puntúan menos (di en el comentario cuáles y cómo se lee el total).</span></label>
+          <label class="choice"><input type="radio" name="r-7-2" value="C"><span class="letter">C</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="7.3">
+        <div class="q-head"><span class="n">7.3</span><h3 class="q-title" id="t-7-3">Si una actividad no se ha hecho nunca o no se puede valorar, ¿cómo se puntúa?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Por ejemplo, alguien que nunca ha cocinado o que no tiene ocasión de hacerlo. La hoja no lo dice.</p>
+        <fieldset class="choices" aria-labelledby="t-7-3">
+          <label class="choice"><input type="radio" name="r-7-3" value="A"><span class="letter">A</span><span class="txt">Se elige la opción que describe lo que hace hoy, sea cual sea el motivo.</span></label>
+          <label class="choice"><input type="radio" name="r-7-3" value="B"><span class="letter">B</span><span class="txt">Se marca «no valorable» (di en el comentario cómo se lee entonces el total).</span></label>
+          <label class="choice"><input type="radio" name="r-7-3" value="C"><span class="letter">C</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="7.4">
+        <div class="q-head"><span class="n">7.4</span><h3 class="q-title" id="t-7-4">¿Quién la rellena, con qué información y quién la ve?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy el basal lo hacen Enfermería y Medicina, y terapia ocupacional no tiene perfil en la aplicación. La hoja dice «con la ayuda de la persona cuidadora principal». Di qué perfiles la rellenan, quién puede aportar la información, qué perfiles la consultan y si debe salir en algún informe.</p>
+        <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+      <article class="q" data-q="7.5">
+        <div class="q-head"><span class="n">7.5</span><h3 class="q-title" id="t-7-5">¿Cuándo se repite?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide si va siempre con el basal o tiene además su propio ritmo.</p>
+        <fieldset class="choices" aria-labelledby="t-7-5">
+          <label class="choice"><input type="radio" name="r-7-5" value="A"><span class="letter">A</span><span class="txt">Con el basal: al hacerlo y cada vez que se reevalúa.</span></label>
+          <label class="choice"><input type="radio" name="r-7-5" value="B"><span class="letter">B</span><span class="txt">Con el basal y, además, cada cierto tiempo (di cada cuánto).</span></label>
+          <label class="choice"><input type="radio" name="r-7-5" value="C"><span class="letter">C</span><span class="txt">Aparte del basal (di cuándo).</span></label>
+          <label class="choice"><input type="radio" name="r-7-5" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="7.6">
+        <div class="q-head"><span class="n">7.6</span><h3 class="q-title" id="t-7-6">¿En qué centros se usa y es obligatoria para firmar el basal?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Decide si es solo del Centro de Día o también de las residencias, y si un basal se puede firmar sin ella.</p>
+        <fieldset class="choices" aria-labelledby="t-7-6">
+          <label class="choice"><input type="radio" name="r-7-6" value="A"><span class="letter">A</span><span class="txt">Solo en Centro de Día, y obligatoria para firmar.</span></label>
+          <label class="choice"><input type="radio" name="r-7-6" value="B"><span class="letter">B</span><span class="txt">Solo en Centro de Día, y opcional.</span></label>
+          <label class="choice"><input type="radio" name="r-7-6" value="C"><span class="letter">C</span><span class="txt">En Centro de Día y en residencias (di en el comentario dónde es obligatoria).</span></label>
+          <label class="choice"><input type="radio" name="r-7-6" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
       </article>
     </div>
   </section>
