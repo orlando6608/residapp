@@ -22,6 +22,8 @@ public sealed partial class AccesoController
         "Para entrar en el portal necesitas un correo en tu ficha. Pide a la Administración de tu centro que lo añada.";
     public const string FamilyBlockedMessage =
         "Por seguridad, para volver a entrar necesitas una invitación nueva. Pídela a la Administración de tu centro.";
+    /// <summary>Va delante del motivo cuando, tras usar una invitación, la familia no puede seguir: así no cree que ha fallado ni pide otra.</summary>
+    public const string PasswordSavedNotice = "Tu contraseña está guardada. ";
     public const string CodeSentMessage =
         "Te hemos enviado un código a tu correo. Si no llega en unos minutos, mira el correo no deseado, pide otro o llama a tu centro.";
     public const string CodeNotSentMessage =
@@ -124,17 +126,17 @@ public sealed partial class AccesoController
 
     /// <summary>Pide un código y deja a la persona en la pantalla donde escribirlo, también si ahora no se puede mandar otro (así reintenta sin repetir la contraseña).</summary>
     private async Task<IActionResult> SendFamilyCodeAsync(
-        CredentialAccount account, IReadOnlyList<ActiveProfileScope> scopes, string? returnUrl, CancellationToken ct)
+        CredentialAccount account, IReadOnlyList<ActiveProfileScope> scopes, string? returnUrl, CancellationToken ct, string before = "")
     {
         var send = await familyCodes.SendAsync(account.UserName, AccountId.From(account.Id), scopes, ct);
         switch (send.Outcome)
         {
             case AccessCodeSendOutcome.NotAvailable:
-                return FamilyCannotEnter(FamilyClosedMessage);
+                return FamilyCannotEnter(before + FamilyClosedMessage);
             case AccessCodeSendOutcome.NoAddress:
-                return FamilyCannotEnter(FamilyNoAddressMessage);
+                return FamilyCannotEnter(before + FamilyNoAddressMessage);
             case AccessCodeSendOutcome.Blocked:
-                return FamilyCannotEnter(FamilyBlockedMessage);
+                return FamilyCannotEnter(before + FamilyBlockedMessage);
         }
 
         // Sin código nuevo, este navegador conserva el que ya tenía (sigue valiendo si no ha caducado).

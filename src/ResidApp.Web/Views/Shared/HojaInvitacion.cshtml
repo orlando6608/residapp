@@ -12,7 +12,7 @@
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-8">
+    <div class="hoja-invitacion col-12 col-md-10 col-lg-8">
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h1 class="h4 mb-3">@ViewData["Title"] para @nombre</h1>
@@ -56,6 +56,23 @@
 
                 <p class="mt-3 mb-1 small text-muted">Dirección de la invitación:</p>
                 <p class="font-monospace small text-break mb-0">@Model.Direccion</p>
+
+                @* Información breve de protección de datos (LOPDGDD art. 11), borrador por validar: docs/privacidad/codigo-acceso-familiar-por-correo.md. La hoja no sabe si es de una
+                   familia, así que empieza por «Si eres familiar»; teléfono, delegado y autoridad del centro no están en la aplicación y no se inventan. *@
+                @if (FamilyAccess.EmailCode)
+                {
+                    <section class="hoja-datos-familia border-top mt-3 pt-3 small" aria-labelledby="datos-familia">
+                        <h2 class="h6" id="datos-familia">Si eres familiar: qué hacemos con tus datos</h2>
+                        <ul class="mb-0">
+                            <li><strong>Responsable:</strong> @Model.Centro. ResidApp trata tus datos por su cuenta.</li>
+                            <li><strong>Tu correo</strong> se usa para enviarte el código de cada entrada, para avisarte si se cambia esa dirección y, si el centro la ha confirmado contigo y no te has dado de baja, para avisos sobre citas.</li>
+                            <li>Para proteger tu cuenta se anota cuándo entras y desde qué dirección IP (el número que identifica tu conexión).</li>
+                            <li>Puedes dejar de recibir los avisos sin perder el acceso: pídeselo al centro. Sin correo no se puede usar el portal; el centro te atiende en persona o por teléfono.</li>
+                            <li><strong>Tus derechos</strong> (ver, corregir o borrar tus datos y oponerte a su uso, entre otros): dirígete a @Model.Centro. Pregunta allí por su delegado de protección de datos y por la autoridad ante la que puedes reclamar.</li>
+                            <li class="text-break">Más información: @Url.Action("Privacy", "Home", null, Context.Request.Scheme)</li>
+                        </ul>
+                    </section>
+                }
             </div>
         </div>
 

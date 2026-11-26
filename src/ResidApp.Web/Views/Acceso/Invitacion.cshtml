@@ -1,4 +1,5 @@
 @model ResidApp.Web.Models.UsarInvitacionViewModel
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     ViewData["Title"] = Model.Recuperacion ? "Recuperar el acceso" : "Elige tu contraseña";
 }
@@ -17,6 +18,11 @@
                 else
                 {
                     <p>Elige una contraseña que no uses en otro sitio. Si trabajas en el centro, después prepararás el código del móvil.</p>
+                }
+
+                @if (FamilyAccess.EmailCode)
+                {
+                    <p>Si eres familiar, después te pediremos un código que te enviamos al correo de tu ficha.</p>
                 }
 
                 <div asp-validation-summary="All" class="text-danger" role="alert"></div>

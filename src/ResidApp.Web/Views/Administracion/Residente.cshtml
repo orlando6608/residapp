@@ -1,5 +1,6 @@
 @using ResidApp.Web.Models
 @model AdministrativeResidentViewModel
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     var resident = Model.Detail.Resident;
     ViewData["Title"] = resident.DisplayName;
@@ -130,6 +131,10 @@
                         <div class="text-body-secondary small text-break">@member.Email</div>
                         <div class="small">@AdministrativeResidentDisplay.EmailConfirmation(member)</div>
                     }
+                    @if (FamilyAccess.EmailCode && member.PortalAccount is not null && string.IsNullOrWhiteSpace(member.Email))
+                    {
+                        <div class="small fw-semibold">@AdministrativeResidentDisplay.PortalWithoutEmail</div>
+                    }
                     @if (member.NoticesOptOutAt is { } optedOutAt)
                     {
                         <div class="small">@AdministrativeResidentDisplay.NoticesOptOut(optedOutAt)</div>
@@ -192,6 +197,10 @@
                                 @if (member.Email is not null)
                                 {
                                     <div class="small">@AdministrativeResidentDisplay.EmailConfirmation(member)</div>
+                                }
+                                @if (FamilyAccess.EmailCode && member.PortalAccount is not null && string.IsNullOrWhiteSpace(member.Email))
+                                {
+                                    <div class="small fw-semibold">@AdministrativeResidentDisplay.PortalWithoutEmail</div>
                                 }
                                 @if (member.NoticesOptOutAt is { } noticesOptOutAt)
                                 {

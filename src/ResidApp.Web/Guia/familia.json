@@ -2,7 +2,7 @@
   "perfil": "Familiar",
   "proposito": "El Portal Familiar es la parte de ResidApp para las familias. Te deja leer las novedades que el equipo asistencial decide publicar sobre tu residente, reservar o solicitar citas con el equipo y, si el centro lo abre, ver las citas de tu residente fuera del centro y ofrecerte a llevarlo o acompañarlo. No es un canal urgente y no hay chat: lo urgente se resuelve siempre por teléfono con el centro.",
   "rutina": [
-    "Entras con tu usuario y tu contraseña. Si solo tienes un residente, llegas directamente a su pantalla.",
+    "Entras con tu usuario, tu contraseña y un código que te llega por correo. Si solo tienes un residente, llegas directamente a su pantalla.",
     "Lees las novedades nuevas (llevan la etiqueta «Nueva») y, si el centro lo ha elegido, el resumen diario o semanal.",
     "Cuando lo necesitas, reservas o solicitas una cita, o respondes a la propuesta que te hace el centro.",
     "Si necesitas algo urgente, llamas por teléfono al centro."
@@ -27,7 +27,7 @@
     "Usar el portal para algo urgente: para eso, el teléfono del centro."
   ],
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-19",
+  "revisado": "2026-11-26",
   "fichas": [
     {
       "codigo": "FAM-01",
@@ -37,12 +37,14 @@
       "antes": [
         "Que la Administración del centro te haya dado acceso: te dice tu **usuario** y te entrega la **hoja de invitación** (con un código QR y una dirección).",
         "Que tu autorización esté **activa** y sin caducar: Administración la abre y la activa en la ficha del residente.",
-        "Una contraseña nueva de al menos 12 caracteres. A las familias no se les pide el código del móvil."
+        "Un **correo** en tu ficha que puedas abrir al entrar: ahí llega el código. Si no tienes, ver FAM-12.",
+        "Una contraseña nueva de al menos 12 caracteres, distinta de la de tu correo. A las familias no se les pide el código del móvil."
       ],
       "pasos": [
         { "texto": "**La primera vez**, escanea el código QR de la hoja con la cámara del móvil, o escribe su dirección. Se abre «Elige tu contraseña».", "campos": ["Elige tu contraseña"] },
-        { "texto": "Escribe «Contraseña nueva» y «Repite la contraseña», y pulsa **Guardar y continuar**. Entras directamente al portal.", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva", "Repite la contraseña"] },
-        { "texto": "**Las demás veces**, en «Iniciar sesión» escribe «Usuario» y «Contraseña» y pulsa **Entrar**.", "botones": ["Entrar"], "campos": ["Iniciar sesión", "Usuario", "Contraseña"] },
+        { "texto": "Escribe «Contraseña nueva» y «Repite la contraseña», y pulsa **Guardar y continuar**. Se abre «Código del correo».", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva", "Repite la contraseña", "Código del correo"] },
+        { "texto": "**Las demás veces**, en «Iniciar sesión» escribe «Usuario» y «Contraseña» y pulsa **Entrar**. Se abre «Código del correo».", "botones": ["Entrar"], "campos": ["Iniciar sesión", "Usuario", "Contraseña", "Código del correo"] },
+        { "texto": "Escribe en «Código» las 6 cifras que te llegan por correo y pulsa **Comprobar** (si no llega, ver FAM-12).", "botones": ["Comprobar"], "campos": ["Código del correo", "Código"] },
         { "texto": "Si solo tienes un residente, llegas directamente a su pantalla. Si tienes varios, ves «Mis residentes»: pulsa la tarjeta de aquel al que quieres ver.", "campos": ["Mis residentes"] },
         { "texto": "Para ver a otro residente, pulsa **Cambiar de residente** en la cabecera (en el móvil, está tras el botón de menú de la esquina superior derecha).", "botones": ["Cambiar de residente"] },
         { "texto": "Al terminar, pulsa **Salir**. La sesión también se cierra sola a los 30 minutos sin usarla.", "botones": ["Salir"] }
@@ -57,7 +59,7 @@
         { "p": "La hoja de invitación caducó, se perdió o ya la usaste.", "r": "Vale 72 horas y una sola vez. Pide otra a Administración: la nueva anula la anterior." },
         { "p": "Olvidé mi contraseña.", "r": "Pide a Administración una invitación de recuperación. Con ella eliges otra contraseña." }
       ],
-      "rutas": ["Acceso/Entrar", "Acceso/Invitacion", "PortalFamiliar/Index"],
+      "rutas": ["Acceso/Entrar", "Acceso/Invitacion", "Acceso/CodigoCorreo", "PortalFamiliar/Index"],
       "mensajes": [
         "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.",
         "Ahora no tienes acceso a ningún residente",
@@ -391,7 +393,7 @@
         { "texto": "A los 7 días de una cita y la víspera puedes recibir «Tienes un aviso sobre una cita en ResidApp». No dice qué cita es ni de qué: entra en ResidApp y mira **Citas fuera del centro** (ver FAM-09).", "botones": ["Citas fuera del centro"] },
         { "texto": "A los 2 días puedes recibir «Una cita en ResidApp todavía necesita ayuda», solo si falta algo (transporte o acompañante) que la familia puede cubrir y nadie se ha ofrecido todavía. Abre la cita y mira si puedes ayudar (ver FAM-10)." },
         { "texto": "Si ya te has ofrecido a una cita, a 7 días y la víspera el aviso va solo a ti (y a nadie más); si nadie se ha ofrecido, llega a todas las personas autorizadas, un correo a cada una." },
-        { "texto": "Para dejar de recibir estos avisos, díselo a la Administración del centro: puede darte de baja solo de los de citas fuera del centro o de todos los avisos sobre citas (en los dos casos vale para todos tus residentes). Para volver a recibirlos, pídeselo." }
+        { "texto": "Para dejar de recibir estos avisos, díselo a la Administración del centro: puede darte de baja solo de los de citas fuera del centro o de todos los avisos sobre citas (en los dos casos vale para todos tus residentes). Para volver a recibirlos, pídeselo. La baja no corta el código para entrar ni el aviso por cambio de correo; no pidas que borren tu correo, porque no podrías entrar." }
       ],
       "despues": [
         { "para": "Familia", "texto": "Los correos salen de no-responder@avisos.residapp.es; si no los ves, mira el correo no deseado. No se pueden responder y no sustituyen al teléfono." },
@@ -408,6 +410,90 @@
         "Una cita en ResidApp todavía necesita ayuda",
         "Si no quieres recibir estos avisos, díselo a la Administración del centro.",
         "no-responder@avisos.residapp.es"
+      ],
+      "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "FAM-12",
+      "pregunta": "¿Cómo entro con el código que me llega por correo y qué hago si no llega?",
+      "palabras": ["código del correo", "código", "correo", "no llega", "enviar otro código", "bloqueada", "sin correo"],
+      "permisos": [],
+      "antes": [
+        "Tu **usuario** y tu contraseña (ver FAM-01).",
+        "Un correo en tu ficha, anotado por la Administración del centro, y poder abrirlo en ese momento. Usa en ResidApp una contraseña distinta de la de tu correo.",
+        "Si no tienes correo o no quieres darlo, no puedes usar el portal: el centro te atiende en persona o por teléfono."
+      ],
+      "pasos": [
+        { "texto": "En «Iniciar sesión» escribe «Usuario» y «Contraseña» y pulsa **Entrar**. Se abre «Código del correo». Es la misma pantalla que sale tras elegir la contraseña con una invitación.", "botones": ["Entrar"], "campos": ["Iniciar sesión", "Usuario", "Contraseña", "Código del correo"] },
+        { "texto": "Abre tu correo y busca «Tu código para entrar en ResidApp», que sale de no-responder@avisos.residapp.es. Si no lo ves, mira el correo no deseado." },
+        { "texto": "Escribe o pega las 6 cifras en «Código» y pulsa **Comprobar**. Sirve una sola vez y caduca en 10 minutos.", "botones": ["Comprobar"], "campos": ["Código"] },
+        { "texto": "Si no llega o ya no vale, pulsa **Enviar otro código** y usa el del último correo. Entre uno y otro hay que esperar un minuto; como máximo, 5 por hora y 10 en 24 horas, contando el de cada entrada.", "botones": ["Enviar otro código"] },
+        { "texto": "Para escribir otra vez el usuario y la contraseña, pulsa **Volver a empezar**.", "botones": ["Volver a empezar"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Entras al portal. El código se pide cada vez que entras. ResidApp nunca te lo pide por teléfono ni por mensaje: no se lo des a nadie." },
+        { "para": "Administración", "texto": "Es a quien acudir si no tienes correo, si ha cambiado o si necesitas una invitación nueva (ver ADM-54)." }
+      ],
+      "dudas": [
+        { "p": "«Te hemos enviado un código a tu correo.» pero no llega.", "r": "Espera unos minutos, mira el correo no deseado, pide otro o llama a tu centro." },
+        { "p": "«No hemos podido enviarte el código.»", "r": "El correo no salió. Pasado un minuto pulsa «Enviar otro código»; si sigue sin llegar, llama a tu centro." },
+        { "p": "«Has pedido un código hace menos de un minuto.», «Has pedido demasiados códigos en la última hora.» o «Has pedido demasiados códigos hoy.»", "r": "Has llegado a un límite. Espera antes de pedir otro; si es el del día, vuelve a intentarlo más tarde o llama a tu centro." },
+        { "p": "«El código no es correcto. Usa el del último correo que te hemos enviado.» o «Este código ya no vale. Pide otro.»", "r": "Usa el último o pide otro. Tras 5 fallos seguidos, de contraseña o de código, la cuenta se bloquea 15 minutos." },
+        { "p": "«Para entrar en el portal necesitas un correo en tu ficha.»", "r": "Pide a la Administración de tu centro que lo añada. Si te lo dice justo después de elegir la contraseña, la contraseña ya está guardada." },
+        { "p": "«Por seguridad, para volver a entrar necesitas una invitación nueva.»", "r": "Hubo 15 códigos fallidos en 24 horas. Pide la invitación a la Administración de tu centro." },
+        { "p": "«Ahora mismo no se puede entrar al portal de las familias. Llama a tu centro.»", "r": "No es cosa de tu cuenta. Llama a tu centro." },
+        { "p": "«Ha pasado demasiado tiempo o algo ha cambiado en la cuenta.»", "r": "Han pasado más de 10 minutos o ha cambiado algo. Escribe otra vez usuario y contraseña." }
+      ],
+      "rutas": ["Acceso/Entrar", "Acceso/Invitacion", "Acceso/CodigoCorreo", "Acceso/ReenviarCodigo"],
+      "mensajes": [
+        "Te hemos enviado un código a tu correo.",
+        "No hemos podido enviarte el código.",
+        "Has pedido un código hace menos de un minuto.",
+        "Has pedido demasiados códigos en la última hora.",
+        "Has pedido demasiados códigos hoy.",
+        "El código no es correcto. Usa el del último correo que te hemos enviado.",
+        "Este código ya no vale. Pide otro.",
+        "Para entrar en el portal necesitas un correo en tu ficha.",
+        "Por seguridad, para volver a entrar necesitas una invitación nueva.",
+        "Ahora mismo no se puede entrar al portal de las familias. Llama a tu centro.",
+        "Has superado los intentos permitidos: la cuenta queda bloqueada 15 minutos.",
+        "Ha pasado demasiado tiempo o algo ha cambiado en la cuenta.",
+        "Tu código para entrar en ResidApp",
+        "ResidApp nunca te pedirá este código por teléfono ni por mensaje."
+      ],
+      "manual": { "id": "entrar-ambito", "titulo": "Entrar y elegir tu ámbito de trabajo" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" },
+      "acceso": { "id": "entrar", "titulo": "Entrar" }
+    },
+    {
+      "codigo": "FAM-13",
+      "pregunta": "¿Cómo sé si alguien más ha intentado entrar en mi cuenta y qué hago?",
+      "palabras": ["última entrada", "alguien ha entrado", "código que no he pedido", "cambio de correo", "seguridad"],
+      "permisos": [],
+      "antes": [
+        "Haber entrado en el portal (ver FAM-12)."
+      ],
+      "pasos": [
+        { "texto": "En «Mis residentes» o en la pantalla de tu residente lee «Última entrada, sin contar esta», con su día y hora." },
+        { "texto": "Pulsa **Mi cuenta** y revisa «Últimos accesos a tu cuenta».", "botones": ["Mi cuenta"], "campos": ["Últimos accesos a tu cuenta"] },
+        { "texto": "Si algo no es tuyo, o recibes un código sin estar entrando, usa **Cambiar la contraseña** y avisa a tu centro.", "botones": ["Cambiar la contraseña"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Al cambiar la contraseña se cierran tus demás sesiones." },
+        { "para": "Administración", "texto": "Si avisas, puede darte una invitación de recuperación o suspender tu autorización." }
+      ],
+      "dudas": [
+        { "p": "«No consta otra entrada.»", "r": "No hay otra anotada aparte de esta." },
+        { "p": "Recibo «Cambio en tu cuenta de ResidApp».", "r": "El centro ha cambiado o quitado el correo al que llegan tus códigos. Si no lo has pedido, llama a tu centro." },
+        { "p": "Veo «Código del correo incorrecto».", "r": "Alguien escribió mal un código después de acertar tu contraseña. Si no fuiste tú, cambia la contraseña y avisa." }
+      ],
+      "rutas": ["PortalFamiliar/Index", "PortalFamiliar/Residente", "Cuenta/Index", "Cuenta/CambiarContrasena"],
+      "mensajes": [
+        "Última entrada, sin contar esta",
+        "No consta otra entrada.",
+        "Cambio en tu cuenta de ResidApp",
+        "Código del correo incorrecto"
       ],
       "manual": { "id": "portal-familiar", "titulo": "Portal Familiar" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }

@@ -137,6 +137,67 @@ public class CodigoAccesoFamiliaTests
     }
 
     [Fact]
+    public async Task LaInvitacion_ReiniciaTambienLosTopesDeEnvios()
+    {
+        var account = await SeedAccountAsync();
+        for (var i = 0; i < 10; i++)
+        {
+            await ReservedAsync(account, Start.AddHours(i < 5 ? 0 : 2).AddMinutes(i * 2));
+        }
+        var later = Start.AddHours(3).AddMinutes(30);
+        Assert.Equal(AccessCodeReservation.DayLimit, await Store().ReserveAsync(Code(account, later)));
+
+        await Store().ResetAsync(account, later);
+
+        // Ni el tope del día, ni el de la hora, ni la espera de un minuto siguen contando lo anterior.
+        for (var i = 0; i < 5; i++)
+        {
+            await ReservedAsync(account, later.AddMinutes(i * 2));
+        }
+        Assert.Equal(AccessCodeReservation.HourLimit, await Store().ReserveAsync(Code(account, later.AddMinutes(12))));
+    }
+
+    [Theory]
+    [InlineData(23, true)]
+    [InlineData(25, false)]
+    public async Task LosFallos_SoloCuentanParaElBloqueoDuranteUnDia(int hoursLater, bool blocks)
+    {
+        var account = await SeedAccountAsync();
+        for (var round = 0; round < 2; round++)
+        {
+            var earlier = await ReservedAsync(account, Start.AddMinutes(round * 2));
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                await Store().RedeemAsync(earlier.Id, account, new byte[32], Start.AddMinutes(round * 2));
+            }
+        }
+
+        var at = Start.AddHours(hoursLater);
+        var last = await ReservedAsync(account, at);
+        var results = new List<AccessCodeCheck>();
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            results.Add(await Store().RedeemAsync(last.Id, account, new byte[32], at));
+        }
+
+        Assert.Equal(blocks ? AccessCodeCheck.Blocked : AccessCodeCheck.Exhausted, results[^1]);
+    }
+
+    [Fact]
+    public async Task FallosSimultaneos_NoPasanDeCincoPorCodigo()
+    {
+        var account = await SeedAccountAsync();
+        var code = await ReservedAsync(account, Start);
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Store().RedeemAsync(code.Id, account, new byte[32], Start.AddMinutes(1))));
+
+        Assert.Equal(4, results.Count(result => result == AccessCodeCheck.Wrong));
+        Assert.Single(results, result => result == AccessCodeCheck.Exhausted);
+        Assert.Equal(3, results.Count(result => result == AccessCodeCheck.NotLive));
+        Assert.Equal(5, await ScalarAsync<int>("SELECT CAST(intentos_fallidos AS INT) FROM dbo.codigos_acceso_correo WHERE id = @Id", new { code.Id }));
+    }
+
+    [Fact]
     public async Task UnEnvioFallido_DejaElCodigoSinValor_ConSuMotivo()
     {
         var account = await SeedAccountAsync();

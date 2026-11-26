@@ -220,8 +220,8 @@ public sealed partial class AccesoController(
             return familyAccess.Entry switch
             {
                 FamilyEntry.PasswordOnly => await OpenSessionAsync(account, scopes[0], null, ct),
-                FamilyEntry.EmailCode => await SendFamilyCodeAsync(account, scopes, null, ct),
-                _ => FamilyCannotEnter($"Tu contraseña está guardada. {FamilyClosedMessage}"),
+                FamilyEntry.EmailCode => await SendFamilyCodeAsync(account, scopes, null, ct, PasswordSavedNotice),
+                _ => FamilyCannotEnter(PasswordSavedNotice + FamilyClosedMessage),
             };
         }
 

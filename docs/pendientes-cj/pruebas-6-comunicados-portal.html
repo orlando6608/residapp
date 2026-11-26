@@ -276,7 +276,7 @@
   .nota-ing p { margin: 0; white-space: pre-line; }
 </style>
 </head>
-<body data-doc="pruebas-6-comunicados-portal" data-version="2026-11-20">
+<body data-doc="pruebas-6-comunicados-portal" data-version="2026-11-26">
 
 <div class="page">
   <header>
@@ -326,9 +326,9 @@
       </p>
       <p><strong>Cómo se entra.</strong> Como en una residencia de verdad: en «Iniciar sesión» escribes el usuario de la cuenta y su
         contraseña y, después, el código de 6 cifras de tu aplicación de autenticación, o pulsas «Entrar con passkey». Las cuentas ya están dadas de alta: usa
-        la contraseña que te ha dado Orlando y el código de tu aplicación de autenticación (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
+        la contraseña que te ha dado Orlando y, en las cuentas del personal, el código de tu aplicación de autenticación (mira «Tus cuentas» en <a href="pruebas.html">Pruebas</a>). Para cambiar
         de cuenta, pulsa «Salir» en el menú de tu perfil (arriba a la derecha) y entra con la otra. Si una cuenta tiene varios ámbitos, la
-        aplicación te deja elegir cuál usar.</p>
+        aplicación te deja elegir cuál usar. <strong>Eso vale para las cuentas del personal.</strong> Con <code>almendros-elena</code> se abre «Código del correo»: escribes las 6 cifras que llegan al correo de su ficha y pulsas «Comprobar». Cada entrada manda un código (máximo 5 por hora y 10 en 24 horas): ábrela en una ventana privada u otro navegador y déjala abierta; si se cierra tras 30 minutos sin usarla, entra de nuevo. No cambies ni borres el correo de su ficha.</p>
       <p>Las palabras que se usan en las guías y lo que todavía no se puede probar están en <a href="pruebas.html">Pruebas</a>.</p>
       <p><strong>Si te pierdes</strong>, el <a href="pruebas-6-comunicados-portal-flujo.html">flujo de la guía 6</a> muestra en un diagrama qué perfil hace cada prueba y qué le llega al siguiente.</p>
     </div>
@@ -341,7 +341,7 @@
         <tr><td><code>almendros-medicina</code></td><td>Medicina</td><td>Los escalados a Medicina y sus eventos propios.</td></tr>
         <tr><td><code>almendros-direccion</code></td><td>Dirección Clínica</td><td>Supervisión de la unidad, calidad de proceso y consulta auditada del basal; puede fijar los rangos de referencia y los plazos de los hitos del proceso, y publicar, corregir o retirar comunicados a la familia.</td></tr>
         <tr><td><code>almendros-administracion</code></td><td>Administración</td><td>Residentes (solo datos administrativos), traslados y bajas, familias y su acceso al Portal Familiar, comunicados a la familia, citas, usuarios, estructura, turnos y auditoría. Es la Administración principal del centro.</td></tr>
-        <tr><td><code>almendros-elena</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Rosa Sánchez (ficticia)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente.</td></tr>
+        <tr><td><code>almendros-elena</code></td><td>Familiar (Portal Familiar)</td><td>La hija de «Rosa Sánchez (ficticia)», con la autorización activa. Solo ve las novedades publicadas y las citas de ese residente. Entra con el código que llega por correo.</td></tr>
       </tbody>
     </table></div>
 
@@ -517,10 +517,11 @@
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
           <li>Entra con <code>almendros-administracion</code>, abre «Residentes» y elige un residente que tenga un familiar (el que diste de alta en la <a href="pruebas-5-administracion.html">guía 5</a>, prueba 1, por ejemplo).</li>
-          <li>En su familiar pulsa «Autorización». Verás el estado y, debajo, «Acceso al Portal Familiar». Escribe un usuario (por ejemplo <code>familia-prueba-1</code>) y pulsa «Dar acceso al portal».</li>
+          <li>En un familiar <strong>sin correo</strong> pulsa «Autorización». Verás el estado y, debajo, «Acceso al Portal Familiar» y el aviso «Para entrar necesita un correo en su ficha: allí recibe el código.». Escribe un usuario (por ejemplo <code>familia-prueba-1</code>) y pulsa «Dar acceso al portal»: no debe dejar.</li>
+          <li>Pulsa «Añadir el correo», escribe una dirección inventada (<code>familia-prueba-1@example.com</code>), sin marcar «Dirección confirmada con la familia», y «Guardar cambios». Vuelve a «Autorización», escribe el usuario y pulsa «Dar acceso al portal».</li>
           <li>Después abre la autorización («Abrir autorización» y luego «Activar»). Comprueba también que ese usuario no aparece en «Usuarios».</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Sale «Acceso al Portal Familiar creado…» y la sección pasa a decir con qué usuario entra. Dar el acceso no activa la autorización: hay que abrirla y activarla aparte. El usuario de la familia no aparece en «Usuarios» (esa lista es solo de profesionales). En «Auditoría» consta «Acceso al Portal Familiar dado a un familiar».</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Sin correo sale «Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.» y no se crea nada. Con correo, sale «Acceso al Portal Familiar creado…» y la sección pasa a decir con qué usuario entra. Dar el acceso no activa la autorización: hay que abrirla y activarla aparte. El usuario de la familia no aparece en «Usuarios» (esa lista es solo de profesionales). En «Auditoría» consta «Acceso al Portal Familiar dado a un familiar».</div>
         <fieldset class="choices" aria-labelledby="t-7">
           <label class="choice"><input type="radio" name="r-7" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-7" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>
@@ -534,7 +535,7 @@
         <div class="q-head"><span class="n">8</span><h3 class="q-title" id="t-8">La familia entra y lee las novedades publicadas</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>Entra con <code>almendros-elena</code> (la hija de «Rosa Sánchez (ficticia)»). Verás directamente las novedades de ese residente.</li>
+          <li>Entra con <code>almendros-elena</code> (la hija de «Rosa Sánchez (ficticia)»), en una ventana privada: escribe el código que llega por correo y pulsa «Comprobar». Verás directamente las novedades de ese residente.</li>
           <li>Para tener algo que leer, publica un comunicado de «Rosa Sánchez»: como Enfermería (<code>almendros-enfermeria</code>) registra un cambio y ciérralo con una comunicación (como en la <a href="pruebas-1-auxiliar-enfermeria.html">guía 1</a>, prueba 12, o en la <a href="pruebas-2-medicina-indicaciones.html">guía 2</a>, prueba 10), y publícalo antes de su hora con Administración o Dirección (pruebas 5 o 6).</li>
           <li>Vuelve con <code>almendros-elena</code>, abre la novedad y prueba los filtros «Relevantes» y «Ordinarias».</li>
         </ol>
@@ -604,7 +605,7 @@
         <div class="q-head"><span class="n">12</span><h3 class="q-title" id="t-12">Quitar o suspender el acceso de la familia</h3><span class="chip">Sin probar</span></div>
         <ol class="pasos">
           <li>Entra con <code>almendros-administracion</code> y abre la autorización del familiar de «Rosa Sánchez (ficticia)». Pulsa «Suspender» y escribe un motivo.</li>
-          <li>Sin cerrar sesión de la familia, vuelve a <code>almendros-elena</code> y recarga la página. Después, con Administración, vuelve a activarla: la necesitan la prueba 14 y la guía 7.</li>
+          <li>Sin cerrar sesión de la familia (en su ventana privada: entrar con Administración en la misma ventana la cerraría), vuelve a <code>almendros-elena</code> y recarga la página. Después, con Administración, vuelve a activarla: la necesitan la prueba 14 y la guía 7.</li>
         </ol>
         <div class="esperado"><strong>Qué debería ocurrir</strong>En cuanto se suspende, la familia ya no ve a su residente: «Ahora no tienes acceso a ningún residente», sin esperar a que caduque la sesión. Al activarla de nuevo, vuelve a ver sus novedades. Revocar tiene el mismo efecto, pero ya no se puede deshacer.</div>
         <fieldset class="choices" aria-labelledby="t-12">

@@ -644,8 +644,8 @@
         <span class="num">5</span>
         <div class="hito">
           <div class="hito-cab"><span class="cuando">Día 1 · 10:20</span><span class="perfil adm">Administración</span></div>
-          <p><strong>Los accesos.</strong> Administración abre y activa la autorización de Elena, le da acceso al Portal Familiar con un usuario y le entrega su invitación impresa, con la que Elena elige su contraseña. Después asigna a Rosa a las cuentas de Auxiliar de la planta.</p>
-          <p class="pasa">Le llega al <strong>Auxiliar</strong>, que la ve en «Mis residentes», y a <strong>Elena</strong>, que ya puede entrar en el portal.</p>
+          <p><strong>Los accesos.</strong> Administración abre y activa la autorización de Elena, le da acceso al Portal Familiar con un usuario y le entrega su invitación impresa, con la que Elena elige su contraseña. En su ficha tiene que constar su correo: allí le llegará el código para entrar. Después asigna a Rosa a las cuentas de Auxiliar de la planta.</p>
+          <p class="pasa">Le llega al <strong>Auxiliar</strong>, que la ve en «Mis residentes», y a <strong>Elena</strong>, que ya puede entrar en el portal con su contraseña y el código que le llega por correo.</p>
           <p class="ir"><a href="#llegada">Más en «Llega un residente»</a></p>
         </div>
       </li>
@@ -1132,8 +1132,8 @@
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">3</span><strong>Acceso al Portal Familiar</strong><span class="perfil adm">Administración</span></div>
-        <span>En la misma pantalla, «Acceso al Portal Familiar»: el usuario con el que entrará, «Dar acceso al portal» y «Crear invitación de acceso», la hoja con la que elegirá su contraseña.</span>
-        <span class="pasa">Le llega a <strong>la familia</strong>: con la autorización activa y su usuario puede entrar. Sin autorización activa no ve a nadie.</span>
+        <span>En la misma pantalla, «Acceso al Portal Familiar»: el usuario con el que entrará, «Dar acceso al portal» y «Crear invitación de acceso», la hoja con la que elegirá su contraseña. El familiar necesita un correo en su ficha: sin él no se crea el acceso ni la invitación.</span>
+        <span class="pasa">Le llega a <strong>la familia</strong>: con la autorización activa, entra con su usuario, su contraseña y un código que le llega por correo. Sin autorización activa no ve a nadie.</span>
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">4</span><strong>Asignar al Auxiliar</strong><span class="perfil adm">Administración</span></div>
@@ -1603,6 +1603,7 @@
 
   <section id="familia" aria-labelledby="familia-t">
     <h2 id="familia-t">La familia, informada</h2>
+    <p class="pista">Para entrar, la familia escribe su usuario y su contraseña y, después, un código de 6 cifras que le llega al correo de su ficha. Sirve una vez y caduca en 10 minutos. Quien no tiene correo no usa el portal: se le atiende en persona o por teléfono.</p>
     <p class="ejemplo"><span class="ej">En el ejemplo</span>Elena lee a las 19:00 el comunicado que Enfermería preparó por la mañana y, al día siguiente, reserva una cita telefónica.</p>
     <h3 class="sub">El camino de un comunicado</h3>
     <div class="diagrama">
@@ -1727,7 +1728,7 @@
           <text class="bt det" x="1011" y="109.4" text-anchor="middle">confirmada</text>
       </svg>
     </div>
-    <p class="pista">Si el aviso por correo está activado y el familiar tiene correo con la dirección confirmada (Administración la confirma leyéndosela a la persona, desde la ficha del familiar; sin confirmar no se envía nada, y tampoco se manda después aunque se confirme más tarde), al proponer un horario le llega un correo genérico con un enlace a ResidApp. Si además está activado el aviso de cambio, a los pocos minutos de que Administración reprograme o cancele una cita confirmada, quien la reservó recibe otro correo genérico (sin día, hora ni motivo) si tiene la dirección confirmada y acceso al portal. Los correos salen de no-responder@avisos.residapp.es y pueden acabar en el correo no deseado: al confirmar la dirección, pide a la persona que la añada a sus contactos. Los avisos están apagados por defecto y son un complemento: avisa siempre a la familia por teléfono. Si además está activado el recordatorio, el día antes de una cita confirmada (entre las 10:00 y las 18:59) quien la reservó recibe un correo genérico («Tienes una cita mañana»), sin hora ni detalles, con las mismas condiciones de dirección confirmada y acceso al portal; si Administración cambia o cancela la cita después, puede llegar también el aviso de cambio. Ninguno de estos avisos le llega a quien está de baja de los avisos: Administración anota la baja en «Editar familiar» cuando la persona lo pide.</p>
+    <p class="pista">Si el aviso por correo está activado y el familiar tiene correo con la dirección confirmada (Administración la confirma leyéndosela a la persona, desde la ficha del familiar; sin confirmar no se envía ningún aviso, y tampoco se manda después aunque se confirme más tarde), al proponer un horario le llega un correo genérico con un enlace a ResidApp. Si además está activado el aviso de cambio, a los pocos minutos de que Administración reprograme o cancele una cita confirmada, quien la reservó recibe otro correo genérico (sin día, hora ni motivo) si tiene la dirección confirmada y acceso al portal. Los correos salen de no-responder@avisos.residapp.es y pueden acabar en el correo no deseado: al confirmar la dirección, pide a la persona que la añada a sus contactos. Los avisos están apagados por defecto y son un complemento: avisa siempre a la familia por teléfono. Si además está activado el recordatorio, el día antes de una cita confirmada (entre las 10:00 y las 18:59) quien la reservó recibe un correo genérico («Tienes una cita mañana»), sin hora ni detalles, con las mismas condiciones de dirección confirmada y acceso al portal; si Administración cambia o cancela la cita después, puede llegar también el aviso de cambio. Ninguno de estos avisos le llega a quien está de baja de los avisos: Administración anota la baja en «Editar familiar» cuando la persona lo pide. El código para entrar y el correo que se manda a la dirección anterior cuando Administración cambia o borra el correo de un familiar con acceso no son avisos de citas: salen sin confirmación y aunque la persona esté de baja.</p>
     <h3 class="sub">Las citas fuera del centro</h3>
     <p class="prose">Son las pruebas, consultas y tratamientos del residente fuera de la residencia. Es una parte del Portal Familiar que cada centro abre cuando está preparado: viene cerrada, y también los correos de aviso.</p>
     <div class="diagrama">

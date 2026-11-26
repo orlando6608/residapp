@@ -139,10 +139,10 @@ Cada guía tiene además una **página de flujo** (`pruebas-N-…-flujo.html`): 
 | [pruebas-3-basal-barthel.html](pruebas-3-basal-barthel.html) | `pruebas-3-basal-barthel.notas.json` | Guía 3: basal y Barthel (7 pruebas, 3 imprescindibles) | Contestada el 2026-11-20 (7 de 7), con notas de ingeniería. La 6 está corregida (nota del 2026-11-24), para volver a probar. Esperan su respuesta la 2 («Transferencias» y etiología en deterioro cognitivo leve) y la 5 (en qué pantalla vio el aviso, y la reevaluación a partir del basal vigente, sin construir) |
 | [pruebas-4-direccion.html](pruebas-4-direccion.html) | `pruebas-4-direccion.notas.json` | Guía 4: Dirección Clínica, con la consulta auditada del expediente (10 pruebas, 3 imprescindibles) | Pendiente |
 | [pruebas-5-administracion.html](pruebas-5-administracion.html) | `pruebas-5-administracion.notas.json` | Guía 5: Administración del centro (19 pruebas, 3 imprescindibles) | Pendiente |
-| [pruebas-6-comunicados-portal.html](pruebas-6-comunicados-portal.html) | `pruebas-6-comunicados-portal.notas.json` | Guía 6: comunicados a la familia y Portal Familiar (14 pruebas, 5 imprescindibles) | Pendiente |
+| [pruebas-6-comunicados-portal.html](pruebas-6-comunicados-portal.html) | `pruebas-6-comunicados-portal.notas.json` | Guía 6: comunicados a la familia y Portal Familiar (14 pruebas, 5 imprescindibles) | Cambiada el 2026-11-26 (la familia entra con un código por correo). Pendiente |
 | [pruebas-7-citas.html](pruebas-7-citas.html) | `pruebas-7-citas.notas.json` | Guía 7: citas con la familia e inicio de Administración (9 pruebas, 4 imprescindibles) | Pendiente |
 | [pruebas-8-aislamiento.html](pruebas-8-aislamiento.html) | `pruebas-8-aislamiento.notas.json` | Guía 8: aislamiento entre centros (5 pruebas, 2 imprescindibles) y 3 preguntas finales | Pendiente |
-| [pruebas-9-citas-externas.html](pruebas-9-citas-externas.html) | `pruebas-9-citas-externas.notas.json` | Guía 9: citas externas de los residentes (11 pruebas, 5 imprescindibles) y 2 preguntas finales, una de ellas la confirmación de FAM-10 (avisos por correo). Nueva el 20/11/2026 | Pendiente |
+| [pruebas-9-citas-externas.html](pruebas-9-citas-externas.html) | `pruebas-9-citas-externas.notas.json` | Guía 9: citas externas de los residentes (11 pruebas, 5 imprescindibles) y 2 preguntas finales, una de ellas la confirmación de FAM-10 (avisos por correo). Nueva el 20/11/2026 | Cambiada el 2026-11-26 (la familia entra con un código por correo). Pendiente |
 
 ### Para Orlando (no son de CJ)
 

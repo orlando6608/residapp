@@ -1,3 +1,4 @@
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     ViewData["Title"] = "Cómo pedir el acceso";
 }
@@ -17,6 +18,12 @@
                     Si ya tienes cuenta y no puedes entrar (olvidaste la contraseña, la cuenta está bloqueada o cambiaste de móvil),
                     pide ayuda también a la Administración de tu centro.
                 </p>
+                @if (FamilyAccess.EmailCode)
+                {
+                    <p>
+                        Si eres familiar y no te llega el código por correo, o la pantalla dice que falta tu correo, pide ayuda a la Administración de tu centro.
+                    </p>
+                }
                 <p class="mb-0">
                     <a asp-controller="Acceso" asp-action="Entrar" class="btn btn-primary btn-lg">Volver a iniciar sesión</a>
                 </p>

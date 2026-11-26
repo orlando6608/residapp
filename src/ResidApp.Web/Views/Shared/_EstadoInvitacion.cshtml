@@ -1,9 +1,15 @@
 @model ResidApp.Web.Models.EstadoInvitacionViewModel
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @* El acceso de una cuenta (ADR 0007, I2): crear o anular su invitación. Lo usan la ficha del usuario y la autorización del familiar. *@
 <section class="card mb-4" aria-labelledby="invitacion-acceso">
     <div class="card-body">
         <h2 class="h5 card-title" id="invitacion-acceso">Entrar en ResidApp</h2>
-        @if (Model.TieneContrasena)
+        @if (Model.TieneContrasena && FamilyAccess.EmailCode)
+        {
+            <p class="mb-2">Ya tiene contraseña. Si la ha olvidado, ha perdido el móvil o, siendo familiar, se le pide una invitación nueva por fallar demasiados códigos, entrégale una
+                <strong>invitación de recuperación</strong>: al usarla elige otra contraseña y se cierran sus sesiones abiertas. El personal vuelve a preparar además el código del móvil.</p>
+        }
+        else if (Model.TieneContrasena)
         {
             <p class="mb-2">Ya tiene contraseña. Si la ha olvidado o ha perdido el móvil, entrégale una <strong>invitación de recuperación</strong>:
                 al usarla elige otra contraseña, vuelve a preparar el código del móvil y se cierran sus sesiones abiertas.</p>

@@ -1,6 +1,6 @@
 {
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-19",
+  "revisado": "2026-11-26",
   "terminos": [
     { "termino": "Administración principal", "significa": "La cuenta de Administración que ve todas las unidades del centro y puede añadírselas a otras Administraciones o marcar a otra como principal.", "ver": ["ADM-07", "PLA-04"] },
     { "termino": "Ámbito", "significa": "La combinación de centro y perfil con la que trabajas en cada momento. Si tu cuenta tiene varios, eliges uno al entrar y puedes cambiarlo después.", "ver": ["TOD-04"] },
@@ -12,6 +12,7 @@
     { "termino": "Borrador (del basal)", "significa": "El basal guardado pero aún sin firmar. Al firmarlo se convierte en la versión vigente y la anterior pasa a histórica.", "ver": ["ENF-18", "MED-13"] },
     { "termino": "Cama", "significa": "En la pantalla de alta de un residente, la habitación o la plaza donde queda ubicado. En la estructura del centro y en el resto de la Guía se habla de habitaciones y plazas.", "ver": ["ENF-17", "ADM-19", "ADM-05"] },
     { "termino": "Cambio ordinario y cambio prioritario", "significa": "Los dos modos en que el Auxiliar registra un cambio del residente. El prioritario lleva un motivo y un aviso directo a Enfermería; el ordinario va a su bandeja de cambios ordinarios.", "ver": ["AUX-05", "AUX-06"] },
+    { "termino": "Código del correo", "significa": "El número de 6 cifras que ResidApp manda por correo a una persona de la familia cada vez que entra, además de su contraseña. Sirve una sola vez y caduca en 10 minutos.", "ver": ["FAM-12", "ADM-54"] },
     { "termino": "Código del móvil", "significa": "El número que muestra la aplicación de autenticación de tu móvil y que cambia cada 30 segundos. Se pide al entrar, junto con la contraseña.", "ver": ["TOD-01", "TOD-02"] },
     { "termino": "Comunicado a la familia", "significa": "El texto que Enfermería o Medicina prepara al cerrar un evento, ordinario o relevante. Se publica a su hora, o antes si Administración o Dirección lo adelantan, y la familia lo ve firmado como «Equipo asistencial del centro».", "ver": ["ENF-07", "ADM-34", "FAM-02"] },
     { "termino": "Constantes", "significa": "Las medidas de la valoración: temperatura, tensión arterial, frecuencia cardíaca y respiratoria, saturación de oxígeno y glucemia, entre otras.", "ver": ["ENF-05"] },

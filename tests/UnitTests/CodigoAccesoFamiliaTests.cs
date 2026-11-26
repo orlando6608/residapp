@@ -35,6 +35,19 @@ public class CodigoAccesoFamiliaTests
         }
     }
 
+    [Theory]
+    [InlineData("es", "caduca en 10 minutos", "nunca te pedirá este código", "Puede que alguien sepa tu contraseña", "«Mi cuenta»", "avisa a tu centro")]
+    [InlineData("ca", "caduca al cap de 10 minuts", "mai no et demanarà aquest codi", "Pot ser que algú sàpiga la teva contrasenya", "La pantalla de ResidApp és en castellà.", "avisa el teu centre")]
+    public void LaPlantilla_LlevaLosAvisosAcordados_EnLosDosIdiomas(string language, params string[] sentences)
+    {
+        var text = AccessCodeTemplate.Render(language, "048213").PlainText;
+
+        foreach (var sentence in sentences)
+        {
+            Assert.Contains(sentence, text);
+        }
+    }
+
     [Fact]
     public async Task ConTodoEnOrden_MandaUnSoloCorreo_YGuardaSoloElResumenConClave()
     {
