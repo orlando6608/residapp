@@ -192,6 +192,19 @@ public class PendientesCjPagesTests : IClassFixture<ResidentsFlowTests.WebAppFac
     }
 
 
+    // Cada formulario de Para Orlando pide «<documento>.respuestas.json» junto a sí mismo: tiene que publicarse en orlando/, no en la raíz.
+    [Theory]
+    [InlineData("dominio-y-correo")]
+    [InlineData("aviso-correo-decisiones")]
+    public async Task ParaOrlando_LasRespuestasSeSirvenJuntoASuFormulario(string name)
+    {
+        var response = await (await LoggedInAsync()).GetAsync($"/pendientes-cj/orlando/{name}.respuestas.json");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains($"\"documento\": \"{name}\"", await response.Content.ReadAsStringAsync());
+    }
+
     [Theory]
     [InlineData("preguntas")]
     [InlineData("pruebas")]
