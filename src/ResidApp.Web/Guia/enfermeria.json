@@ -220,7 +220,7 @@
       ],
       "despues": [
         { "para": "Enfermería", "texto": "Verás «Evento cerrado.» (con la comunicación programada, si la preparaste). El evento sale de las bandejas, pasa al Historial y la valoración ya no se modifica. Pulsar dos veces no lo cierra dos veces." },
-        { "para": "Familia", "texto": "Si preparaste la comunicación, se publica a la hora del centro (por defecto, las 19:00, con 1 hora de margen), firmada «Equipo asistencial del centro», nunca con tu nombre. Una ordinaria se ve 30 días y una relevante, 6 meses." }
+        { "para": "Familia", "texto": "Si preparaste la comunicación, se publica a la hora del centro (por defecto, en una Residencia las 19:00 con 1 hora de margen, y en un Centro de Día las 18:00 con 30 minutos), firmada «Equipo asistencial del centro», nunca con tu nombre. Una ordinaria se ve 30 días y una relevante, 6 meses." }
       ],
       "dudas": [
         { "p": "«No se puede cerrar el evento mientras queden indicaciones de Medicina sin cumplir: léelas y registra si se realizaron.»", "r": "Lee y registra el resultado de cada indicación (ENF-11). Al cumplir la última te lleva al detalle, con el botón «Cerrar episodio»." },
