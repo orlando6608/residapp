@@ -1,7 +1,7 @@
 {
   "proposito": "Esto vale para cualquier persona con una cuenta de ResidApp, sea cual sea su perfil: entrar la primera vez y cada día, cambiar de centro o de perfil, cuidar tu cuenta (contraseña, códigos de recuperación, sesiones), recuperar el acceso si lo pierdes, elegir el modo claro u oscuro e imprimir. Se cuenta una sola vez aquí; las guías de cada perfil remiten a estas fichas. Nadie se crea su propia cuenta: la da de alta la Administración de tu centro, que es también a quien hay que acudir si no puedes entrar.",
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-19",
+  "revisado": "2026-11-26",
   "fichas": [
     {
       "codigo": "TOD-01",
@@ -11,11 +11,12 @@
       "antes": [
         "La **hoja de invitación** que te entrega en mano la Administración de tu centro, impresa o en su pantalla: lleva un código QR y una dirección. Vale **72 horas** y **una sola vez**.",
         "Una contraseña que no uses en otro sitio, de **al menos 12 caracteres** (una frase de varias palabras vale).",
-        "Si eres del personal (todos los perfiles menos Familia): un móvil con una **aplicación de autenticación** (Microsoft Authenticator, Google Authenticator u otra) y papel y bolígrafo para apuntar unos códigos."
+        "Si eres del personal (todos los perfiles menos Familia): un móvil con una **aplicación de autenticación** (Microsoft Authenticator, Google Authenticator u otra) y papel y bolígrafo para apuntar unos códigos.",
+        "Si eres de Familia: un correo en tu ficha que puedas abrir en ese momento."
       ],
       "pasos": [
         { "texto": "Escanea el QR de la hoja con la cámara del móvil, o escribe su dirección en el navegador. Se abre **Elige tu contraseña**, con tu usuario: con él entrarás a partir de ahora.", "campos": ["Elige tu contraseña"] },
-        { "texto": "Escribe la «Contraseña nueva», repítela en «Repite la contraseña» y pulsa **Guardar y continuar**. Si eres de Familia, ya has entrado: aquí termina.", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva", "Repite la contraseña"] },
+        { "texto": "Escribe la «Contraseña nueva», repítela en «Repite la contraseña» y pulsa **Guardar y continuar**. Si eres de Familia, se abre **Código del correo**: escribe el código que te llega y pulsa **Comprobar** (ver FAM-12); ahí termina.", "botones": ["Guardar y continuar", "Comprobar"], "campos": ["Contraseña nueva", "Repite la contraseña", "Código del correo"] },
         { "texto": "Personal: se abre **Activar el segundo factor**. En la aplicación de autenticación añade una cuenta y escanea el código QR de la pantalla (si no puedes, escribe a mano la clave que aparece debajo; los espacios no importan).", "campos": ["Activar el segundo factor"] },
         { "texto": "Escribe el «Código» de 6 cifras que te muestra la aplicación y pulsa **Activar y entrar**.", "botones": ["Activar y entrar"], "campos": ["Código"] },
         { "texto": "Sale una lista de **10 códigos de recuperación**. Apúntalos en papel y guárdalos en un sitio seguro, no en el móvil: no se vuelven a mostrar. Después pulsa **Ya los he guardado, continuar**.", "botones": ["Ya los he guardado, continuar"] }
@@ -30,7 +31,7 @@
         { "p": "Dejé a medias el código del móvil.", "r": "Al volver a entrar con la contraseña, la app te dice que necesitas una invitación: «Tu cuenta necesita preparar el código del móvil, y eso solo se hace con una invitación: pídela a la Administración de tu centro.»" },
         { "p": "Perdí los 10 códigos de recuperación.", "r": "Mientras te funcione el móvil, genera otros nuevos (ver TOD-06)." }
       ],
-      "rutas": ["Acceso/Invitacion", "Acceso/ActivarSegundoFactor"],
+      "rutas": ["Acceso/Invitacion", "Acceso/ActivarSegundoFactor", "Acceso/CodigoCorreo"],
       "mensajes": [
         "Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.",
         "Las dos contraseñas no coinciden.",
@@ -48,11 +49,13 @@
       "permisos": [],
       "antes": [
         "Tu **usuario** (el que te dio la Administración al darte de alta) y tu contraseña.",
-        "Si eres del personal: tu móvil, con la aplicación de autenticación. Si no lo tienes a mano, uno de tus códigos de recuperación apuntados en papel."
+        "Si eres del personal: tu móvil, con la aplicación de autenticación. Si no lo tienes a mano, uno de tus códigos de recuperación apuntados en papel.",
+        "Si eres de Familia: poder abrir el correo de tu ficha."
       ],
       "pasos": [
         { "texto": "Abre ResidApp. Si una pantalla necesita sesión, la app te lleva a **Iniciar sesión** y, al entrar, te devuelve a donde ibas.", "campos": ["Iniciar sesión"] },
-        { "texto": "Escribe tu «Usuario» y tu «Contraseña» y pulsa **Entrar**. Si eres de Familia, entras ya.", "botones": ["Entrar"], "campos": ["Usuario", "Contraseña"] },
+        { "texto": "Escribe tu «Usuario» y tu «Contraseña» y pulsa **Entrar**.", "botones": ["Entrar"], "campos": ["Usuario", "Contraseña"] },
+        { "texto": "Familia: se abre **Código del correo**. Escribe en «Código» las 6 cifras que te llegan y pulsa **Comprobar** (ver FAM-12).", "botones": ["Comprobar"], "campos": ["Código del correo", "Código"] },
         { "texto": "Personal: en **Código de verificación** escribe el código de 6 cifras que muestra ahora la aplicación de autenticación y pulsa **Comprobar**.", "botones": ["Comprobar"], "campos": ["Código de verificación"] },
         { "texto": "Sin el móvil: pulsa **Usa un código de recuperación**, escribe uno de tus códigos y pulsa **Comprobar**. Cada código sirve **una sola vez**.", "botones": ["Usa un código de recuperación"], "campos": ["Código de recuperación"] },
         { "texto": "Si tu cuenta puede trabajar con varios centros o perfiles, la app te pide elegir uno (ver TOD-04); si solo tiene uno, entras directamente a tu inicio." }
@@ -61,13 +64,13 @@
         { "para": "Tú", "texto": "La sesión se cierra sola tras **30 minutos sin usarla** y, en cualquier caso, a las **12 horas** de abrirla. Si la sesión terminó justo al guardar un formulario, lo que escribías **no se guarda**: la app te lleva a Iniciar sesión con el aviso «Tu sesión había terminado…» y tendrás que volver a escribirlo." }
       ],
       "dudas": [
-        { "p": "«Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.»", "r": "El aviso es el mismo si el usuario no existe, la contraseña es otra, la cuenta está suspendida o no tiene perfiles: así no se dan pistas. Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos aunque después la escribas bien. Si no recuerdas la contraseña, ver TOD-09." },
+        { "p": "«Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.»", "r": "El aviso es el mismo si el usuario no existe, la contraseña es otra, la cuenta está suspendida o no tiene perfiles: así no se dan pistas. Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos aunque después la escribas bien. Si no recuerdas la contraseña, ver TOD-09. En Familia, los códigos del correo equivocados cuentan para ese bloqueo y acertar la contraseña no los borra." },
         { "p": "«El código no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.»", "r": "Sale igual con el código de la aplicación y con uno de recuperación. El de la aplicación cambia cada 30 segundos; cada código de recuperación sirve una sola vez." },
         { "p": "Pasé más de 10 minutos entre la contraseña y el código.", "r": "Hay que volver a escribir la contraseña. Los códigos de 6 cifras equivocados también cuentan para el bloqueo." },
         { "p": "«Tu sesión había terminado: lo que estabas guardando no se ha guardado.»", "r": "Entra de nuevo y vuelve a escribirlo." },
         { "p": "No tengo cuenta.", "r": "Nadie se crea la suya: pídela a la Administración de tu centro («Cómo pedir el acceso», un enlace al pie de Iniciar sesión)." }
       ],
-      "rutas": ["Acceso/Entrar", "Acceso/SegundoFactor", "Acceso/CodigoRecuperacion"],
+      "rutas": ["Acceso/Entrar", "Acceso/SegundoFactor", "Acceso/CodigoRecuperacion", "Acceso/CodigoCorreo"],
       "mensajes": [
         "Usuario o contraseña incorrectos. Tras 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.",
         "Tu sesión había terminado",
@@ -180,7 +183,7 @@
       "palabras": ["códigos de recuperación", "regenerar", "perdí los códigos", "quedan pocos", "Mi cuenta"],
       "permisos": [],
       "antes": [
-        "Ser del personal. Quien es de Familia entra solo con la contraseña y no tiene estos códigos.",
+        "Ser del personal. Quien es de Familia entra con su contraseña y un código que le llega por correo, y no tiene estos códigos.",
         "Tu **contraseña** y el **código de 6 cifras** que da ahora tu móvil.",
         "Papel y bolígrafo."
       ],
@@ -196,12 +199,12 @@
       "dudas": [
         { "p": "«El código del móvil no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.»", "r": "El código cambia cada 30 segundos: escribe el que muestra la aplicación en ese momento, y que sea la cuenta «ResidApp»." },
         { "p": "Cambié de móvil o lo perdí.", "r": "Esta pantalla no sirve para eso: pide a la Administración de tu centro una invitación de recuperación (ver TOD-09)." },
-        { "p": "«Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.»", "r": "Es lo normal en Familia: no hay nada que generar." }
+        { "p": "«Entras con tu contraseña y un código que te llega por correo, así que no tienes códigos de recuperación.»", "r": "Es lo normal en Familia: no hay nada que generar." }
       ],
       "rutas": ["Cuenta/Index", "Cuenta/RegenerarCodigos", "Acceso/ActivarSegundoFactor"],
       "mensajes": [
         "El código del móvil no es correcto. Comprueba que es el de ResidApp y que no ha cambiado ya.",
-        "Tu perfil entra solo con la contraseña, así que no tiene códigos de recuperación.",
+        "Entras con tu contraseña y un código que te llega por correo, así que no tienes códigos de recuperación.",
         "Guarda estos códigos ahora: no se volverán a mostrar."
       ],
       "manual": { "id": "mi-cuenta", "titulo": "Mi cuenta" },
@@ -279,16 +282,17 @@
       "permisos": [],
       "antes": [
         "Que la Administración de tu centro te dé una **invitación de recuperación**: nadie puede dártela a sí mismo desde la aplicación, y tampoco hay una opción de «he olvidado mi contraseña» en Iniciar sesión (el enlace «Cómo pedir el acceso», bajo el formulario, explica a quién pedirla).",
-        "Si solo estás bloqueado por intentos fallidos, espera 15 minutos: la cuenta se desbloquea sola."
+        "Si solo estás bloqueado por intentos fallidos, espera 15 minutos: la cuenta se desbloquea sola. En Familia, si la pantalla pide una invitación nueva tras demasiados códigos, no basta con esperar."
       ],
       "pasos": [
         { "texto": "Pide a la Administración de tu centro una invitación de recuperación. Si te quedan códigos de recuperación y solo has perdido el móvil, antes puedes entrar con uno (ver TOD-02) y generar otros (ver TOD-06)." },
         { "texto": "Te entrega una hoja con un código QR y una dirección. Escanéala o escribe la dirección: se abre **Recuperar el acceso**, con tu usuario.", "campos": ["Recuperar el acceso"] },
         { "texto": "Escribe una «Contraseña nueva», repítela y pulsa **Guardar y continuar**.", "botones": ["Guardar y continuar"], "campos": ["Contraseña nueva"] },
-        { "texto": "Personal: prepara de nuevo el código del móvil y apunta los códigos de recuperación nuevos, como la primera vez (pasos 3 a 5 de TOD-01)." }
+        { "texto": "Personal: prepara de nuevo el código del móvil y apunta los códigos de recuperación nuevos, como la primera vez (pasos 3 a 5 de TOD-01)." },
+        { "texto": "Familia: después de guardar te llega un código por correo (ver FAM-12)." }
       ],
       "despues": [
-        { "para": "Tú", "texto": "La contraseña nueva sustituye a la anterior; el código del móvil anterior deja de valer; se **borran tus passkeys** (tendrás que añadirlas de nuevo, ver TOD-03) y se cierran las sesiones abiertas en cualquier dispositivo. La invitación vale 72 horas y una sola vez." }
+        { "para": "Tú", "texto": "La contraseña nueva sustituye a la anterior; en el personal, el código del móvil anterior deja de valer; se **borran tus passkeys** (tendrás que añadirlas de nuevo, ver TOD-03) y se cierran las sesiones abiertas en cualquier dispositivo. La invitación vale 72 horas y una sola vez." }
       ],
       "dudas": [
         { "p": "«Esta invitación ya no vale: se ha usado, se ha anulado o ha caducado. Pide otra a la Administración de tu centro.»", "r": "Pasaron las 72 horas, ya la usaste o te dieron otra más nueva, que anula la anterior." },

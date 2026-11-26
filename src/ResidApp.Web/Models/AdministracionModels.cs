@@ -259,6 +259,9 @@ public static class AdministrativeResidentDisplay
     /// <summary>La baja de avisos por correo (script 0123): solo la fecha, no la cuenta que la anotó.</summary>
     public static string NoticesOptOut(DateTimeOffset at) => $"De baja de los avisos por correo desde el {CenterTime.Local(at):dd/MM/yyyy}.";
 
+    /// <summary>Con el código de acceso encendido, quien tiene cuenta de familia y no tiene correo en su ficha no puede entrar (ADR 0012, pieza 3).</summary>
+    public const string PortalWithoutEmail = "Tiene acceso al portal, pero sin correo no puede entrar.";
+
     /// <summary>ADM-08: la autorización tal como cuenta hoy, p. ej. «Activa hasta el 31/10/2026» o «Sin autorización».</summary>
     public static string Authorization(ResidentFamilyMember member, DateOnly today)
     {

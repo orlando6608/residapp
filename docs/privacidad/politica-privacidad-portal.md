@@ -13,6 +13,8 @@ Etiquetas de la parte B: **[Hecho]** verificado en el repositorio o en una fuent
 
 # PARTE A — TEXTO PÚBLICO
 
+> Los textos marcados **(con código)** solo se muestran cuando el código de acceso por correo para la familia está encendido.
+
 > Nota para quien lo pase a la vista: en móvil, las tablas de las secciones 8 y 10 deben mostrarse como tarjetas (una por fila), según `docs/decisiones-arquitectura/directrices-pwa-movil.md`, apartado 2. Cada encabezado `##` debe tener un ancla (`id`) para poder enlazar desde el correo («apartado Privacidad»).
 
 # Política de privacidad
@@ -25,6 +27,7 @@ Etiquetas de la parte B: **[Hecho]** verificado en el repositorio o en una fuent
 - **El responsable de tus datos es el centro (la residencia) que te dio acceso o que cuida de ti o de tu familiar.** ResidApp trabaja por cuenta del centro y solo según sus instrucciones.
 - Se tratan datos de salud de las personas residentes. Son datos especialmente protegidos y solo los ve el personal que los necesita para su trabajo.
 - Si tienes cuenta, guardamos los datos mínimos para que puedas entrar y para dejar constancia de quién hace qué.
+- **(con código)** Si eres familiar, para entrar en el portal necesitas tu contraseña y un código que te enviamos por correo cada vez (apartado 5).
 - No hay publicidad, ni analítica, ni cookies de terceros. Las cookies que usamos son las necesarias para que la aplicación funcione (apartado 10).
 - Para ejercer tus derechos (acceder a tus datos, corregirlos, pedir que se borren, etc.), **escribe a tu centro**. Los datos de contacto de tu centro están en el apartado 12.
 - Si no estás conforme, puedes reclamar ante la autoridad de protección de datos (apartado 13).
@@ -69,15 +72,20 @@ ResidApp **no** guarda la administración de la medicación (qué se da y cuánd
 
 ### 2.2 Familiares y representantes
 
-Los datos los introduce el personal de Administración del centro, a partir de lo que tú le das. Son:
+Una parte de los datos la introduce la Administración del centro a partir de lo que tú le das. Otra la genera la aplicación cuando entras y la usas:
 
-- **Nombre, teléfono y relación** con la persona residente. El **correo electrónico es opcional**.
+- **Nombre, teléfono y relación** con la persona residente. **Correo electrónico:** opcional; **(con código)** necesario para entrar en el portal, porque allí llega el código de cada entrada, y el mismo en todas tus fichas.
 - **Tu autorización de acceso** al Portal Familiar: si está activa, hasta cuándo es válida y si eres la persona de referencia o su representante.
 - **Tu cuenta:** identificador de acceso y contraseña (la contraseña se guarda transformada, de forma que nadie puede leerla).
 - **Tus citas:** las solicitudes de cita y las citas que reservas con el centro.
 - Si tu centro lo tiene activado: la marca interna de que el centro **ha confirmado tu dirección de correo contigo** (se la leyó a quien corresponde, y se anota quién y cuándo).
+- **Si pides no recibir avisos por correo** (todos, o solo los de citas fuera del centro): desde cuándo y qué cuenta de Administración lo anotó. No se guarda el motivo ni cómo lo pediste. Los cambios quedan además registrados.
+- **Entradas y sesiones:** cuándo entras, sales o fallas la contraseña o el código, con la **dirección IP** (el número que identifica tu conexión a internet). Puedes ver y cerrar tus sesiones en «Mi cuenta».
+- **Registro de actividad:** qué consultas en el portal y qué haces en él (por ejemplo, con tus citas), con tu cuenta, la fecha y la hora.
+- **(con código)** **Códigos de acceso:** de cada uno, cuándo se creó, cuándo caduca, cómo terminó, cuántas veces se falló, si el envío salió, el número con el que Microsoft identifica ese envío y el idioma y la versión del texto. Mientras el código puede usarse guardamos una huella suya, calculada con una clave secreta que no está en la base de datos. **No guardamos el código, y en este registro no va tu dirección.** Si fallas demasiadas veces, queda anotado que tu cuenta está bloqueada.
+- **(con código)** **Tu última entrada:** el portal te enseña su fecha y hora, sin la dirección IP, para que veas si alguien más ha entrado.
 
-**Para qué:** que puedas ver lo que el centro publica para la familia, gestionar citas y recibir los avisos que hayas aceptado. El centro también usa tu teléfono para localizarte en caso necesario.
+**Para qué:** que puedas ver lo que el centro publica para la familia, gestionar citas, enviarte los correos del apartado 5 y proteger tu cuenta. El centro también usa tu teléfono para localizarte en caso necesario.
 
 El Portal Familiar **no** da acceso al historial clínico interno.
 
@@ -90,6 +98,7 @@ Los datos los introduce la Administración del centro. Son:
 - **Registro de entradas:** cuándo entras, sales, o fallas la contraseña o el código, con la **dirección IP** desde la que lo haces.
 - **Registro de actividad (auditoría):** cuenta, perfil, centro, fecha y hora de las acciones que cambian datos o que consultan datos sensibles. En algunas consultas también se guarda el motivo que escribes.
 - **Tu firma** en los documentos que firmas dentro de la aplicación (por ejemplo, un informe de derivación).
+- **Gestiones con las familias:** si confirmas una dirección de correo o das de baja los avisos de un familiar, queda anotada tu cuenta con la fecha.
 - Si tu centro tiene el dictado por voz y lo usas: tu voz (apartado 6).
 
 **Para qué:** que solo entren las personas autorizadas, que cada una vea solo lo que le corresponde y poder demostrar quién consultó o cambió qué dato de salud. **Este registro sirve para la seguridad y para detectar accesos indebidos. ResidApp no incluye listas ni clasificaciones de personal por rendimiento.**
@@ -108,6 +117,7 @@ La base legal exacta la fija **cada centro** y te la explica en su información 
 - **Familiares:** el servicio que el centro presta a la familia, el interés legítimo del centro en coordinar visitas y citas y, si el centro es público, el ejercicio de sus funciones. **[PENDIENTE: el DPO confirma cuál aplica.]**
 - **Personal:** la relación laboral o de servicios y el interés legítimo del centro en la seguridad de los datos que custodia. **[PENDIENTE: el DPO confirma.]**
 - **Foto de la persona residente:** consentimiento de la persona o de su representante (apartado 7).
+- **(con código)** **Código de acceso y aviso de cambio de correo:** son medidas de seguridad para que solo entres tú. No te pedimos consentimiento para ellas. **[PENDIENTE: una persona experta confirma la base legal]**
 
 ## 4. Quién puede ver los datos
 
@@ -130,12 +140,25 @@ ResidApp puede enviar avisos genéricos por correo a las familias cuya direcció
 
 Estos avisos **no dicen** el nombre de la persona residente, ni el centro, ni la hora, ni el motivo, ni nada de salud. Solo te piden que entres en ResidApp; el recordatorio dice, además, que tienes una cita mañana. El remitente es «ResidApp» y no se puede responder al correo: si necesitas algo, llama al centro.
 
-- El aviso solo se envía a una dirección que el centro **ha confirmado contigo** y mientras tengas acceso al Portal Familiar.
-- Es **voluntario**. Para dejar de recibirlos, díselo a tu centro: no tienes que explicar por qué ni hace falta borrar tu dirección. La baja vale para ese centro y el centro anota desde cuándo. Verás las novedades igualmente al entrar en ResidApp.
+- Los avisos sobre citas solo se envían a una dirección que el centro **ha confirmado contigo** y mientras tengas acceso al Portal Familiar.
+- Es **voluntario**. Para dejar de recibirlos, díselo a tu centro: no tienes que explicar por qué ni hace falta borrar tu dirección. La baja vale para ese centro y quedan anotados desde cuándo y qué persona de Administración la apuntó. Verás las novedades igualmente al entrar en ResidApp.
 - Los avisos que no se envíen mientras estás de baja no se mandan después, salvo el de una cita fuera del centro que toque el mismo día en que se vuelvan a activar. Para volver a recibirlos, pídeselo a tu centro.
 - ResidApp **no** mide si abres el correo ni si pulsas el enlace.
 - **Por tu seguridad:** ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje. Si recibes un aviso que no esperabas, ignóralo y cuéntaselo al centro.
-- Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío **sin el contenido ni la dirección**: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió y, en el recordatorio y en los avisos de citas fuera del centro, el día de la cita.
+- Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío **sin el contenido ni la dirección**: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió y, en el recordatorio y en los avisos de citas fuera del centro, el día de la cita. **(con código)** Los envíos del código se anotan aparte (apartado 2.2) y el aviso de cambio de correo, en este mismo registro.
+
+### El código para entrar en el Portal Familiar **(con código)**
+
+Si entras solo como familiar, necesitas tu **contraseña** y un **código de 6 cifras** que te enviamos por correo cada vez que entras, también cuando usas una invitación. Si además trabajas en el centro, entras como el personal.
+
+- El código sirve **una sola vez** y caduca en **10 minutos**. Si no llega, mira el correo no deseado, pide otro o llama a tu centro.
+- **Límites por seguridad:** hay que esperar 60 segundos para pedir otro; como máximo 5 por hora y 10 al día; 5 intentos por código. Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos. Con 15 códigos fallidos en 24 horas no podrás entrar hasta que la Administración de tu centro te entregue una invitación nueva.
+- El correo del código no lleva nombres, datos de salud ni enlaces. ResidApp **nunca te pedirá el código** por teléfono ni por mensaje: no se lo des a nadie.
+- ¿Te llega un código sin estar intentando entrar? Puede que alguien sepa tu contraseña: cámbiala en «Mi cuenta» y avisa a tu centro.
+- Usa en ResidApp una **contraseña distinta de la de tu correo**. Quien pueda leer tu correo (por ejemplo, si lo compartes) verá el código.
+- **Si cambia tu correo:** cuando la Administración cambia o borra la dirección, se cierran tus sesiones, deja de valer el código pendiente y ResidApp intenta enviar un aviso, sin nombres, a la dirección anterior. Si no lo has pedido tú, llama a tu centro.
+- **Sin correo no hay portal.** Si no tienes correo o no quieres darlo, no podrás usarlo: tu centro te atiende en persona o por teléfono. **[PENDIENTE: cada centro confirma cómo lo hace]**
+- **Darte de baja de los avisos no te quita el acceso:** el código y el aviso de cambio de correo te siguen llegando, porque son de seguridad.
 
 ## 6. Dictado por voz (módulo opcional)
 
@@ -188,6 +211,8 @@ El plazo lo fija el centro (como responsable) y la ley. ResidApp aplica lo que e
 | Sesiones abiertas y cerradas | **[PENDIENTE]** | Sin decidir |
 | Registro de envíos de correo (sin contenido ni dirección) | Máximo 12 meses; se borra solo | **[PENDIENTE: confirmación de la persona experta]** |
 | Registros de entrega del servicio de correo de Microsoft | **[PENDIENTE: previsto 30 días en un espacio propio en la UE]** | Sin configurar |
+| Baja de los avisos | En la ficha mientras dure la baja; se quita al reactivar o al anonimizar. El registro de los cambios y las bajas solo de citas fuera del centro no se pueden borrar hoy | **[PENDIENTE: plazo y vía de borrado]** |
+| **(con código)** Registro de los códigos de acceso | 30 días desde que se creó cada código (propuesta); la huella se borra antes | **[PENDIENTE: lo decide una persona experta; no es un plazo legal]** |
 | Foto | Hasta que se cambia, se quita o se da de baja a la persona | Según lo descrito en el apartado 7 |
 | Audio y texto del dictado | ResidApp no los guarda | **[PENDIENTE: lo que conserva Mistral]** |
 | Historial de módulos de cada centro (cuándo se activó, renovó o apagó un módulo, con la fecha y el canal de la petición del centro, un código de referencia y la cuenta de la persona de ResidApp que hizo el cambio; sin datos de residentes, no se puede modificar ni borrar desde la aplicación) | **[PENDIENTE]** | Sin decidir |
@@ -200,10 +225,10 @@ Estas empresas son **subencargadas**: trabajan para ResidApp, que trabaja para e
 | Empresa | Para qué | Cuándo interviene |
 |---|---|---|
 | **Microsoft Azure** | Alojar la aplicación (servidor web) y la base de datos donde se guardan todos los datos | Siempre. Región: **[PENDIENTE: región de Azure del servicio; se prefiere la Unión Europea]** |
-| **Microsoft Azure Communication Services** | Enviar los avisos por correo del apartado 5 | Solo si el servicio de avisos está encendido y solo para las familias cuya dirección el centro ha anotado y confirmado |
+| **Microsoft Azure Communication Services** | Enviar los avisos por correo del apartado 5 y, **(con código)**, el código de acceso y el aviso de cambio de correo | Avisos: solo a direcciones confirmadas y sin baja. **(con código)** Código: en cada entrada de una familia; aviso de cambio: a la dirección anterior |
 | **Mistral AI** | Pasar a texto el dictado y proponer la sugerencia del apartado 6 | Solo en los centros que tienen activo el módulo de dictado por voz y mientras esté vigente; en los demás no recibe nada |
 
-**Transferencias fuera de la Unión Europea.** ResidApp no tiene previsto enviar datos fuera de la UE. **[PENDIENTE: confirmar región real de Azure y de Mistral.]** Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas. En nuestros avisos solo viajaría una dirección de correo y la hora de envío. **[PENDIENTE: garantía aplicable a esas transferencias, por ejemplo cláusulas contractuales tipo o certificación del proveedor.]**
+**Transferencias fuera de la Unión Europea.** ResidApp no tiene previsto enviar datos fuera de la UE. **[PENDIENTE: confirmar región real de Azure y de Mistral.]** Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas. Por ese servicio pasan la dirección de correo, el texto del mensaje (sin nombres ni datos de salud; el correo de acceso incluye el código) y la fecha y la hora del envío. **[PENDIENTE: garantía aplicable a esas transferencias, por ejemplo cláusulas contractuales tipo o certificación del proveedor.]**
 
 **Fuentes de letra de Google en dos páginas de ayuda.** Las páginas «Flujo de trabajo» y «Acceso y sesión» (enlazadas en el pie de la aplicación del personal) cargan los tipos de letra desde Google. Al abrirlas, tu navegador se conecta con Google y le llega tu dirección IP. **[PENDIENTE: ResidApp va a servir esas letras desde su propio servidor; retirar este párrafo cuando esté hecho.]** El resto de la aplicación no carga nada de terceros.
 
@@ -223,7 +248,7 @@ Dónde se pone cada cookie: solo en el sitio de la aplicación, sin compartirse 
 | `residapp_active_scope` | Recuerda el centro y el perfil con el que estás trabajando. No da acceso por sí sola: el servidor comprueba siempre tu permiso | Al elegir centro y perfil (personal y familias) | Hasta que cierres el navegador, cambies de perfil o pulses «Salir» |
 | `residapp_clinical_access` | Solo para Dirección Clínica: recuerda la declaración que haces antes de consultar el detalle clínico de una persona residente | Al hacer esa declaración | Hasta **1 hora**; se borra al cambiar de perfil o al salir |
 | `residapp_transfer_history` | Solo para Enfermería y Medicina: recuerda que has pedido ver el historial anterior de una persona residente trasladada de unidad | Al pedirlo | Hasta **1 hora**; se borra al cambiar de perfil o al salir |
-| `residapp_acceso_pendiente` | Recuerda que ya has puesto bien la contraseña y falta el segundo paso (código). Va cifrada | Entre la contraseña y el código | **10 minutos** |
+| `residapp_acceso_pendiente` | Recuerda que has puesto bien la contraseña (o usado una invitación) y que falta el segundo paso: el código del móvil o, **(con código)**, el del correo. Guarda identificadores, nunca la contraseña ni el código. Va cifrada | Entre la contraseña y el segundo paso | **10 minutos** |
 | `residapp_invitacion` | Recuerda la invitación que estás usando para crear tu acceso. Va cifrada | Al abrir el enlace de invitación | **30 minutos** |
 | `residapp_passkey` | Guarda el paso intermedio al entrar o registrar una llave de acceso. Va cifrada y se usa una sola vez | Al entrar con llave de acceso o al registrarla | **5 minutos** |
 | `.AspNetCore.Antiforgery.…` **[PENDIENTE: confirmar el nombre exacto en el navegador]** | Impide que otra web envíe formularios en tu nombre (protección «antifalsificación») | Al abrir una pantalla con formulario | Hasta que cierres el navegador |
@@ -251,7 +276,7 @@ Medidas principales, explicadas sin tecnicismos:
 - **Solo entra quien tiene cuenta.** Todas las pantallas piden iniciar sesión, salvo esta página, el manual, la ayuda y la pantalla de entrada. Las cuentas las crea el centro, no se pueden crear por cuenta propia.
 - **Permiso para cada cosa.** El servidor comprueba en cada petición quién eres, con qué perfil actúas y a qué residentes y unidades llega tu permiso. **Lo que no está permitido expresamente, se deniega.**
 - **Cada centro, separado.** Los datos de un centro no se mezclan con los de otro: las reglas están en el servidor y en la propia base de datos.
-- **Contraseña larga y segundo paso.** La contraseña debe tener al menos 12 caracteres. El personal usa además un **segundo factor**: un código temporal que genera una aplicación en su móvil, que se pide en cada entrada. El personal puede entrar también con una **llave de acceso («passkey»)**, que es una credencial que se desbloquea en tu dispositivo con la huella, la cara o el PIN y que solo funciona en la web de ResidApp (disponible cuando el servicio la tiene activada). Las familias entran con usuario y contraseña.
+- **Contraseña larga y segundo paso.** La contraseña debe tener al menos 12 caracteres. El personal usa además un **segundo factor**: un código temporal que genera una aplicación en su móvil, que se pide en cada entrada. El personal puede entrar también con una **llave de acceso («passkey»)**, que es una credencial que se desbloquea en tu dispositivo con la huella, la cara o el PIN y que solo funciona en la web de ResidApp (disponible cuando el servicio la tiene activada). **(con código)** Las familias usan además un código de un solo uso que llega a su correo (apartado 5); esta protección no basta si otra persona puede leer tu correo o si una web falsa te pide la contraseña y el código. Mientras el código no está encendido, las familias solo pueden entrar con usuario y contraseña en los entornos de prueba.
 - **Frenos a los intentos repetidos.** Tras 5 fallos seguidos (contraseña o código), la cuenta se bloquea 15 minutos. También se limitan los intentos por dirección IP.
 - **Entrega de accesos.** Las invitaciones para crear un acceso son de un solo uso, caducan a las 72 horas y el centro puede anularlas.
 - **Sesiones con tiempo límite** y que se pueden cerrar desde «Mi cuenta». Cerrar sesión la invalida también en el servidor.
@@ -267,7 +292,7 @@ Tienes derecho a:
 
 - **Acceso:** saber qué datos tuyos se tratan y recibir una copia.
 - **Rectificación:** corregir datos incorrectos o incompletos.
-- **Supresión:** pedir que se borren tus datos. Si lo pides, el centro borra tu nombre, teléfono y correo en ResidApp y cierra tu acceso. Lo que la ley manda conservar (la documentación clínica y los registros de seguridad) se conserva mientras dure la obligación. **[PENDIENTE: una persona experta decide si, además, hay que guardar aparte los datos suprimidos (bloqueo, art. 32 LOPDGDD) y durante cuánto tiempo]**
+- **Supresión:** pedir que se borren tus datos. Si lo pides, el centro borra tu nombre, teléfono y correo en ResidApp y cierra tu acceso. **(con código)** Si pides que se borre solo tu correo, se borra, pero ya no podrás entrar en el portal. Lo que la ley manda conservar (la documentación clínica y los registros de seguridad) se conserva mientras dure la obligación. **[PENDIENTE: una persona experta decide si, además, hay que guardar aparte los datos suprimidos (bloqueo, art. 32 LOPDGDD) y durante cuánto tiempo]**
 - **Oposición:** oponerte a un tratamiento basado en el interés legítimo o en una misión pública.
 - **Limitación:** pedir que se congele el uso de tus datos mientras se resuelve una duda o reclamación.
 - **Portabilidad:** recibir los datos que nos diste en un formato de uso común, cuando la base del tratamiento sea tu consentimiento o un contrato.
@@ -324,11 +349,11 @@ La página debe decir solo lo que existe. Estado a 2026-11-03:
 |---|---|---|
 | Cuentas, sesión, contraseña, TOTP, códigos de recuperación, invitaciones, «Mi cuenta» | Hecho (ADR 0007, I0 a I3) | Descrito |
 | Passkeys | Hecho, pero **solo si `Acceso:PasskeyDominio` está configurado** (ADR 0007, I4) | «cuando el servicio la tiene activada» |
-| Segundo factor de familiares | **No**: solo contraseña (ADR 0007, tabla I1, «familiares solo con contraseña hasta que CJ responda la 3.2»). CJ eligió código por correo (ADR 0012, líneas 17 y 18) y **no está construido** | Dice «Las familias entran con usuario y contraseña» |
+| Segundo factor de familiares | **Código por correo** (scripts `0121` a `0123`, ADR 0012, pieza 3), **apagado por defecto**; apagado, solo un entorno declarado de desarrollo deja entrar a las familias, con la contraseña | Dos textos según esté encendido o no (secciones 2.2, 5 y 11) |
 | Pulsera NFC con PIN (I5), NFC en camas | **No construido** (ADR 0007, línea 76; ADR 0009, línea 4) | No aparece |
 | Aviso de propuesta de cita por correo | Construido, **apagado por defecto** (ADR 0012, línea 58) | «El centro puede tener activados…» |
 | Aviso de cambio o cancelación | Construido, **apagado por defecto** (ADR 0012, línea 63) | Ídem |
-| Recordatorio del día antes, código de acceso por correo | **No construidos** (ADR 0012, líneas 75 y 76) | No aparecen |
+| Recordatorio del día antes, código de acceso por correo | **Construidos** y apagados por defecto (ADR 0012, piezas 2 y 3) | Descritos en la sección 5 |
 | Casilla «Dirección confirmada» | Construida el 2026-11-02, script `0084` (ADR 0012, línea 75) | Descrita |
 | Registro de envíos y purga a 12 meses | Construido (`0081`, `0085`); la purga exige la conexión `ResidAppTareas` (`antes-de-datos-reales.md`, línea 105) | «Máximo 12 meses», con marcador |
 | Dictado por voz | Construido, **sin clave de Mistral en Azure** (dossier, línea 144), **sin contrato ni EIPD** | Sección 6, con marcador de estado |
@@ -336,7 +361,7 @@ La página debe decir solo lo que existe. Estado a 2026-11-03:
 | Idioma catalán / cookie de idioma | **No construido** (ADR 0013, línea 3; no existe ninguna cookie de idioma en `src/`) | La página dice «solo en castellano»; no hay cookie de idioma en la tabla |
 | Landings `.es` / `.cat` | No construidas (`antes-de-datos-reales.md`, línea 73) | Fuera de alcance de esta política (otro responsable: ResidApp; ver `landings-y-passkeys-por-subdominio.md`, línea 27) |
 
-Si se activa alguna de las no construidas, hay que actualizar la página antes (por ejemplo, cookie de idioma, segundo factor de familias, recordatorio).
+Si se activa alguna de las no construidas, hay que actualizar la página antes (por ejemplo, la cookie de idioma).
 
 ## B3. Cookies y almacenamiento: inventario verificado
 
@@ -350,7 +375,7 @@ Búsqueda en `src/` de `Response.Cookies`, `AddCookie`, `localStorage`, `session
 | `residapp_active_scope` | `ActiveProfileScopeCookie.cs`, líneas 17 a 28 | HttpOnly, Lax, `IsEssential`, sin caducidad (de sesión). **Valor en Base64 de un JSON sin cifrar**: ids del ámbito y del centro, **nombre del centro** y perfil. No concede acceso (SQL revalida, líneas 9 a 14 del mismo archivo) |
 | `residapp_clinical_access` | `ClinicalAccessDeclarationCookie.cs`, líneas 11 a 19 | Solo el id de la declaración. Duración de la declaración: 60 min (`appsettings.json`, línea 16) |
 | `residapp_transfer_history` | `TransferHistoryCookie.cs`, líneas 10 a 18 | Solo el id de la petición. La petición vale 1 h (`historial-tras-traslado-01`, línea 38) |
-| `residapp_acceso_pendiente` | `PendingAccessCookie.cs`, líneas 18, 19 y 27 | Cifrada por Data Protection, 10 min, `Path=/Acceso`, Strict |
+| `residapp_acceso_pendiente` | `PendingAccessCookie.cs`, líneas 10 a 32 | Cifrada por Data Protection, 10 min, `Path=/Acceso`, Strict. Sirve al paso del código del móvil y al del código del correo (cuenta, sello de seguridad, destino y envío del código) |
 | `residapp_invitacion` | `InvitationCookie.cs`, líneas 13, 14 y 20 | Cifrada, 30 min, `Path=/Acceso`, Strict. Lleva el resumen del token, no el token |
 | `residapp_passkey` | `PasskeyStateCookie.cs`, líneas 24, 25 y 32 | Cifrada, 5 min, un solo uso, Strict |
 | `residapp_cj_acceso` | `PendientesCjAccess.cs`, líneas 14 y 52 a 58 | De sesión, HttpOnly, Lax. Solo se crea tras escribir la clave de `/pendientes-cj` |
@@ -421,7 +446,7 @@ La responsable es la residencia, así que **la base la elige y documenta ella**.
 6. **Sección 7 (foto).** Fotografía + sexo + fecha de nacimiento + nombre en una base de residentes: es dato personal reforzado por el contexto, aunque no sea biométrico mientras no se use para reconocimiento. Solo la ven cuatro perfiles (`0059`, líneas 5 a 8). Una foto se renueva a los 12 meses (`ResidentPhoto.cs` / `ResidentPhotoConsent.cs`, línea 29); es un aviso, no un borrado. **[Decidir]** CJ y el DPO si se debe borrar al cabo de un plazo.
 7. **Sección 8 (plazos).** Seis filas con [PENDIENTE]. La más importante es la de la documentación clínica (B4.1). `eventos_acceso` guarda IP y no tiene plazo (ADR 0007, línea 104).
 8. **Sección 9 (Google Fonts).** Obligada por B4.3 hasta que se corrija. La política no puede decir «no se carga nada de terceros» mientras eso exista.
-9. **Sección 11 (seguridad).** Descripción de medidas verificadas: contraseña de 12 o más (ADR 0007, línea 70), TOTP obligatorio al personal (línea 70), bloqueo 5 fallos y 15 minutos (línea 70), invitación de 72 h (línea 71), sesión 30 min y 12 h (`appsettings.json`, líneas 18 a 21), cookies HttpOnly y Secure (`Program.cs`, líneas 158 a 162 y 191 a 194), TDE (`hallazgos.md`, línea 83), auditoría inmutable (`hallazgos.md`, línea 313). **Dos límites que la política no menciona a propósito:** el TOTP se guarda en claro en `dbo.credenciales` (ADR 0007, línea 97) y las familias entran sin segundo factor. No son datos que haya que decir en una política de privacidad, pero el DPO debe conocerlos: son puertas abiertas del proyecto.
+9. **Sección 11 (seguridad).** Descripción de medidas verificadas: contraseña de 12 o más (ADR 0007, línea 70), TOTP obligatorio al personal (línea 70), bloqueo 5 fallos y 15 minutos (línea 70), invitación de 72 h (línea 71), sesión 30 min y 12 h (`appsettings.json`, líneas 18 a 21), cookies HttpOnly y Secure (`Program.cs`, líneas 158 a 162 y 191 a 194), TDE (`hallazgos.md`, línea 83), auditoría inmutable (`hallazgos.md`, línea 313). **Dos límites que la política no menciona a propósito:** el TOTP se guarda en claro en `dbo.credenciales` (ADR 0007, línea 97) y el segundo paso de la familia es un código por correo, apagado por defecto y más débil que el del personal. No son datos que haya que decir en una política de privacidad, pero el DPO debe conocerlos: son puertas abiertas del proyecto.
 10. **Sección 12 (derechos).** Compromiso de que ResidApp traslade las peticiones al centro: es una obligación de asistencia del encargado (art. 28.3.e), pero hoy **no hay contrato de encargado firmado con ningún centro**. Por eso lleva marcador.
 11. **Idioma.** Solo castellano, por ahora. La referencia a la normativa catalana de documentación clínica está en B4.1 y B5; la parte A no la cita en el texto público porque la cita exacta depende de que el DPO confirme cuál aplica. Puedo redactar la versión catalana cuando se pida, tras el ADR 0013.
 
@@ -497,3 +522,7 @@ Repositorio (archivos y líneas citados). Fuentes externas, **todas leídas a tr
 - BOE (DOUE), Reglamento (UE) 2016/679, art. 12.3: `https://www.boe.es/buscar/doc.php?id=DOUE-L-2016-80807`.
 - AEPD, nota de prensa de la actualización de la guía de cookies (11/07/2023): `https://www.aepd.es/prensa-y-comunicacion/notas-de-prensa/aepd-actualiza-guia-cookies-para-adaptarla-a-nuevas-directrices-cepd`. La guía misma no se abrió.
 - Datos de Microsoft ACS y de Mistral: no consultados de nuevo; proceden de `docs/privacidad/aviso-cita-por-correo.md` (consultado el 2026-10-30) y `docs/seguridad/dictado-por-voz-dossier-dpo.md` (2026-10-23). Los términos de un proveedor cambian: releerlos antes de publicar.
+
+## Cambios del PR 4 (2026-11-26)
+
+Lectura de `dpo-residapp`, por validar por una persona. La parte A y la vista recogen el código de acceso (textos condicionados a que esté encendido), la baja de avisos con su fecha y quién la anota, las entradas, sesiones y auditoría de la familia (faltaban, y no dependen del código) y qué pasa por el servicio de correo (antes se decía que solo la dirección y la hora).

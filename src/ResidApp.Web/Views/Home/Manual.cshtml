@@ -26,9 +26,9 @@
         <li><strong>Familiar:</strong> el Portal Familiar, con las novedades de su residente, las citas con el centro y, si el centro lo abre, sus citas fuera del centro (en las que puede ofrecerse a llevar o acompañar).</li>
         <li><strong>Plataforma:</strong> alta de centros nuevos, Administración principal de cada centro, módulos opcionales de cada centro, cuentas que trabajan en varios centros y los documentos de apoyo de la plataforma.</li>
     </ul>
-    Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, el personal, además
-    con un código de su móvil, o con una <strong>passkey</strong> («llave de acceso» guardada en tu móvil o portátil, que se desbloquea con la
-    huella, la cara o el PIN). La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
+    Lo que falta aparece al final, en "Próximamente". Se entra con <strong>usuario y contraseña</strong> y, además,
+    el personal con un código de su móvil y la familia con un código que le llega por correo. El personal puede entrar en su lugar con una
+    <strong>passkey</strong> («llave de acceso» guardada en tu móvil o portátil, que se desbloquea con la huella, la cara o el PIN). La contraseña la elige cada persona con la <strong>invitación</strong> que le entrega Administración. En
     el entorno de pruebas se entra con las mismas pantallas, pero las cuentas ya están dadas de alta (ver "Cuentas de prueba").
     <p class="mt-2 mb-0">
         <strong>Al guardar o enviar:</strong> el botón muestra un círculo giratorio mientras el servidor responde. Una vez enviado,
@@ -120,7 +120,17 @@
         contraseña la app te pedirá otra invitación. A partir de ahí, cada vez que entres te pide el código del móvil; si un día no lo
         tienes, «Usa un código de recuperación» te deja entrar con uno de ellos, y cada uno sirve una vez. Los códigos de 6 cifras
         equivocados también cuentan para el bloqueo. Si pasan más de 10 minutos entre la contraseña y el código, hay que volver a
-        escribir la contraseña. Los familiares entran, por ahora, solo con la contraseña.
+        escribir la contraseña. Los familiares no usan el código del móvil: su segundo paso es un código por correo.
+    </p>
+    <p>
+        <strong>La familia entra con un código por correo.</strong> Después del usuario y la contraseña (y también justo después de elegirla con una invitación) se abre
+        «Código del correo»: ResidApp manda un código de 6 cifras a la dirección que consta en la ficha del familiar, con el asunto «Tu código para entrar en ResidApp», desde
+        <code>no-responder@avisos.residapp.es</code> (si no aparece, hay que mirar el correo no deseado). Se escribe en «Código» y se pulsa «Comprobar»; sirve una sola vez y
+        caduca en 10 minutos. «Enviar otro código» manda uno nuevo y deja sin valor el anterior: entre uno y otro hay que esperar un minuto, con un máximo de 5 por hora y 10 en
+        24 horas, contando el de cada entrada. Un código equivocado cuenta como fallo: 5 fallos seguidos, de contraseña o de código, bloquean la cuenta 15 minutos (acertar la
+        contraseña no borra los fallos), y con 15 códigos fallidos en 24 horas no se vuelve a entrar hasta que Administración entregue una invitación de recuperación. ResidApp
+        nunca pide el código por teléfono ni por mensaje. Quien no tiene correo, o no quiere darlo, no usa el portal: se le atiende en persona o por teléfono. Si el código no se
+        puede enviar, no se entra: hay que llamar al centro.
     </p>
     <p>
         Si has registrado una <strong>passkey</strong> («llave de acceso»: una credencial guardada en tu móvil o portátil que se desbloquea con
@@ -131,7 +141,8 @@
     <p>
         <strong>Si olvidas la contraseña o pierdes el móvil</strong>, pide a la Administración de tu centro una <strong>invitación de
         recuperación</strong>. Al usarla eliges otra contraseña, preparas de nuevo el código del móvil (el anterior deja de valer), se
-        borran tus passkeys (tendrás que registrarlas de nuevo) y se cierran las sesiones que tuvieras abiertas en cualquier dispositivo.
+        borran tus passkeys (tendrás que registrarlas de nuevo) y se cierran las sesiones que tuvieras abiertas en cualquier dispositivo. A la familia le sirve igual si olvida
+        la contraseña o si ResidApp le pide una invitación nueva tras demasiados códigos fallidos: elige otra contraseña, se cierran sus sesiones y recibe un código por correo.
     </p>
     <p>
         Al entrar en la app, si tu cuenta puede actuar con un único perfil (por ejemplo, Enfermería) en un
@@ -198,7 +209,7 @@
             cuenta. Aceptar no te da acceso: la Administración de ese centro tiene que confirmar que eres tú. Después, al entrar, eliges con qué
             centro trabajas, y cada centro solo ve lo suyo.</li>
         <li><strong>Últimos accesos a tu cuenta</strong>: las entradas, los fallos y los cambios recientes, con los fallos marcados. Si ves uno
-            que no reconoces, cambia la contraseña y avisa a la Administración de tu centro.</li>
+            que no reconoces, cambia la contraseña y avisa a la Administración de tu centro. En una cuenta de familia, un código erróneo figura como «Código del correo incorrecto».</li>
     </ul>
     <p>
         Cada ficha lleva un color distinto en su título para reconocerla de un vistazo. Cada cambio que haces aquí (contraseña cambiada, passkey añadida
@@ -234,7 +245,7 @@
 <section id="cuentas-prueba" class="mb-4">
     <h2 class="h5">Cuentas de prueba y cómo cambiar de usuario</h2>
     <p>
-        En el entorno de pruebas se entra con las mismas pantallas que en un centro real (usuario, contraseña y, el personal, código del móvil), pero las
+        En el entorno de pruebas se entra con las mismas pantallas que en un centro real (usuario y contraseña y, además, el personal el código del móvil y la familia un código que llega al correo de su ficha), pero las
         cuentas de CJ las dio de alta Orlando y es él quien le da su contraseña; después se puede añadir una passkey. No hay otra forma de entrar.
         Para <strong>cambiar de usuario</strong>, pulsa «Salir» y entra con la otra cuenta. Si una cuenta tiene más de un ámbito, la app te
         pide elegir con cuál trabajas.
@@ -269,7 +280,7 @@
                 <tr><td><code>almendros-enfermeria</code></td><td>Enfermería</td><td>Las dos plantas, con permiso de basal, de la ficha de antecedentes y de las citas externas; miembro de los equipos de las dos plantas. Ninguna cuenta de prueba trae el permiso de trasladar: para probarlo, concédeselo a esta desde Usuarios, en el perfil de la cuenta, sección Permisos.</td></tr>
                 <tr><td><code>almendros-enfermeria-planta1</code></td><td>Enfermería</td><td>Solo la Planta 1, con los mismos permisos; sirve para probar el historial tras un traslado.</td></tr>
                 <tr><td><code>almendros-auxiliar</code></td><td>Auxiliar</td><td>Planta 1, con cinco residentes en «Mis residentes»: Rosa, Antonio, Carmen, Lucía y Manuel.</td></tr>
-                <tr><td><code>almendros-elena</code></td><td>Familiar</td><td>Elena, hija de Rosa, en el Portal Familiar.</td></tr>
+                <tr><td><code>almendros-elena</code></td><td>Familiar</td><td>Elena, hija de Rosa, en el Portal Familiar. Entra con su contraseña y el código que llega al correo puesto en su ficha.</td></tr>
             </tbody>
         </table>
     </div>
@@ -468,7 +479,7 @@
     <p>
         <strong>Al dar de alta a un residente</strong> (Administración, o Enfermería con permiso) puedes registrar en el mismo formulario a sus
         familiares de contacto prioritario, referentes y tutores legales: hasta tres filas, cada una con nombre, relación, teléfono y, si
-        quieres, correo (el correo del alta queda sin confirmar y no se le envía ningún aviso hasta que lo confirmes después, desde «Editar familiar»), y las marcas «Familiar referente», «Tutor legal» y «Contacto prioritario» (un familiar puede tener varias). Tiene que haber al menos un
+        quieres, correo (el correo del alta queda sin confirmar y no se le envía ningún aviso hasta que lo confirmes después, desde «Editar familiar»; sí sirve para el código con el que esa persona entra en el portal), y las marcas «Familiar referente», «Tutor legal» y «Contacto prioritario» (un familiar puede tener varias). Tiene que haber al menos un
         <strong>contacto prioritario</strong> (es el contacto urgente) y puede haber varios. Si el residente no tiene a nadie a quien avisar (por ejemplo,
         «sin familia conocida»), no marques ninguno y escribe el <strong>motivo</strong>: queda anotado en la ficha. Las filas en blanco se ignoran; una fila a medias, no. El alta no se guarda sin
         un contacto prioritario o un motivo; la ficha avisa si el residente no tiene familiares o ninguno es de contacto, referente o tutor (salvo que conste el motivo). Los
@@ -478,21 +489,30 @@
     <p>
         En la ficha administrativa, la sección <strong>Familiares</strong> lista los familiares del residente con su
         relación, teléfono, correo y el estado de su autorización. Con <strong>Añadir familiar</strong> escribes nombre,
-        relación (por ejemplo, «Hija»), teléfono y, si quieres, el «Correo para avisos de ResidApp». Añadir un familiar no le da acceso a nada.
+        relación (por ejemplo, «Hija»), teléfono y el «Correo para entrar en el portal y para avisos de ResidApp», que en la ficha es opcional pero imprescindible para quien vaya a entrar en el portal. Añadir un familiar no le da acceso a nada.
         <strong>Dirección confirmada con la familia.</strong> Debajo del correo hay una casilla, que nunca viene marcada: «Dirección confirmada con la familia: se la he leído a la persona a quien
         pertenece y me ha dicho que es correcta». Márcala solo si de verdad le has leído la dirección despacio (letra a letra si hace falta) y te ha dicho que es correcta; si no has podido, déjala sin marcar:
-        no pasa nada, simplemente <strong>no se envía ningún aviso por correo a esa dirección</strong>. Al confirmarla, dile también que los avisos salen de <code>no-responder@avisos.residapp.es</code> y que, si no ve alguno, mire el correo no deseado
+        no pasa nada, simplemente <strong>no se envía ningún aviso por correo a esa dirección</strong> (el código para entrar le llega igual). Al confirmarla, dile también que los avisos salen de <code>no-responder@avisos.residapp.es</code> y que, si no ve alguno, mire el correo no deseado
         y añada esa dirección a sus contactos (en una prueba con Outlook.com, el primer aviso llegó a «Correo no deseado»). Si la marcas sin haber escrito el correo, la pantalla te dice «Escribe el correo para poder confirmarlo.».
         Si cambias o borras la dirección y no vuelves a marcar la casilla, la confirmación se pierde y hay que volver a confirmarla. Si alguien te pide que no le manden más avisos, da de baja a esa persona en <strong>Avisos por correo</strong> (se explica a continuación); no borres la
-        dirección ni quites la confirmación para eso. Un aviso que se omitió por falta de confirmación no se manda más tarde aunque confirmes después. En la ficha del residente, cada familiar con correo dice «Correo sin confirmar: ResidApp no
+        dirección ni quites la confirmación para eso: sin correo no podría entrar en el portal. Un aviso que se omitió por falta de confirmación no se manda más tarde aunque confirmes después. En la ficha del residente, cada familiar con correo dice «Correo sin confirmar: ResidApp no
         enviará avisos a esta dirección.» o «Dirección confirmada el dd/mm/aaaa.» (la fecha, no quién la confirmó).
         <strong>Editar</strong> cambia esos datos; el cambio queda en la auditoría (si la función está activada, al final de esa pantalla está «Anonimizar a este familiar…», explicado más abajo). Si la dirección está confirmada, la pantalla de edición lo dice con la fecha y ofrece «Quitar la confirmación de la dirección», que quita solo la confirmación: úsalo si la dirección es dudosa o un aviso llegó a quien no debía. Si otra persona de Administración cambia al mismo
         familiar mientras tú lo editas, al guardar la app no pisa su cambio: te enseña los datos actuales y te pide que los revises y
         vuelvas a guardar.
     </p>
     <p>
+        <strong>Cambiar el correo de quien entra en el portal.</strong> Si el familiar tiene cuenta, la pantalla de edición avisa: «Esta persona entra con un código enviado a este
+        correo.» Comprueba que es ella quien pide el cambio (en persona o llamando al teléfono que ya consta). Si cambias o borras una dirección que ya había (cambiar solo
+        mayúsculas no cuenta), se cierran sus sesiones, su código sin usar deja de valer y se manda a la dirección anterior el correo «Cambio en tu cuenta de ResidApp» (si la
+        cuenta también es de personal, no). Al guardar lees «Datos del familiar guardados. Se han cerrado sus sesiones abiertas.» y «Aviso enviado a la dirección anterior; no
+        podemos asegurar que llegue.» o «No consta que el aviso a la dirección anterior haya salido: avise por teléfono.»; si la has borrado, además «Sin correo no podrá entrar en
+        el portal.» Si una cuenta con acceso se queda sin correo, «Autorización» avisa «Ahora mismo no puede entrar: no tiene correo en su ficha y allí recibe el código.» y la
+        ficha del residente dice «Tiene acceso al portal, pero sin correo no puede entrar.»
+    </p>
+    <p>
         <strong>Avisos por correo.</strong> En la pantalla de edición, debajo del formulario, este apartado dice si la persona está de baja de los avisos. Con
-        <strong>Dar de baja de los avisos</strong> deja de recibir todos los avisos sobre citas (propuesta, cambio, recordatorio y citas fuera del centro) de todos sus residentes del centro; no
+        <strong>Dar de baja de los avisos</strong> deja de recibir todos los avisos sobre citas (propuesta, cambio, recordatorio y citas fuera del centro) de todos sus residentes del centro. El código para entrar y el aviso de seguridad por cambio de correo le siguen llegando. No
         tiene que explicar por qué, y no hace falta que tenga correo. La baja se mantiene aunque cambies, borres o confirmes su dirección. En la pantalla de edición se lee «De baja de los avisos desde el
         dd/mm/aaaa.» y en la ficha del residente, «De baja de los avisos por correo desde el dd/mm/aaaa.». Lo que no se envíe mientras está de baja no se envía después, salvo el aviso de una cita fuera del centro que toque el mismo día en que se
         reactive. Para volver a activarlos, solo si esa persona te lo pide, marca <strong>Esta persona me ha pedido volver a recibir los avisos</strong> y pulsa <strong>Volver a activar los
@@ -2061,14 +2081,18 @@
     <h2 class="h5">Portal Familiar</h2>
     <p>
         El Portal Familiar es la parte de la aplicación para las familias. Su dirección es <code>/Familia</code>; se entra con el usuario
-        que escribe Administración y la contraseña que la persona elige con su invitación.
+        que escribe Administración, la contraseña que la persona elige con su invitación y, cada vez, un código de 6 cifras que llega al correo de su ficha (ver «Entrar y elegir tu
+        ámbito de trabajo»). Sin correo no se usa el portal: se atiende a la persona en persona o por teléfono.
     </p>
     <p>
         <strong>Cómo se da el acceso (Administración).</strong> En la ficha del residente, junto a su familiar, pulsa
         <strong>Autorización</strong>. Debajo del estado aparece <strong>Acceso al Portal Familiar</strong>: escribe el usuario con el
         que entrará la persona y pulsa <strong>Dar acceso al portal</strong>. Eso crea su cuenta, sin contraseña: debajo aparece
         <strong>«Crear invitación de acceso»</strong>, que da la hoja con la que elegirá su contraseña (como la del personal, pero sin
-        código del móvil), y después la de recuperación si la olvida. La cuenta no le da acceso a nada todavía:
+        código del móvil: la hoja le recuerda que le llegará un código por correo, que use una contraseña distinta de la de su correo y qué se hace con sus datos), y después la de
+        recuperación si la olvida o si ResidApp se la pide tras demasiados códigos fallidos. Si el familiar no tiene correo en su ficha, la pantalla avisa («Para entrar necesita un
+        correo en su ficha: allí recibe el código.», con «Añadir el correo») y no crea el acceso ni la invitación: «Este familiar no tiene correo en su ficha y lo necesita para
+        entrar en el portal: añádelo antes.» La cuenta no le da acceso a nada todavía:
         hay que <strong>abrir</strong> y <strong>activar</strong> la autorización. Mientras la autorización no esté Activa y sin caducar, la
         persona no ve a ningún residente. Suspender o revocar la autorización le corta el acceso en la petición siguiente. También se corta solo
         mientras el <strong>residente</strong> está suspendido (ingreso hospitalario) o de baja, y vuelve solo al terminar la suspensión o al reactivarlo,
@@ -2079,7 +2103,8 @@
     <p>
         <strong>Qué ve la familia.</strong> Elige a su residente (si solo tiene uno, entra directamente; el botón <strong>«Cambiar de residente»</strong> de la cabecera abre la lista
         de todos modos y, si solo hay uno, avisa de que no hay otro al que cambiar; junto a él, <strong>«Mi cuenta»</strong> abre la misma pantalla de cuenta que ve el personal, para
-        cambiar la contraseña o cerrar sesiones: ver «Mi cuenta») y lee las <strong>novedades
+        cambiar la contraseña o cerrar sesiones: ver «Mi cuenta»). En «Mis residentes» y en la pantalla del residente ve «Última entrada, sin contar esta: dd/mm/aaaa hh:mm. Si no fuiste tú,
+        cambia tu contraseña en Mi cuenta y avisa a tu centro.», o «No consta otra entrada.» Además lee las <strong>novedades
         publicadas</strong>: los comunicados que el equipo preparó al cerrar un evento, ya publicados (a su hora o antes, si Administración o
         Dirección Clínica los adelantaron). Cada uno muestra su tipo, cuándo se publicó y el texto vigente, firmado siempre como «Equipo
         asistencial del centro». Una novedad ordinaria se ve 30 días y una relevante, 6 meses, contados desde que se publicó. Lo publicado desde su
@@ -2103,7 +2128,7 @@
         Con el mismo equipo solo puede tener una cita próxima. Puede <strong>reprogramar</strong> o <strong>cancelar</strong> sus citas (con confirmación) hasta la antelación mínima
         del centro; después, por teléfono. Solo ve las citas que reservó ella misma. Si el centro reprograma o cancela una cita que reservó ella y el aviso por correo está activado, su dirección está confirmada y no está de baja de los avisos, puede recibir un correo genérico
         («Tienes un cambio en una cita en ResidApp») sin detalles: los ve al entrar en el portal. Ese correo sale de <code>no-responder@avisos.residapp.es</code>; si no lo ve, que mire el correo no deseado y añada esa dirección a sus contactos. No le llega si fue ella quien cambió o canceló la cita. Si el recordatorio está activado, el día antes de una cita confirmada que reservó ella (entre las 10:00 y las 18:59) puede recibir otro correo genérico
-        («Tienes una cita mañana en ResidApp»), sin hora ni detalles, con las mismas condiciones de dirección confirmada, sin baja y con acceso al portal; no le llega si reservó o movió esa cita ese mismo día. Para no recibir ningún aviso sobre citas, basta con que se lo pida al centro. Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
+        («Tienes una cita mañana en ResidApp»), sin hora ni detalles, con las mismas condiciones de dirección confirmada, sin baja y con acceso al portal; no le llega si reservó o movió esa cita ese mismo día. Para no recibir ningún aviso sobre citas, basta con que se lo pida al centro (el código para entrar le sigue llegando). Todas las pantallas recuerdan que las citas no son un canal urgente. Si el centro
         desactiva el servicio, no se ofrece reservar, pero las citas ya confirmadas se siguen viendo y se pueden cancelar.
     </p>
     <p>
@@ -2116,7 +2141,7 @@
         al centro. Al abrir una cita, si el transporte o el acompañante son de la familia y están pendientes, puede pulsar <strong>Me encargo yo del transporte</strong> o <strong>del acompañamiento</strong> (el primero que pulsa se
         queda esa parte; el resto ve «lo hará un familiar»), <strong>Ya no puedo encargarme</strong> para soltarlo o <strong>No puedo</strong> (y después <strong>Quitar el «No puedo»</strong>). Junto a los botones, la pantalla avisa de que el personal verá su nombre, de que es
         un aviso que el centro confirmará por su cuenta y de que no sustituye al teléfono. Si la cita cambia y su ofrecimiento deja de valer, lo dice. Si el centro lo enciende, puede recibir correos genéricos («Tienes un aviso sobre una cita en
-        ResidApp») a los 7 días y la víspera de cada cita, y a los 2 días otro si todavía falta algo que pueda cubrir la familia; no dicen el día, el lugar ni de qué es, y para no recibirlos se lo pide a la Administración del centro.
+        ResidApp») a los 7 días y la víspera de cada cita, y a los 2 días otro si todavía falta algo que pueda cubrir la familia; no dicen el día, el lugar ni de qué es, y para no recibirlos se lo pide a la Administración del centro (el código para entrar le sigue llegando).
     </p>
     <p>
         <strong>Solicitar una cita.</strong> Si el centro tiene la solicitud previa activa, en lugar de «Reservar una cita» aparece «Solicitar una cita»: elige el equipo y la modalidad,
@@ -2130,7 +2155,7 @@
     <p class="mb-0">
         <strong>Qué no ve nunca.</strong> Observaciones, valoraciones, constantes, basal, indicaciones, derivaciones, historial, nombres de
         profesionales ni datos de otros familiares. Cada vez que un familiar abre las novedades de un residente o un comunicado queda registrado
-        quién y cuándo (sin guardar el contenido). Por ahora el familiar entra solo con su contraseña: su segundo factor está por decidir.
+        quién y cuándo (sin guardar el contenido). El familiar entra con su contraseña y un código por correo. El código protege frente a quien solo sepa la contraseña, no frente a quien además entre en su correo: por eso conviene que no use la misma contraseña en los dos.
     </p>
 </section>
 

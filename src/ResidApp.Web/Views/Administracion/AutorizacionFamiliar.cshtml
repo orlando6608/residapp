@@ -48,6 +48,13 @@
         @if (member.PortalAccount is { } portalAccount)
         {
             <p class="mb-1">Tiene acceso al portal con el usuario <code>@portalAccount</code>.</p>
+            @if (FamilyAccess.EmailCode && string.IsNullOrWhiteSpace(member.Email))
+            {
+                <div class="alert alert-warning" role="status">
+                    Ahora mismo no puede entrar: no tiene correo en su ficha y allí recibe el código.
+                    <a class="alert-link" asp-action="EditarFamiliar" asp-route-residenteId="@resident.ResidentId.Value" asp-route-vinculoId="@member.LinkId">Añadir el correo</a>
+                </div>
+            }
             <p class="text-muted mb-0">Lo que ve depende de esta autorización: solo si está <strong>Activa</strong> puede ver al residente. Para cortarle el acceso, suspéndela o revócala.</p>
         }
         else

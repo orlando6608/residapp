@@ -305,12 +305,12 @@
     </nav>
     <p class="eyebrow">ResidApp · Acceso y sesión</p>
     <h1>Cómo se entra en ResidApp: el acceso y la sesión</h1>
-    <p class="meta">Revisado para ResidApp v0.5.0 · Estado a 19/11/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
+    <p class="meta">Revisado para ResidApp v0.5.0 · Estado a 26/11/2026 · Para quien usa o prueba la aplicación, para Plataforma y soporte, y para quien responde de su seguridad</p>
     <p class="lead prose">
       Nadie se crea su propia cuenta en ResidApp: el acceso lo da quien responde de cada persona. Después, cada vez que abres una
       pantalla, la aplicación comprueba <strong>quién eres</strong>, con tu sesión, y <strong>qué puedes hacer</strong>, con el perfil,
-      el centro y las unidades de tu cuenta. Se entra con tu identificador y tu contraseña y, si eres del personal, con un código de
-      tu móvil (segundo factor), o con una <strong>passkey</strong> («llave de acceso»: una credencial guardada en tu móvil o portátil que se desbloquea con tu huella,
+      el centro y las unidades de tu cuenta. Se entra con tu identificador y tu contraseña y con un segundo código: si eres del personal, el de
+      tu móvil (segundo factor); si eres familiar, uno que te llega por correo. El personal puede entrar en su lugar con una <strong>passkey</strong> («llave de acceso»: una credencial guardada en tu móvil o portátil que se desbloquea con tu huella,
       tu cara o tu PIN) si la has registrado. La contraseña la eliges tú con la <strong>invitación</strong> de un solo uso que te entrega tu
       Administración. En el entorno de pruebas se entra con las mismas pantallas, pero las cuentas ya están dadas de alta; desde el 24/10/2026 no hay otra forma de entrar.
     </p>
@@ -343,7 +343,7 @@
       <li>
         <h3>Para entrar</h3>
         <p>Tu identificador de acceso y tu <strong>contraseña</strong>; el personal, además, el <strong>código de 6 cifras</strong>
-          de su aplicación de autenticación; o, si has registrado una, <strong>«Entrar con passkey»</strong>. La primera vez, la
+          de su aplicación de autenticación; la familia, además, un <strong>código de 6 cifras</strong> que le llega por correo; o, el personal, si ha registrado una, <strong>«Entrar con passkey»</strong>. La primera vez, la
           <strong>invitación</strong> de tu Administración. En el entorno de pruebas las cuentas ya están dadas de alta: usa la contraseña que te da Orlando con tu usuario (por ejemplo,
           <code>almendros-enfermeria</code>).</p>
       </li>
@@ -449,8 +449,8 @@
             <td>Familiar de un residente</td>
             <td>La Administración del centro</td>
             <td>En la ficha del residente, «Autorización» → <strong>Dar acceso al portal</strong> con tu usuario y, debajo, <strong>Crear
-              invitación de acceso</strong>. Después abre y activa la autorización: sin ella activa, no ves a nadie.</td>
-            <td>Tu usuario y tu contraseña</td>
+              invitación de acceso</strong>. El familiar necesita un correo en su ficha: sin él no se le da el acceso ni la invitación. Después abre y activa la autorización: sin ella activa, no ves a nadie.</td>
+            <td>Tu usuario, tu contraseña y un código que te llega cada vez al correo de tu ficha</td>
           </tr>
           <tr>
             <td>La primera Administración de un centro nuevo</td>
@@ -470,7 +470,7 @@
             <td>Quien prueba la aplicación (CJ)</td>
             <td>Orlando</td>
             <td>Las <a href="#cuentas">cuentas de prueba</a> las dio de alta Orlando de una vez (no hay invitaciones que abrir), solo en este
-              entorno de pruebas. Él te da la contraseña y el código de tu aplicación de autenticación.</td>
+              entorno de pruebas. Él te da la contraseña y el código de tu aplicación de autenticación. La cuenta de familia recibe su código en el correo puesto en su ficha.</td>
             <td>La contraseña y el código del móvil que te da Orlando, o una passkey</td>
           </tr>
         </tbody>
@@ -497,20 +497,20 @@
       <li class="adm">
         <div class="paso-cab"><span class="n">2</span><span class="perfil" style="color: var(--lane-adm)">Administración o Plataforma</span></div>
         <p><strong>Entrega una invitación de un solo uso</strong>: una hoja con un código QR y su dirección, en mano o en su pantalla.
-          Vale 72 horas; solo se ve al crearla, y crear otra anula la anterior. No hace falta que la persona tenga correo.</p>
+          Vale 72 horas; solo se ve al crearla, y crear otra anula la anterior. La hoja no se envía por correo. El personal no necesita correo; una cuenta de familia sí lo necesita en su ficha, porque allí recibe el código para entrar.</p>
       </li>
       <li class="persona">
         <div class="paso-cab"><span class="n">3</span><span class="perfil" style="color: var(--accent)">La persona</span></div>
         <p><strong>Abre la invitación</strong> y elige su contraseña; la invitación deja de valer. Si es del personal, ahí mismo prepara
           el segundo factor (una app de códigos en el móvil, TOTP) y guarda sus 10 códigos de recuperación. Es el único sitio donde se
           prepara: saber la contraseña de alguien no basta para registrar otro móvil.</p>
-        <p class="pasa">Desde entonces entra con su identificador, su contraseña y el código del móvil.</p>
+        <p class="pasa">Desde entonces el personal entra con su identificador, su contraseña y el código del móvil; la familia, con su identificador, su contraseña y un código por correo (el primero le llega justo al elegir la contraseña).</p>
       </li>
       <li class="adm">
         <div class="paso-cab"><span class="n">4</span><span class="perfil" style="color: var(--lane-adm)">Administración</span></div>
         <p><strong>Si olvida la contraseña o pierde el móvil</strong>, la persona lo pide a su Administración, que le entrega una
           invitación de recuperación. Al usarla elige otra contraseña, prepara de nuevo el segundo factor y se cierran todas sus sesiones:
-          recuperar el acceso nunca deja la cuenta con menos protección. Hasta que la usa, su contraseña de siempre sigue valiendo.</p>
+          recuperar el acceso nunca deja la cuenta con menos protección. Hasta que la usa, su contraseña de siempre sigue valiendo. Una familia la necesita también si su cuenta se cierra tras 15 códigos fallidos en 24 horas: al usarla vuelve a poder pedir códigos.</p>
       </li>
       <li class="persona">
         <div class="paso-cab"><span class="n">5</span><span class="perfil" style="color: var(--accent)">La persona</span></div>
@@ -518,7 +518,7 @@
           cierra sus sesiones abiertas. Para cambiar de móvil necesita una invitación de recuperación (paso 4), que además borra sus passkeys.</p>
       </li>
     </ol>
-    <p class="pista">Las cuentas de Plataforma entran solo con passkey en cuanto tienen una (I4). El segundo factor de las familias está por decidir con CJ.</p>
+    <p class="pista">Las cuentas de Plataforma entran solo con passkey en cuanto tienen una (I4). Las familias entran con contraseña y un código por correo.</p>
   </section>
 
   <section id="soporte" aria-labelledby="soporte-t">
@@ -565,6 +565,9 @@
           <li>Allí, en la ficha del residente, «Autorización»: tiene que estar Activa y sin caducar, y el familiar tener acceso al
             Portal Familiar.</li>
           <li>Si en la ficha el familiar figura como «Anonimizado», se le cerró el acceso a propósito (a petición suya) y no se puede reabrir.</li>
+          <li>Si no le llega el código: que mire el correo no deseado, espere un minuto y pulse «Enviar otro código». Su Administración comprueba el correo de su ficha. Con «Por seguridad,
+            para volver a entrar necesitas una invitación nueva…», le entrega una invitación de recuperación. Con «Ahora mismo no se puede entrar al portal de las familias. Llama a tu
+            centro.», soporte revisa la configuración del código y del correo.</li>
         </ol>
       </li>
       <li class="aviso">
@@ -695,7 +698,8 @@
       sesión o con «Iniciar sesión» en la cabecera. Si tu cuenta se queda sin ámbitos con la sesión abierta, la pantalla de elegir ámbito
       te ofrece también «Entrar con otra cuenta». Si eres del personal
       (cualquier perfil salvo el de familiar), después te pide el <strong>código de 6 cifras</strong> de tu aplicación de autenticación,
-      que preparaste al usar tu invitación. Si no lo llegaste a preparar, la pantalla te pide una invitación nueva.</p>
+      que preparaste al usar tu invitación. Si no lo llegaste a preparar, la pantalla te pide una invitación nueva. Si tu cuenta es solo de familia, se abre «Código del correo»: escribes
+      en «Código» las 6 cifras que te llegan y pulsas «Comprobar»; «Enviar otro código» manda otro.</p>
     <p class="prose">Si has registrado una <strong>passkey</strong>, pulsas «Entrar con passkey» sin escribir nada: el dispositivo te pide la
       huella, la cara o el PIN y entras. Es una entrada completa, sin contraseña ni código del móvil, y solo funciona en la dirección web de
       ResidApp, así que una página falsa que imite a ResidApp no puede aprovecharla. Una cuenta bloqueada por intentos, suspendida o sin ámbito activo tampoco
@@ -704,7 +708,7 @@
     <div class="diagrama">
       <svg viewBox="0 0 1120 412" style="min-width: 900px" aria-labelledby="d-ent-t d-ent-d">
         <title id="d-ent-t">Qué pasa al pulsar «Entrar»</title>
-        <desc id="d-ent-d">Escribes el usuario y la contraseña y, si eres del personal, el código de tu móvil. Si la contraseña o el
+        <desc id="d-ent-d">Escribes el usuario y la contraseña y un segundo código: el del móvil si eres del personal, o el del correo si eres familiar. Si la contraseña o el
           código no son correctos, o la cuenta no existe, está suspendida, bloqueada o no tiene ningún ámbito activo, no entras y sigues
           como estabas. Si son correctos, se cierra la sesión que tuvieras abierta, se abre una nueva y, si la cuenta tiene un solo
           ámbito, llegas a tu inicio o a la pantalla a la que ibas; si tiene varios, eliges antes con cuál trabajas. Cinco fallos
@@ -726,7 +730,7 @@
 
         <rect class="box" x="16" y="170" width="180" height="80" rx="8"/>
         <text class="bt tit" x="106" y="204" text-anchor="middle">Usuario y contraseña</text>
-        <text class="bt det" x="106" y="222" text-anchor="middle">el personal, y su código</text>
+        <text class="bt det" x="106" y="222" text-anchor="middle">y el segundo código</text>
 
         <rect class="box paso" x="236" y="170" width="190" height="80" rx="8"/>
         <text class="bt tit" x="331" y="204" text-anchor="middle">¿Son correctos?</text>
@@ -764,9 +768,10 @@
     <ul class="lista prose">
       <li><strong>Si el usuario o la contraseña no valen</strong>, el aviso es «Usuario o contraseña incorrectos.» y no dice cuál de los dos
         falla: así no se puede averiguar qué cuentas existen. Con la contraseña correcta, en cambio, la pantalla sí avisa de lo que falta
-        (por ejemplo, que la cuenta de Plataforma entra solo con passkey, o que hay que preparar el código del móvil).</li>
-      <li><strong>Cinco fallos seguidos</strong> (contraseña o código del móvil) <strong>bloquean la cuenta 15 minutos</strong>, aunque
-        después se escriba bien. Cada fallo, cada bloqueo y cada entrada quedan en el registro de accesos.</li>
+        (por ejemplo, que la cuenta de Plataforma entra solo con passkey, o que hay que preparar el código del móvil, o que a una persona de la familia le falta el correo en su ficha).</li>
+      <li><strong>Cinco fallos seguidos</strong> (contraseña, código del móvil o código del correo) <strong>bloquean la cuenta 15 minutos</strong>, aunque
+        después se escriba bien. Cada fallo, cada bloqueo y cada entrada quedan en el registro de accesos. En la familia, acertar la contraseña no borra los fallos; además hay límite de
+        envíos (uno por minuto, 5 por hora, 10 en 24 horas), 5 intentos por código y, con 15 fallidos en 24 horas, hace falta una invitación de recuperación.</li>
       <li><strong>Sin el móvil</strong>, «Usa un código de recuperación» deja entrar con uno de los 10 códigos; cada uno vale una vez.
         Si no te quedan, pide ayuda a tu Administración.</li>
       <li><strong>Entre la contraseña y el código</strong> hay 10 minutos; si se pasan, o si entretanto cambia la contraseña de la cuenta,
@@ -782,8 +787,8 @@
         del móvil, y el dispositivo te pide verificarte. Todo, paso a paso, en <a href="#passkeys">Passkeys</a>.</li>
       <li><strong>Cambiar de usuario</strong> (por ejemplo, en el cambio de turno de una tablet compartida): pulsa «Salir» en el menú de
         tu perfil y entra con la otra cuenta. «Salir» cierra tu sesión en ese momento.</li>
-      <li><strong>Familia:</strong> la cuenta de un familiar entra, por ahora, solo con la contraseña (su segundo factor está por
-        decidir con CJ) y va directamente al Portal Familiar, con su propio aspecto y sin nada del personal.</li>
+      <li><strong>Familia:</strong> la cuenta de un familiar entra con la contraseña y un código por correo, que sirve una vez y caduca en 10 minutos, y va directamente al Portal Familiar, con su propio aspecto
+        y sin nada del personal. En el portal ve cuándo fue la última entrada sin contar la actual. Sin correo en su ficha no puede entrar.</li>
       <li><strong>Si la sesión había terminado al pulsar «Guardar»</strong>, lo escrito no se guarda: la pantalla de acceso te lo
         avisa y, tras entrar de nuevo, te devuelve a la pantalla del formulario.</li>
       <li><strong>Al entrar o salir</strong> se olvida el ámbito elegido y termina cualquier lectura clínica declarada por Dirección Clínica.</li>
@@ -906,6 +911,7 @@
           <tr><td>Pulsas «Salir»</td><td>En ese momento</td><td class="motivo">Salida (<code>LOGOUT</code>)</td></tr>
           <tr><td>Entras con otra cuenta</td><td>Al entrar con la nueva</td><td class="motivo">Cambio de cuenta (<code>CAMBIO_IDENTIDAD</code>)</td></tr>
           <tr><td>Cierras otra sesión desde «Mi cuenta», o cambias la contraseña</td><td>En la siguiente pantalla que abra esa sesión</td><td class="motivo">Cierre propio (<code>CIERRE_PROPIO</code>)</td></tr>
+          <tr><td>Administración cambia o borra el correo de un familiar</td><td>En la siguiente pantalla que abra</td><td class="motivo">Cambio de correo (<code>CAMBIO_CORREO</code>)</td></tr>
           <tr><td>Usas una invitación de recuperación</td><td>Al usarla (se cierran todas tus sesiones)</td><td class="motivo">Recuperación (<code>RECUPERACION</code>)</td></tr>
           <tr><td>30 minutos sin usarla</td><td>En la siguiente pantalla que abras</td><td class="motivo">Inactividad (<code>INACTIVIDAD</code>)</td></tr>
           <tr><td>12 horas desde que entraste, aunque la uses</td><td>En la siguiente pantalla que abras</td><td class="motivo">Caducidad (<code>CADUCIDAD</code>)</td></tr>
@@ -958,7 +964,7 @@
       <li class="fam">
         <h3>Familia</h3>
         <p class="usuario">almendros-elena</p>
-        <p>Elena, hija de Rosa y su contacto prioritario, con la autorización activa. Entra directamente en el Portal Familiar.</p>
+        <p>Elena, hija de Rosa y su contacto prioritario, con la autorización activa. Entra con su contraseña y el código del correo de su ficha, directamente en el Portal Familiar.</p>
       </li>
       <li class="plat">
         <h3>Plataforma</h3>
@@ -1014,7 +1020,7 @@
         <h3>Contraseña y segundo factor</h3>
         <p>La contraseña se guarda como un resumen que no se puede revertir; el personal necesita además el código de su móvil, o entra con
           una passkey: la clave que te desbloquea y prueba que eres tú no sale nunca de tu dispositivo, y ResidApp guarda solo la que sirve para
-          comprobarla, que por sí sola no permite entrar. Cinco fallos bloquean la cuenta
+          comprobarla, que por sí sola no permite entrar; la familia necesita además un código que le llega por correo, que no protege frente a quien también entre en ese correo. Cinco fallos bloquean la cuenta
           y todo queda en un registro de accesos separado de la auditoría clínica.</p>
       </li>
       <li class="aviso">
@@ -1063,7 +1069,6 @@
       <ul class="lista">
         <li>El responsable de protección de datos de la residencia piloto: la evaluación de impacto, qué datos de acceso se guardan y
           cuánto tiempo, y qué segundo factor acepta para cada grupo de personas.</li>
-        <li>CJ: el segundo factor de los familiares, y si se les puede pedir correo (hoy es opcional en el alta).</li>
         <li>El tiempo de inactividad definitivo en las tablets compartidas: hoy son 30 minutos y se puede cambiar sin tocar el código.</li>
       </ul>
     </div>
@@ -1118,7 +1123,7 @@
             <td>ASP.NET Core Identity solo para las credenciales (<code>UserManager</code>, sin <code>SignInManager</code>): el usuario
               es la cuenta y su nombre, <code>sujeto_externo</code>. Contraseña de 12 caracteres o más, bloqueo 5 / 15 min
               (<code>AccesoOptions</code>), <code>Acceso:IntentosPorMinuto</code> (120). El paso hasta el segundo factor es la cookie
-              <code>residapp_acceso_pendiente</code> (10 min, solo <code>/Acceso</code>, con el sello de seguridad).</td>
+              <code>residapp_acceso_pendiente</code> (10 min, solo <code>/Acceso</code>, con el sello de seguridad). Familia: <code>AccesoController.CodigoFamiliar.cs</code>, <code>FamilyAccessGate</code>, <code>Acceso:CodigoFamiliarActivo</code> y <code>Acceso:CodigoFamiliarClave</code> (32 caracteres o más), además del correo operativo. Apagado, la familia solo entra (con la contraseña sola) en un entorno declarado de desarrollo; en cualquier otro no entra.</td>
           </tr>
           <tr>
             <td>Passkeys (I4)</td>
@@ -1140,7 +1145,7 @@
             <td><code>dbo.credenciales</code> y <code>dbo.eventos_acceso</code> (script <code>0062</code>), <code>SqlAccessEventLog</code></td>
             <td>Sin seguridad por filas. Códigos de recuperación guardados como resúmenes SHA-256; la clave TOTP, en claro, como en el
               almacén por defecto de Identity. Los intentos fallidos se suman en SQL. <code>eventos_acceso</code> no se modifica ni se
-              borra (errores 50537 y 50538) y nunca guarda lo tecleado.</td>
+              borra (errores 50537 y 50538) y nunca guarda lo tecleado. Códigos de familia: <code>dbo.codigos_acceso_correo</code> (script <code>0121</code>), solo un resumen con clave (una huella que exige un secreto del servidor); se purga a los 30 días.</td>
           </tr>
           <tr>
             <td>Invitación de arranque</td>
@@ -1183,7 +1188,7 @@
           <tr>
             <td>Pruebas</td>
             <td><code>SesionTests</code>, <code>SesionFueraDeDesarrolloTests</code>, <code>SqlSessionStoreTests</code>,
-              <code>SessionPolicyTests</code>, <code>AccesoTests</code> (con <code>AccesoTests.Passkeys.cs</code> y un autenticador de pruebas), <code>SqlCredentialStoreTests</code></td>
+              <code>SessionPolicyTests</code>, <code>AccesoTests</code> (con <code>AccesoTests.Passkeys.cs</code> y un autenticador de pruebas, y <code>AccesoTests.CodigoFamiliar.cs</code> y <code>AccesoTests.CambioCorreo.cs</code>), <code>SqlCredentialStoreTests</code></td>
             <td>Cubren los casos AUTH-SPIKE-T02 a T06: cookie fabricada, sesión cerrada, renovación sin ampliar la caducidad,
               inactividad y cuenta suspendida. Y de I1: mismo mensaje para todo fallo, bloqueo, segundo factor obligatorio al personal,
               códigos de recuperación de un solo uso y el paso pendiente que caduca o deja de valer si cambia la contraseña. Y de I4: el alta de
@@ -1197,7 +1202,7 @@
   </section>
 
   <footer>
-    ResidApp · Acceso y sesión · Estado a 16/11/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
+    ResidApp · Acceso y sesión · Estado a 26/11/2026. El detalle de cada pantalla está en el <a href="/Home/Manual">Manual de usuario</a>.
   </footer>
 </div>
 

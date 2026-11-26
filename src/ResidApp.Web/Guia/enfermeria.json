@@ -37,7 +37,7 @@
     "Cambiar los rangos de referencia de las constantes: los fija Dirección Clínica. Tú los ves en la valoración, como aviso."
   ],
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-19",
+  "revisado": "2026-11-26",
   "fichas": [
     {
       "codigo": "ENF-01",
@@ -545,7 +545,7 @@
         { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre la tarjeta **Alta de residente**.", "botones": ["Inicio", "Alta de residente"] },
         { "texto": "Elige la «Unidad». Si tiene camas libres, elige una «Cama» o «Pendiente de asignar»: hay que elegir una de las dos. Las camas ocupadas no se ofrecen.", "campos": ["Unidad", "Cama", "Pendiente de asignar"] },
         { "texto": "Escribe el «Nombre completo», la «Fecha de nacimiento», el «Sexo documentado» y, si quieres, la «Referencia interna».", "campos": ["Nombre completo", "Fecha de nacimiento", "Sexo documentado", "Referencia interna"] },
-        { "texto": "En «Familiares de contacto» escribe «Nombre», «Relación con el residente», «Teléfono» y, si quieres, el correo, y marca «Contacto prioritario (contacto urgente)». Si no hay ningún contacto, escribe el «Motivo de no tener contacto urgente».", "campos": ["Familiares de contacto", "Relación con el residente", "Contacto prioritario (contacto urgente)", "Motivo de no tener contacto urgente"] },
+        { "texto": "En «Familiares de contacto» escribe «Nombre», «Relación con el residente», «Teléfono» y el correo (opcional; imprescindible si va a entrar en el portal), y marca «Contacto prioritario (contacto urgente)». Si no hay ningún contacto, escribe el «Motivo de no tener contacto urgente».", "campos": ["Familiares de contacto", "Relación con el residente", "Contacto prioritario (contacto urgente)", "Motivo de no tener contacto urgente"] },
         { "texto": "Pulsa **Dar de alta**.", "botones": ["Dar de alta"] }
       ],
       "despues": [

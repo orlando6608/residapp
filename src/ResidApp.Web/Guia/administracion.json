@@ -25,7 +25,7 @@
     "Añadirte unidades a tu ámbito ni marcar a otra cuenta como principal, si no eres la Administración principal del centro."
   ],
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-19",
+  "revisado": "2026-11-26",
   "fichas": [
     {
       "codigo": "ADM-01",
@@ -357,15 +357,18 @@
         { "texto": "Si se pierde la hoja, crea otra: **la nueva anula la anterior**. Para dejar una sin valor, pulsa **Anular la invitación**.", "botones": ["Anular la invitación"] }
       ],
       "despues": [
-        { "para": "Personal del centro", "texto": "Con la de acceso elige su contraseña y prepara el código del móvil (ver TOD-01). Con la de recuperación elige otra contraseña, prepara de nuevo el código, **pierde sus passkeys** y se le cierran todas las sesiones abiertas (ver TOD-09). Hasta que la use, su contraseña de siempre sigue valiendo: si temes que alguien la conozca, suspéndele la cuenta (ver ADM-16)." }
+        { "para": "Personal del centro", "texto": "Con la de acceso elige su contraseña y prepara el código del móvil (ver TOD-01). Con la de recuperación elige otra contraseña, prepara de nuevo el código, **pierde sus passkeys** y se le cierran todas las sesiones abiertas (ver TOD-09). Hasta que la use, su contraseña de siempre sigue valiendo: si temes que alguien la conozca, suspéndele la cuenta (ver ADM-16)." },
+        { "para": "Familia", "texto": "Elige su contraseña y recibe un código por correo para entrar (ver FAM-12). La de recuperación le permite además volver a pedir códigos si se bloqueó por fallarlos." }
       ],
       "dudas": [
+        { "p": "«Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.»", "r": "Añade el correo en la ficha del familiar (ver ADM-28) y vuelve a crear la invitación." },
         { "p": "«No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.»", "r": "Pídesela a otra Administración de tu centro o a Plataforma (ver PLA-03 y PLA-07)." },
         { "p": "«La cuenta está suspendida, o la invitación ya se había usado o anulado.»", "r": "Reactiva la cuenta antes (ver ADM-16)." },
         { "p": "«Invitación anulada: ya no sirve para entrar.»", "r": "Es la confirmación de «Anular la invitación»." }
       ],
       "rutas": ["Administracion/Usuario", "Administracion/Invitacion", "Administracion/AnularInvitacion"],
       "mensajes": [
+        "Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.",
         "Invitación anulada: ya no sirve para entrar.",
         "No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.",
         "La cuenta está suspendida, o la invitación ya se había usado o anulado."
@@ -587,7 +590,7 @@
         { "texto": "En el inicio de Administración, abre la tarjeta **Alta de residente**.", "botones": ["Alta de residente"] },
         { "texto": "Elige la «Unidad». Si tiene camas libres, elige una «Cama» o «Pendiente de asignar»: hay que elegir una de las dos. La lista reúne las camas de todas las unidades, agrupadas por unidad: elige una de la unidad que has marcado. Las camas ocupadas no se ofrecen.", "campos": ["Unidad", "Pendiente de asignar"] },
         { "texto": "Escribe el «Nombre completo», la «Fecha de nacimiento», el «Sexo documentado» y, si quieres, la «Referencia interna».", "campos": ["Nombre completo", "Fecha de nacimiento", "Sexo documentado", "Referencia interna"] },
-        { "texto": "En «Familiares de contacto» escribe «Nombre», «Relación con el residente», «Teléfono» y, si quieres, el correo, y marca «Contacto prioritario (contacto urgente)». Si no hay ningún contacto, escribe el «Motivo de no tener contacto urgente».", "campos": ["Familiares de contacto", "Relación con el residente", "Contacto prioritario (contacto urgente)", "Motivo de no tener contacto urgente"] },
+        { "texto": "En «Familiares de contacto» escribe «Nombre», «Relación con el residente», «Teléfono» y el correo (opcional; imprescindible si va a entrar en el portal), y marca «Contacto prioritario (contacto urgente)». Si no hay ningún contacto, escribe el «Motivo de no tener contacto urgente».", "campos": ["Familiares de contacto", "Relación con el residente", "Contacto prioritario (contacto urgente)", "Motivo de no tener contacto urgente"] },
         { "texto": "Pulsa **Dar de alta**.", "botones": ["Dar de alta"] }
       ],
       "despues": [
@@ -837,7 +840,7 @@
       "palabras": ["añadir familiar", "vincular familiar", "familiar existente", "relación", "teléfono"],
       "permisos": [],
       "antes": [
-        "Del familiar: nombre, relación con el residente (por ejemplo «Hija») y teléfono; el correo es opcional.",
+        "Del familiar: nombre, relación con el residente (por ejemplo «Hija») y teléfono; el correo es opcional en la ficha, pero imprescindible si esa persona va a entrar en el portal.",
         "Si la persona ya es familiar de otro residente del centro, **vincúlala en vez de añadirla de nuevo**: así no queda duplicada y sus datos de contacto son los mismos para todos sus residentes."
       ],
       "pasos": [
@@ -870,22 +873,24 @@
       "palabras": ["editar familiar", "correo", "avisos", "confirmar dirección", "referente", "tutor legal"],
       "permisos": [],
       "antes": [
-        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo es voluntario y solo sirve para avisarle de que tiene una propuesta de cita pendiente, de que el centro ha cambiado o cancelado una cita, de que tiene una cita mañana (recordatorio del día antes) o, si el centro lo ha encendido (ver ADM-50), de que hay un aviso sobre una cita fuera del centro de su residente: los avisos no dicen el nombre del residente, ni el centro, ni la hora ni el motivo; el recordatorio solo dice que tiene una cita mañana.",
+        "Para el correo: hablar con la persona, **leerle la dirección despacio** y esperar a que diga que es correcta. El correo sirve para el código con el que esa persona entra en el portal (sin él no puede entrar) y, solo con la dirección confirmada, para avisarle de que tiene una propuesta de cita pendiente, de que el centro ha cambiado o cancelado una cita, de que tiene una cita mañana (recordatorio del día antes) o, si el centro lo ha encendido (ver ADM-50), de que hay un aviso sobre una cita fuera del centro de su residente: los avisos no dicen el nombre del residente, ni el centro, ni la hora ni el motivo; el recordatorio solo dice que tiene una cita mañana.",
         "Si el familiar está vinculado a más residentes, los cambios de nombre, teléfono y correo valen para todos; la relación es solo de este residente."
       ],
       "pasos": [
         { "texto": "En la ficha del residente, pulsa **Editar** en la fila del familiar.", "botones": ["Editar"] },
-        { "texto": "Cambia el «Nombre», la «Relación», el «Teléfono» o el «Correo para avisos de ResidApp (opcional)».", "campos": ["Teléfono", "Correo para avisos de ResidApp (opcional)"] },
-        { "texto": "Solo si ya se la has leído y la persona ha dicho que es correcta, marca la casilla de confirmación de la dirección. Sin ella, ResidApp no envía ningún aviso a ese correo.", "campos": ["Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta"] },
+        { "texto": "Cambia el «Nombre», la «Relación», el «Teléfono» o el «Correo para entrar en el portal y para avisos de ResidApp».", "campos": ["Teléfono", "Correo para entrar en el portal y para avisos de ResidApp"] },
+        { "texto": "Si tiene cuenta y cambias o borras su correo, comprueba antes que es ella quien lo pide (en persona o llamando al teléfono que ya consta)." },
+        { "texto": "Solo si ya se la has leído y la persona ha dicho que es correcta, marca la casilla de confirmación de la dirección. Sin ella, ResidApp no envía ningún aviso a ese correo; el código para entrar le llega igual.", "campos": ["Dirección confirmada con la familia: se la he leído a la persona a quien pertenece y me ha dicho que es correcta"] },
         { "texto": "Marca «Familiar referente» o «Tutor legal» si procede y pulsa **Guardar cambios**.", "botones": ["Guardar cambios"], "campos": ["Familiar referente", "Tutor legal"] },
         { "texto": "Si la persona pide que no le manden más avisos, en la misma pantalla de edición, en «Avisos por correo», pulsa **Dar de baja de los avisos**. No tiene que explicar por qué. No borres el correo ni quites la confirmación para esto. El botón no guarda los cambios de la ficha: guárdalos antes.", "botones": ["Dar de baja de los avisos"] },
         { "texto": "Para volver a activarlos, solo si esa persona te lo pide: marca «Esta persona me ha pedido volver a recibir los avisos» y pulsa **Volver a activar los avisos**.", "botones": ["Volver a activar los avisos"] },
         { "texto": "Si la dirección es dudosa o un aviso llegó a quien no debía, corrígela o pulsa **Quitar la confirmación de la dirección** (solo sale si está confirmada). Eso no es una baja.", "botones": ["Quitar la confirmación de la dirección"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "Si el correo está confirmado y la persona no está de baja, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). La baja vale para todos sus residentes del centro y corta todos los avisos sobre citas; lo que no se envíe mientras tanto no se manda después, salvo el aviso de una cita fuera del centro que toque el mismo día en que se reactive. Si te pide no recibir solo los de citas fuera del centro, ver ADM-50. Si figura en dos fichas distintas, dala de baja en las dos. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla; la baja se mantiene." }
+        { "para": "Familia", "texto": "Si el correo está confirmado y la persona no está de baja, recibe los avisos de ResidApp, que le dicen solo que entre en la aplicación (el recordatorio, además, que tiene una cita mañana). La baja vale para todos sus residentes del centro y corta todos los avisos sobre citas, no el código ni el aviso de cambio de correo; lo que no se envíe mientras tanto no se manda después, salvo el aviso de una cita fuera del centro que toque el mismo día en que se reactive. Si te pide no recibir solo los de citas fuera del centro, ver ADM-50. Si figura en dos fichas distintas, dala de baja en las dos. El correo no sustituye al teléfono: si algo es urgente, se llama. Cambiar o borrar la dirección quita la confirmación y hay que volver a confirmarla; la baja se mantiene. Cambiar o borrar la dirección de quien tiene acceso cierra sus sesiones, anula su código y avisa a la dirección anterior." }
       ],
       "dudas": [
+        { "p": "«Se han cerrado sus sesiones abiertas.»", "r": "Has cambiado el correo con el que entra. Si pone «No consta que el aviso a la dirección anterior haya salido: avise por teléfono.», llámale." },
         { "p": "«Escribe un correo válido.»", "r": "La dirección no tiene forma de correo (falta la @ o el dominio): corrígela o bórrala." },
         { "p": "«Datos del familiar guardados.»", "r": "Es la confirmación. Cambiar los datos no cambia su autorización de acceso." },
         { "p": "«Correo sin confirmar: ResidApp no enviará avisos a esta dirección.»", "r": "Confirma la dirección con la persona y marca la casilla, o déjala así si no ha podido hacerse: es correcto y simplemente no se enviará ningún aviso." },
@@ -895,6 +900,10 @@
       "mensajes": [
         "Datos del familiar guardados.",
         "Escribe un correo válido.",
+        "Se han cerrado sus sesiones abiertas.",
+        "Aviso enviado a la dirección anterior; no podemos asegurar que llegue.",
+        "No consta que el aviso a la dirección anterior haya salido: avise por teléfono.",
+        "Sin correo no podrá entrar en el portal.",
         "Baja anotada: no se le enviarán avisos por correo sobre citas.",
         "Baja quitada: esta persona puede volver a recibir los avisos por correo.",
         "Los avisos de esta persona ya habían cambiado. Revisa cómo están ahora.",
@@ -947,24 +956,31 @@
       "antes": [
         "Que el familiar tenga la autorización **abierta y activa** (ver ADM-29): dar el acceso no la abre ni la activa.",
         "El **usuario** con el que entrará: de 3 a 200 caracteres, sin espacios.",
+        "Un **correo** en la ficha del familiar (ver ADM-28): sin él no se le da el acceso ni la invitación.",
         "Una forma de **entregarle la invitación en mano** (impresa o en pantalla)."
       ],
       "pasos": [
         { "texto": "En la ficha del residente, pulsa **Autorización** en la fila del familiar y baja a **Acceso al Portal Familiar**.", "botones": ["Autorización"], "campos": ["Acceso al Portal Familiar"] },
+        { "texto": "Si no hay correo, verás «Para entrar necesita un correo en su ficha: allí recibe el código.»: pulsa **Añadir el correo**, guarda y vuelve a **Autorización**.", "botones": ["Añadir el correo", "Autorización"] },
         { "texto": "Si todavía no tiene cuenta, escribe el «Usuario» y pulsa **Dar acceso al portal**.", "botones": ["Dar acceso al portal"], "campos": ["Usuario"] },
-        { "texto": "Pulsa **Crear invitación de acceso** (aparece en «Entrar en ResidApp»): sale la hoja, que se ve una sola vez. Entrégasela en mano, como a cualquier cuenta (ver ADM-11): con ella elige su contraseña. Los familiares entran solo con contraseña.", "botones": ["Crear invitación de acceso"] }
+        { "texto": "Pulsa **Crear invitación de acceso** (aparece en «Entrar en ResidApp»): sale la hoja, que se ve una sola vez. Entrégasela en mano, como a cualquier cuenta (ver ADM-11): con ella elige su contraseña. Cada vez que entre, además de la contraseña, escribirá un código que le llega a ese correo.", "botones": ["Crear invitación de acceso"] }
       ],
       "despues": [
-        { "para": "Familia", "texto": "Elige su contraseña con la invitación (ver TOD-01) y entra al Portal Familiar. **Solo ve al residente mientras su autorización está Activa**; para cortarle el acceso, suspende o revoca la autorización: entonces el portal le dice «Ahora no tienes acceso a ningún residente»." }
+        { "para": "Familia", "texto": "Elige su contraseña con la invitación (ver TOD-01), escribe el código que le llega por correo (ver FAM-12) y entra al Portal Familiar. **Solo ve al residente mientras su autorización está Activa**; para cortarle el acceso, suspende o revoca la autorización: entonces el portal le dice «Ahora no tienes acceso a ningún residente»." }
       ],
       "dudas": [
         { "p": "«Acceso al Portal Familiar creado. Para que pueda entrar, entrégale su invitación de acceso (abajo); para que vea la información, su autorización tiene que estar Activa.»", "r": "Es la confirmación. Falta la invitación y, si no lo está, activar la autorización." },
         { "p": "«Revisa el usuario: de 3 a 200 caracteres, sin espacios (letras, números y . _ - @).»", "r": "Corrige el usuario: sin espacios y solo con letras, números y . _ - @." },
         { "p": "«Ese usuario ya existe o este familiar ya tiene acceso. Recarga la pantalla para ver su estado.»", "r": "Elige otro usuario, o recarga: puede que otra persona ya le diera el acceso." },
+        { "p": "«Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.»", "r": "Añádelo y vuelve a dar el acceso o la invitación." },
+        { "p": "«Ahora mismo no puede entrar: no tiene correo en su ficha y allí recibe el código.»", "r": "Ya tiene cuenta, pero le falta el correo: pulsa **Añadir el correo**." },
         { "p": "Las cuentas de Familia no salen en «Usuarios».", "r": "Es lo normal: se gestionan desde la ficha del residente." }
       ],
       "rutas": ["Administracion/AutorizacionFamiliar", "Administracion/AccesoPortalFamiliar", "Administracion/Invitacion"],
       "mensajes": [
+        "Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.",
+        "Para entrar necesita un correo en su ficha: allí recibe el código.",
+        "Ahora mismo no puede entrar: no tiene correo en su ficha y allí recibe el código.",
         "Acceso al Portal Familiar creado. Para que pueda entrar, entrégale su invitación de acceso (abajo); para que vea la información, su autorización tiene que estar Activa.",
         "Ese usuario ya existe o este familiar ya tiene acceso. Recarga la pantalla para ver su estado.",
         "Revisa el usuario: de 3 a 200 caracteres, sin espacios (letras, números y . _ - @)."
@@ -1764,6 +1780,35 @@
       ],
       "manual": { "id": "asistencia", "titulo": "Asistencia (solo Centro de Día)" },
       "flujo": { "id": "asistencia", "titulo": "Asistencia del Centro de Día" }
+    },
+    {
+      "codigo": "ADM-54",
+      "pregunta": "¿Cómo ayudo a un familiar que no puede entrar con el código del correo?",
+      "palabras": ["código del correo", "no llega", "bloqueado", "familia no puede entrar", "sin correo", "invitación de recuperación"],
+      "permisos": [],
+      "antes": [
+        "Comprobar que es esa persona quien lo pide: en persona o llamando al teléfono que ya consta. ResidApp nunca pide el código, y tú tampoco."
+      ],
+      "pasos": [
+        { "texto": "En la ficha del residente, pulsa **Editar** en su fila y revisa el correo. Si hay que corregirlo, hazlo y pulsa **Guardar cambios** (ver ADM-28).", "botones": ["Editar", "Guardar cambios"] },
+        { "texto": "Si el correo está bien, pídele que mire el correo no deseado, espere un minuto y pulse «Enviar otro código» (ver FAM-12)." },
+        { "texto": "Si la pantalla le pide una invitación nueva, pulsa **Autorización** y, en «Entrar en ResidApp», **Crear invitación de recuperación**. Entrégasela en mano.", "botones": ["Autorización", "Crear invitación de recuperación"], "campos": ["Entrar en ResidApp"] }
+      ],
+      "despues": [
+        { "para": "Familia", "texto": "Con la dirección correcta o la invitación nueva vuelve a pedir códigos. Si no tiene correo o no quiere darlo, no usa el portal: atiéndela en persona o por teléfono." }
+      ],
+      "dudas": [
+        { "p": "«Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.»", "r": "Añádelo antes de dar el acceso o la invitación." },
+        { "p": "«Tiene acceso al portal, pero sin correo no puede entrar.»", "r": "Sale en la ficha del residente cuando a una cuenta con acceso le falta el correo: añádelo en «Editar»." },
+        { "p": "A ninguna familia le llega el código, o ven «Ahora mismo no se puede entrar al portal de las familias».", "r": "No se arregla desde Administración: avisa a quien da soporte a ResidApp y atiende por teléfono." }
+      ],
+      "rutas": ["Administracion/Residente", "Administracion/EditarFamiliar", "Administracion/AutorizacionFamiliar", "Administracion/Invitacion"],
+      "mensajes": [
+        "Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.",
+        "Tiene acceso al portal, pero sin correo no puede entrar."
+      ],
+      "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
+      "flujo": { "id": "familia", "titulo": "La familia, informada" }
     }
   ]
 }

@@ -1,5 +1,9 @@
+@inject ResidApp.Application.Ports.FamilyAccessPolicy FamilyAccess
 @{
     ViewData["Title"] = "Política de privacidad";
+
+    // La familia entra además con un código que le llega por correo (ADR 0012, pieza 3): los textos que lo cuentan solo salen con él encendido.
+    var conCodigo = FamilyAccess.EmailCode;
 
     // Dato que falta y que no se debe inventar: lo fija una persona (Orlando, el centro o su DPO). Ver docs/privacidad/politica-privacidad-portal.md.
     Microsoft.AspNetCore.Html.IHtmlContent Pend(string que) =>
@@ -22,6 +26,10 @@
     <li>Si tienes cuenta, guardamos los datos mínimos para que puedas entrar y para dejar constancia de quién hace qué.</li>
     <li>Algunas funciones son <strong>opcionales</strong> (hoy, el dictado por voz): solo funcionan en los centros que las han contratado y solo mientras dure lo contratado. Pregunta a tu centro si usa alguna.</li>
     <li>No hay publicidad, ni analítica, ni cookies de terceros. Las cookies que usamos son las necesarias para que la aplicación funcione (apartado 10).</li>
+    @if (conCodigo)
+    {
+        <li>Si eres familiar, para entrar en el portal necesitas tu contraseña y un código que te enviamos por correo cada vez (apartado 5).</li>
+    }
     <li>Para ejercer tus derechos (acceder a tus datos, corregirlos, pedir que se borren, etc.), <strong>escribe a tu centro</strong> (apartado 12).</li>
     <li>Si no estás conforme, puedes reclamar ante la autoridad de protección de datos (apartado 13).</li>
 </ul>
@@ -56,15 +64,31 @@
 <p><strong>Para qué:</strong> prestar la atención y los cuidados, coordinar al equipo, informar a la familia y dejar constancia de lo que se hace. ResidApp <strong>no</strong> guarda la administración de la medicación (qué se da y cuándo), <strong>no</strong> avisa de alergias ni de interacciones y no decide nada por el personal.</p>
 
 <h3 class="h6 mt-3">2.2 Familiares y representantes</h3>
-<p class="mb-1">Los datos los introduce la Administración del centro a partir de lo que tú le das:</p>
+<p class="mb-1">Una parte de los datos la introduce la Administración del centro a partir de lo que tú le das. Otra la genera la aplicación cuando entras y la usas:</p>
 <ul>
-    <li><strong>Nombre, teléfono y relación</strong> con la persona residente. El <strong>correo electrónico es opcional</strong>.</li>
+    <li><strong>Nombre, teléfono y relación</strong> con la persona residente.</li>
+    @if (conCodigo)
+    {
+        <li><strong>Correo electrónico:</strong> es <strong>necesario para entrar</strong> en el Portal Familiar, porque allí te llega el código de cada entrada. Si no usas el portal, no hace falta. Si tienes ficha en más de un centro, el correo tiene que ser el mismo en todas.</li>
+    }
+    else
+    {
+        <li>El <strong>correo electrónico</strong> es <strong>opcional</strong>.</li>
+    }
     <li><strong>Tu autorización de acceso</strong> al Portal Familiar: si está activa, hasta cuándo y si eres la persona de referencia o su representante.</li>
     <li><strong>Tu cuenta:</strong> identificador de acceso y contraseña (la contraseña se guarda transformada, de forma que nadie puede leerla).</li>
     <li><strong>Tus citas:</strong> las solicitudes y las citas que reservas con el centro.</li>
     <li>Si tu centro lo usa: la marca interna de que el centro <strong>ha confirmado contigo tu dirección de correo</strong>, con quién la anotó y cuándo.</li>
+    <li><strong>Si pides no recibir avisos por correo</strong> (todos, o solo los de citas fuera del centro): desde cuándo y qué cuenta de Administración lo anotó. No se guarda el motivo ni cómo lo pediste. Los cambios quedan además registrados.</li>
+    <li><strong>Entradas y sesiones:</strong> cuándo entras, sales o fallas la contraseña o el código, con la <strong>dirección IP</strong> (el número que identifica tu conexión a internet). Puedes ver y cerrar tus sesiones en «Mi cuenta».</li>
+    <li><strong>Registro de actividad:</strong> qué consultas en el portal y qué haces en él (por ejemplo, con tus citas), con tu cuenta, la fecha y la hora.</li>
+    @if (conCodigo)
+    {
+        <li><strong>Códigos de acceso:</strong> de cada uno, cuándo se creó, cuándo caduca, cómo terminó, cuántas veces se falló, si el envío salió, el número con el que Microsoft identifica ese envío y el idioma y la versión del texto. Mientras el código puede usarse guardamos una huella suya, calculada con una clave secreta que no está en la base de datos. <strong>No guardamos el código, y en este registro no va tu dirección.</strong> Si fallas demasiadas veces, queda anotado que tu cuenta está bloqueada.</li>
+        <li><strong>Tu última entrada:</strong> el portal te enseña su fecha y hora, sin la dirección IP, para que veas si alguien más ha entrado.</li>
+    }
 </ul>
-<p><strong>Para qué:</strong> que puedas ver lo que el centro publica para la familia, gestionar citas y recibir los avisos que hayas aceptado. El centro también usa tu teléfono para localizarte si hace falta. El Portal Familiar <strong>no</strong> da acceso al historial clínico interno.</p>
+<p><strong>Para qué:</strong> que puedas ver lo que el centro publica para la familia, gestionar citas, enviarte los correos del apartado 5 y proteger tu cuenta. El centro también usa tu teléfono para localizarte si hace falta. El Portal Familiar <strong>no</strong> da acceso al historial clínico interno.</p>
 
 <h3 class="h6 mt-3">2.3 Personal del centro</h3>
 <p class="mb-1">Los datos los introduce la Administración del centro:</p>
@@ -74,6 +98,7 @@
     <li><strong>Registro de entradas:</strong> cuándo entras, sales o fallas la contraseña o el código, con la <strong>dirección IP</strong> desde la que lo haces.</li>
     <li><strong>Sesiones:</strong> cada sesión que abres guarda cuándo empezó y cuándo terminó, y la dirección IP desde la que se abrió. Puedes verlas y cerrarlas desde «Mi cuenta».</li>
     <li><strong>Registro de actividad (auditoría):</strong> cuenta, perfil, centro, fecha y hora de las acciones que cambian datos o consultan datos sensibles. En algunas consultas se guarda también el motivo que escribes.</li>
+    <li><strong>Gestiones con las familias:</strong> si confirmas una dirección de correo o das de baja los avisos de un familiar, queda anotada tu cuenta con la fecha.</li>
     <li><strong>Tu firma</strong> en los documentos que firmas dentro de la aplicación (por ejemplo, un informe de derivación).</li>
     <li>Si tu centro tiene el dictado por voz y lo usas: tu voz (apartado 6).</li>
 </ul>
@@ -90,6 +115,10 @@
     <li><strong>Familiares:</strong> el servicio que el centro presta a la familia y el interés legítimo del centro en coordinar visitas y citas. @Pend("el delegado de protección de datos confirma cuál aplica")</li>
     <li><strong>Personal:</strong> la relación laboral o de servicios y el interés legítimo del centro en la seguridad de los datos que custodia. @Pend("el delegado de protección de datos confirma")</li>
     <li><strong>Foto de la persona residente:</strong> el consentimiento de la persona o de su representante (apartado 7).</li>
+    @if (conCodigo)
+    {
+        <li><strong>Código de acceso y aviso de cambio de correo:</strong> son medidas de seguridad para que solo entres tú. No te pedimos consentimiento para ellas. @Pend("una persona experta confirma la base legal")</li>
+    }
 </ul>
 
 <h2 class="h5 mt-4" id="quien-ve">4. Quién puede ver los datos</h2>
@@ -106,12 +135,28 @@
 <p>ResidApp puede enviar avisos genéricos por correo a las familias cuya dirección el centro haya anotado y <strong>confirmado con ellas</strong>. Es una función general del servicio, no un módulo opcional: no se contrata aparte ni se enciende centro por centro. @Pend("confirmar si está encendida al publicar; viene apagada de fábrica y cada aviso tiene su propio interruptor") En la práctica, en tu centro solo se envían si el centro ha anotado tu dirección y la ha confirmado contigo. Hoy hay cinco. Tres son sobre tus citas con el equipo del centro: «Tienes una propuesta de cita pendiente» (cuando el centro propone una cita), «Tienes un cambio en una cita» (cuando el centro cambia o cancela una cita que reservaste; se envía a quien la reservó) y «Tienes una cita mañana» (el día antes de una cita confirmada, entre las 10:00 y las 19:00; se envía a quien la reservó y solo si la cita sigue confirmada). Además, si tu centro ha activado los avisos de citas fuera del centro, hay dos más sobre las citas de la persona residente, entre las 10:00 y las 19:00: «Tienes un aviso sobre una cita en ResidApp» (siete días antes y el día antes; se envía a quien de la familia se haya encargado de esa cita y, si nadie lo ha hecho, a los familiares con acceso) y «Una cita en ResidApp todavía necesita ayuda» (dos días antes, solo si sigue sin cubrirse algo que le toca a la familia; no se envía a quien ya se ha encargado ni a quien ha dicho que no puede).</p>
 <p>Estos avisos <strong>no dicen</strong> el nombre de la persona residente, ni el centro, ni la hora, ni el motivo, ni nada de salud. Solo te piden que entres en ResidApp. El recordatorio solo dice que tienes una cita mañana. El remitente es «ResidApp» y no se puede responder al correo: si necesitas algo, llama al centro.</p>
 <ul>
-    <li>Solo se envían a una dirección que el centro <strong>ha confirmado contigo</strong> y mientras tengas acceso al Portal Familiar.</li>
-    <li>Son <strong>voluntarios</strong>. Para dejar de recibirlos, díselo a tu centro: no tienes que explicar por qué ni hace falta borrar tu dirección. La baja vale para ese centro y el centro anota desde cuándo. Verás las novedades igualmente al entrar en ResidApp.</li>
+    <li>Los avisos sobre citas solo se envían a una dirección que el centro <strong>ha confirmado contigo</strong> y mientras tengas acceso al Portal Familiar.</li>
+    <li>Son <strong>voluntarios</strong>. Para dejar de recibirlos, díselo a tu centro: no tienes que explicar por qué ni hace falta borrar tu dirección. La baja vale para ese centro y quedan anotados desde cuándo y qué persona de Administración la apuntó. Verás las novedades igualmente al entrar en ResidApp.</li>
     <li>Los avisos que no se envíen mientras estás de baja no se mandan después, salvo el de una cita fuera del centro que toque el mismo día en que se vuelvan a activar. Para volver a recibirlos, pídeselo a tu centro.</li>
     <li><strong>Por tu seguridad:</strong> ResidApp nunca te pedirá tu contraseña por correo, por teléfono ni por mensaje. Si recibes un aviso que no esperabas, ignóralo y cuéntaselo al centro.</li>
-    <li>Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío <strong>sin el contenido ni la dirección</strong>: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió y, en el recordatorio y en los avisos de citas fuera del centro, el día de la cita.</li>
+    <li>Para enviarlos usamos el servicio de correo de Microsoft (apartado 9). Guardamos un registro de cada envío <strong>sin el contenido ni la dirección</strong>: solo qué aviso, a qué familiar (por su identificador interno), cuándo y si salió y, en el recordatorio y en los avisos de citas fuera del centro, el día de la cita. @if (conCodigo) { <text>Los envíos del código se anotan aparte (apartado 2.2) y el aviso de cambio de correo, en este mismo registro.</text> }</li>
 </ul>
+
+@if (conCodigo)
+{
+    <h3 class="h6 mt-3" id="codigo-acceso">El código para entrar en el Portal Familiar</h3>
+    <p>Si entras solo como familiar, necesitas tu <strong>contraseña</strong> y un <strong>código de 6 cifras</strong> que te enviamos por correo cada vez que entras, también cuando usas una invitación. Si además trabajas en el centro, entras como el personal.</p>
+    <ul>
+        <li>El código sirve <strong>una sola vez</strong> y caduca en <strong>10 minutos</strong>. Si no llega, mira el correo no deseado, pide otro o llama a tu centro.</li>
+        <li><strong>Límites por seguridad:</strong> hay que esperar 60 segundos para pedir otro; como máximo 5 por hora y 10 al día; 5 intentos por código. Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos. Con 15 códigos fallidos en 24 horas no podrás entrar hasta que la Administración de tu centro te entregue una invitación nueva.</li>
+        <li>El correo del código no lleva nombres, datos de salud ni enlaces. ResidApp <strong>nunca te pedirá el código</strong> por teléfono ni por mensaje: no se lo des a nadie.</li>
+        <li>¿Te llega un código sin estar intentando entrar? Puede que alguien sepa tu contraseña: cámbiala en «Mi cuenta» y avisa a tu centro.</li>
+        <li>Usa en ResidApp una <strong>contraseña distinta de la de tu correo</strong>. Quien pueda leer tu correo (por ejemplo, si lo compartes) verá el código.</li>
+        <li><strong>Si cambia tu correo:</strong> cuando la Administración cambia o borra la dirección, se cierran tus sesiones, deja de valer el código pendiente y ResidApp intenta enviar un aviso, sin nombres, a la dirección anterior. Si no lo has pedido tú, llama a tu centro.</li>
+        <li><strong>Sin correo no hay portal.</strong> Si no tienes correo o no quieres darlo, no podrás usarlo: tu centro te atiende en persona o por teléfono. @Pend("cada centro confirma cómo lo hace")</li>
+        <li><strong>Darte de baja de los avisos no te quita el acceso:</strong> el código y el aviso de cambio de correo te siguen llegando, porque son de seguridad.</li>
+    </ul>
+}
 
 <h2 class="h5 mt-4" id="dictado">6. Dictado por voz (módulo opcional)</h2>
 <p>En la pantalla «Registrar cambio», una auxiliar puede <strong>contar hablando</strong> lo que ha observado en una persona residente, en lugar de marcar casillas. Es un <strong>módulo opcional</strong>: no lo tienen todos los centros. @Pend("confirmar su estado al publicar: hoy ningún centro real lo tiene activado y solo se ha probado con audios y datos inventados")</p>
@@ -155,6 +200,11 @@
     <li class="list-group-item"><strong>Registro de actividad (auditoría).</strong> Hoy no se puede borrar. @Pend("plazo y vía de borrado sin decidir")</li>
     <li class="list-group-item"><strong>Sesiones abiertas y cerradas.</strong> Hoy no se pueden borrar. @Pend("plazo y vía de borrado sin decidir")</li>
     <li class="list-group-item"><strong>Registro de envíos de correo (sin contenido ni dirección).</strong> Como máximo 12 meses; se borra solo. @Pend("confirmación de la persona experta")</li>
+    <li class="list-group-item"><strong>Baja de los avisos.</strong> En tu ficha, mientras estés de baja; se quita al volver a activarlos o si se anonimiza tu ficha. El registro de esos cambios, y las bajas solo de citas fuera del centro, hoy no se pueden borrar. @Pend("plazo y vía de borrado sin decidir")</li>
+    @if (conCodigo)
+    {
+        <li class="list-group-item"><strong>Registro de los códigos de acceso.</strong> Propuesta: 30 días desde que se creó cada código. La huella del código se borra antes: cuando deja de valer o, si solo caduca, en la limpieza diaria. La marca de bloqueo dura hasta que usas una invitación nueva. @Pend("una persona experta decide el plazo; 30 días es una propuesta, no un plazo legal")</li>
+    }
     <li class="list-group-item"><strong>Registros de entrega del servicio de correo de Microsoft.</strong> @Pend("plazo sin configurar")</li>
     <li class="list-group-item"><strong>Foto.</strong> Hasta que se cambia, se quita o se da de baja a la persona (apartado 7).</li>
     <li class="list-group-item"><strong>Audio y texto del dictado.</strong> ResidApp no los guarda. @Pend("lo que conserva Mistral")</li>
@@ -166,10 +216,19 @@
 <p>Estas empresas son <strong>subencargadas</strong>: trabajan para ResidApp, que trabaja para el centro. Tratan los datos solo para dar el servicio y están obligadas por contrato.</p>
 <ul class="list-group mb-3">
     <li class="list-group-item"><strong>Microsoft Azure.</strong> Aloja la aplicación y la base de datos donde se guardan todos los datos. Interviene siempre. Región: @Pend("región de Azure; se prefiere la Unión Europea")</li>
-    <li class="list-group-item"><strong>Microsoft Azure Communication Services.</strong> Envía los avisos por correo del apartado 5. Interviene solo si el servicio de avisos está encendido y solo para las familias cuya dirección el centro ha anotado y confirmado.</li>
+    <li class="list-group-item"><strong>Microsoft Azure Communication Services.</strong>
+        @if (conCodigo)
+        {
+            <text>Envía los correos del apartado 5. El código de acceso llega a cada familiar que entra en el portal y el aviso de cambio, a la dirección anterior. Los avisos sobre citas, solo a quien tiene la dirección confirmada y no está de baja. Como el código se envía en cada entrada, por este servicio pasa también cuándo la pides.</text>
+        }
+        else
+        {
+            <text>Envía los avisos por correo del apartado 5. Interviene solo si el servicio de avisos está encendido y solo para las familias cuya dirección el centro ha confirmado y que no estén de baja.</text>
+        }
+    </li>
     <li class="list-group-item"><strong>Mistral AI.</strong> Pasa a texto el dictado y propone la sugerencia del apartado 6. Interviene solo en los centros que tienen activo el módulo de dictado por voz y mientras esté vigente; en los demás no recibe nada.</li>
 </ul>
-<p><strong>Transferencias fuera de la Unión Europea.</strong> ResidApp no tiene previsto enviar datos fuera de la UE. @Pend("confirmar la región real de Azure y de Mistral y la garantía aplicable") Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas; en nuestros avisos solo viajaría una dirección de correo y la hora de envío.</p>
+<p><strong>Transferencias fuera de la Unión Europea.</strong> ResidApp no tiene previsto enviar datos fuera de la UE. @Pend("confirmar la región real de Azure y de Mistral y la garantía aplicable") Microsoft indica, para su servicio de correo, que los datos pueden transitar o procesarse en otras zonas geográficas; por ese servicio pasan la dirección de correo, el texto del mensaje (@(conCodigo ? "sin nombres ni datos de salud; el correo de acceso incluye el código" : "sin nombres ni datos de salud")) y la fecha y la hora del envío.</p>
 <p><strong>Letras de Google en dos páginas de ayuda.</strong> Las páginas «Flujo de trabajo» y «Acceso y sesión» cargan los tipos de letra desde Google. Al abrirlas, tu navegador se conecta con Google y le llega tu dirección IP. @Pend("ResidApp va a servir esas letras desde su propio servidor; quitar este párrafo cuando esté hecho") Los documentos de trabajo del equipo del proyecto (guías de pruebas) también cargan esas letras. El resto de la aplicación no carga nada de terceros.</p>
 
 <h2 class="h5 mt-4" id="cookies">10. Cookies y almacenamiento en tu dispositivo</h2>
@@ -182,7 +241,7 @@
     <li class="list-group-item"><code>residapp_active_scope</code> — Recuerda el centro y el perfil con el que trabajas. No da acceso por sí sola: el servidor comprueba siempre tu permiso. Dura hasta que cierres el navegador, cambies de perfil o pulses «Salir».</li>
     <li class="list-group-item"><code>residapp_clinical_access</code> — Solo para Dirección Clínica: recuerda la declaración que haces antes de consultar el detalle clínico de una persona. Dura hasta 1 hora.</li>
     <li class="list-group-item"><code>residapp_transfer_history</code> — Solo para Enfermería y Medicina: recuerda que has pedido ver el historial anterior de una persona trasladada de unidad. Dura hasta 1 hora.</li>
-    <li class="list-group-item"><code>residapp_acceso_pendiente</code> — Recuerda que ya has puesto bien la contraseña y falta el código (va cifrada). Dura 10 minutos.</li>
+    <li class="list-group-item"><code>residapp_acceso_pendiente</code> — Recuerda que has puesto bien la contraseña (o que has usado una invitación) y que falta el segundo paso: @(conCodigo ? "el código del móvil o el que te llega por correo" : "el código del móvil"). Guarda identificadores @(conCodigo ? "de tu cuenta y del envío del código" : "de tu cuenta") y la página a la que ibas, nunca la contraseña ni el código. Va cifrada, solo se usa en las pantallas de acceso y dura 10 minutos.</li>
     <li class="list-group-item"><code>residapp_invitacion</code> — Recuerda la invitación que usas para crear tu acceso (va cifrada). Dura 30 minutos.</li>
     <li class="list-group-item"><code>residapp_passkey</code> — Guarda el paso intermedio al entrar o registrar una llave de acceso (va cifrada, un solo uso). Dura 5 minutos.</li>
     <li class="list-group-item">Cookies de protección de formularios y de mensajes entre pantallas (por ejemplo, «Datos guardados») — Impiden que otra web envíe formularios en tu nombre y llevan un aviso breve a la pantalla siguiente. Duran hasta que cierres el navegador. @Pend("nombre exacto de cada una, a confirmar en el navegador")</li>
@@ -202,7 +261,14 @@
     <li><strong>Solo entra quien tiene cuenta.</strong> Todas las pantallas piden iniciar sesión, salvo esta página, el manual, la ayuda y la pantalla de entrada. Las cuentas las crea el centro; nadie puede crearse una por su cuenta.</li>
     <li><strong>Permiso para cada cosa.</strong> El servidor comprueba en cada petición quién eres, con qué perfil actúas y a qué residentes y unidades llega tu permiso. Lo que no está permitido expresamente, se deniega.</li>
     <li><strong>Cada centro, separado.</strong> Los datos de un centro no se mezclan con los de otro: las reglas están en el servidor y en la propia base de datos.</li>
-    <li><strong>Contraseña larga y segundo paso.</strong> La contraseña tiene al menos 12 caracteres. El personal usa además un código temporal que genera una aplicación en su móvil, o una llave de acceso («passkey», una credencial que se desbloquea en tu dispositivo con la huella, la cara o el PIN, cuando el servicio la tiene activada). Las familias entran con usuario y contraseña.</li>
+    <li><strong>Contraseña larga y segundo paso.</strong> La contraseña tiene al menos 12 caracteres. El personal usa además un código temporal que genera una aplicación en su móvil, o una llave de acceso («passkey», una credencial que se desbloquea en tu dispositivo con la huella, la cara o el PIN, cuando el servicio la tiene activada). @if (conCodigo)
+        {
+            <text>Las familias usan además un código de un solo uso que llega a su correo (apartado 5). Esta protección no basta si otra persona puede leer tu correo o si una web falsa te pide la contraseña y el código.</text>
+        }
+        else
+        {
+            <text>Mientras el código por correo no está encendido, las familias solo pueden entrar con usuario y contraseña en los entornos de prueba.</text>
+        }</li>
     <li><strong>Frenos a los intentos repetidos.</strong> Tras 5 fallos seguidos, la cuenta se bloquea 15 minutos. También se limitan los intentos por dirección IP.</li>
     <li><strong>Invitaciones de un solo uso</strong>, que caducan a las 72 horas y que el centro puede anular.</li>
     <li><strong>Sesiones con tiempo límite</strong>, que se pueden cerrar desde «Mi cuenta».</li>
@@ -216,7 +282,7 @@
 <ul>
     <li><strong>Acceso:</strong> saber qué datos tuyos se tratan y recibir una copia.</li>
     <li><strong>Rectificación:</strong> corregir datos incorrectos o incompletos.</li>
-    <li><strong>Supresión:</strong> pedir que se borren tus datos. Si lo pides, el centro borra tu nombre, teléfono y correo en ResidApp y cierra tu acceso (lo hace la Administración principal del centro). Se conservan tu identificador de acceso y la relación con la persona residente (por ejemplo, «hija»), porque no se pueden cambiar. Lo que la ley manda conservar, como la documentación clínica y los registros de seguridad, se conserva mientras dure esa obligación, y puede incluir nombres que el personal escribió a mano. @Pend("una persona experta decide si, además, hay que guardar aparte los datos suprimidos (bloqueo) y durante cuánto tiempo")</li>
+    <li><strong>Supresión:</strong> pedir que se borren tus datos. Si lo pides, el centro borra tu nombre, teléfono y correo en ResidApp y cierra tu acceso (lo hace la Administración principal del centro). Se conservan tu identificador de acceso y la relación con la persona residente (por ejemplo, «hija»), porque no se pueden cambiar. Lo que la ley manda conservar, como la documentación clínica y los registros de seguridad, se conserva mientras dure esa obligación, y puede incluir nombres que el personal escribió a mano. @if (conCodigo) { <text>Si pides que se borre solo tu correo, se borra, pero ya no podrás entrar en el portal. </text> } @Pend("una persona experta decide si, además, hay que guardar aparte los datos suprimidos (bloqueo) y durante cuánto tiempo")</li>
     <li><strong>Oposición:</strong> oponerte a un tratamiento basado en el interés legítimo o en una misión pública.</li>
     <li><strong>Limitación:</strong> pedir que se congele el uso de tus datos mientras se resuelve una duda o reclamación.</li>
     <li><strong>Portabilidad:</strong> recibir los datos que nos diste en un formato de uso común, cuando el tratamiento se base en tu consentimiento o en un contrato.</li>

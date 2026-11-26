@@ -51,6 +51,20 @@
     display: table-footer-group !important;
     break-inside: avoid;
   }
+
+  /* La hoja de invitación con la información a la familia tiene que caber en una página: en papel sobran los menús y los enlaces del pie. */
+  body:has(.hoja-datos-familia) > header,
+  body:has(.hoja-datos-familia) > footer {
+    display: none !important;
+  }
+
+  body:has(.hoja-datos-familia) .impresion-pagina {
+    max-width: none;
+  }
+
+  body:has(.hoja-datos-familia) .hoja-invitacion {
+    width: 100%;
+  }
 }
 
 /* Foto de identificación del residente (_FotoResidente): de tamaño fijo y cuadrada con las esquinas redondeadas, en las listas y en la ficha;

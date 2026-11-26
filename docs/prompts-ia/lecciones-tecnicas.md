@@ -218,6 +218,10 @@ Repite estos pasos antes de dar un bloque por cerrado:
   No la solapes con otra carga sobre SQL Server (aplicar el seed, la app con curl, otra compilación): el
   2026-09-30 una vuelta que coincidió con la aplicación del seed a la base local tardó 1 min 13 s y dio 3
   fallos en tests no relacionados; las tres siguientes, sin nada en paralelo, salieron limpias.
+- **Una prueba funcional que falla solo en la CI, con un 500 al abrir una pantalla (2026-11-26, PR #436):** las copias de la aplicación que arrancan las pruebas
+  agotaban los vigilantes de ficheros de Linux (inotify, un tope por usuario); `VigilantesDeFicheros.cs` los sustituye en las pruebas por consultas periódicas.
+  En Windows no se ve, y en la imagen Docker `mcr.microsoft.com/dotnet/sdk` tampoco, porque ya trae `DOTNET_USE_POLLING_FILE_WATCHER=true`. El registro de la CI
+  no guarda los errores de la aplicación: para verlos, reprodúcelo en contenedores Linux.
 - **Estado de un push en GitHub:** busca su run con `.../actions/runs?head_sha=<sha completo>`; la lista con
   `per_page=1` a veces devuelve un run antiguo. Después, `.../actions/runs/<id>/jobs` da la conclusión de
   `build-and-test` y `deploy`.

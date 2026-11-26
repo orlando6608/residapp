@@ -214,6 +214,7 @@ Fuentes consultadas hoy (2026-10-30), páginas de Microsoft Learn: `learn.micros
 | Transferencias | Datos en Europa; tránsito posible por otras geografías (apartado 2.6). **A verificar** |
 | Conservación | Dirección: la del familiar mientras tenga acceso. Registro de envíos: **[Decidir]**, propuesta 12 meses. Registros de entrega de ACS: **[Decidir]**, propuesta 30 días. |
 | Seguridad | Texto cerrado y versionado; sin datos en el mensaje; envío tras confirmar la propuesta; comprobación del acceso en el momento de enviar; destinatario único; sin seguimiento de aperturas y sin ningún recurso remoto en el mensaje (el icono de ResidApp va incrustado); seguridad por filas; cadena de conexión fuera del repositorio |
+| Baja de avisos (oposición) | En la ficha: desde cuándo y qué cuenta de Administración la anotó, sin motivo ni canal; historial en la auditoría (`FAMILY_NOTICES_OPT_OUT` y `_OPT_IN`). Corta los avisos sobre citas, no el código ni el aviso de cambio de correo. Se comprueba justo antes de enviar. Plazo del historial: **[Decidir]** |
 | Autoridad de control | **A verificar** (AEPD o APDCAT) |
 
 **Parte B, ResidApp (encargada):** tratar la dirección y la plantilla por instrucción de la residencia para enviar el aviso mediante Azure Communication Services (subencargado); mantener el registro de envíos; no usar las direcciones para otra cosa; borrar el registro al terminar el contrato o cuando la residencia lo indique.

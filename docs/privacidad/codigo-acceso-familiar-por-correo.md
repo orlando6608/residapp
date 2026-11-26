@@ -191,18 +191,23 @@ El pie con el titular de ResidApp sigue siendo requisito previo a datos reales (
 
 ### Registro de actividades (art. 30): añadir a la actividad del Portal Familiar
 
-| Campo | Parte A, residencia (responsable) |
-|---|---|
-| Finalidad | Comprobar la identidad de quien entra en el portal y proteger la cuenta |
-| Base jurídica | [DECIDIR: 6.1.b, 6.1.f o 6.1.e, con art. 32] |
-| Personas afectadas | Familiares y representantes con acceso al portal |
-| Datos | Correo (fin nuevo, además de los avisos); resumen del código; fechas de envío, uso y caducidad; resultado del envío; intentos; entradas y fallos con IP |
-| Destinatarios | ResidApp (encargada); Microsoft Azure Communication Services (subencargado) |
-| Transferencias | Las ya anotadas para el correo: «puede transitar o procesarse en otras geografías»; garantía **a verificar** |
-| Plazos | Tabla de códigos: [30 días, DECIDIR]; `eventos_acceso`: [DECIDIR]; registros de entrega: [30 días, sin configurar] |
-| Seguridad | Dos pasos; código de 6 cifras, un uso, 10 minutos; límites de intentos y envíos; sin dirección ni código en registros; aviso y cierre de sesiones al cambiar la dirección |
+Actualizado en el PR 4 (2026-11-26) contra lo construido. Borrador por validar. El registro es obligatorio al haber categorías especiales (art. 30.5).
 
-**Parte B, ResidApp (encargada, art. 30.2):** envío de códigos y avisos de seguridad por cuenta de cada residencia; subencargado Microsoft; medidas anteriores. **Contrato de encargado (art. 28):** incluir este uso en el objeto y las instrucciones; informar del cambio en el uso del subencargado.
+| Campo | Parte A, la residencia (art. 30.1) |
+|---|---|
+| Actividad | Acceso de la familia al portal con código por correo y avisos de seguridad |
+| Responsable y DPO | [RESIDENCIA], [DPO] |
+| Finalidad | Comprobar quién entra, proteger la cuenta y avisar de un cambio de dirección |
+| Base jurídica | [DECIDIR: 6.1.b, 6.1.f o 6.1.e, en relación con el art. 32; con 6.1.f, nombrar el interés] |
+| Personas afectadas | Familiares y representantes con acceso; ocasionalmente, un tercero que reciba un correo por una dirección errónea |
+| Datos | Correo de la ficha; cuenta; códigos (`codigos_acceso_correo`: huella con clave mientras vive, fechas, cierre, fallos, envío, operación del proveedor, versión e idioma; sin código, dirección, IP, centro ni residente); marca de bloqueo (`credenciales`); aviso de cambio (`envios_correo`: centro, identificador del familiar, estado, motivo, operación y fecha, sin direcciones); entradas y sesiones, con IP |
+| Destinatarios | ResidApp (encargada); Microsoft Azure Communication Services (subencargado). Administración sabe si salió el aviso de cambio |
+| Transferencias | Posible tránsito fuera de la UE según Microsoft; garantía **a verificar** |
+| Plazos | Códigos: 30 días [DECIDIR]; envíos: 12 meses [confirmar]; entradas y sesiones: sin plazo ni vía de borrado [DECIDIR]; registros de entrega de Microsoft: 30 días previstos, sin configurar |
+| Seguridad | Contraseña y código de 6 cifras, un uso, 10 minutos; límites de envío e intentos; huella con clave guardada fuera de la base; purga con rol propio; la aplicación no puede borrar códigos; sin código ni dirección en los registros técnicos revisados; aviso, cierre de sesiones y anulación del código al cambiar la dirección; fuera de desarrollo, sin código no entran |
+| Autoridad | [AEPD o APDCAT] |
+
+**Parte B, ResidApp (encargada, art. 30.2):** por cuenta de [RESIDENCIA], envío de códigos y avisos de seguridad y custodia de sus registros; subencargado Microsoft; transferencias y medidas como arriba; datos de contacto y DPO de ambas partes [PENDIENTE]. **Contrato de encargado (art. 28):** incluir este uso en el objeto y las instrucciones; informar del cambio en el uso del subencargado.
 
 ### Información a la familia (antes de recoger o reutilizar la dirección)
 
@@ -344,4 +349,27 @@ Base normativa local (comprobada el 2026-11-20; textos consolidados, no oficiale
 
 **La residencia** fija quién atiende estas peticiones, cómo comprueba la identidad por teléfono y cómo trata dos fichas de la misma persona.
 
-**Visto y no corregido aquí:** `expurgo-y-supresion.md` dice que la baja de citas externas se borra con la anonimización definitiva; la aplicación no lo hace y la base de datos lo impide (script `0105`). Antes de datos reales, comprobar que nadie quedó «de baja» solo por haberle quitado la confirmación o borrado la dirección.
+**Corregido en el PR 4:** la fila de `expurgo-y-supresion.md` decía que la baja de citas externas se borra con la anonimización definitiva; ahora dice que no (la aplicación no lo hace y la base de datos lo impide, script `0105`). Antes de datos reales, comprobar que nadie quedó «de baja» solo por haberle quitado la confirmación o borrado la dirección.
+
+## PR 4: textos y encendido en desarrollo
+
+**Borrador del agente `dpo-residapp` (2026-11-26), por validar por una persona.** **Admisible con condiciones para desarrollo con datos ficticios; no para familias reales.** Construido: página y política de privacidad, información breve en la hoja de invitación, catálogo de expurgo, registro de actividades, y aviso a Administración cuando una cuenta con acceso no tiene correo.
+
+### Antes de encender en desarrollo, en este orden
+
+1. **La persona que prueba, informada y conforme** antes de escribir su dirección en una ficha: para qué, que la verá quien entre como Administración de ese centro, que pasa por Microsoft y cómo retirarla. Si dio su dirección para otra cosa, es un fin nuevo (arts. 5.1.b y 13.3 RGPD). Ninguna dirección va al repositorio ni al chat.
+2. **Solo direcciones permitidas:** `Correo__TodosLosDestinos` ausente o en `false`, y cada dirección, exacta, en `Correo__DireccionesPermitidas__N`. Un envío a una dirección no permitida también gasta el límite de envíos.
+3. **Textos y documentación desplegados.**
+4. **Direcciones puestas en las fichas con el código apagado** (así no hay cierres de sesión ni avisos a direcciones antiguas). La misma en todas las fichas de una cuenta. Las demás cuentas de familia quedan fuera, y es lo esperado: no ponerles direcciones de terceros ni inventadas en dominios reales.
+5. **Ajustes:** correo operativo, `Acceso__CodigoFamiliarClave` aleatoria de 32 caracteres o más, creada solo en la Web App, y después `Acceso__CodigoFamiliarActivo`.
+6. **Sesiones de familia:** encender no las cierra. Solo las hay sin código en desarrollo: comprobar que nadie está dentro y esperar 30 minutos sin actividad (máximo absoluto, 12 horas). Anotar cómo se hizo.
+7. **Avisar** a quien prueba: si además se marca «Dirección confirmada», puede recibir avisos de citas; y si cambia o borra el correo de la cuenta de familia, dejará de poder entrar.
+8. **Primera prueba:** el registro de la Web App debe decir `CODIGO_ACCESO_FAMILIA: ENVIADO`, sin dirección ni código.
+
+**Paso 1 para las cuentas de CJ (2026-11-26):** Orlando comunica que CJ está conforme con que su dirección se use en sus cuentas de familia de prueba; la hoja de acceso de CJ ya lo dice. Aquí no se copia la dirección ni la respuesta.
+
+Recomendado: comprobar que `ResidAppTareas` está configurada (si sale «Códigos de acceso: no se purgan», los 30 días no se cumplen), seguimiento de aperturas apagado en Azure y retirar las direcciones de prueba al terminar.
+
+### Solo antes de datos reales
+
+Además del apartado 9: forma escrita de cerrar sesiones al encender; decidir si el entorno de desarrollo debe exigir también la marca de la base de datos (hoy basta la configuración); cuentas que fueron de personal y conservan aplicación de códigos o llave de acceso (entran sin el código por correo); cambio de dirección a la vez que se comprueba el código; una persona con fichas en dos centros se queda sin acceso a ambos si uno cambia el correo, y el mensaje solo dice que falta el correo.
