@@ -1,6 +1,6 @@
 # Centro de Día como segunda modalidad de centro: traspaso
 
-**Estado a 2026-11-21: fase 0 hecha (alcance, lectura del DPO y preguntas a CJ) y fase 1 construida en la rama `feat-tipo-de-servicio` (script `0113`, ADR 0017, ver el apartado 5 bis).** Ninguna pantalla cambia todavía por el tipo, solo lo muestra una etiqueta. La fase 5 espera a que CJ conteste `docs/pendientes-cj/centro-de-dia-parte-diario-cj.html` (18 preguntas en 5 temas); las fases 2 a 4 se pueden empezar sin esa respuesta.
+**Estado a 2026-11-26: fases 0 a 4 y 5a (asistencia) hechas, fusionadas en `main` (apartados 5 a 5 sexies; ADR 0017 y 0019; scripts `0113` a `0120`).** El ADR 0019 está «aceptada en lo técnico» y **no autoriza datos reales**: las lecturas del DPO son borradores y los valores de partida no están validados por CJ. Sin recorrer en Azure dev: las ausencias «Terminadas» y «Acortar», los arreglos que salieron del recorrido de Medicina y el cambio de horario al corregir el tipo (`0120`). El cuestionario `docs/pendientes-cj/centro-de-dia-parte-diario-cj.html` tiene 26 preguntas en 7 temas y, a 2026-11-26, CJ había contestado 11 (temas 1 a 3); las fases 5b a 5d, sin construir, esperan los temas 4 y 5.
 
 Un Centro de Día es un servicio al que las personas van por la mañana y del que vuelven a casa por la tarde: sin camas ni turno de noche, y con una familia que espera saber cada día cómo ha ido (cierre de tarde de 17:00 a 18:00). Hasta ahora estaba fuera de alcance; ya no lo está, salvo su parte diario (ver `docs/producto/alcance.md`). SAAD (atención a domicilio) sigue fuera.
 
