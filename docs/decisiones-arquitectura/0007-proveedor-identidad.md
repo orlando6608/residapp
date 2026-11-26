@@ -110,8 +110,9 @@ Desde I1 los cubren además `tests/FunctionalTests/AccesoTests.cs` y `tests/Inte
 ## Puertas abiertas
 
 1. **DPO de la residencia piloto:** EIPD; qué datos de identidad se guardan y cuánto tiempo; aceptación del segundo factor por población.
-2. **Segundo factor por población** (lo propone Seguridad y lo valida el DPO): TOTP o passkey para el personal; para familiares, a decidir
-   con CJ (pregunta 3.2 de `docs/pendientes-cj/portal-familiar-confirmaciones-cj.html`); passkey obligatoria para Plataforma.
+2. **Segundo factor por población** (lo propone Seguridad y lo valida el DPO): TOTP o passkey para el personal; para familiares, código por
+   correo (CJ, pregunta 3.2 de `docs/pendientes-cj/portal-familiar-confirmaciones-cj.html`; Orlando, 2026-11-26: sin correo no hay portal; sin
+   construir, ver ADR 0012); passkey obligatoria para Plataforma.
 3. **Tablets compartidas:** tiempo de inactividad definitivo y entrada rápida (I5).
 4. **Contradicciones (I2 no las necesita: la invitación se entrega en mano, sin correo):** el correo de los familiares es opcional en el alta; FAM-10 dice «sin correo ni SMS en el
    piloto». La auditoría de autenticación separada de la clínica que pide el ADR legado existe desde I1 (`dbo.eventos_acceso`;

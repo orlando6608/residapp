@@ -37,7 +37,18 @@ CJ lo reafirmó en la 6.4).
 4. **Remitente verificado.** Un dominio propio con SPF y DKIM (las firmas que dicen a los servidores de correo que el remitente es quien dice ser), para que los avisos no
    acaben en la carpeta de correo no deseado y para que nadie pueda hacerse pasar por ResidApp con facilidad.
 5. **Familias sin correo.** Hoy el correo es opcional. Sin correo no hay aviso ni recordatorio (el aviso dentro del portal, 6.3, cubre a todas). Para el código de acceso (3.2)
-   el correo pasa a ser **obligatorio** en el familiar que tiene acceso al portal: decidir qué pasa con los que ya tienen cuenta sin correo.
+   el correo pasa a ser **obligatorio** en el familiar que tiene acceso al portal. **Decidido por Orlando el 2026-11-26** (sin consultar de nuevo a CJ, a quien se
+   informa): la primera versión solo tiene el código por correo; quien no tenga correo, tampoco quien ya tenga cuenta, no usa el portal y se le atiende en persona o por
+   teléfono. En el uso real se verá si hace falta otra forma (aplicación de códigos o llave de acceso). Lectura de privacidad previa (borrador por validar):
+   `docs/privacidad/codigo-acceso-familiar-por-correo.md`. **Límites del código (Orlando, 2026-11-26; cifras de ingeniería, no un plazo legal):** vale 10 minutos
+   y una sola vez; 60 segundos entre envíos; como máximo 5 envíos por hora y 10 al día por cuenta; 5 intentos por código; con 15 fallos en 24 horas la cuenta no
+   entra hasta que Administración entregue una invitación de recuperación, que reinicia los contadores de código y envíos. **Baja de avisos (Orlando, 2026-11-26):**
+   entra en esta pieza; la marca Administración en la ficha del familiar, que conserva el correo para el código. Apagarlos desde el portal, más adelante (CJ, 3.2 de
+   `aviso-citas-por-correo-cj`). **Accesos nuevos (Orlando, 2026-11-26):** el correo del código dice que, si no está entrando quien lo recibe, cambie la contraseña y
+   avise al centro, y el portal muestra la fecha de la última entrada; sin aviso por aparato desconocido ni registro de aparatos. **Cambio de dirección (Orlando,
+   2026-11-26):** se avisa a la dirección anterior con un correo sin nombres; es un tipo de correo que no estaba en la lista de FAM-10 (se informa a CJ).
+   **Fuera de desarrollo (Orlando, 2026-11-26):** se construye con esta pieza que, en un entorno que no se declare de desarrollo y con el código apagado, la familia
+   no entre solo con la contraseña. Nada de esto está construido todavía.
 6. **Si el proveedor falla,** la acción que lo provoca no falla: la propuesta de cita, el cambio o la cancelación se guardan igual y el envío se reintenta; el código de acceso sí debe avisar de que no se
    pudo mandar.
 7. **Plantillas por idioma (decidido por Orlando el 2026-10-29).** Cada plantilla existe en castellano y en catalán, como ficheros separados y versionados en el

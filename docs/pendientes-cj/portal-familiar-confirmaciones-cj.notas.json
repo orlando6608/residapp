@@ -1,4 +1,6 @@
 {
   "documento": "portal-familiar-confirmaciones-cj",
-  "notas": {}
+  "notas": {
+    "3.2": "Para informarte, no hace falta que contestes. Decidido el 26/11/2026: la familia entrará con su contraseña y un código que le llega por correo, como elegiste. Quien no tenga correo no usará el portal y se le atenderá en persona o por teléfono.\n• La pregunta hablaba de un proveedor de cuentas que ya no usamos. Hoy existen además una aplicación de códigos y las llaves de acceso (huella, cara o PIN del móvil), que la pregunta no te ofrecía. En el uso real veremos si hace falta alguna de ellas.\n• Sobre los accesos nuevos que recomendaste vigilar: el correo del código dirá que, si no eres tú quien está entrando, cambies la contraseña y avises al centro, y el portal mostrará la fecha de la última entrada.\n• Si Administración cambia el correo de un familiar, se avisará a la dirección anterior con un mensaje sin nombres. Es un correo nuevo, además de los que ya habías aprobado.\n• Un familiar podrá rechazar los avisos y seguir recibiendo el código: de momento lo marcará Administración.\n• Todavía no está construido: hoy la familia sigue entrando solo con la contraseña."
+  }
 }
