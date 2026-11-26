@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using ResidApp.Application.Errors;
@@ -450,8 +451,10 @@ public sealed partial class AdministracionController(
             + (removed ? " Sin correo no podrá entrar en el portal." : string.Empty);
     }
 
-    /// <summary>Baja de avisos por familiar (script 0123). bajaVista son los instantes (ticks UTC) de la baja que enseñaba la pantalla; vacío si no estaba de baja.</summary>
+    /// <summary>Baja de avisos por familiar (script 0123). bajaVista son los instantes (ticks UTC) de la baja que enseñaba la pantalla; vacío si no estaba de baja.
+    /// [Authorize] repite lo que ya exige la política global (sesión iniciada) para que CodeQL lo vea; el permiso lo comprueba el caso de uso.</summary>
     [HttpPost]
+    [Authorize]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AvisosFamiliar(Guid residenteId, Guid vinculoId, bool baja, long? bajaVista, bool pedida, CancellationToken ct)
     {
