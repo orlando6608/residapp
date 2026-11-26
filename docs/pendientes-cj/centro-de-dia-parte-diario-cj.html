@@ -269,7 +269,7 @@
     </nav>
     <p class="eyebrow">ResidApp · Producto · Pendiente de tu criterio</p>
     <h1>El Centro de Día: qué se anota en el día</h1>
-    <p class="meta">Estado a 21/11/2026 · Para CJ, responsable de producto</p>
+    <p class="meta">Estado a 26/11/2026 · Para CJ, responsable de producto</p>
     <p class="lead prose">
       Orlando está estudiando si ResidApp, pensada para residencias, puede usarse también en un <strong>Centro de Día</strong>: un servicio al que las personas van por la mañana y del que vuelven a casa por la tarde,
       sin camas ni turno de noche, y en el que la familia espera saber cada día cómo ha ido. <strong>No está decidido abrirlo ni hay nada construido.</strong> Muchas cosas ya valdrían tal cual (sin habitaciones, sin noche);
@@ -283,7 +283,7 @@
   <div class="keyfacts" role="list">
     <div role="listitem"><span class="k">Qué bloquea</span><span>El parte del día no se puede diseñar sin tus respuestas. Nada de esto toca a las residencias.</span></div>
     <div role="listitem"><span class="k">Qué no cambia</span><span>El registro del Auxiliar, la revisión de Enfermería y los comunicados a la familia de las residencias siguen igual.</span></div>
-    <div role="listitem"><span class="k">Preguntas</span><span>18 preguntas en 5 temas. Sin datos personales reales en los comentarios.</span></div>
+    <div role="listitem"><span class="k">Preguntas</span><span>20 preguntas en 6 temas. Sin datos personales reales en los comentarios.</span></div>
   </div>
 
   <section class="howto" aria-labelledby="como">
@@ -482,6 +482,46 @@
         <div class="q-head"><span class="n">5.2</span><h3 class="q-title" id="t-5-2">El transporte, ¿lo hace el propio centro, una empresa o la familia? ¿Qué necesita saber el centro?</h3><span class="chip">Pendiente</span></div>
         <p class="why">Por ejemplo, silla de ruedas, hora de recogida o dirección. La dirección de una persona es un dato delicado: decide si la aplicación debe guardarla o no.</p>
         <label class="field">Tu respuesta<textarea data-field="texto" rows="4"></textarea></label>
+      </article>
+    </div>
+  </section>
+
+  <section class="tema" id="tema-6">
+    <h2>Tema 6 · Horario de los comunicados y plazos de partida</h2>
+    <div class="stack prose">
+      <p>Estas dos preguntas son del 26/11/2026. Desde que se escribió este documento, en el entorno de pruebas ya se puede dar de alta un Centro de Día, y nace con unos valores de partida que no has revisado.
+        Hablan de los comunicados a la familia y de los plazos que Dirección usa para la calidad del proceso, no del parte del día.</p>
+    </div>
+    <div class="qs">
+      <article class="q" data-q="6.1">
+        <div class="q-head"><span class="n">6.1</span><h3 class="q-title" id="t-6-1">En un Centro de Día, ¿a qué hora debe publicarse un comunicado a la familia y con cuánto margen?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">El margen es el tiempo mínimo para corregir un comunicado antes de que se publique. En una residencia se parte de las 19:00 y 1 hora, como indicaste. Para un Centro de Día, Orlando ha puesto de partida las 18:00 y 30 minutos. La Administración de cada centro puede cambiarlo.</p>
+        <fieldset class="choices" aria-labelledby="t-6-1">
+          <label class="choice"><input type="radio" name="r-6-1" value="A"><span class="letter">A</span><span class="txt">Valen las 18:00 y 30 minutos.</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="B"><span class="letter">B</span><span class="txt">Otra hora u otro margen (dilos en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-1" value="C"><span class="letter">C</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="2"></textarea></label>
+      </article>
+      <article class="q" data-q="6.2">
+        <div class="q-head"><span class="n">6.2</span><h3 class="q-title" id="t-6-2">¿Valen para un Centro de Día los mismos plazos del proceso que para una residencia?</h3><span class="chip">Pendiente</span></div>
+        <p class="why">Hoy un Centro de Día parte de los plazos que diste para las residencias (plazo normal y, después de la barra, el de un evento prioritario). Se cuentan por reloj, seguidos: también por la noche, en fin de semana y con el centro cerrado. Dirección puede cambiarlos en cada centro.</p>
+        <ul class="why">
+          <li>Valoración de Enfermería (desde que Auxiliar registra un cambio): 8 horas / 30 minutos.</li>
+          <li>Valoración médica (desde el escalado): 24 horas / 30 minutos.</li>
+          <li>Recepción de la transferencia de un seguimiento de Enfermería: 8 horas / 30 minutos.</li>
+          <li>Informe de derivación (desde que se activa el protocolo urgente): 30 minutos / 30 minutos.</li>
+          <li>Llamada a la familia (desde que se activa el protocolo urgente): 1 hora / 30 minutos.</li>
+          <li>Lectura de la indicación médica: 8 horas / 30 minutos.</li>
+          <li>Realización de la indicación médica: 8 horas / 30 minutos.</li>
+        </ul>
+        <fieldset class="choices" aria-labelledby="t-6-2">
+          <label class="choice"><input type="radio" name="r-6-2" value="A"><span class="letter">A</span><span class="txt">Valen tal cual.</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="B"><span class="letter">B</span><span class="txt">Hay que cambiar algunos (di cuáles y a cuánto en el comentario).</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="C"><span class="letter">C</span><span class="txt">Habría que contar solo las horas en que el centro está abierto (hoy no está construido).</span></label>
+          <label class="choice"><input type="radio" name="r-6-2" value="D"><span class="letter">D</span><span class="txt">Otra cosa (cuéntalo en el comentario).</span></label>
+        </fieldset>
+        <label class="field">Comentario (opcional)<textarea data-field="texto" rows="3"></textarea></label>
       </article>
     </div>
   </section>
