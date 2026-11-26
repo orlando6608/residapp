@@ -31,4 +31,11 @@ public sealed class AccesoOptions
     public string? PasskeyDominio { get; set; }
 
     public bool PasskeysActivas => !string.IsNullOrWhiteSpace(PasskeyDominio);
+
+    /// <summary>La familia entra con contraseña y un código que le llega por correo (ADR 0012, pieza 3). Apagado por defecto; ver <see cref="FamilyAccessGate"/>.</summary>
+    public bool CodigoFamiliarActivo { get; set; }
+
+    /// <summary>Clave del resumen de esos códigos (al menos 32 caracteres). Va en un ajuste de la Web App (<c>Acceso__CodigoFamiliarClave</c>), nunca en el repositorio.
+    /// Sin ella no se manda ningún código y, con el código activo, la familia no entra.</summary>
+    public string? CodigoFamiliarClave { get; set; }
 }

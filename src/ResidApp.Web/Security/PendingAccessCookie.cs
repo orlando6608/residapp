@@ -5,8 +5,11 @@ namespace ResidApp.Web.Security;
 
 /// <summary>Quién ha superado la contraseña y le falta el segundo factor. Lleva el sello de seguridad de ese momento: si cambia (otra
 /// contraseña, otro segundo factor), el paso pendiente deja de valer. CanEnroll: viene de usar una invitación, la única vía para dar de
-/// alta el segundo factor (ADR 0007, I2).</summary>
-public sealed record PendingAccess(Guid AccountId, string SecurityStamp, string? ReturnUrl, DateTimeOffset ExpiresAt, bool CanEnroll = false);
+/// alta el segundo factor (ADR 0007, I2). EmailCode: es un paso de familia, que se completa con el código por correo y no con la aplicación de
+/// códigos (ni al revés); CodeId es el código que se mandó a este navegador, si salió alguno (ADR 0012, pieza 3).</summary>
+public sealed record PendingAccess(
+    Guid AccountId, string SecurityStamp, string? ReturnUrl, DateTimeOffset ExpiresAt, bool CanEnroll = false, bool EmailCode = false,
+    Guid? CodeId = null);
 
 /// <summary>
 /// El paso entre la contraseña y el segundo factor (ADR 0007, incremento I1): una cookie cifrada por Data Protection, de 10 minutos y
@@ -20,10 +23,12 @@ public sealed class PendingAccessCookie(IDataProtectionProvider dataProtection, 
 
     private readonly IDataProtector protector = dataProtection.CreateProtector("ResidApp.Web.Security.PendingAccess");
 
-    public void Write(HttpResponse response, Guid accountId, string securityStamp, string? returnUrl, bool canEnroll = false) =>
+    public void Write(
+        HttpResponse response, Guid accountId, string securityStamp, string? returnUrl, bool canEnroll = false, bool emailCode = false,
+        Guid? codeId = null) =>
         response.Cookies.Append(CookieName,
             protector.Protect(JsonSerializer.Serialize(
-                new PendingAccess(accountId, securityStamp, returnUrl, clock.GetUtcNow() + Lifetime, canEnroll))),
+                new PendingAccess(accountId, securityStamp, returnUrl, clock.GetUtcNow() + Lifetime, canEnroll, emailCode, codeId))),
             new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.Strict, Path = "/Acceso", IsEssential = true, MaxAge = Lifetime });
 
     /// <summary>El paso pendiente, o null si no hay, está manipulado o ha caducado.</summary>

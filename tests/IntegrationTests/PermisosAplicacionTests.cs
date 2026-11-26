@@ -20,7 +20,7 @@ public sealed class PermisosAplicacionTests
     // Tablas que la aplicación actualiza (columna: solo terminada_en, ver ColumnaTerminada).
     private static readonly HashSet<string> Update = Names("""
         ambitos_perfil ambitos_perfil_residente ambitos_perfil_unidad bajas_residente basales_borrador basales_vigentes_residente cargos centros citas citas_bloqueos
-        citas_configuracion_centro citas_externas citas_franjas citas_solicitudes credenciales cuentas declaraciones_acceso_clinico declaraciones_historial_traslado edificios envios_correo
+        citas_configuracion_centro citas_externas citas_franjas citas_solicitudes codigos_acceso_correo credenciales cuentas declaraciones_acceso_clinico declaraciones_historial_traslado edificios envios_correo
         episodios_residente_centro equipos equipos_miembros eventos_asistenciales familiares fotos_residente habitaciones indicaciones_medicas intervalos_ubicacion_residente
         invitaciones_acceso logos_centro operaciones_idempotencia passkeys permisos_perfil planificacion_turnos plantas plantillas_intercambio plazas portal_familiar_visitas
         rangos_referencia_constantes residentes residentes_familiares sesiones suspensiones_residente turnos_catalogo unidades valoraciones_enfermeria valoraciones_medicas

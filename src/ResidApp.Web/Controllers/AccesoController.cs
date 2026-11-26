@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using ResidApp.Application.Ports;
 using ResidApp.Application.Sessions;
+using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Shared;
@@ -17,16 +18,18 @@ namespace ResidApp.Web.Controllers;
 /// <summary>
 /// Inicio de sesión con contraseña (ADR 0007, incremento I1) y uso de las invitaciones (I2). El personal (cualquier ámbito activo que no
 /// sea de familiar) necesita además un segundo factor TOTP, que solo se da de alta al usar una invitación (decisión de Orlando del
-/// 2026-10-22): así, saber la contraseña de una cuenta no basta para registrar otro móvil. Los familiares entran solo con la contraseña
-/// hasta que se construya su segundo factor (CJ ya contestó la pregunta 3.2 del Portal Familiar). Cualquier fallo con la contraseña da el mismo mensaje, exista
+/// 2026-10-22): así, saber la contraseña de una cuenta no basta para registrar otro móvil. Las cuentas que solo son de familia entran con la
+/// contraseña y un código que les llega por correo (ADR 0012, pieza 3; AccesoController.CodigoFamiliar.cs) o, con el código apagado y solo en un
+/// entorno de desarrollo, con la contraseña sola (<see cref="FamilyAccessGate"/>). Cualquier fallo con la contraseña da el mismo mensaje, exista
 /// o no la cuenta; los fallos de contraseña y de segundo factor cuentan para el bloqueo y quedan en dbo.eventos_acceso.
 /// </summary>
 [AllowAnonymous]
-public sealed class AccesoController(
+public sealed partial class AccesoController(
     UserManager<CredentialAccount> users, IProfileScopeDirectoryProvider directory, SessionSignIn signIn, PendingAccessCookie pendingCookie,
     IAccessInvitationRepository invitations, InvitationCookie invitationCookie, ISessionStore sessions,
     IAccessEventLog accessLog, TimeProvider clock, AccessFailureThrottle throttle,
-    IOptions<AccesoOptions> acceso, ILogger<AccesoController> logger) : Controller
+    IOptions<AccesoOptions> acceso, FamilyAccessGate familyAccess, FamilyAccessCodeService familyCodes,
+    ILogger<AccesoController> logger) : Controller
 {
     public const string PlatformUsesPasskeyMessage =
         "Las cuentas de Plataforma entran solo con passkey. Usa «Entrar con passkey».";
@@ -96,10 +99,19 @@ public sealed class AccesoController(
             return View(EntrarModel(subject, returnUrl, false));
         }
 
-        if (!account.TwoFactorEnabled && scopes.All(scope => scope.Profile == SystemProfile.Familiar))
+        if (!account.TwoFactorEnabled && IsFamilyOnly(scopes))
         {
-            await users.ResetAccessFailedCountAsync(account);
-            return await OpenSessionAsync(account, scopes[0], returnUrl, ct);
+            switch (familyAccess.Entry)
+            {
+                case FamilyEntry.PasswordOnly:
+                    await users.ResetAccessFailedCountAsync(account);
+                    return await OpenSessionAsync(account, scopes[0], returnUrl, ct);
+                case FamilyEntry.EmailCode:
+                    // Los fallos no se ponen a cero con la contraseña: solo al acertar también el código.
+                    return await SendFamilyCodeAsync(account, scopes, Url.IsLocalUrl(returnUrl) ? returnUrl : null, ct);
+                default:
+                    return FamilyCannotEnter(FamilyClosedMessage);
+            }
         }
 
         if (!account.TwoFactorEnabled)
@@ -194,15 +206,23 @@ public sealed class AccesoController(
             invitation.AccountId, null, SessionSignIn.Ip(HttpContext), Now, ct);
         InvitationCookie.Clear(Response);
 
+        // Una invitación nueva deja atrás los envíos, los fallos y el bloqueo del código por correo.
+        await familyCodes.ResetAsync(invitation.AccountId, ct);
+
         var scopes = await directory.ListActiveAsync(account.UserName, ct);
         if (scopes.Count == 0)
         {
             TempData[AvisoKey] = "Tu contraseña está guardada, pero tu cuenta no tiene ningún perfil activo. Pregunta a la Administración de tu centro.";
             return RedirectToAction(nameof(Entrar));
         }
-        if (scopes.All(scope => scope.Profile == SystemProfile.Familiar))
+        if (IsFamilyOnly(scopes))
         {
-            return await OpenSessionAsync(account, scopes[0], null, ct);
+            return familyAccess.Entry switch
+            {
+                FamilyEntry.PasswordOnly => await OpenSessionAsync(account, scopes[0], null, ct),
+                FamilyEntry.EmailCode => await SendFamilyCodeAsync(account, scopes, null, ct),
+                _ => FamilyCannotEnter($"Tu contraseña está guardada. {FamilyClosedMessage}"),
+            };
         }
 
         pendingCookie.Write(Response, account.Id, account.SecurityStamp ?? string.Empty, null, canEnroll: true);
@@ -432,11 +452,12 @@ public sealed class AccesoController(
 
     private sealed record Pending(PendingAccess State, CredentialAccount Account, IReadOnlyList<ActiveProfileScope> Scopes);
 
-    /// <summary>El paso pendiente sigue valiendo si la cookie es válida y no ha caducado, la cuenta sigue activa, con algún ámbito activo,
-    /// sin bloquear y con el mismo sello de seguridad.</summary>
-    private async Task<Pending?> ResolvePendingAsync(CancellationToken ct)
+    /// <summary>El paso pendiente sigue valiendo si la cookie es válida y no ha caducado, es de la clase que pide la pantalla (la aplicación
+    /// de códigos o el código por correo), la cuenta sigue activa, con algún ámbito activo, sin bloquear y con el mismo sello de seguridad.</summary>
+    private async Task<Pending?> ResolvePendingAsync(CancellationToken ct, bool emailCode = false)
     {
         if (pendingCookie.Read(Request) is not { } state
+            || state.EmailCode != emailCode
             || await users.FindByIdAsync(state.AccountId.ToString("D")) is not { Active: true } account
             || !string.Equals(account.SecurityStamp ?? string.Empty, state.SecurityStamp, StringComparison.Ordinal)
             || await users.IsLockedOutAsync(account))

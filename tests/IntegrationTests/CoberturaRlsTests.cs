@@ -17,6 +17,7 @@ public sealed class CoberturaRlsTests
         ["cuentas"] = Diseno,
         ["sesiones"] = Diseno,
         ["credenciales"] = Diseno,
+        ["codigos_acceso_correo"] = Diseno, // Script 0121: como credenciales, se escribe y se lee antes de que haya ámbito; sin centro, dirección ni código en claro.
         ["passkeys"] = Diseno,
         ["eventos_acceso"] = Diseno,
         ["invitaciones_acceso"] = Diseno,

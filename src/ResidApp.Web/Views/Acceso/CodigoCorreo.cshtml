@@ -1,0 +1,42 @@
+@model ResidApp.Web.Models.CodigoCorreoViewModel
+@{
+    ViewData["Title"] = "Código del correo";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 text-center mb-3">Código del correo</h1>
+
+                @if (Model.Aviso is { } aviso)
+                {
+                    <div class="alert alert-info" role="status">@aviso</div>
+                }
+
+                <p>Escribe el código de 6 cifras que te llega por correo. Sirve una sola vez y caduca en 10 minutos.</p>
+
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                <form asp-controller="Acceso" asp-action="CodigoCorreo" method="post">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código</label>
+                        <input type="text" class="form-control form-control-lg" id="codigo" name="codigo" inputmode="numeric" pattern="[0-9 ]*"
+                               autocomplete="one-time-code" autofocus required />
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Comprobar</button>
+                    </div>
+                </form>
+
+                <form asp-controller="Acceso" asp-action="ReenviarCodigo" method="post" class="d-grid mt-3">
+                    <button type="submit" class="btn btn-outline-primary btn-lg">Enviar otro código</button>
+                </form>
+
+                <p class="text-center small mt-3 mb-0">
+                    ResidApp nunca te pedirá este código por teléfono ni por mensaje. <a asp-controller="Acceso" asp-action="Entrar">Volver a empezar</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
