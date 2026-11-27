@@ -215,6 +215,22 @@ public partial class AccesoTests
         Assert.Contains("path=/acceso", cookie);
     }
 
+    /// <summary>
+    /// Un navegador puede guardar sin límite un 410 que no lo prohíba y volver a servirlo, sin preguntar, cuando la redirección que quita el
+    /// token lleva otra vez a esa dirección: una invitación nueva y buena seguía saliendo como «ya no vale» (2026-11-27). Sin sesión, que es
+    /// cuando la página no lleva ningún formulario que lo prohíba por otro lado.
+    /// </summary>
+    [Theory]
+    [InlineData("/Acceso/Invitacion")]
+    [InlineData("/Acceso/Invitacion/no-existe")]
+    public async Task LaPaginaDeLaInvitacionQueYaNoVale_NoSePuedeGuardarEnElNavegador(string url)
+    {
+        var response = await Client().GetAsync(url);
+
+        Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore, "La página tiene que pedir al navegador que no la guarde (Cache-Control: no-store).");
+    }
+
     /// <summary>El botón lo muestra y lo hace funcionar el JavaScript de la hoja (se comprueba en un navegador); aquí, que copia la misma dirección que lleva el QR.</summary>
     [Fact]
     public async Task LaHojaDeInvitacion_OfreceCopiarLaMismaDireccionQueElQr_YNoSaleImpreso()
