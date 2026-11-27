@@ -276,7 +276,7 @@
   .nota-ing p { margin: 0; white-space: pre-line; }
 </style>
 </head>
-<body data-doc="pruebas-4-direccion" data-version="2026-11-20">
+<body data-doc="pruebas-4-direccion" data-version="2026-11-28">
 
 <div class="page">
   <header>
@@ -390,9 +390,10 @@
         <div class="q-head"><span class="n">1</span><h3 class="q-title" id="t-1">Supervisión de pendientes</h3><span class="chip">Sin probar</span></div>
         <div class="prueba-meta"><span class="tag-imp">Imprescindible</span></div>
         <ol class="pasos">
-          <li>En Inicio de Dirección, mira las cifras por unidad. Abre «Supervisión de pendientes», filtra por tipo y unidad con «Buscar» y abre «Ver detalle operativo» de uno.</li>
+          <li>En Inicio de Dirección, mira «Requiere atención», arriba, y pulsa una de sus líneas.</li>
+          <li>Vuelve al Inicio de Dirección y mira las cifras por unidad. Abre «Supervisión de pendientes», filtra por tipo y unidad con «Buscar» y abre «Ver detalle operativo» de uno.</li>
         </ol>
-        <div class="esperado"><strong>Qué debería ocurrir</strong>Las cifras (sin valorar, en valoración, escalados, seguimiento y pendientes, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones. La única acción asistencial de este perfil es el cierre excepcional de un episodio con indicaciones sin cumplir (prueba 10).</div>
+        <div class="esperado"><strong>Qué debería ocurrir</strong>Cada línea de «Requiere atención» abre «Supervisión de pendientes» ya filtrada, con tantos episodios como decía su cifra; las líneas posibles son protocolo urgente, prioritario sin valorar, seguimiento pendiente e indicación no realizada, y si no hay ningún caso dice «No hay nada pendiente.». Las cifras (sin valorar, en valoración, escalados, seguimiento y pendientes, protocolo urgente, indicaciones) cuadran con lo que ves en la lista. El detalle muestra estado e hitos (quién, por perfil, y cuándo), sin observaciones, valoraciones ni indicaciones. La única acción asistencial de este perfil es el cierre excepcional de un episodio con indicaciones sin cumplir (prueba 10).</div>
         <fieldset class="choices" aria-labelledby="t-1">
           <label class="choice"><input type="radio" name="r-1" value="A"><span class="letter">A</span><span class="txt">Funciona como esperaba.</span></label>
           <label class="choice"><input type="radio" name="r-1" value="B"><span class="letter">B</span><span class="txt">Funciona, pero con un problema o algo que no me convence (descríbelo en el comentario).</span></label>

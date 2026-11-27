@@ -8,6 +8,14 @@ Flujo: [`supervision-clinica-direccion.md`](../../flujos-clinicos/supervision-cl
 
 ## Hecho
 
+- **«Requiere atención» en el Inicio de Dirección (2026-11-27, sin script; historia 1; fase 3 de la especificación de dashboards)** — cuatro líneas
+  (protocolo urgente activo, prioritario sin valorar, seguimiento pendiente, indicación no realizada) que cuentan episodios y enlazan a
+  `Direccion/Pendientes?tipo=…` (tipo nuevo `PrioritarioSinValorar`). Si falla la lectura, ni ceros ni «no tienes unidades». La lista y el detalle usan
+  ya fecha **y hora** para «pendiente», y marcan «Residente suspendido» (sus episodios siguen contando; decisión de Orlando). Fuera, por decisión de
+  Orlando: hitos fuera de plazo. **No es un fallo:** un seguimiento de Enfermería escalado a Medicina no sale como seguimiento en el Inicio ni en la
+  lista porque CJ lo confirmó así (confirmaciones de la segunda tanda, 4.3, 2026-10-10: consta como escalado); los indicadores sí lo siguen contando.
+  Pruebas: `DireccionAvisosPagesTests`, `DireccionSupervisionTests` y `SupervisionPendingRulesTests`. Se prueba en la guía 4 de CJ, prueba 1 (versión
+  2026-11-28). Falta: el aviso de episodios antiguos (umbral de CJ) y lo anotado en `avisos-abiertos.md`.
 - **Publicar comunicados a la familia antes de hora (CJ 5.3 de las confirmaciones de la segunda tanda, 2026-10-10; sin script)** — Dirección Clínica
   puede publicar un comunicado antes de su hora (`Direccion/Comunicados` + `PublicarComunicado`, `FamilyCommunicationPublicationApplicationService`),
   además de Administración. Es, con publicar una corrección o retirar un comunicado ya publicado (script `0053`, `FAMILY_COMMUNICATION_CORRECTIVE` y `FAMILY_COMMUNICATION_WITHDRAW`), la **única acción de escritura** de este perfil (el resto sigue en solo lectura). Alcance: los eventos de sus unidades y

@@ -4,7 +4,7 @@ Nov 10, 2026 · @Orlando Santos
 
 Estado: **propuesta revisada el 2026-11-10** contra las decisiones ya tomadas (ADR 0006, 0008 y 0015, lectura del DPO de módulos, guía de diseño y directrices PWA). Lo que contradecía alguna de ellas se ha quitado o rebajado; el apartado «Qué se descartó y por qué» lo recoge.
 
-**Construido (2026-11-27): la base común y Administración (fases 1 y 2).** Lo demás sigue sin construir. Al construirlas, Orlando decidió, y esto manda sobre lo que diga más abajo:
+**Construido (2026-11-27): la base común y Administración (fases 1 y 2) y, el mismo día, los avisos de Dirección que ya tenían datos (ver «Dirección»).** Lo demás sigue sin construir. Al construirlas, Orlando decidió, y esto manda sobre lo que diga más abajo:
 
 1. **Dos sitios.** Los avisos siguen en «Requiere atención» del Inicio de Administración, que gana los dos nuevos; las cifras y los gráficos van en una página aparte, «Panel de gestión» (`/Administracion/Panel`), con su tarjeta en «Inicio», al lado de la de «Administración» (Orlando, 2026-11-27).
 2. **Sin caché de servidor** hasta medir que una pantalla va lenta (las condiciones del apartado «Datos, histórico y rendimiento» se aplicarán si se añade).
@@ -101,14 +101,16 @@ Nuevos avisos y contadores en el Inicio, con la misma forma que los de hoy, que 
 
 | Aviso | Situación | Enlaza a |
 | --- | --- | --- |
-| Protocolos urgentes activos | Existe hoy como contador por unidad | Supervisión de pendientes |
-| Episodios prioritarios abiertos y sin valorar | Existe hoy como contador por unidad | Supervisión de pendientes |
-| Seguimientos con la fecha prevista pasada | Existe hoy como contador por unidad | Supervisión de pendientes |
-| Indicaciones no realizadas o con incidencia | Existe hoy como contador por unidad | Supervisión de pendientes |
-| Episodios abiertos más antiguos que un umbral | Nuevo (umbral por definir con CJ) | Supervisión de pendientes |
-| Hitos del proceso fuera de plazo | Nuevo en el Inicio; los plazos ya los fija Dirección con permiso | Calidad de proceso |
-| Peticiones de historial tras un traslado sin atender | La pantalla existe; **a comprobar** si hay contador para el Inicio | Peticiones de historial |
-| Episodios con indicaciones sin cumplir, que admiten el cierre excepcional | La acción existe en el episodio; **a comprobar** si hay contador para el Inicio | Supervisión de pendientes |
+| Protocolos urgentes activos | Construido (2026-11-27) | Supervisión de pendientes |
+| Episodios prioritarios abiertos y sin valorar | Construido (2026-11-27). La tabla solo contaba «Sin valorar»: se añadió el tipo «Prioritario sin valorar» | Supervisión de pendientes |
+| Seguimientos con la fecha prevista pasada | Construido (2026-11-27); con hora prevista, cuando pasa la hora | Supervisión de pendientes |
+| Indicaciones no realizadas o con incidencia | Construido (2026-11-27); cuenta episodios, no indicaciones | Supervisión de pendientes |
+| Episodios abiertos más antiguos que un umbral | Sin construir: umbral por definir con CJ | Supervisión de pendientes |
+| Hitos del proceso fuera de plazo | Sin construir (Orlando, 2026-11-27): Calidad de proceso queda registrada al abrirse y su cifra incluye hitos ya hechos tarde | Calidad de proceso |
+| Peticiones de historial tras un traslado sin atender | Descartado (2026-11-27): Dirección solo consulta esas peticiones; no hay nada que atender | Peticiones de historial |
+| Episodios con indicaciones sin cumplir, que admiten el cierre excepcional | Fuera por ahora (2026-11-27): contaría casi cualquier episodio con indicaciones pendientes | Supervisión de pendientes |
+
+**Construido (2026-11-27):** «Requiere atención» en el Inicio de Dirección, con las cuatro primeras filas: totales de su ámbito, sin cruce por unidad y periodo, y cada cifra igual a la lista filtrada a la que enlaza. Los episodios de un residente suspendido siguen contando y salen marcados (Orlando). Un seguimiento de Enfermería escalado a Medicina consta como escalado y no como seguimiento, como ya había confirmado CJ (confirmaciones de la segunda tanda, 4.3). Pendiente de una persona, antes de datos reales: informar al personal de que Dirección ve avisos de estado y anotarlo en el registro de actividades del centro (lectura del DPO, apartado 4).
 
 Los bloques de indicadores y de calidad de proceso solo aparecen si la cuenta tiene el permiso correspondiente. Los cálculos de «Indicadores e informe de actividad» y «Calidad de proceso» se reutilizan tal cual, para no crear cifras que los contradigan, y todo porcentaje muestra su numerador, denominador y periodo (historia DIR-08).
 
@@ -295,7 +297,7 @@ Reglas de implementación:
 
 1. **Base común (sin SQL nuevo).** Estructura de tres capas, componentes de tarjeta, aviso y gráfico SVG con tabla accesible, y selector de periodo. Se da por terminada cuando se ve igual en claro, oscuro, móvil de 375 px e impresión.
 2. **Administración.** Avisos existentes más invitaciones y bajas por vencer; ocupación, altas y bajas, citas y autorizaciones. Se prueba con Los Almendros y Los Olmos. Se añaden sus historias de usuario a `docs\historias-usuarios\administracion.md`.
-3. **Dirección / Coordinación Clínica (solo base).** Los dos avisos nuevos, tras decidir el umbral con CJ y revisar la ausencia de cifra mínima en los indicadores de hoy. El módulo gráfico es una propuesta aparte.
+3. **Dirección / Coordinación Clínica (solo base).** Hechos los cuatro avisos que ya tenían datos (2026-11-27). Queda el de episodios antiguos, tras decidir el umbral con CJ, y, antes de datos reales, la ausencia de cifra mínima en los indicadores de hoy. El módulo gráfico es una propuesta aparte.
 4. **Plataforma.** Con las cifras de servicio de arriba («Servicio»). Se prueba con los dos centros de pruebas y la cuenta de Plataforma de pruebas. La sección «Operación técnica» tiene sus propias dos fases (ver su apartado) y empieza cuando Orlando lo decida (el PR 6 de las citas externas y el hito 0.5.0 ya están cerrados).
 5. **Panel de turno para Medicina y Enfermería (fase posterior).** No es un cuadro de gestión sino una lista accionable del turno: eventos prioritarios abiertos, escalados recibidos (Medicina), indicaciones sin leer (Enfermería), seguimientos con la fecha pasada, protocolos urgentes activos y residentes sin basal. Casi sin gráficos y sin cifras por profesional, para que no se lea como un ranking de personas. Borrador de zonas: *Enfermería*, avisos de hitos, bandeja prioritaria (cambios prioritarios), protocolos urgentes, seguimientos pendientes y transferidos entre turnos, indicaciones pendientes o sin leer, episodios que se pueden cerrar, eventos pendientes de valoración, escalados enviados a Medicina y comunicados pendientes de publicar; *Medicina*, solo los escalados a Medicina y los eventos médicos propios (no todos los de Enfermería), protocolos urgentes, seguimientos pendientes, programados y vencidos, e indicaciones sin leer, con incidencia o en seguimiento. Ninguna acción cambia de dueño: Medicina no realiza indicaciones en nombre de Enfermería. Cada zona se contrasta con su pantalla y su permiso actuales antes de construirla.
 
@@ -316,6 +318,7 @@ Cada fase actualiza el Manual, la Guía por perfil y el Flujo de trabajo con el 
 | Operación técnica: leer Azure Monitor desde la app | Exigiría una identidad con permiso de lectura sobre Azure dentro de la app (superficie nueva); el portal ya da el panel y las alertas (decisión 1) |
 | Operación técnica: botón «Análisis ejecutivo con IA» | Claude no es proveedor autorizado y el análisis no es un caso de uso aprobado (ADR 0011); aporta poco sobre las reglas (decisión 7) |
 | Operación técnica: coste y margen por centro, DAU/WAU por centro, correos por centro | Datos que no existen o están bajo seguridad por filas; costes compartidos; actividad por persona sin cifra mínima |
+| Dirección: aviso de «peticiones de historial sin atender» | Dirección solo las consulta; no existe un estado «sin atender» |
 | Librería de gráficos propia | Sin precedente en la app; la guía prohíbe `style` y `script` en línea; la política de privacidad afirma que solo hay Bootstrap y jQuery |
 
 ## Decisiones abiertas

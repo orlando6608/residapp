@@ -182,7 +182,7 @@ public sealed class DireccionController(
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(new DireccionInicioViewModel([]));
+            return View(new DireccionInicioViewModel([], Failed: true));
         }
 
         // Las tarjetas de Indicadores y Calidad solo se enseñan con el permiso; solo orienta, cada pantalla vuelve a autorizar.

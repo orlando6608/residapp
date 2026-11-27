@@ -16,6 +16,9 @@ Criterios de aceptación:
 - El panel agrega la información por mi ámbito de supervisión (centro, unidad).
 - La supervisión operativa puede identificar residente y episodio cuando sea necesario, sin abrir automáticamente notas clínicas completas.
 - No aparece en este panel ningún control de escritura asistencial.
+- Arriba, «Requiere atención» cuenta los episodios abiertos de mi ámbito con protocolo urgente activo, prioritarios sin valorar, con el seguimiento pendiente (pasada su fecha u hora prevista) o con alguna indicación no realizada, en ese orden; cada cifra coincide con la lista a la que enlaza. Si no hay ninguno, dice «No hay nada pendiente».
+- Si las cifras no se pueden leer, el panel lo dice; nunca enseña un cero ni «No hay nada pendiente».
+- Los episodios de un residente suspendido por un ingreso hospitalario siguen contando y salen marcados en la lista y en el detalle.
 
 Códigos de origen: `DIR-02`, `DIR-03`.
 

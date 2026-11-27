@@ -5,6 +5,8 @@
 @{
     ViewData["Title"] = "Supervisión de pendientes";
     var filtro = Model.Filter;
+    // Con hora prevista, el seguimiento está pendiente cuando pasa esa hora: la misma regla que el filtro y las cifras.
+    var now = CenterTime.Now;
 }
 
 <nav aria-label="breadcrumb">
@@ -93,13 +95,17 @@ else
                             </h2>
                             <p class="mb-1">
                                 <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, item.Classification == DailyChangeClassification.Prioritario)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
-                                @if (SupervisionPendingRules.IsOverdue(item, Model.Today))
+                                @if (SupervisionPendingRules.IsOverdue(item, now))
                                 {
                                     <span class="badge text-bg-warning">Seguimiento pendiente</span>
                                 }
                                 @if (item.IndicationsNotDone > 0)
                                 {
                                     <span class="badge text-bg-danger">Indicación no realizada</span>
+                                }
+                                @if (item.ResidentSuspended)
+                                {
+                                    <span class="badge text-bg-warning">Residente suspendido</span>
                                 }
                             </p>
                             <p class="text-body-secondary small mb-0">
@@ -134,13 +140,17 @@ else
                                 <span class="badge @ClinicalEventStatusDisplay.BadgeClass(item.Status, item.Classification == DailyChangeClassification.Prioritario)">@ClinicalEventStatusDisplay.Label(item.Status)</span>
                             </td>
                             <td>
-                                @if (SupervisionPendingRules.IsOverdue(item, Model.Today))
+                                @if (SupervisionPendingRules.IsOverdue(item, now))
                                 {
                                     <span class="badge text-bg-warning">Seguimiento pendiente</span>
                                 }
                                 @if (item.IndicationsNotDone > 0)
                                 {
                                     <span class="badge text-bg-danger">Indicación no realizada</span>
+                                }
+                                @if (item.ResidentSuspended)
+                                {
+                                    <span class="badge text-bg-warning">Residente suspendido</span>
                                 }
                             </td>
                             <td>@CenterTime.Local(item.ReceivedAt).ToString("g")</td>

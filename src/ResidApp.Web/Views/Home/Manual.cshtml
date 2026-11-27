@@ -1315,16 +1315,27 @@
         <span class="badge text-bg-secondary align-middle">Perfil: Dirección Clínica</span>
     </h2>
     <p>
-        El inicio de Dirección Clínica muestra, por cada unidad de tu ámbito, cuántos episodios siguen abiertos y cuántos
+        Arriba del inicio de Dirección Clínica, <strong>Requiere atención</strong> cuenta los episodios abiertos de todo tu ámbito que cumplen cada criterio,
+        siempre en este orden: con protocolo urgente activo; prioritarios sin valorar; con el seguimiento pendiente (pasada su fecha u hora prevista); y con
+        alguna indicación no realizada. Solo salen las líneas con algún caso, un mismo episodio puede contar en varias y cada línea abre «Supervisión de
+        pendientes» ya filtrada. «No hay nada pendiente.» se refiere solo a estos cuatro criterios: puede haber otros episodios abiertos. La última línea
+        cuenta episodios, no indicaciones, así que puede no coincidir con la columna «Indicaciones no realizadas» de la tabla. Los plazos de los hitos no
+        salen aquí: se ven en «Calidad de proceso». Si las cifras no se pueden leer, la pantalla lo dice en lugar de enseñar un cero.
+    </p>
+    <p>
+        Debajo de las tarjetas, la tabla <strong>Por unidad</strong> muestra, por cada unidad de tu ámbito, cuántos episodios siguen abiertos y cuántos
         están sin valorar, en valoración, escalados a Medicina, en seguimiento (y cuántos de ellos pendientes, con su fecha u hora prevista pasada) o con
         protocolo urgente, junto con las indicaciones pendientes y las no realizadas. Cada cifra va acompañada del total
         de la unidad. Los episodios cerrados no cuentan.
     </p>
     <p>
         En <strong>Supervisión de pendientes</strong> ves la lista de episodios abiertos, del más antiguo al más reciente, y
-        puedes filtrar por tipo de pendiente y por unidad con "Buscar". "Ver detalle operativo" abre el estado del episodio
+        puedes filtrar por tipo de pendiente (entre ellos, «Prioritario sin valorar») y por unidad con "Buscar". "Ver detalle operativo" abre el estado del episodio
         y sus hitos (quién los hizo, por perfil, y cuándo). Esta vista no muestra observaciones, valoraciones ni
-        indicaciones, y no ofrece ninguna acción asistencial.
+        indicaciones, y no ofrece ninguna acción asistencial. Un seguimiento con hora prevista sale como pendiente cuando pasa esa hora, y el detalle la
+        enseña. Un residente suspendido por un ingreso hospitalario lleva la marca <strong>Residente suspendido</strong> en la lista y en el detalle: su
+        episodio sigue contando, pero no se puede registrar nada sobre él. Un seguimiento de Enfermería escalado a Medicina consta aquí como escalado, no
+        como seguimiento (en «Indicadores» sigue contando como seguimiento hasta que se cierra el episodio).
     </p>
     <p>
         <strong>Cerrar un episodio con indicaciones sin cumplir.</strong> Es lo único que Dirección Clínica puede hacer sobre un episodio. Si un episodio tiene

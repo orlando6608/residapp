@@ -36,6 +36,18 @@ public class SupervisionPendingRulesTests
     }
 
     [Fact]
+    public void PrioritarioSinValorar_ExigeLasDosCosas()
+    {
+        var pending = Episode(null, null, hasFollowUp: false) with { Status = ClinicalEventStatus.Pendiente };
+        var now = Day.ToDateTime(new TimeOnly(9, 0));
+        bool Matches(SupervisionEpisode e) => SupervisionPendingRules.Matches(SupervisionPendingType.PrioritarioSinValorar, e, now);
+
+        Assert.True(Matches(pending with { Classification = DailyChangeClassification.Prioritario }));
+        Assert.False(Matches(pending));
+        Assert.False(Matches(pending with { Classification = DailyChangeClassification.Prioritario, Status = ClinicalEventStatus.EnValoracion }));
+    }
+
+    [Fact]
     public void SinSeguimientoOSinFecha_NoVenceNunca()
     {
         Assert.False(SupervisionPendingRules.IsOverdue(Episode(Day, new TimeOnly(1, 0), hasFollowUp: false), Day.AddYears(1).ToDateTime(TimeOnly.MinValue)));
