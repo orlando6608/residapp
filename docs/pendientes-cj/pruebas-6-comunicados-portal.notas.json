@@ -1,4 +1,6 @@
 {
   "documento": "pruebas-6-comunicados-portal",
-  "notas": {}
+  "notas": {
+    "15": "Prueba nueva (27/11/2026): la entrada de la familia con un código por correo ya está activada en desarrollo. Si algo no llega o no cuadra, apúntalo en el comentario con el texto que muestre la pantalla, sin copiar el código."
+  }
 }
