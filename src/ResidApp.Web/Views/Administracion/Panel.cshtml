@@ -1,0 +1,140 @@
+@using ResidApp.Application.Ports
+@using ResidApp.Web.Models
+@model AdministrationPanelViewModel
+@{
+    ViewData["Title"] = "Panel de gestión";
+    var period = Model.Period;
+    var periodText = $"del {period.From:dd/MM/yyyy} al {period.Today:dd/MM/yyyy}";
+    const string failed = "Ahora mismo no se pueden mostrar las cifras de este bloque. El resto del panel funciona con normalidad.";
+}
+
+<nav aria-label="breadcrumb" class="d-print-none">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Administración</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Panel de gestión</li>
+    </ol>
+</nav>
+
+<h1 class="h3 d-flex align-items-center gap-2 informe-impreso"><partial name="_Icono" model='"indicadores"' />Panel de gestión</h1>
+<p class="text-muted">
+    Cifras de gestión, sin nombres, calculadas al abrir la pantalla. Residentes, @(Model.DayCenter ? "" : "plazas, ")altas, bajas y autorizaciones son de las unidades de tu
+    ámbito; las citas y los comunicados se cuentan como en sus pantallas. Lo que hay que atender sigue en el <a asp-action="Index">Inicio de Administración</a>.
+</p>
+@* Solo si hay un error: vacío, el resumen de ASP.NET escribe un style en línea. *@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="text-danger"></div>
+}
+
+<div class="d-flex flex-wrap align-items-center gap-3 mb-3 d-print-none">
+    <nav aria-label="Periodo del panel">
+        <div class="btn-group">
+            @foreach (var range in Enum.GetValues<DashboardRange>())
+            {
+                var selected = range == period.Range;
+                <a asp-action="Panel" asp-route-periodo="@AdministrationPanelDisplay.Code(range)" aria-current="@(selected ? "page" : null)"
+                   class="btn btn-lg @(selected ? "btn-primary" : "btn-outline-primary")">@AdministrationPanelDisplay.Name(range)</a>
+            }
+        </div>
+    </nav>
+    <button type="button" class="btn btn-outline-primary btn-lg" data-imprimir>Imprimir / guardar como PDF</button>
+</div>
+
+<p class="fw-semibold">Periodo @periodText.</p>
+<p class="d-none d-print-block">Generado el @Model.GeneratedAt.ToString("dd/MM/yyyy HH:mm"). Datos agregados, no reidentificar.</p>
+
+<div class="row g-3 mb-4">
+    @foreach (var card in AdministrationPanelDisplay.Cards(Model))
+    {
+        <div class="col-12 col-sm-6 col-lg-4">
+            <partial name="_TarjetaCifra" model="card" />
+        </div>
+    }
+</div>
+
+@if (!Model.DayCenter)
+{
+    <section class="card mb-3 grafico-bloque" aria-labelledby="ocupacion-actual">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="ocupacion-actual">Ocupación actual</h2>
+            @if (Model.Occupancy is not { } occupancy)
+            {
+                <p class="text-body-secondary mb-0">@failed</p>
+            }
+            else if (occupancy.Places == 0)
+            {
+                <p class="text-body-secondary mb-0">No hay plazas definidas en tus unidades, así que no se calcula un porcentaje.</p>
+            }
+            else
+            {
+                <partial name="_GraficoRosquilla" model="new DonutChart(occupancy.Occupied, occupancy.Places)" />
+            }
+        </div>
+    </section>
+
+    <section class="card mb-3 grafico-bloque" aria-labelledby="ocupacion-unidades">
+        <div class="card-body">
+            <h2 class="h5 card-title" id="ocupacion-unidades">Ocupación por unidad y edificio</h2>
+            @if (Model.Occupancy is not { } units)
+            {
+                <p class="text-body-secondary mb-0">@failed</p>
+            }
+            else
+            {
+                <partial name="_GraficoBarras" model="AdministrationPanelDisplay.OccupancyByUnit(units)" />
+            }
+        </div>
+    </section>
+}
+
+<section class="card mb-3 grafico-bloque" aria-labelledby="altas-bajas">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="altas-bajas">Altas y bajas</h2>
+        <p class="small text-body-secondary">
+            Las altas cuentan en su fecha de ingreso, si consta, o en el día en que se registraron; una reactivación es un alta. Las bajas, en el día
+            en que se registraron. Una baja anulada con una
+            reactivación sigue contando.
+        </p>
+        @if (Model.Movements is not { } movements)
+        {
+            <p class="text-body-secondary mb-0">@failed</p>
+        }
+        else
+        {
+            <partial name="_GraficoBarras" model="AdministrationPanelDisplay.Movements(period, movements)" />
+        }
+    </div>
+</section>
+
+<section class="card mb-3 grafico-bloque" aria-labelledby="citas-familia">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="citas-familia">Citas con la familia</h2>
+        <p class="small text-body-secondary">De todo el centro, por el día de la cita y con su estado de ahora, hasta hoy incluido.</p>
+        @if (Model.Appointments is not { } appointments)
+        {
+            <p class="text-body-secondary mb-0">@failed</p>
+        }
+        else
+        {
+            <partial name="_GraficoBarras" model="AdministrationPanelDisplay.Appointments(period, appointments)" />
+        }
+    </div>
+</section>
+
+<section class="card mb-3 grafico-bloque" aria-labelledby="autorizaciones">
+    <div class="card-body">
+        <h2 class="h5 card-title" id="autorizaciones">Autorizaciones de familiares</h2>
+        <p class="small text-body-secondary">
+            Cómo estaban al terminar cada tramo (el último, ahora), de los residentes que hoy están en tu ámbito. Las revocadas no cuentan.
+        </p>
+        @if (Model.Authorizations is not { } authorizations)
+        {
+            <p class="text-body-secondary mb-0">@failed</p>
+        }
+        else
+        {
+            <partial name="_GraficoBarras" model="AdministrationPanelDisplay.Authorizations(period, authorizations)" />
+        }
+    </div>
+</section>

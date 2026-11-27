@@ -14,6 +14,7 @@
     "Conceder y revocar los permisos configurables de Enfermería, Medicina y Dirección / Coordinación Clínica, y asignar residentes a un Auxiliar.",
     "Dar acceso a alguien que ya tiene cuenta en otro centro, con una hoja que esa persona usa desde «Mi cuenta».",
     "Registrar y cambiar las citas externas de los residentes, ver cuáles tienen el transporte o el acompañante sin cubrir (ver ADM-47) y registrar la siguiente cita de una realizada (ver ADM-48).",
+    "Consultar e imprimir el Panel de gestión, con las cifras y los gráficos de tu ámbito (ver ADM-55).",
     "Importar y exportar la estructura y el censo de residentes, y consultar la auditoría administrativa de tu ámbito."
   ],
   "conPermiso": [],
@@ -36,22 +37,24 @@
         "Entrar con tu cuenta y, si tienes varios ámbitos, elegir el de Administración (ver TOD-04)."
       ],
       "pasos": [
-        { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente (solo en una Residencia), fotos de más de 12 meses y cuentas profesionales suspendidas o sin ámbito.", "campos": ["Inicio de Administración", "Requiere atención"] },
-        { "texto": "Si no hay nada que atender, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
+        { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente (solo en una Residencia), fotos de más de 12 meses, cuentas profesionales suspendidas o sin ámbito, cuentas con la invitación de acceso sin usar y bajas con el plazo de conservación vencido o que vence en 12 meses o menos.", "campos": ["Inicio de Administración", "Requiere atención"] },
+        { "texto": "Si no hay nada que atender y se han podido leer todas las cifras, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
         { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados en los últimos 7 días." },
-        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Citas externas**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**. Aparte de «Requiere atención», el aviso **Citas externas con algo sin cubrir** (ver ADM-47) lista las citas de los próximos 7 días a las que falta transporte o acompañante.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
+        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Panel de gestión** (ver ADM-55), **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Citas externas**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**. Aparte de «Requiere atención», el aviso **Citas externas con algo sin cubrir** (ver ADM-47) lista las citas de los próximos 7 días a las que falta transporte o acompañante.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
       ],
       "despues": [
-        { "para": "Administración", "texto": "Cada línea te lleva ya filtrada a la lista donde se resuelve (por ejemplo, **Usuarios** solo con las cuentas que conviene revisar). Las cifras de residentes y autorizaciones son de tu ámbito; las de citas y cuentas, de todo el centro." }
+        { "para": "Administración", "texto": "Cada línea te lleva ya filtrada a la lista donde se resuelve (por ejemplo, **Usuarios** solo con las cuentas que conviene revisar). Las cifras de residentes, autorizaciones y bajas son de tu ámbito; las de citas, cuentas e invitaciones, de todo el centro." }
       ],
       "dudas": [
         { "p": "«Ahora mismo no se pueden mostrar las cifras de lo que requiere atención.»", "r": "Es un fallo momentáneo al calcularlas; el resto del inicio funciona. Vuelve a abrir el inicio." },
+        { "p": "«Ahora mismo no se pueden mostrar algunas cifras de lo que requiere atención.»", "r": "Alguna de las líneas no se ha podido calcular, así que puede faltar un aviso. Vuelve a abrir el inicio." },
         { "p": "No veo una tarjeta.", "r": "Las tarjetas del inicio son las del perfil con el que has entrado: comprueba tu ámbito en el menú." }
       ],
       "rutas": ["Administracion/Index", "Administracion/Residentes"],
       "mensajes": [
         "No hay nada pendiente.",
-        "Ahora mismo no se pueden mostrar las cifras de lo que requiere atención."
+        "Ahora mismo no se pueden mostrar las cifras de lo que requiere atención.",
+        "Ahora mismo no se pueden mostrar algunas cifras de lo que requiere atención."
       ],
       "manual": { "id": "residentes-administracion", "titulo": "Residentes y ficha administrativa" }
     },
@@ -358,6 +361,7 @@
         { "texto": "Si se pierde la hoja, crea otra: **la nueva anula la anterior**. Para dejar una sin valor, pulsa **Anular la invitación**.", "botones": ["Anular la invitación"] }
       ],
       "despues": [
+        { "para": "Administración", "texto": "Mientras una invitación siga sin usar ni anular (aunque haya caducado), el inicio la cuenta en **Requiere atención**; esa línea lleva a **Usuarios** filtrado, donde cada cuenta dice «Invitación pendiente: caduca el …» o «Invitación caducada el …» (ver ADM-01)." },
         { "para": "Personal del centro", "texto": "Con la de acceso elige su contraseña y prepara el código del móvil (ver TOD-01). Con la de recuperación elige otra contraseña, prepara de nuevo el código, **pierde sus passkeys** y se le cierran todas las sesiones abiertas (ver TOD-09). Hasta que la use, su contraseña de siempre sigue valiendo: si temes que alguien la conozca, suspéndele la cuenta (ver ADM-16)." },
         { "para": "Familia", "texto": "Elige su contraseña y recibe un código por correo para entrar (ver FAM-12). La de recuperación le permite además volver a pedir códigos si se bloqueó por fallarlos." }
       ],
@@ -783,7 +787,7 @@
         "Para reactivar: la **unidad** de tu ámbito en la que vuelve, y, si quieres, una habitación o plaza libres de esa unidad."
       ],
       "pasos": [
-        { "texto": "En el inicio, abre **Residentes dados de baja**. Es una lista de solo lectura: cada residente con el motivo de la baja, su última unidad y hasta cuándo se conservan sus datos.", "botones": ["Residentes dados de baja"] },
+        { "texto": "En el inicio, abre **Residentes dados de baja**. Es una lista de solo lectura: cada residente con el motivo de la baja, su última unidad y hasta cuándo se conservan sus datos. El inicio avisa en **Requiere atención** de cuántas tienen el plazo vencido o a 12 meses o menos (ver ADM-01).", "botones": ["Residentes dados de baja"] },
         { "texto": "Si un residente vuelve al centro, pulsa **Reactivar** en su fila.", "botones": ["Reactivar"] },
         { "texto": "Elige la «Unidad» (hay que elegirla) y, si quieres, la «Habitación o plaza en la unidad (opcional)», y pulsa **Reactivar**. Si no eliges habitación ni plaza, el residente vuelve sin ellas.", "botones": ["Reactivar"], "campos": ["Unidad", "Habitación o plaza en la unidad (opcional)"] }
       ],
@@ -1813,6 +1817,40 @@
       ],
       "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }
+    },
+    {
+      "codigo": "ADM-55",
+      "pregunta": "¿Cómo veo las cifras y los gráficos de gestión del centro y los imprimo?",
+      "palabras": ["panel de gestión", "gráficos", "ocupación", "altas y bajas", "estadísticas", "cifras", "imprimir el panel"],
+      "permisos": [],
+      "antes": [
+        "Entrar con el perfil de Administración. Las cifras son de las unidades de tu ámbito; las citas con la familia, de todo el centro."
+      ],
+      "pasos": [
+        { "texto": "En el inicio, abre **Panel de gestión**.", "botones": ["Panel de gestión"] },
+        { "texto": "Elige el periodo: **7 días**, **30 días** (el que sale al abrir) o **12 meses**.", "campos": ["7 días", "30 días", "12 meses"] },
+        { "texto": "Arriba están las cifras (residentes activos, ocupación, altas, bajas, citas y comunicados) y debajo los gráficos. En un Centro de Día no sale la ocupación.", "campos": ["Residentes activos", "Ocupación por unidad y edificio", "Autorizaciones de familiares"] },
+        { "texto": "En pantallas anchas, **Ver en tabla** muestra en una tabla los datos de cada gráfico de barras.", "campos": ["Ver en tabla"] },
+        { "texto": "Para llevarlo en papel o en un archivo, pulsa **Imprimir / guardar como PDF** (ver TOD-11).", "botones": ["Imprimir / guardar como PDF"] }
+      ],
+      "despues": [
+        { "para": "Administración", "texto": "Son solo cifras, sin nombres, calculadas al abrir la pantalla: no se guarda nada. Lo que hay que atender sigue en **Requiere atención** del inicio (ver ADM-01)." }
+      ],
+      "dudas": [
+        { "p": "«Sin datos anteriores para comparar»", "r": "Al empezar el periodo no había ningún residente registrado: pasa cuando el centro empieza a usar ResidApp o acaba de importar su censo." },
+        { "p": "Hay más residentes que antes, pero las altas no suben.", "r": "Un alta cuenta en su fecha de ingreso, si consta: un censo importado con ingresos antiguos no son altas de ahora." },
+        { "p": "Anulé una baja reactivando al residente y sigue saliendo.", "r": "El panel cuenta las dos cosas, la baja y la reactivación como alta, porque no distingue un error de una vuelta." },
+        { "p": "«Ahora mismo no se pueden mostrar las cifras de este bloque. El resto del panel funciona con normalidad.»", "r": "Es un fallo momentáneo: vuelve a abrir el panel." }
+      ],
+      "rutas": ["Administracion/Panel"],
+      "mensajes": [
+        "Sin datos anteriores para comparar",
+        "Ahora mismo no se pueden mostrar las cifras de este bloque. El resto del panel funciona con normalidad.",
+        "Ahora mismo no se puede mostrar.",
+        "No hay datos en este periodo.",
+        "No hay plazas definidas en tus unidades, así que no se calcula un porcentaje."
+      ],
+      "manual": { "id": "panel-administracion", "titulo": "Panel de gestión" }
     }
   ]
 }

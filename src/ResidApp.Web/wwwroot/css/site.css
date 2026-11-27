@@ -52,9 +52,12 @@
     break-inside: avoid;
   }
 
-  /* La hoja de invitación con la información a la familia tiene que caber en una página: en papel sobran los menús y los enlaces del pie. */
+  /* La hoja de invitación con la información a la familia tiene que caber en una página, y en un informe impreso (el panel de gestión) solo va el informe:
+     en los dos casos sobran en papel los menús y los enlaces del pie. */
   body:has(.hoja-datos-familia) > header,
-  body:has(.hoja-datos-familia) > footer {
+  body:has(.hoja-datos-familia) > footer,
+  body:has(.informe-impreso) > header,
+  body:has(.informe-impreso) > footer {
     display: none !important;
   }
 

@@ -27,9 +27,12 @@ public sealed record AccountProfileScope(
 }
 
 /// <summary>ADM-12: una cuenta con algún perfil (vigente o revocado) en el centro. DisplayName es null en las cuentas
-/// anteriores a 0023 a las que nadie ha puesto nombre. Profiles solo trae los de este centro: los vigentes primero.</summary>
+/// anteriores a 0023 a las que nadie ha puesto nombre. Profiles solo trae los de este centro: los vigentes primero.
+/// OpenInvitationExpiresAt es la caducidad de la invitación de acceso de este centro que sigue sin usar ni anular (como mucho hay una por cuenta),
+/// haya caducado ya o no; null si no la hay.</summary>
 public sealed record ProfessionalAccountSummary(
-    AccountId AccountId, string Subject, string? DisplayName, AccountStatus Status, IReadOnlyList<AccountProfileScope> Profiles);
+    AccountId AccountId, string Subject, string? DisplayName, AccountStatus Status, IReadOnlyList<AccountProfileScope> Profiles,
+    DateTimeOffset? OpenInvitationExpiresAt = null);
 
 /// <summary>ADM-13: la ficha de una cuenta. HasActiveProfilesElsewhere dice si tiene perfiles vigentes en otro centro
 /// (entonces no se puede suspender ni reactivar desde aquí), sin decir cuáles. IsOwnAccount es la cuenta de quien la

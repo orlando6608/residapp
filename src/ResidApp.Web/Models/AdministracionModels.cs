@@ -15,13 +15,19 @@ namespace ResidApp.Web.Models;
 /// <summary>ADM-01: el inicio de Administración, con el número de residentes activos del ámbito y el de cuentas con
 /// algún perfil en el centro.</summary>
 /// <summary>El inicio de Administración. AccountsToReview son las cuentas suspendidas o sin ámbito (ProfessionalAccountAttention), null si no se
-/// pudieron leer. ExternalAppointmentsUncovered son las citas externas de los próximos días con transporte o acompañante sin cubrir (null si no se pudieron leer; script 0101).</summary>
+/// pudieron leer. ExternalAppointmentsUncovered son las citas externas de los próximos días con transporte o acompañante sin cubrir (null si no se pudieron leer; script 0101).
+/// OpenInvitations son las cuentas con la invitación de acceso sin usar (y ExpiredInvitations, de ellas, las caducadas); RetentionDue, las bajas del
+/// ámbito con el plazo de conservación vencido o a punto de vencer. Un null en cualquiera de las dos: no se pudo leer.</summary>
 public sealed record AdministracionInicioViewModel(
     int Residents, int Accounts, AdministrationOverview? Attention = null, AdministrationCommunicationsSummary? Communications = null,
     int? AccountsToReview = null, IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsUncovered = null, DateOnly ExternalAppointmentsToday = default,
-    IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsOverdue = null, IReadOnlySet<Guid>? ExternalAppointmentsOffered = null)
+    IReadOnlyList<ResidApp.Application.Ports.ExternalAppointmentRecord>? ExternalAppointmentsOverdue = null, IReadOnlySet<Guid>? ExternalAppointmentsOffered = null,
+    int? OpenInvitations = null, int ExpiredInvitations = 0, int? RetentionDue = null)
 {
-    public bool NothingPending => Attention is { NothingPending: true } && (AccountsToReview ?? 0) == 0;
+    /// <summary>Solo se afirma que no hay nada pendiente si se pudo leer todo: un fallo de carga no es un cero.</summary>
+    public bool NothingPending => Attention is { NothingPending: true } && AccountsToReview == 0 && OpenInvitations == 0 && RetentionDue == 0;
+
+    public bool SomeFiguresMissing => AccountsToReview is null || OpenInvitations is null || RetentionDue is null;
 }
 
 /// <summary>ADM-02: buscar y filtrar la lista de residentes. Llega por GET (?q=&amp;unidad=); los campos vacíos no
@@ -376,6 +382,19 @@ public static class ProfessionalAccountDisplay
     public static string Name(ProfessionalAccountSummary account) => account.DisplayName ?? account.Subject;
 
     public static string Status(AccountStatus status) => status == AccountStatus.Active ? "Activa" : "Suspendida";
+
+    /// <summary>El estado de la invitación sin usar de la cuenta, con la hora del centro.</summary>
+    public static string Invitation(ProfessionalAccountSummary account, DateTimeOffset now)
+    {
+        if (account.OpenInvitationExpiresAt is not { } expires)
+        {
+            return "Sin invitación pendiente";
+        }
+
+        var local = CenterTime.Local(expires);
+        var when = $"{local:dd/MM/yyyy} a las {local:HH:mm}";
+        return expires <= now ? $"Invitación caducada el {when}" : $"Invitación pendiente: caduca el {when}";
+    }
 
     public static string ActiveUnits(AccountProfileScope profile) =>
         string.Join(", ", profile.Units.Where(u => u.Active).Select(u => u.Name));

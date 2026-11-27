@@ -77,7 +77,20 @@
                 {
                     <li class="list-group-item"><a asp-action="Usuarios" asp-route-revisar="true">@Plural(accountsToReview, "cuenta profesional suspendida o sin ámbito", "cuentas profesionales suspendidas o sin ámbito")</a></li>
                 }
+                @if (Model.OpenInvitations is > 0 and var openInvitations)
+                {
+                    var expiredNote = Model.ExpiredInvitations > 0 ? $" ({Plural(Model.ExpiredInvitations, "caducada", "caducadas")})" : "";
+                    <li class="list-group-item"><a asp-action="Usuarios" asp-route-invitacion="true">@Plural(openInvitations, "cuenta con la invitación de acceso sin usar", "cuentas con la invitación de acceso sin usar")@expiredNote</a></li>
+                }
+                @if (Model.RetentionDue is > 0 and var retentionDue)
+                {
+                    <li class="list-group-item"><a asp-action="Bajas">@Plural(retentionDue, "baja con el plazo de conservación vencido o que vence", "bajas con el plazo de conservación vencido o que vence") en @ResidApp.Domain.Residents.ResidentDischarge.RetentionWarningMonths meses o menos</a></li>
+                }
             </ul>
+        }
+        @if (Model.SomeFiguresMissing)
+        {
+            <p class="text-body-secondary small">Ahora mismo no se pueden mostrar algunas cifras de lo que requiere atención.</p>
         }
         <p class="text-body-secondary small mb-0">
             <a asp-action="AgendaCitas">Citas confirmadas: @attention.AppointmentsToday hoy y @attention.AppointmentsComing en los próximos @AdministrationOverviewRules.ComingAppointmentDays días</a>.
@@ -154,6 +167,14 @@ else
             <div class="card-body">
                 <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"alta-residente"' />Alta de residente</h2>
                 <p class="card-text mb-0">Registrar un nuevo residente en el centro. Su basal queda pendiente.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <a asp-action="Panel" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"indicadores"' />Panel de gestión</h2>
+                <p class="card-text mb-0">Cifras y gráficos de @(ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter ? "" : "ocupación, ")altas y bajas, citas y autorizaciones de familiares.</p>
             </div>
         </a>
     </div>

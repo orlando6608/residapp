@@ -7,6 +7,7 @@ No tiene flujo clínico propio; wireframe [`administracion.md`](../../bocetos-pa
 
 ## Hecho
 
+- **Panel de gestión y avisos de acceso y conservación (2026-11-27, sin script; historia 12; fases 1 y 2 de la especificación de dashboards)** — `Administracion/Panel` (cifras y gráficos de ocupación, altas y bajas, citas con la familia y autorizaciones; periodo de 7 días, 30 días o 12 meses; `AdministrationDashboardApplicationService`, `SqlAdministrationDashboard`, solo lectura) y, en «Requiere atención», las invitaciones sin usar y las bajas con el plazo de conservación vencido o a 12 meses o menos. Piezas comunes para otros paneles: `_TarjetaCifra`, `_GraficoBarras` y `_GraficoRosquilla` (SVG en servidor). Pruebas: `AdministrationDashboardTests`, `AdministracionPanelTests` y `AdministracionPanelPagesTests`. Lo que falta: «Estado actual» del relevo y `avisos-abiertos.md`.
 - **Encuadre del logo del centro (2026-10-25, sin script; sobre el script `0068`)** — al elegir el logo en `Datos del centro` o en el alta de un centro (Plataforma) aparece, como en la foto del
   residente, un recuadro apaisado 3:1 (768×256 px) donde se mueve (arrastre, botones de flecha o teclado) y se acerca o aleja (0,25× a 3×); los márgenes quedan transparentes y se envía ese
   recuadro como PNG (JPEG sobre blanco si pesa más de 480 KB). `site.js` comparte la función `encuadre` con la foto; el servidor no cambia.
@@ -510,7 +511,7 @@ En el orden propuesto (cada bloque se planifica antes de construirlo):
 
 1. **Traslado y baja/reactivación del residente:** hecho el 2026-10-07 (ver «Traslado, baja, reactivación y suspensión»); el traslado por Enfermería con permiso específico está hecho desde el 2026-11-20 (ver «Traslado, baja, reactivación y suspensión»).
 2. **El organigrama y los cargos (ADM-07):** hecho el 2026-10-26 (ver «Organigrama y cargos» arriba). Los turnos recurrentes con excepciones (ADM-16), el equipo entrante de los seguimientos y los edificios, plantas, habitaciones y plazas ya están hechos (2026-10-01/02).
-3. **Panel completo (10).** Las publicaciones familiares (historias 5 y 6) y las citas (7 y 8, con reserva directa y con solicitud previa) ya están hechas.
+3. **Panel completo (10):** hecho el 2026-11-27 (ver «Panel de gestión» arriba). Las publicaciones familiares (historias 5 y 6) y las citas (7 y 8, con reserva directa y con solicitud previa) ya están hechas.
 
 Huecos de lo ya construido:
 

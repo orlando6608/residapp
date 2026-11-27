@@ -419,6 +419,72 @@ details[open] > summary {
   margin-left: auto;
 }
 
+/* Gráficos de los cuadros de mando (_GraficoBarras, _GraficoRosquilla): SVG que dibuja el servidor. Solo azul de marca, verde teal y neutros; los
+   colores de alerta no se usan en una serie. Cada serie lleva además su nombre y sus valores en texto. */
+.grafico-barra {
+  display: block;
+}
+
+.grafico-fondo {
+  fill: var(--color-border);
+}
+
+.serie-1 {
+  fill: var(--color-primary-brand);
+}
+
+.serie-2 {
+  fill: var(--color-secondary-teal);
+}
+
+.serie-3 {
+  fill: var(--color-text-dark);
+}
+
+.serie-4 {
+  fill: var(--color-border-control);
+}
+
+/* Separa los trozos contiguos de una barra apilada. */
+.grafico-trozo {
+  stroke: var(--color-bg-card);
+  stroke-width: 1;
+}
+
+.grafico-marca {
+  vertical-align: -1px;
+}
+
+/* En papel, ni un bloque ni una fila se parten entre dos páginas (un bloque más alto que la página sí se reparte). */
+.grafico-bloque,
+.grafico-fila {
+  break-inside: avoid;
+}
+
+.grafico-rosquilla {
+  width: 9rem;
+  height: 9rem;
+}
+
+.grafico-rosquilla circle {
+  fill: none;
+  stroke-width: 5;
+}
+
+.rosquilla-fondo {
+  stroke: var(--color-border);
+}
+
+.rosquilla-valor {
+  stroke: var(--color-primary-brand);
+}
+
+.grafico-rosquilla text {
+  fill: var(--color-text-dark);
+  font-size: 7px;
+  font-weight: 600;
+}
+
 /* Listado o bandeja vacía: un recuadro que se ve como respuesta, no como una línea gris suelta que pasa por texto de
    relleno. */
 .estado-vacio {

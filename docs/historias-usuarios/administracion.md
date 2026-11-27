@@ -137,6 +137,24 @@ Criterios de aceptación:
 
 Códigos de origen: ninguno del PRD (función posterior); ver `docs/producto/citas-externas-diseno.md`.
 
+### 12. Ver el panel de gestión y los avisos de acceso y conservación
+
+**Como** Administración, **quiero** ver en una pantalla las cifras de gestión de mi ámbito y que el inicio me avise de las invitaciones sin usar y de las bajas con el plazo de conservación por vencer, **para** saber cómo va el centro y no dejar nada sin atender.
+
+Criterios de aceptación:
+- El «Panel de gestión» muestra residentes activos, ocupación, altas, bajas, citas con la familia y comunicados, y gráficos de ocupación, altas y bajas, citas y autorizaciones de familiares. Se calcula al abrirlo; no guarda ninguna cifra. Solo lo abre Administración.
+- Elijo 7 días (por días), 30 días (por semanas de lunes a domingo; es el que sale al abrir) o 12 meses (por meses naturales). El periodo viaja en la dirección de la página.
+- Residentes, plazas, altas, bajas y autorizaciones son solo de las unidades de mi ámbito, también dentro de un edificio compartido; las citas con la familia son de todo el centro. Ninguna cifra lleva nombres, texto libre ni nada clínico.
+- Un alta cuenta en su fecha de ingreso, si consta y es la primera estancia, o en el día en que se registró; una reactivación es un alta. Una baja cuenta el día en que se registró, por su categoría de motivo, y sigue contando aunque se anule con una reactivación; la pantalla lo dice.
+- La ocupación pasada se calcula con las plazas de hoy y la pantalla lo dice. Las unidades sin plazas definidas enseñan solo sus residentes, fuera del porcentaje. «100 %» solo si está lleno.
+- Si al empezar el periodo no había ningún residente registrado, en vez de la variación se lee «Sin datos anteriores para comparar».
+- En un Centro de Día no se habla de ocupación ni de plazas.
+- Un bloque que no se puede leer lo dice en su sitio y los demás se ven; nunca se pinta como cero.
+- Cada gráfico dice sus valores en texto (también en el móvil y en papel) y, en pantallas anchas, tiene su tabla. Se ve en claro y en oscuro, sin desplazamiento lateral a 375 px, y al imprimir sale con la marca del centro, la fecha y «Datos agregados, no reidentificar», sin menús.
+- El inicio cuenta las cuentas activas con algún perfil vigente y una invitación de este centro sin usar (y cuántas están caducadas), y enlaza a «Usuarios» filtrado por ellas. Cuenta las bajas de mi ámbito con el plazo de conservación vencido o a 12 meses o menos, y enlaza a la lista de bajas. «No hay nada pendiente» solo sale si se han podido leer todas las cifras.
+
+Códigos de origen: (sin código del PRD; `docs\producto\Especificación de dashboards de ResidApp.md`).
+
 ## Tabla resumen de trazabilidad
 
 | Historia | Códigos cubiertos |
@@ -152,6 +170,7 @@ Códigos de origen: ninguno del PRD (función posterior); ver `docs/producto/cit
 | 9. Auditoría administrativa | `ADM-09`, `AUD-01` a `AUD-03` |
 | 10. Panel inicial y cuenta multirol | `ADM-01`, `ADM-10` |
 | 11. Citas externas y avisos a las familias | (sin código del PRD; `citas-externas-diseno.md`) |
+| 12. Panel de gestión y avisos de acceso y conservación | (sin código del PRD; especificación de dashboards) |
 
 ## Nota de procedencia
 

@@ -72,7 +72,10 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
         const string accountFilter = "(@AccountId IS NULL OR profile.cuenta_id = @AccountId)";
         var accounts = await connection.QueryAsync<AccountRow>(new CommandDefinition($"""
             SELECT account.id AS AccountId, account.sujeto_externo AS Subject, account.nombre_visible AS DisplayName,
-                   account.estado AS StatusCode
+                   account.estado AS StatusCode,
+                   (SELECT invitation.caduca_en FROM dbo.invitaciones_acceso invitation
+                     WHERE invitation.cuenta_id = account.id AND invitation.centro_id = @CenterId
+                       AND invitation.usada_en IS NULL AND invitation.anulada_en IS NULL) AS OpenInvitationExpiresAt
               FROM dbo.cuentas account
              WHERE EXISTS (SELECT 1 FROM dbo.ambitos_perfil profile
                             WHERE profile.cuenta_id = account.id AND profile.centro_id = @CenterId AND profile.perfil_codigo <> 'FAMILIAR' AND {accountFilter})
@@ -141,7 +144,8 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
                     p.Id, EnumCode.ParseCode<SystemProfile>(p.Code), Utc(p.GrantedAt), p.GrantedBy,
                     p.RevokedAt is { } revoked ? Utc(revoked) : null, p.RevokedBy,
                     units[p.Id].Select(ToGrant).ToList(), residents[p.Id].Select(ToGrant).ToList(),
-                    permissions[p.Id].Select(ToGrant).ToList(), principals.Contains(p.Id))).ToList()))
+                    permissions[p.Id].Select(ToGrant).ToList(), principals.Contains(p.Id))).ToList(),
+                a.OpenInvitationExpiresAt is { } expires ? Utc(expires) : null))
             .ToList();
     }
 
@@ -150,7 +154,7 @@ public sealed class SqlProfessionalAccountDirectory(SqlConnectionFactory connect
 
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
 
-    private sealed record AccountRow(Guid AccountId, string Subject, string? DisplayName, string StatusCode);
+    private sealed record AccountRow(Guid AccountId, string Subject, string? DisplayName, string StatusCode, DateTime? OpenInvitationExpiresAt);
 
     /// <summary>Una fila de perfil, unidad, residente o permiso. Id es el ámbito de perfil; Code, el código del perfil o del
     /// permiso, o el nombre de la unidad o del residente; TargetId, el id de la unidad, del residente o de la fila del
