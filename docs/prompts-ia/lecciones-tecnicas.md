@@ -222,6 +222,7 @@ Repite estos pasos antes de dar un bloque por cerrado:
   agotaban los vigilantes de ficheros de Linux (inotify, un tope por usuario); `VigilantesDeFicheros.cs` los sustituye en las pruebas por consultas periódicas.
   En Windows no se ve, y en la imagen Docker `mcr.microsoft.com/dotnet/sdk` tampoco, porque ya trae `DOTNET_USE_POLLING_FILE_WATCHER=true`. El registro de la CI
   no guarda los errores de la aplicación: para verlos, reprodúcelo en contenedores Linux.
+- **Un 410 («ya no existe») sin `Cache-Control` se queda en el navegador para siempre (2026-11-27):** Chrome lo da por válido sin límite y lo sirve también al llegar por una redirección, sin preguntar al servidor. Así, a quien vio una vez «Esta invitación ya no vale» antes del 2026-11-04 (cuando las páginas pasaron a pedir `no-store`) las invitaciones nuevas le seguían fallando en la ventana normal, y en la privada no. Señales: en incógnito funciona, recargar lo arregla y el servidor no recibe la segunda petición. Lo vigila `LaPaginaDeLaInvitacionQueYaNoVale_NoSePuedeGuardarEnElNavegador`. Las pruebas por HTTP y un navegador recién abierto no lo ven: para reproducirlo hay que visitar primero la página de error en el mismo navegador.
 - **Estado de un push en GitHub:** busca su run con `.../actions/runs?head_sha=<sha completo>`; la lista con
   `per_page=1` a veces devuelve un run antiguo. Después, `.../actions/runs/<id>/jobs` da la conclusión de
   `build-and-test` y `deploy`.
