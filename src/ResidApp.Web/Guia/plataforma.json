@@ -30,7 +30,7 @@
     "Entregarte una invitación a ti ni suspender tu propia cuenta."
   ],
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-21",
+  "revisado": "2026-11-27",
   "fichas": [
     {
       "codigo": "PLA-01",
@@ -123,7 +123,8 @@
         { "texto": "Abre **Centros** y, en el centro, pulsa **Administraciones y unidades**.", "botones": ["Centros", "Administraciones y unidades"] },
         { "texto": "En la tarjeta de esa Administración, pulsa **Crear invitación de acceso o de recuperación**. Es de acceso si todavía no tiene contraseña, y de recuperación si ya la tiene.", "botones": ["Crear invitación de acceso o de recuperación"] },
         { "texto": "Sale la hoja con el usuario, el centro, «Vale hasta» (72 horas, una sola vez) y un código QR." },
-        { "texto": "Pulsa **Imprimir** (o enséñale la pantalla) y **entrégale la hoja en mano**.", "botones": ["Imprimir"] }
+        { "texto": "Pulsa **Imprimir** (o enséñale la pantalla) y **entrégale la hoja en mano**.", "botones": ["Imprimir"] },
+        { "texto": "Si necesitas la dirección en texto, pulsa **Copiar dirección** (debajo de «Dirección de la invitación»): copia la misma que lleva el código QR. No la envíes por correo ni por mensajería. El botón solo aparece si el navegador permite copiar, y no sale impreso.", "botones": ["Copiar dirección"] }
       ],
       "despues": [
         { "para": "Administración", "texto": "Escanea el código (o escribe la dirección de la hoja), elige su contraseña y prepara de nuevo el código del móvil. Si era una **recuperación**, la contraseña anterior, el código anterior y las sesiones abiertas dejan de valer; en cualquier caso, sus passkeys se borran y tiene que añadirlas otra vez." },
@@ -136,6 +137,8 @@
       ],
       "rutas": ["Plataforma/Centro", "Plataforma/Invitacion"],
       "mensajes": [
+        "Dirección copiada. Con ella se entra en la cuenta: entrégasela solo a esa persona. No la envíes por correo ni por mensajería.",
+        "No se ha podido copiar. Selecciona la dirección y cópiala a mano.",
         "La cuenta está suspendida.",
         "Esa cuenta tiene perfiles vigentes en otros centros: no se le entrega desde aquí.",
         "Esta hoja solo se enseña ahora."

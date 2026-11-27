@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ResidApp.Infrastructure.Identity;
 using ResidApp.Infrastructure.Persistence;
 using ResidApp.Web.Controllers;
+using ResidApp.Web.Security;
 
 namespace ResidApp.FunctionalTests;
 
@@ -191,6 +192,41 @@ public partial class AccesoTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("es la tuya", await TextAsync(response));
         Assert.Equal(0, await ScalarAsync<int>("SELECT COUNT(*) FROM dbo.invitaciones_acceso WHERE cuenta_id = @accountId", new { accountId }));
+    }
+
+    /// <summary>
+    /// Quien pulsa un enlace a su invitación desde otro sitio (un correo, una mensajería): con SameSite=Strict el navegador no devolvía esta
+    /// cookie en la redirección que quita el token de la dirección, y salía «ya no vale». Con Lax viaja; el envío del formulario sigue
+    /// protegido por su testigo antifalsificación. El navegador de las pruebas no aplica SameSite, así que se comprueba el atributo.
+    /// </summary>
+    [Fact]
+    public async Task AlAbrirLaInvitacion_SuCookieViajaAunqueSeLlegueDesdeUnEnlaceDeOtroSitio()
+    {
+        var (admin, _, adminId) = await AdministrationAsync();
+        var (subject, accountId) = await SeedInCenterAsync(adminId, "ENFERMERIA");
+        var url = InvitationUrl(await TextAsync(await IssueAsync(admin, subject, $"/Administracion/Usuario?cuentaId={accountId}")));
+
+        var opened = await Client().GetAsync(url);
+
+        var cookie = Assert.Single(opened.Headers.GetValues("Set-Cookie"),
+            value => value.StartsWith($"{InvitationCookie.CookieName}=", StringComparison.Ordinal)).ToLowerInvariant();
+        Assert.Contains("samesite=lax", cookie);
+        Assert.Contains("httponly", cookie);
+        Assert.Contains("path=/acceso", cookie);
+    }
+
+    /// <summary>El botón lo muestra y lo hace funcionar el JavaScript de la hoja (se comprueba en un navegador); aquí, que copia la misma dirección que lleva el QR.</summary>
+    [Fact]
+    public async Task LaHojaDeInvitacion_OfreceCopiarLaMismaDireccionQueElQr_YNoSaleImpreso()
+    {
+        var (admin, _, adminId) = await AdministrationAsync();
+        var (subject, accountId) = await SeedInCenterAsync(adminId, "ENFERMERIA");
+
+        var sheet = await TextAsync(await IssueAsync(admin, subject, $"/Administracion/Usuario?cuentaId={accountId}"));
+
+        var shown = Regex.Match(sheet, "id=\"direccion-invitacion\">([^<]+)</p>").Groups[1].Value;
+        Assert.Equal(InvitationUrl(sheet), new Uri(shown.Trim()).PathAndQuery);
+        Assert.Matches("<div class=\"d-print-none[^\"]*\">\\s*<button type=\"button\"[^>]*id=\"copiar-direccion\" hidden>Copiar dirección</button>", sheet);
     }
 
     private const string FailedMessage = AccesoController.FailedMessage;

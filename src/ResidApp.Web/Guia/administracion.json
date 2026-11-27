@@ -25,7 +25,7 @@
     "Añadirte unidades a tu ámbito ni marcar a otra cuenta como principal, si no eres la Administración principal del centro."
   ],
   "revisadoPara": "0.5.0",
-  "revisado": "2026-11-26",
+  "revisado": "2026-11-27",
   "fichas": [
     {
       "codigo": "ADM-01",
@@ -354,6 +354,7 @@
         { "texto": "En **Usuarios**, abre la ficha de la cuenta (pulsa su nombre). En la ficha **Entrar en ResidApp** verás si ya tiene contraseña.", "botones": ["Usuarios"], "campos": ["Entrar en ResidApp"] },
         { "texto": "Si todavía no tiene contraseña, pulsa **Crear invitación de acceso**. Si ya la tiene y la olvidó o perdió el móvil, pulsa **Crear invitación de recuperación**.", "botones": ["Crear invitación de acceso", "Crear invitación de recuperación"] },
         { "texto": "Sale la hoja con el usuario, el centro, «Vale hasta» (72 horas, una sola vez) y un código QR. Pulsa **Imprimir** o enséñale la pantalla, y **entrégasela en mano**.", "botones": ["Imprimir"] },
+        { "texto": "Si necesitas la dirección en texto, pulsa **Copiar dirección** (debajo de «Dirección de la invitación»): copia la misma que lleva el código QR. No la envíes por correo ni por mensajería. El botón solo aparece si el navegador permite copiar, y no sale impreso.", "botones": ["Copiar dirección"] },
         { "texto": "Si se pierde la hoja, crea otra: **la nueva anula la anterior**. Para dejar una sin valor, pulsa **Anular la invitación**.", "botones": ["Anular la invitación"] }
       ],
       "despues": [
@@ -364,10 +365,13 @@
         { "p": "«Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.»", "r": "Añade el correo en la ficha del familiar (ver ADM-28) y vuelve a crear la invitación." },
         { "p": "«No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.»", "r": "Pídesela a otra Administración de tu centro o a Plataforma (ver PLA-03 y PLA-07)." },
         { "p": "«La cuenta está suspendida, o la invitación ya se había usado o anulado.»", "r": "Reactiva la cuenta antes (ver ADM-16)." },
-        { "p": "«Invitación anulada: ya no sirve para entrar.»", "r": "Es la confirmación de «Anular la invitación»." }
+        { "p": "«Invitación anulada: ya no sirve para entrar.»", "r": "Es la confirmación de «Anular la invitación»." },
+        { "p": "«No se ha podido copiar. Selecciona la dirección y cópiala a mano.»", "r": "El navegador no ha dejado copiar: selecciona la dirección que se ve en la hoja y cópiala a mano." }
       ],
       "rutas": ["Administracion/Usuario", "Administracion/Invitacion", "Administracion/AnularInvitacion"],
       "mensajes": [
+        "Dirección copiada. Con ella se entra en la cuenta: entrégasela solo a esa persona. No la envíes por correo ni por mensajería.",
+        "No se ha podido copiar. Selecciona la dirección y cópiala a mano.",
         "Este familiar no tiene correo en su ficha y lo necesita para entrar en el portal: añádelo antes.",
         "Invitación anulada: ya no sirve para entrar.",
         "No se puede entregar una invitación a esta cuenta: es la tuya o tiene perfiles vigentes en otros centros.",
