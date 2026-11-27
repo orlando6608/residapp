@@ -143,6 +143,7 @@ Códigos de origen: ninguno del PRD (función posterior); ver `docs/producto/cit
 
 Criterios de aceptación:
 - El «Panel de gestión» muestra residentes activos, ocupación, altas, bajas, citas con la familia y comunicados, y gráficos de ocupación, altas y bajas, citas y autorizaciones de familiares. Se calcula al abrirlo; no guarda ninguna cifra. Solo lo abre Administración.
+- Su tarjeta está en «Inicio», al lado de la de «Administración», y no se repite entre las tarjetas de Administración.
 - Elijo 7 días (por días), 30 días (por semanas de lunes a domingo; es el que sale al abrir) o 12 meses (por meses naturales). El periodo viaja en la dirección de la página.
 - Residentes, plazas, altas, bajas y autorizaciones son solo de las unidades de mi ámbito, también dentro de un edificio compartido; las citas con la familia son de todo el centro. Ninguna cifra lleva nombres, texto libre ni nada clínico.
 - Un alta cuenta en su fecha de ingreso, si consta y es la primera estancia, o en el día en que se registró; una reactivación es un alta. Una baja cuenta el día en que se registró, por su categoría de motivo, y sigue contando aunque se anule con una reactivación; la pantalla lo dice.

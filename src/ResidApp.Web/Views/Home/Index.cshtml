@@ -64,6 +64,14 @@ else
                 </div>
             </a>
         </div>
+        <div class="col-12 col-md-4">
+            <a asp-controller="Administracion" asp-action="Panel" class="card text-decoration-none h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"indicadores"' />Panel de gestión</h2>
+                    <p class="card-text text-muted mb-0">Cifras y gráficos de @(ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter ? "" : "ocupación, ")altas y bajas, citas y autorizaciones de familiares.</p>
+                </div>
+            </a>
+        </div>
     }
     @if (perfil is SystemProfile.Enfermeria && permisos.Contains(ResidApp.Domain.Accounts.ProfilePermissions.ResidentIdentityCreate))
     {

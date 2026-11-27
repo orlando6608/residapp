@@ -52,10 +52,13 @@ public class AdministracionPanelPagesTests(ResidentsFlowTests.WebAppFactory fact
     {
         var (client, _) = await EnterAsync();
 
-        var home = await MainAsync(client, "/Administracion");
+        var home = await MainAsync(client, "/");
+        var administration = await MainAsync(client, "/Administracion");
         var panel = await MainAsync(client, "/Administracion/Panel");
 
-        Assert.Contains("href=\"/Administracion/Panel\"", home);
+        // La tarjeta está en Inicio, al lado de «Administración», y no se repite en la pantalla de Administración.
+        Assert.Matches("(?s)href=\"/Administracion\".*href=\"/Administracion/Panel\"", home);
+        Assert.DoesNotContain("href=\"/Administracion/Panel\"", administration);
         foreach (var title in new[]
                  {
                      "Panel de gestión", "Residentes activos", "Ocupación actual", "Ocupación por unidad y edificio", "Altas y bajas", "Citas con la familia",
@@ -215,9 +218,11 @@ public class AdministracionPanelPagesTests(ResidentsFlowTests.WebAppFactory fact
         var client = await SesionTests.LoginAsync(factory, subject);
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/ProfileScope/Select")).StatusCode);
 
-        var home = await MainAsync(client, "/Administracion");
+        var home = await MainAsync(client, "/");
         var panel = await MainAsync(client, "/Administracion/Panel");
 
+        // La misma tarjeta en Inicio que en una Residencia, sin hablar de ocupación.
+        Assert.Matches("(?s)href=\"/Administracion\".*href=\"/Administracion/Panel\"", home);
         Assert.Contains("Cifras y gráficos de altas y bajas", home);
         Assert.Contains("Residentes activos", panel);
         Assert.DoesNotContain("Ocupación", panel);

@@ -171,14 +171,6 @@ else
         </a>
     </div>
     <div class="col-12 col-md-6">
-        <a asp-action="Panel" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"indicadores"' />Panel de gestión</h2>
-                <p class="card-text mb-0">Cifras y gráficos de @(ResidApp.Domain.Platform.CurrentCenterService.IsDayCenter ? "" : "ocupación, ")altas y bajas, citas y autorizaciones de familiares.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-12 col-md-6">
         <a asp-action="Bajas" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h5 card-title d-flex align-items-center gap-2"><partial name="_Icono" model='"baja"' />Residentes dados de baja</h2>

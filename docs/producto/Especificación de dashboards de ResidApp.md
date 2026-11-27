@@ -6,7 +6,7 @@ Estado: **propuesta revisada el 2026-11-10** contra las decisiones ya tomadas (A
 
 **Construido (2026-11-27): la base común y Administración (fases 1 y 2).** Lo demás sigue sin construir. Al construirlas, Orlando decidió, y esto manda sobre lo que diga más abajo:
 
-1. **Dos sitios.** Los avisos siguen en «Requiere atención» del Inicio de Administración, que gana los dos nuevos; las cifras y los gráficos van en una página aparte, «Panel de gestión» (`/Administracion/Panel`).
+1. **Dos sitios.** Los avisos siguen en «Requiere atención» del Inicio de Administración, que gana los dos nuevos; las cifras y los gráficos van en una página aparte, «Panel de gestión» (`/Administracion/Panel`), con su tarjeta en «Inicio», al lado de la de «Administración» (Orlando, 2026-11-27).
 2. **Sin caché de servidor** hasta medir que una pantalla va lenta (las condiciones del apartado «Datos, histórico y rendimiento» se aplicarán si se añade).
 3. **Sin datos anteriores no se compara:** si al empezar el periodo no había ningún residente registrado, se lee «Sin datos anteriores para comparar» (un censo importado diría que han entrado todos).
 4. **Una baja anulada con una reactivación sigue contando**, igual que la reactivación como alta, y la pantalla lo dice.

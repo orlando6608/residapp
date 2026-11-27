@@ -40,7 +40,7 @@
         { "texto": "Entras al **Inicio de Administración**. Arriba está **Requiere atención**: cada línea es un enlace a la pantalla donde se resuelve, por orden de importancia: residentes sin contacto urgente ni motivo indicado, solicitudes y propuestas de cita, citas pasadas sin cerrar, autorizaciones de familiares pendientes, caducadas o por caducar, residentes con la ubicación pendiente (solo en una Residencia), fotos de más de 12 meses, cuentas profesionales suspendidas o sin ámbito, cuentas con la invitación de acceso sin usar y bajas con el plazo de conservación vencido o que vence en 12 meses o menos.", "campos": ["Inicio de Administración", "Requiere atención"] },
         { "texto": "Si no hay nada que atender y se han podido leer todas las cifras, dice «No hay nada pendiente.». Solo son cifras: no salen nombres ni texto clínico." },
         { "texto": "Debajo, las citas confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados en los últimos 7 días." },
-        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Panel de gestión** (ver ADM-55), **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Citas externas**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**. Aparte de «Requiere atención», el aviso **Citas externas con algo sin cubrir** (ver ADM-47) lista las citas de los próximos 7 días a las que falta transporte o acompañante.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
+        { "texto": "Las tarjetas abren cada tarea: **Residentes**, **Alta de residente**, **Residentes dados de baja**, **Usuarios**, **Unidades del centro**, **Comunicados a la familia**, **Citas con la familia**, **Citas externas**, **Datos del centro**, **Estructura del centro**, **Turnos**, **Equipos**, **Organigrama y cargos**, **Planificación de turnos**, **Importar datos**, **Exportar datos** y **Auditoría**. Aparte de «Requiere atención», el aviso **Citas externas con algo sin cubrir** (ver ADM-47) lista las citas de los próximos 7 días a las que falta transporte o acompañante.", "botones": ["Usuarios", "Unidades del centro", "Datos del centro", "Estructura del centro", "Importar datos", "Exportar datos", "Auditoría"] }
       ],
       "despues": [
         { "para": "Administración", "texto": "Cada línea te lleva ya filtrada a la lista donde se resuelve (por ejemplo, **Usuarios** solo con las cuentas que conviene revisar). Las cifras de residentes, autorizaciones y bajas son de tu ámbito; las de citas, cuentas e invitaciones, de todo el centro." }
@@ -48,7 +48,7 @@
       "dudas": [
         { "p": "«Ahora mismo no se pueden mostrar las cifras de lo que requiere atención.»", "r": "Es un fallo momentáneo al calcularlas; el resto del inicio funciona. Vuelve a abrir el inicio." },
         { "p": "«Ahora mismo no se pueden mostrar algunas cifras de lo que requiere atención.»", "r": "Alguna de las líneas no se ha podido calcular, así que puede faltar un aviso. Vuelve a abrir el inicio." },
-        { "p": "No veo una tarjeta.", "r": "Las tarjetas del inicio son las del perfil con el que has entrado: comprueba tu ámbito en el menú." }
+        { "p": "No veo una tarjeta.", "r": "Las tarjetas del inicio son las del perfil con el que has entrado: comprueba tu ámbito en el menú. El **Panel de gestión** no está en esta pantalla: pulsa **Inicio**, en las migas de pan (ver ADM-55)." }
       ],
       "rutas": ["Administracion/Index", "Administracion/Residentes"],
       "mensajes": [
@@ -1827,14 +1827,14 @@
         "Entrar con el perfil de Administración. Las cifras son de las unidades de tu ámbito; las citas con la familia, de todo el centro."
       ],
       "pasos": [
-        { "texto": "En el inicio, abre **Panel de gestión**.", "botones": ["Panel de gestión"] },
+        { "texto": "Pulsa **Inicio** (en las migas de pan, arriba) y abre **Panel de gestión**, la tarjeta que está al lado de **Administración**.", "botones": ["Inicio", "Panel de gestión"] },
         { "texto": "Elige el periodo: **7 días**, **30 días** (el que sale al abrir) o **12 meses**.", "campos": ["7 días", "30 días", "12 meses"] },
         { "texto": "Arriba están las cifras (residentes activos, ocupación, altas, bajas, citas y comunicados) y debajo los gráficos. En un Centro de Día no sale la ocupación.", "campos": ["Residentes activos", "Ocupación por unidad y edificio", "Autorizaciones de familiares"] },
         { "texto": "En pantallas anchas, **Ver en tabla** muestra en una tabla los datos de cada gráfico de barras.", "campos": ["Ver en tabla"] },
         { "texto": "Para llevarlo en papel o en un archivo, pulsa **Imprimir / guardar como PDF** (ver TOD-11).", "botones": ["Imprimir / guardar como PDF"] }
       ],
       "despues": [
-        { "para": "Administración", "texto": "Son solo cifras, sin nombres, calculadas al abrir la pantalla: no se guarda nada. Lo que hay que atender sigue en **Requiere atención** del inicio (ver ADM-01)." }
+        { "para": "Administración", "texto": "Son solo cifras, sin nombres, calculadas al abrir la pantalla: no se guarda nada. Lo que hay que atender sigue en **Requiere atención** del inicio de Administración (ver ADM-01)." }
       ],
       "dudas": [
         { "p": "«Sin datos anteriores para comparar»", "r": "Al empezar el periodo no había ningún residente registrado: pasa cuando el centro empieza a usar ResidApp o acaba de importar su censo." },
@@ -1842,7 +1842,7 @@
         { "p": "Anulé una baja reactivando al residente y sigue saliendo.", "r": "El panel cuenta las dos cosas, la baja y la reactivación como alta, porque no distingue un error de una vuelta." },
         { "p": "«Ahora mismo no se pueden mostrar las cifras de este bloque. El resto del panel funciona con normalidad.»", "r": "Es un fallo momentáneo: vuelve a abrir el panel." }
       ],
-      "rutas": ["Administracion/Panel"],
+      "rutas": ["Home/Index", "Administracion/Panel"],
       "mensajes": [
         "Sin datos anteriores para comparar",
         "Ahora mismo no se pueden mostrar las cifras de este bloque. El resto del panel funciona con normalidad.",
