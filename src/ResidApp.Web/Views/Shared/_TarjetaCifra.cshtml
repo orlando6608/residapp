@@ -1,0 +1,20 @@
+@model ResidApp.Web.Models.StatCard
+@* Una cifra grande de un cuadro de mando. Siempre neutra: en el cuadro no hay nada que valorar con color. Si no se pudo calcular, se dice. *@
+<div class="card h-100">
+    <div class="card-body">
+        <h2 class="h6 card-title">@Model.Title</h2>
+        @if (Model.Value is null)
+        {
+            <p class="text-body-secondary mb-0">Ahora mismo no se puede mostrar.</p>
+        }
+        else
+        {
+            <span class="cifra">@Model.Value</span>
+            <span class="d-block">@Model.Label</span>
+            @foreach (var detail in Model.Details)
+            {
+                <span class="d-block small text-body-secondary">@detail</span>
+            }
+        }
+    </div>
+</div>

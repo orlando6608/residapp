@@ -19,7 +19,7 @@
             seguimiento médico, protocolo urgente, derivación a Urgencias, cierre médico, las citas externas de los residentes (solo verlas) y, con permiso, el estado basal.</li>
         <li><strong>Enfermería y Medicina:</strong> el historial y la línea temporal de cada residente, y la corrección o rectificación de
             la propia valoración.</li>
-        <li><strong>Administración:</strong> residentes y su ficha (traslados, bajas y suspensiones), familiares y autorizaciones, usuarios y permisos, nombre y logo del centro, estructura del
+        <li><strong>Administración:</strong> panel de gestión, residentes y su ficha (traslados, bajas y suspensiones), familiares y autorizaciones, usuarios y permisos, nombre y logo del centro, estructura del
             centro (unidades, edificios, habitaciones y plazas), turnos, equipos y planificación, organigrama y cargos, citas con la familia, citas externas de los residentes, importación y exportación de datos, comunicados a la familia y auditoría.</li>
         <li><strong>Dirección Clínica:</strong> supervisión operativa por unidad, calidad de proceso y sus plazos, indicadores e informe de actividad, y la consulta
             auditada del basal.</li>
@@ -52,6 +52,7 @@
             <a class="list-group-item list-group-item-action" href="#cuentas-prueba">Cuentas de prueba y cómo cambiar de usuario</a>
             <a class="list-group-item list-group-item-action" href="#alta-residente">Dar de alta un residente</a>
             <a class="list-group-item list-group-item-action" href="#residentes-administracion">Residentes y ficha administrativa (Administración)</a>
+            <a class="list-group-item list-group-item-action" href="#panel-administracion">Panel de gestión (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#familiares-administracion">Familiares, autorizaciones y contacto urgente (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#usuarios-administracion">Usuarios, perfiles y unidades (Administración)</a>
             <a class="list-group-item list-group-item-action" href="#estructura-administracion">Estructura del centro: unidades, edificios, habitaciones y plazas (Administración)</a>
@@ -395,13 +396,17 @@
         motivo indicado</strong> (en una urgencia hay que saber a quién llamar); después las solicitudes de cita por gestionar, las propuestas
         que esperan la respuesta de la familia y las citas pasadas sin cerrar; las autorizaciones de familiares pendientes de activar,
         caducadas o que caducan en 30 días; los residentes con la <strong>ubicación pendiente</strong> (sin habitación, o sin cama en una
-        unidad que tiene camas; en un Centro de Día no se cuenta); las <strong>fotos de más de 12 meses</strong>, que conviene renovar; y, al final, las <strong>cuentas
+        unidad que tiene camas; en un Centro de Día no se cuenta); las <strong>fotos de más de 12 meses</strong>, que conviene renovar; las <strong>cuentas
         profesionales suspendidas o sin ámbito</strong> (sin ningún perfil vigente o con un perfil sin unidades), que llevan a «Usuarios»
-        filtrado (las de residentes y autorizaciones, de tu ámbito; las de citas y cuentas, de todo el centro). Las líneas de residentes y de autorizaciones llevan a la lista de residentes ya filtrada por ese motivo; en la lista también puedes elegir el filtro «Requiere atención» a mano, y combinarlo con el nombre y la unidad (la lista cuenta residentes y el inicio cuenta autorizaciones, así que un residente con dos familiares pendientes suma dos en el inicio y una vez en la lista). Debajo, las citas
+        filtrado; las <strong>cuentas con la invitación de acceso sin usar</strong> (de acceso o de recuperación, pendiente o caducada, con las
+        caducadas entre paréntesis; solo cuentas activas con algún perfil vigente), que llevan a «Usuarios» filtrado por ese motivo; y, al
+        final, las <strong>bajas con el plazo de conservación vencido o que vence en 12 meses o menos</strong>, que llevan a «Residentes dados
+        de baja» (las de residentes, autorizaciones y bajas, de tu ámbito; las de citas, cuentas e invitaciones, de todo el centro). Las líneas de residentes y de autorizaciones llevan a la lista de residentes ya filtrada por ese motivo; en la lista también puedes elegir el filtro «Requiere atención» a mano, y combinarlo con el nombre y la unidad (la lista cuenta residentes y el inicio cuenta autorizaciones, así que un residente con dos familiares pendientes suma dos en el inicio y una vez en la lista). Debajo, las citas
         confirmadas de hoy y de los próximos 7 días y los comunicados a la familia programados y publicados esta semana. Solo
-        son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender, dice
-        «No hay nada pendiente». El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
-        ámbito, <strong>Alta de residente</strong>, <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»), <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»), <strong>Citas con la familia</strong> (ver «Citas con la familia»), <strong>Citas externas</strong> (ver «Citas externas de los residentes»; ahí se explica también el aviso «Citas externas con algo sin cubrir», que sale aparte de «Requiere atención») e <strong>Importar datos</strong> y <strong>Exportar datos</strong> (ver «Importar y exportar datos»). En el alta, la unidad se elige en una lista con las unidades de tu
+        son cifras: no salen nombres ni texto de ningún comunicado ni de ninguna solicitud. Si no hay nada que atender y se han podido leer
+        todas las cifras, dice «No hay nada pendiente»; si falta alguna, avisa: «Ahora mismo no se pueden mostrar algunas cifras de lo que
+        requiere atención.» El inicio de Administración tiene estas tarjetas: <strong>Residentes</strong>, con el número de residentes de tu
+        ámbito, <strong>Alta de residente</strong>, <strong>Panel de gestión</strong> (ver «Panel de gestión»), <strong>Residentes dados de baja</strong>, <strong>Usuarios</strong> (ver «Usuarios, perfiles y unidades»), <strong>Unidades del centro</strong> (la Administración principal, ver «Usuarios, perfiles y unidades»), <strong>Comunicados a la familia</strong> (ver «Familiares, autorizaciones y contacto urgente»), <strong>Estructura del centro</strong> (ver «Estructura del centro: unidades, edificios, habitaciones y plazas»), <strong>Datos del centro</strong> (ver «Nombre y logo del centro») y <strong>Auditoría</strong> (ver «Auditoría administrativa»), más <strong>Turnos</strong>, <strong>Equipos</strong> y <strong>Planificación de turnos</strong> (ver «Turnos, equipos y planificación»), <strong>Organigrama y cargos</strong> (ver «Organigrama y cargos»), <strong>Citas con la familia</strong> (ver «Citas con la familia»), <strong>Citas externas</strong> (ver «Citas externas de los residentes»; ahí se explica también el aviso «Citas externas con algo sin cubrir», que sale aparte de «Requiere atención») e <strong>Importar datos</strong> y <strong>Exportar datos</strong> (ver «Importar y exportar datos»). En el alta, la unidad se elige en una lista con las unidades de tu
         ámbito (si solo tienes una, ya viene elegida). En la lista de residentes ves la foto (o sus iniciales, si no tiene), el nombre, la edad (calculada a partir
         de la fecha de nacimiento), el sexo documentado, la ubicación (unidad, habitación y plaza; si no tiene habitación, pone
         «Sin habitación asignada»; en un Centro de Día, solo la unidad) y la fecha de alta. Puedes buscar por nombre, sin
@@ -451,7 +456,7 @@
     </p>
     <p class="mb-0">
         <strong>Dar de baja</strong> cierra la estancia del residente en el centro. Elige el motivo (fallecimiento, alta voluntaria,
-        traslado a otro centro u otro motivo, que exige escribir cuál). Los datos no se borran solos: se conservan 15 años desde la baja (es el plazo que propone ResidApp por defecto, basado en la ley catalana de documentación clínica; el centro puede fijar otro dentro de lo que la ley permita). Cuando un plazo vence o está a punto de vencer, la lista de bajas lo avisa; no se borra nada sin que el centro lo decida. El
+        traslado a otro centro u otro motivo, que exige escribir cuál). Los datos no se borran solos: se conservan 15 años desde la baja (es el plazo que propone ResidApp por defecto, basado en la ley catalana de documentación clínica; el centro puede fijar otro dentro de lo que la ley permita). Cuando un plazo vence o está a punto de vencer, la lista de bajas lo avisa y el inicio de Administración dice cuántas son; no se borra nada sin que el centro lo decida. El
         residente sale de las listas activas y pasa a <strong>Residentes dados de baja</strong> (en Administración), una lista de solo
         lectura con el motivo y la fecha hasta la que se conservan sus datos. Desde ahí, <strong>Reactivar</strong> lo devuelve al centro
         en la unidad que elijas, con una estancia nueva; su historial anterior se conserva. Si la baja es por fallecimiento, los episodios
@@ -468,6 +473,44 @@
         registrar nada sobre él (ni cambios, ni eventos, ni constantes, ni basales, ni comunicados a sus familiares) hasta que se
         reanude con <strong>Reanudar atención</strong> en su ficha. Quien intente registrar algo verá un aviso de que está suspendido. No
         es una baja y no conserva ningún dato aparte.
+    </p>
+</section>
+
+<section id="panel-administracion" class="mb-4">
+    <h2 class="h5">
+        Panel de gestión
+        <span class="badge text-bg-secondary align-middle">Perfil: Administración</span>
+    </h2>
+    <p>
+        La tarjeta <strong>Panel de gestión</strong> del inicio de Administración abre una pantalla con cifras y gráficos sin nombres,
+        calculados al abrirla (no se guarda nada). Residentes, plazas, altas, bajas y autorizaciones son de las unidades de tu ámbito; los
+        comunicados, de tus unidades; las citas con la familia, de todo el centro. Los avisos no están aquí: siguen en «Requiere atención» del
+        inicio. Arriba eliges el periodo: <strong>7 días</strong> (por días), <strong>30 días</strong> (el que sale al abrir; por semanas de
+        lunes a domingo) o <strong>12 meses</strong> (por meses naturales); el primer y el último tramo pueden quedar recortados.
+    </p>
+    <p>
+        Las cifras de arriba son: <strong>Residentes activos</strong> y <strong>Ocupación</strong> (porcentaje y plazas ocupadas; aparte, los
+        residentes sin plaza asignada y los de unidades sin plazas definidas, que no entran en el porcentaje; sin ninguna plaza, «Sin
+        plazas»), las dos comparadas con el principio del periodo (la ocupación de entonces, calculada con las plazas de hoy); si entonces no
+        había ningún residente registrado, porque el centro empieza o acaba de importar su censo, se lee «Sin datos anteriores para
+        comparar». Siguen <strong>Altas</strong> y <strong>Bajas</strong> (del periodo, de hoy y del periodo anterior; las de hoy, con su
+        categoría de motivo), <strong>Citas con la familia</strong> (confirmadas hoy y en los próximos 7 días) y <strong>Comunicados a la
+        familia</strong> (programados y publicados en los últimos 7 días); estas dos últimas no cambian con el periodo.
+    </p>
+    <p>
+        Debajo van los gráficos: <strong>Ocupación actual</strong>; <strong>Ocupación por unidad y edificio</strong> (por orden de nombre,
+        con el total de tus unidades en cada edificio); <strong>Altas y bajas</strong> (un alta cuenta en su fecha de ingreso, si consta, o
+        el día en que se registró, y una reactivación es un alta; una baja cuenta el día en que se registró, con su categoría de motivo,
+        nunca el texto escrito, y sigue contando aunque se anule reactivando al residente); <strong>Citas con la familia</strong>
+        (finalizadas, confirmadas y canceladas, por el día de la cita y con su estado de ahora, hasta hoy incluido) y <strong>Autorizaciones
+        de familiares</strong> (activas, pendientes, caducadas y suspendidas al terminar cada tramo, de los residentes que hoy están en tu
+        ámbito; las revocadas no cuentan). En los gráficos de barras cada fila dice sus cifras en texto y, en pantallas anchas,
+        <strong>Ver en tabla</strong> muestra las mismas en una tabla. En un Centro de Día no sale nada de ocupación ni de plazas.
+    </p>
+    <p class="mb-0">
+        <strong>Imprimir / guardar como PDF</strong> saca el panel con la marca del centro, la fecha en que se generó y «Datos agregados, no
+        reidentificar»; en papel no salen los menús, el selector de periodo ni las tablas. Si un bloque no se puede leer, lo dice en su sitio
+        y los demás se ven.
     </p>
 </section>
 
@@ -823,6 +866,9 @@
         código del móvil, se le borran las passkeys (llaves de acceso) y se le cierran todas las sesiones abiertas. Hasta que la use, su contraseña de siempre sigue valiendo; si temes
         que alguien la conozca, suspende la cuenta. No se entrega invitación a tu propia cuenta (otra Administración, o Plataforma, puede
         hacerlo) ni a una cuenta con perfiles vigentes en otros centros (esas las gestiona Plataforma). Cada invitación entregada o anulada queda en la auditoría.
+        Mientras una invitación siga sin usar ni anular (aunque haya caducado), el inicio la cuenta en «Requiere atención»; esa línea lleva a
+        «Usuarios» filtrado, donde cada cuenta dice «Invitación pendiente: caduca el … a las …» o «Invitación caducada el … a las …», y «Ver
+        todas» quita el filtro.
     </p>
     <p>
         <strong>Acceso de alguien de otro centro</strong> (junto a «Alta de usuario») es para dar un perfil de tu centro a una persona que <strong>ya
@@ -2168,7 +2214,6 @@
     <p>Los siguientes módulos están descritos en el diseño del producto pero aún no están disponibles en la app:</p>
     <ul class="mb-0">
         <li>Acceso: la pulsera con chip (NFC) y PIN para entrar rápido en una tablet que comparten varias personas.</li>
-        <li>Más gestión administrativa: un panel completo.</li>
         <li>Un calendario de turnos con las personas de cada turno y bandejas personales de seguimientos (futuro; hoy la bandeja es común a la unidad y se elige a mano el equipo entrante).</li>
         <li>Rangos de referencia de constantes propios de cada residente (hoy son del centro).</li>
         <li>Dictado por voz en otros formularios (hoy solo «Registrar cambio»).</li>

@@ -459,6 +459,8 @@ builder.Services.AddScoped<IAppointmentRequestRepository, SqlAppointmentRequestR
 builder.Services.AddScoped<AppointmentRequestsApplicationService>();
 builder.Services.AddScoped<IAdministrationOverviewReader, SqlAdministrationOverview>();
 builder.Services.AddScoped<AdministrationOverviewApplicationService>();
+builder.Services.AddScoped<IAdministrationDashboardReader, SqlAdministrationDashboard>();
+builder.Services.AddScoped<AdministrationDashboardApplicationService>();
 builder.Services.AddScoped<ICenterLayoutDirectory, SqlCenterLayoutDirectory>();
 builder.Services.AddScoped<ICenterLayoutRepository, SqlCenterLayoutRepository>();
 builder.Services.AddScoped<AdministracionEstructuraApplicationService>();

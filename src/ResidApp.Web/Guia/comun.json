@@ -338,7 +338,7 @@
         "Cualquier pantalla se puede imprimir; solo algunas llevan además un botón propio."
       ],
       "pasos": [
-        { "texto": "Abre la pantalla que quieres sacar. Si tiene un botón propio, púlsalo: **Imprimir** en la hoja de invitación o de acceso a otro centro, **Imprimir / guardar como PDF** en los indicadores.", "botones": ["Imprimir", "Imprimir / guardar como PDF"] },
+        { "texto": "Abre la pantalla que quieres sacar. Si tiene un botón propio, púlsalo: **Imprimir** en la hoja de invitación o de acceso a otro centro, **Imprimir / guardar como PDF** en los indicadores y en el Panel de gestión de Administración.", "botones": ["Imprimir", "Imprimir / guardar como PDF"] },
         { "texto": "Sin botón propio, usa la impresión del navegador: **Ctrl+P** (en Mac, **Cmd+P**) o el menú del navegador, opción «Imprimir»." },
         { "texto": "En «Destino», elige tu impresora para sacarlo en papel, o **Guardar como PDF** para un archivo. Comprueba la vista previa y confirma." }
       ],
@@ -348,7 +348,7 @@
       "dudas": [
         { "p": "La vista previa corta una tabla ancha o salen páginas de más.", "r": "Es la impresión del navegador: prueba el modo «Horizontal» o ajusta la escala en sus opciones. Para sacar una guía de ResidApp en papel, mejor desde la propia guía (cada tarea cabe en una página)." }
       ],
-      "rutas": ["Home/Index", "Direccion/Indicadores", "Administracion/Invitacion"],
+      "rutas": ["Home/Index", "Direccion/Indicadores", "Administracion/Panel", "Administracion/Invitacion"],
       "mensajes": [],
       "manual": { "id": "apariencia", "titulo": "Apariencia: colores, modo claro y modo oscuro" }
     }

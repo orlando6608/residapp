@@ -1,0 +1,75 @@
+@using ResidApp.Web.Models
+@model BarChart
+@* Barras horizontales dibujadas por el servidor (SVG, sin librerías, sin style ni script). Cada fila dice sus valores en texto, así que el dibujo es
+   decorativo; debajo, desde «md», la tabla con los mismos datos. *@
+@if (Model.Empty)
+{
+    <p class="text-body-secondary mb-0">No hay datos en este periodo.</p>
+}
+else
+{
+    @if (Model.Series.Count > 1)
+    {
+        <ul class="list-inline small mb-2">
+            @for (var i = 0; i < Model.Series.Count; i++)
+            {
+                <li class="list-inline-item me-3">
+                    <svg class="grafico-marca serie-@(i + 1)" width="12" height="12" aria-hidden="true" focusable="false"><rect width="12" height="12" rx="2" /></svg>
+                    @Model.Series[i]
+                </li>
+            }
+        </ul>
+    }
+    <ul class="list-unstyled mb-2">
+        @foreach (var row in Model.Rows)
+        {
+            <li class="grafico-fila mb-2">
+                <div class="d-flex flex-wrap justify-content-between column-gap-3">
+                    <span class="@(row.IsTotal ? "fw-semibold" : null)">@row.Label</span>
+                    <span class="small text-body-secondary">@row.Text</span>
+                </div>
+                @if (Model.ScaleOf(row) > 0 || row.Scale is null)
+                {
+                    var height = Model.Lanes * BarChart.LaneHeight;
+                    <svg class="grafico-barra" width="100%" height="@height" aria-hidden="true" focusable="false">
+                        <rect class="grafico-fondo" width="100%" height="@height" />
+                        @foreach (var segment in Model.Segments(row))
+                        {
+                            <rect class="grafico-trozo serie-@(segment.Series + 1)" x="@BarChart.Svg(segment.Left)" y="@(segment.Lane * BarChart.LaneHeight)"
+                                  width="@BarChart.Svg(segment.Width)" height="@BarChart.LaneHeight" />
+                        }
+                    </svg>
+                }
+            </li>
+        }
+    </ul>
+    <details class="d-none d-md-block d-print-none">
+        <summary class="small">Ver en tabla</summary>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mt-2">
+                <caption class="visually-hidden">@Model.Table.Caption</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@Model.Table.CategoryHeader</th>
+                        @foreach (var header in Model.Table.Headers)
+                        {
+                            <th scope="col" class="text-end">@header</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Table.Rows)
+                    {
+                        <tr>
+                            <th scope="row" class="fw-normal">@row.Label</th>
+                            @foreach (var cell in row.Cells)
+                            {
+                                <td class="text-end">@cell</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </details>
+}

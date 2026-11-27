@@ -1,0 +1,13 @@
+@model ResidApp.Web.Models.DonutChart
+@* Una parte de un total, dibujada por el servidor: la circunferencia mide 100, así que el trazo es el porcentaje. El texto de al lado dice lo mismo. *@
+<div class="d-flex flex-wrap align-items-center gap-3">
+    <svg class="grafico-rosquilla" viewBox="0 0 42 42" aria-hidden="true" focusable="false">
+        <circle class="rosquilla-fondo" cx="21" cy="21" r="15.915" />
+        @if (Model.Percent > 0)
+        {
+            <circle class="rosquilla-valor" cx="21" cy="21" r="15.915" stroke-dasharray="@Model.Percent @(100 - Model.Percent)" transform="rotate(-90 21 21)" />
+        }
+        <text x="21" y="23.5" text-anchor="middle">@Model.Percent %</text>
+    </svg>
+    <p class="mb-0 fw-semibold">@Model.Text</p>
+</div>

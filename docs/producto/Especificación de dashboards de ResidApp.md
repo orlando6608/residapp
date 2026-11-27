@@ -2,7 +2,16 @@
 
 Nov 10, 2026 · @Orlando Santos
 
-Estado: **propuesta revisada el 2026-11-10** contra las decisiones ya tomadas (ADR 0006, 0008 y 0015, lectura del DPO de módulos, guía de diseño y directrices PWA). Lo que contradecía alguna de ellas se ha quitado o rebajado; el apartado «Qué se descartó y por qué» lo recoge. Nada de esto está construido.
+Estado: **propuesta revisada el 2026-11-10** contra las decisiones ya tomadas (ADR 0006, 0008 y 0015, lectura del DPO de módulos, guía de diseño y directrices PWA). Lo que contradecía alguna de ellas se ha quitado o rebajado; el apartado «Qué se descartó y por qué» lo recoge.
+
+**Construido (2026-11-27): la base común y Administración (fases 1 y 2).** Lo demás sigue sin construir. Al construirlas, Orlando decidió, y esto manda sobre lo que diga más abajo:
+
+1. **Dos sitios.** Los avisos siguen en «Requiere atención» del Inicio de Administración, que gana los dos nuevos; las cifras y los gráficos van en una página aparte, «Panel de gestión» (`/Administracion/Panel`).
+2. **Sin caché de servidor** hasta medir que una pantalla va lenta (las condiciones del apartado «Datos, histórico y rendimiento» se aplicarán si se añade).
+3. **Sin datos anteriores no se compara:** si al empezar el periodo no había ningún residente registrado, se lee «Sin datos anteriores para comparar» (un censo importado diría que han entrado todos).
+4. **Una baja anulada con una reactivación sigue contando**, igual que la reactivación como alta, y la pantalla lo dice.
+
+Los criterios de lo construido están en `docs\historias-usuarios\administracion.md`, historia 12. Decisiones de construcción: tramos por día, semana de lunes a domingo o mes natural; las tarjetas de citas y comunicados no llevan variación; «Comunicados» usa la cifra del Inicio (publicados en los últimos 7 días); la evolución de autorizaciones es la de los residentes que hoy están en el ámbito; la rosquilla lleva el porcentaje en el centro y el texto completo al lado; un Centro de Día no ve ocupación ni plazas (ADR 0017). Quedan pendientes de la fase 2 la frase del registro de actividades del centro y la de «estadística interna» de su cláusula (lectura del DPO, apartado 1), que valida una persona, y medir los tiempos con el volumen de un centro grande.
 
 ## Objetivo y alcance
 

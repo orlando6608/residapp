@@ -6,6 +6,7 @@ using ResidApp.Application.Ports;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Accounts;
 using ResidApp.Domain.Families;
+using ResidApp.Domain.Residents;
 using ResidApp.Shared;
 using ResidApp.Web.Models;
 using ResidApp.Web.Security;
@@ -69,12 +70,17 @@ public sealed partial class AdministracionController(
             ? await externalFamily.ListOfferedAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), [.. uncovered.Value.Select(u => u.Id)], ct)
             : null;
         var overdueExternal = await externalAppointments.ListOverdueAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), null, ct);
+        var discharged = await statuses.ListDischargedAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
+        var today = CenterTime.Today;
         return View(new AdministracionInicioViewModel(
             result.Value?.Count ?? 0, accounts.Value?.Count ?? 0, attention.Value,
             communications.Ok ? AdministrationCommunicationsSummary.From(communications.Value!, DateTimeOffset.UtcNow) : null,
             accounts.Ok ? accounts.Value!.Count(ProfessionalAccountAttention.NeedsReview) : null,
             uncovered.Ok ? uncovered.Value : null, externalAppointments.TodayAtCenter(), overdueExternal.Ok ? overdueExternal.Value : null,
-            offered is { Ok: true } ? offered.Value : null));
+            offered is { Ok: true } ? offered.Value : null,
+            accounts.Ok ? accounts.Value!.Count(ProfessionalAccountAttention.HasOpenInvitation) : null,
+            accounts.Ok ? accounts.Value!.Count(a => ProfessionalAccountAttention.HasExpiredInvitation(a, DateTimeOffset.UtcNow)) : 0,
+            discharged.Ok ? discharged.Value!.Count(r => ResidentDischarge.RetentionStatus(r.RetainUntil, today) != ResidentRetentionStatus.Vigente) : null));
     }
 
     public async Task<IActionResult> Residentes(AdministrativeResidentFilter filtro, CancellationToken ct)
@@ -695,7 +701,7 @@ public sealed partial class AdministracionController(
 
     /// <summary>ADM-12 (0023): las cuentas con algún perfil en el centro. Con <paramref name="revisar"/>, solo las que conviene revisar
     /// (ProfessionalAccountAttention, el enlace del inicio).</summary>
-    public async Task<IActionResult> Usuarios(bool revisar, CancellationToken ct)
+    public async Task<IActionResult> Usuarios(bool revisar, bool invitacion, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
@@ -710,8 +716,11 @@ public sealed partial class AdministracionController(
         }
 
         ViewData["Revisar"] = revisar;
+        ViewData["Invitacion"] = invitacion;
         var accounts = result.Value ?? [];
-        return View(revisar ? accounts.Where(ProfessionalAccountAttention.NeedsReview).ToList() : accounts);
+        return View(revisar ? accounts.Where(ProfessionalAccountAttention.NeedsReview).ToList()
+            : invitacion ? accounts.Where(ProfessionalAccountAttention.HasOpenInvitation).ToList()
+            : accounts);
     }
 
     /// <summary>ADM-13: si la cuenta no tiene perfiles en el centro, se vuelve a la lista sin distinguir el motivo.</summary>
