@@ -376,7 +376,7 @@ Búsqueda en `src/` de `Response.Cookies`, `AddCookie`, `localStorage`, `session
 | `residapp_clinical_access` | `ClinicalAccessDeclarationCookie.cs`, líneas 11 a 19 | Solo el id de la declaración. Duración de la declaración: 60 min (`appsettings.json`, línea 16) |
 | `residapp_transfer_history` | `TransferHistoryCookie.cs`, líneas 10 a 18 | Solo el id de la petición. La petición vale 1 h (`historial-tras-traslado-01`, línea 38) |
 | `residapp_acceso_pendiente` | `PendingAccessCookie.cs`, líneas 10 a 32 | Cifrada por Data Protection, 10 min, `Path=/Acceso`, Strict. Sirve al paso del código del móvil y al del código del correo (cuenta, sello de seguridad, destino y envío del código) |
-| `residapp_invitacion` | `InvitationCookie.cs`, líneas 13, 14 y 20 | Cifrada, 30 min, `Path=/Acceso`, Strict. Lleva el resumen del token, no el token |
+| `residapp_invitacion` | `InvitationCookie.cs`, líneas 15 a 23 | Cifrada, 30 min, `Path=/Acceso`, SameSite=Lax (para que valga al llegar desde un enlace). Lleva el resumen del token, no el token |
 | `residapp_passkey` | `PasskeyStateCookie.cs`, líneas 24, 25 y 32 | Cifrada, 5 min, un solo uso, Strict |
 | `residapp_cj_acceso` | `PendientesCjAccess.cs`, líneas 14 y 52 a 58 | De sesión, HttpOnly, Lax. Solo se crea tras escribir la clave de `/pendientes-cj` |
 | Antiforgery (`.AspNetCore.Antiforgery.*`) | **No configurado** (no hay `AddAntiforgery`); nombre por defecto del framework. Los POST llevan `[ValidateAntiForgeryToken]` (`docs/seguridad/hallazgos.md`, línea 450) | **[A verificar]** el nombre exacto con las herramientas del navegador sobre Azure |

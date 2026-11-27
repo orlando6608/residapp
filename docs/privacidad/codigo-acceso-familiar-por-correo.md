@@ -368,6 +368,14 @@ Base normativa local (comprobada el 2026-11-20; textos consolidados, no oficiale
 
 **Paso 1 para las cuentas de CJ (2026-11-26):** Orlando comunica que CJ está conforme con que su dirección se use en sus cuentas de familia de prueba; la hoja de acceso de CJ ya lo dice. Aquí no se copia la dirección ni la respuesta.
 
+**Encendido en Azure dev (2026-11-27)**, por Orlando, guiado:
+
+- Pasos 2 y 3: correo operativo, `Correo__TodosLosDestinos` ausente, las dos direcciones (CJ y la cuenta de familia de Orlando) en la lista de permitidas y la documentación ya desplegada.
+- Paso 4: direcciones puestas en las fichas de Elena y Pablo Sánchez (Los Almendros) con el código apagado.
+- Pasos 5 y 6: antes de encender se pidió que nadie hubiera entrado con una cuenta de familia en la última media hora; no se comprobó en la base de datos. Orlando creó la clave en la Web App y activó el código; se vio encendido desde fuera a las 09:11 (el apartado del código en la página de privacidad).
+- Paso 7: aviso a CJ redactado y entregado a Orlando para que lo mande.
+- Paso 8: la primera entrada con la cuenta de familia de Orlando funcionó y el código llegó. **Sin comprobar:** el registro de la Web App y si los códigos se purgan (`ResidAppTareas`).
+
 Recomendado: comprobar que `ResidAppTareas` está configurada (si sale «Códigos de acceso: no se purgan», los 30 días no se cumplen), seguimiento de aperturas apagado en Azure y retirar las direcciones de prueba al terminar.
 
 ### Solo antes de datos reales

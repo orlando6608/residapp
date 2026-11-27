@@ -55,7 +55,11 @@
                 </div>
 
                 <p class="mt-3 mb-1 small text-muted">Dirección de la invitación:</p>
-                <p class="font-monospace small text-break mb-0">@Model.Direccion</p>
+                <p class="font-monospace small text-break mb-0" id="direccion-invitacion">@Model.Direccion</p>
+                <div class="d-print-none d-flex flex-wrap align-items-center gap-2 mt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-lg" id="copiar-direccion" hidden>Copiar dirección</button>
+                    <span id="copiar-direccion-estado" role="status"></span>
+                </div>
 
                 @* Información breve de protección de datos (LOPDGDD art. 11), borrador por validar: docs/privacidad/codigo-acceso-familiar-por-correo.md. La hoja no sabe si es de una
                    familia, así que empieza por «Si eres familiar»; teléfono, delegado y autoridad del centro no están en la aplicación y no se inventan. *@
@@ -94,6 +98,18 @@
                 caja.hidden = true;
             }
             document.getElementById('imprimir-invitacion').addEventListener('click', function () { window.print(); });
+
+            // El botón solo aparece si el navegador deja copiar; la dirección sigue a la vista para copiarla a mano.
+            var copiar = document.getElementById('copiar-direccion');
+            if (navigator.clipboard) {
+                copiar.hidden = false;
+                copiar.addEventListener('click', function () {
+                    var estado = document.getElementById('copiar-direccion-estado');
+                    navigator.clipboard.writeText(document.getElementById('direccion-invitacion').textContent.trim()).then(
+                        function () { estado.textContent = 'Dirección copiada. Con ella se entra en la cuenta: entrégasela solo a esa persona. No la envíes por correo ni por mensajería.'; },
+                        function () { estado.textContent = 'No se ha podido copiar. Selecciona la dirección y cópiala a mano.'; });
+                });
+            }
         })();
     </script>
 }
