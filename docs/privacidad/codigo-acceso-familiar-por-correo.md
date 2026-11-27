@@ -374,7 +374,7 @@ Base normativa local (comprobada el 2026-11-20; textos consolidados, no oficiale
 - Paso 4: direcciones puestas en las fichas de Elena y Pablo Sánchez (Los Almendros) con el código apagado.
 - Pasos 5 y 6: antes de encender se pidió que nadie hubiera entrado con una cuenta de familia en la última media hora; no se comprobó en la base de datos. Orlando creó la clave en la Web App y activó el código; se vio encendido desde fuera a las 09:11 (el apartado del código en la página de privacidad).
 - Paso 7: aviso a CJ redactado y entregado a Orlando para que lo mande.
-- Paso 8: la primera entrada con la cuenta de familia de Orlando funcionó y el código llegó. **Sin comprobar:** el registro de la Web App y si los códigos se purgan (`ResidAppTareas`).
+- Paso 8: la primera entrada con la cuenta de familia de Orlando funcionó y el código llegó. **Purga comprobada** ese día en el registro de la Web App: la tarea se ejecutó con la conexión `ResidAppTareas` («Códigos de acceso: 0 filas con más de 30 días borradas»); no se ha visto aún borrar ninguna fila en dev, porque ninguna tiene 30 días. **Sin comprobar:** la línea `CODIGO_ACCESO_FAMILIA: ENVIADO` del registro.
 
 Recomendado: comprobar que `ResidAppTareas` está configurada (si sale «Códigos de acceso: no se purgan», los 30 días no se cumplen), seguimiento de aperturas apagado en Azure y retirar las direcciones de prueba al terminar.
 
