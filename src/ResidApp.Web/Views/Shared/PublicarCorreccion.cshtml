@@ -5,7 +5,7 @@
    (PublicarCorreccion, Comunicados) son las del controlador actual. *@
 @{
     ViewData["Title"] = "Publicar una corrección";
-    var communication = Model.Item.Communication;
+    var communication = Model.Item?.Communication;
     var area = ViewContext.RouteData.Values["controller"]?.ToString() == "Direccion" ? "Dirección Clínica" : "Administración";
 }
 
@@ -20,16 +20,23 @@
 
 <h1 class="h3">Publicar una corrección</h1>
 <p class="text-muted">
-    @communication.ResidentName · @(communication.UnitName ?? "Sin unidad"). Este comunicado ya está publicado y no se puede cambiar: la corrección
-    es una publicación nueva que la familia ve junto al original, firmada como «@FamilyCommunicationChoice.VisibleAuthor». Sale en cuanto la guardes y
-    queda en la auditoría. Si lo que quieres es que la familia deje de verlo, usa «Retirar».
+    @if (communication is not null)
+    {
+        <text>@communication.ResidentName · @(communication.UnitName ?? "Sin unidad").</text>
+    }
+    Este comunicado ya está publicado y no se puede cambiar: la corrección es una publicación nueva que la familia ve junto al original, firmada
+    como «@FamilyCommunicationChoice.VisibleAuthor». Sale en cuanto la guardes y queda en la auditoría. Si lo que quieres es que la familia deje
+    de verlo, usa «Retirar».
 </p>
-<div class="card mb-3">
-    <div class="card-body">
-        <p class="small text-muted mb-1">Comunicado publicado</p>
-        <p class="mb-0" style="white-space: pre-line">@communication.Text</p>
+@if (communication is not null)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="small text-muted mb-1">Comunicado publicado</p>
+            <p class="mb-0" style="white-space: pre-line">@communication.Text</p>
+        </div>
     </div>
-</div>
+}
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <form asp-action="PublicarCorreccion" method="post">

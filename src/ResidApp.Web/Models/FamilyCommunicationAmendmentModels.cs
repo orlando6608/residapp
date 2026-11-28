@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ResidApp.Application.Errors;
 using ResidApp.Application.UseCases;
 using ResidApp.Domain.Enfermeria;
 using ResidApp.Domain.Families;
@@ -33,6 +34,21 @@ public sealed class RetirarComunicadoFormModel
     public string? Motivo { get; set; }
 }
 
-public sealed record PublicarCorreccionViewModel(FamilyCommunicationStatusView Item, PublicarCorreccionFormModel Form);
+/// <summary>Item null: al enviar el formulario no se pudo leer el comunicado, así que solo se enseña lo escrito para volver a intentarlo.</summary>
+public sealed record PublicarCorreccionViewModel(FamilyCommunicationStatusView? Item, PublicarCorreccionFormModel Form);
 
-public sealed record RetirarComunicadoViewModel(FamilyCommunicationStatusView Item, RetirarComunicadoFormModel Form);
+/// <summary>Item null: como en <see cref="PublicarCorreccionViewModel"/>.</summary>
+public sealed record RetirarComunicadoViewModel(FamilyCommunicationStatusView? Item, RetirarComunicadoFormModel Form);
+
+/// <summary>No se pudo leer el comunicado que se quiere corregir o retirar: no se sabe si lo admite, así que no se puede dar ese motivo.</summary>
+public static class FamilyCommunicationReadFailure
+{
+    private const string Denied = "No se puede acceder a ese comunicado.";
+
+    public static string OnOpen(ApplicationFailure failure) =>
+        failure.Code == ApplicationFailureCode.AccessDenied ? Denied : "Ahora mismo no se puede leer ese comunicado. Vuelve a intentarlo.";
+
+    public static string OnSend(ApplicationFailure failure) => failure.Code == ApplicationFailureCode.AccessDenied
+        ? Denied
+        : "Ahora mismo no se puede leer el comunicado, así que no se ha cambiado nada. Lo que has escrito sigue aquí: vuelve a intentarlo.";
+}

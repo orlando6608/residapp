@@ -18,9 +18,10 @@ public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSumma
 }
 
 /// <summary>DIR-12: la lista de derivaciones y, si se pidieron las de episodios cerrados, el periodo elegido (From y To incluidos). Failed: no se pudo
-/// leer, así que no se puede decir que no haya ninguna.</summary>
+/// leer, así que no se puede decir que no haya ninguna. InvalidPeriod: con un periodo imposible no se llega a leer nada.</summary>
 public sealed record SupervisionReferralsViewModel(
-    IReadOnlyList<SupervisionReferral> Referrals, bool IncludeClosed = false, DateOnly? From = null, DateOnly? To = null, bool Failed = false)
+    IReadOnlyList<SupervisionReferral> Referrals, bool IncludeClosed = false, DateOnly? From = null, DateOnly? To = null, bool Failed = false,
+    bool InvalidPeriod = false)
 {
     public int Signed => Referrals.Count(r => r.ReportSigned);
     public int Unsigned => Referrals.Count - Signed;

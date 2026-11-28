@@ -4,7 +4,7 @@
    (RetirarComunicado, Comunicados) son las del controlador actual. *@
 @{
     ViewData["Title"] = "Retirar un comunicado";
-    var communication = Model.Item.Communication;
+    var communication = Model.Item?.Communication;
     var area = ViewContext.RouteData.Values["controller"]?.ToString() == "Direccion" ? "Dirección Clínica" : "Administración";
 }
 
@@ -19,16 +19,23 @@
 
 <h1 class="h3">Retirar un comunicado</h1>
 <p class="text-muted">
-    @communication.ResidentName · @(communication.UnitName ?? "Sin unidad"). Es una medida excepcional. La familia dejará de ver el texto y verá que
-    esa novedad ya no está disponible (también dejarán de verse sus correcciones). El comunicado se conserva y la retirada queda en la
-    auditoría con tu motivo, que la familia no ve. No se puede deshacer; si solo hay un error, es mejor publicar una corrección.
+    @if (communication is not null)
+    {
+        <text>@communication.ResidentName · @(communication.UnitName ?? "Sin unidad").</text>
+    }
+    Es una medida excepcional. La familia dejará de ver el texto y verá que esa novedad ya no está disponible (también dejarán de verse sus
+    correcciones). El comunicado se conserva y la retirada queda en la auditoría con tu motivo, que la familia no ve. No se puede deshacer; si
+    solo hay un error, es mejor publicar una corrección.
 </p>
-<div class="card mb-3">
-    <div class="card-body">
-        <p class="small text-muted mb-1">Comunicado que se retira</p>
-        <p class="mb-0" style="white-space: pre-line">@communication.Text</p>
+@if (communication is not null)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="small text-muted mb-1">Comunicado que se retira</p>
+            <p class="mb-0" style="white-space: pre-line">@communication.Text</p>
+        </div>
     </div>
-</div>
+}
 <div asp-validation-summary="All" class="text-danger"></div>
 
 <form asp-action="RetirarComunicado" method="post">

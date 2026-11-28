@@ -41,7 +41,11 @@
     <div class="form-text">Sin marcar la casilla solo salen las derivaciones de episodios abiertos. Sin fechas, los últimos 30 días.</div>
 </form>
 
-@if (Model.Failed)
+@if (Model.InvalidPeriod)
+{
+    @* El aviso del periodo, arriba, ya lo explica: no se ha leído nada, así que no se dice si hay derivaciones. *@
+}
+else if (Model.Failed)
 {
     <p class="text-muted">Ahora mismo no se pueden mostrar las derivaciones.</p>
 }

@@ -60,7 +60,12 @@ public sealed partial class AdministracionController
     [HttpGet]
     public async Task<IActionResult> PublicarCorreccion(Guid comunicadoId, CancellationToken ct)
     {
-        var item = await FindFamilyCommunicationAsync(comunicadoId, ct);
+        var (item, failure) = await FindFamilyCommunicationAsync(comunicadoId, ct);
+        if (failure is not null)
+        {
+            TempData["Error"] = FamilyCommunicationReadFailure.OnOpen(failure);
+            return RedirectToAction(nameof(Comunicados));
+        }
         if (item is null || !item.CanCorrect)
         {
             TempData["Error"] = "Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.";
@@ -74,7 +79,12 @@ public sealed partial class AdministracionController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PublicarCorreccion([Bind(Prefix = "Form")] PublicarCorreccionFormModel form, CancellationToken ct)
     {
-        var item = await FindFamilyCommunicationAsync(form.ComunicadoId, ct);
+        var (item, failure) = await FindFamilyCommunicationAsync(form.ComunicadoId, ct);
+        if (failure is not null)
+        {
+            ModelState.AddModelError(string.Empty, FamilyCommunicationReadFailure.OnSend(failure));
+            return View("PublicarCorreccion", new PublicarCorreccionViewModel(null, form));
+        }
         if (item is null)
         {
             return RedirectToAction(nameof(Comunicados));
@@ -106,7 +116,12 @@ public sealed partial class AdministracionController
     [HttpGet]
     public async Task<IActionResult> RetirarComunicado(Guid comunicadoId, CancellationToken ct)
     {
-        var item = await FindFamilyCommunicationAsync(comunicadoId, ct);
+        var (item, failure) = await FindFamilyCommunicationAsync(comunicadoId, ct);
+        if (failure is not null)
+        {
+            TempData["Error"] = FamilyCommunicationReadFailure.OnOpen(failure);
+            return RedirectToAction(nameof(Comunicados));
+        }
         if (item is null || !item.CanAmend)
         {
             TempData["Error"] = "Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.";
@@ -120,7 +135,12 @@ public sealed partial class AdministracionController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RetirarComunicado([Bind(Prefix = "Form")] RetirarComunicadoFormModel form, CancellationToken ct)
     {
-        var item = await FindFamilyCommunicationAsync(form.ComunicadoId, ct);
+        var (item, failure) = await FindFamilyCommunicationAsync(form.ComunicadoId, ct);
+        if (failure is not null)
+        {
+            ModelState.AddModelError(string.Empty, FamilyCommunicationReadFailure.OnSend(failure));
+            return View("RetirarComunicado", new RetirarComunicadoViewModel(null, form));
+        }
         if (item is null)
         {
             return RedirectToAction(nameof(Comunicados));
@@ -149,15 +169,16 @@ public sealed partial class AdministracionController
         return View("RetirarComunicado", new RetirarComunicadoViewModel(item, form));
     }
 
-    private async Task<FamilyCommunicationStatusView?> FindFamilyCommunicationAsync(Guid communicationId, CancellationToken ct)
+    /// <summary>El comunicado del ámbito (null si no está) o, si la lectura falla, el fallo: no es lo mismo.</summary>
+    private async Task<(FamilyCommunicationStatusView? Item, ApplicationFailure? Failure)> FindFamilyCommunicationAsync(Guid communicationId, CancellationToken ct)
     {
         var activeScope = ActiveProfileScopeCookie.Read(Request);
         if (activeScope is null)
         {
-            return null;
+            return (null, null);
         }
 
         var result = await familyCommunications.ListAsync(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId), ct);
-        return result.Ok ? result.Value!.FirstOrDefault(c => c.Communication.Id == communicationId) : null;
+        return result.Ok ? (result.Value!.FirstOrDefault(c => c.Communication.Id == communicationId), null) : (null, result.Error);
     }
 }
