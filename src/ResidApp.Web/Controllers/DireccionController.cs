@@ -34,7 +34,7 @@ public sealed class DireccionController(
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(result.Value ?? []);
+        return View(result.Value);
     }
 
     [HttpPost]
@@ -178,17 +178,17 @@ public sealed class DireccionController(
             return RedirectToAction("Select", "ProfileScope", new { returnUrl = Url.Action(nameof(Index)) });
         }
 
-        var result = await service.ReadPanelAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        var query = new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId));
+        var result = await service.ReadPanelAsync(query, ct);
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(new DireccionInicioViewModel([], Failed: true));
         }
 
-        // Las tarjetas de Indicadores y Calidad solo se enseñan con el permiso; solo orienta, cada pantalla vuelve a autorizar.
-        var scope = await service.ReadScopeAsync(new SupervisionQuery(activeScope.ProfileScopeId, CenterId.From(activeScope.CenterId)), ct);
+        // Las tarjetas de Indicadores y Calidad solo se enseñan con el permiso, se hayan podido leer las cifras o no; solo orienta, cada pantalla vuelve a autorizar.
+        var scope = await service.ReadScopeAsync(query, ct);
         var canReviewQuality = scope.Ok && scope.Value!.Permissions.Contains(ResidApp.Domain.Accounts.ProfilePermissions.QualityReview);
-        return View(new DireccionInicioViewModel(result.Value!, canReviewQuality));
+        return View(new DireccionInicioViewModel(result.Value ?? [], canReviewQuality, Failed: !result.Ok));
     }
 
     public async Task<IActionResult> Pendientes(SupervisionFilter filtro, CancellationToken ct)
@@ -209,7 +209,7 @@ public sealed class DireccionController(
         if (!scope.Ok || !list.Ok)
         {
             ModelState.AddModelError(string.Empty, (scope.Error ?? list.Error)!.Message);
-            return View(new SupervisionPendingViewModel(new SupervisionPendingList([], 0), filtro, [], today));
+            return View(new SupervisionPendingViewModel(new SupervisionPendingList([], 0), filtro, [], today, Failed: true));
         }
 
         return View(new SupervisionPendingViewModel(list.Value!, filtro, scope.Value!.Units.Select(u => (u.Id.Value, u.Name)).ToList(), today));
@@ -234,7 +234,7 @@ public sealed class DireccionController(
             if (!open.Ok)
             {
                 ModelState.AddModelError(string.Empty, open.Error!.Message);
-                return View(new SupervisionReferralsViewModel([]));
+                return View(new SupervisionReferralsViewModel([], Failed: true));
             }
 
             return View(new SupervisionReferralsViewModel(open.Value!));
@@ -252,7 +252,7 @@ public sealed class DireccionController(
         if (!result.Ok)
         {
             ModelState.AddModelError(string.Empty, result.Error!.Message);
-            return View(new SupervisionReferralsViewModel([], true, from, to));
+            return View(new SupervisionReferralsViewModel([], true, from, to, Failed: true));
         }
 
         return View(new SupervisionReferralsViewModel(result.Value!, true, from, to));

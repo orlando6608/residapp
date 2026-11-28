@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Dapper;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -95,6 +96,57 @@ public class DireccionAvisosPagesTests(ResidentsFlowTests.WebAppFactory factory)
         Assert.Contains("Ahora mismo no se pueden mostrar las cifras por unidad.", page);
         Assert.DoesNotContain("class=\"cifra\"", page);
         Assert.DoesNotContain("Tu ámbito de supervisión no tiene unidades.", page);
+    }
+
+    [Fact]
+    public async Task SiFallaLaLectura_LaListaDePendientesNoDiceQueNoHayEpisodios()
+    {
+        var client = await ClientAsync(With(inner => new FakeEpisodes(inner, _ => throw new InvalidOperationException("Fallo de prueba."))));
+
+        var list = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/Pendientes"));
+
+        Assert.Contains("Ahora mismo no se puede mostrar la lista de pendientes.", list);
+        Assert.DoesNotContain("No hay episodios abiertos.", list);
+    }
+
+    [Theory]
+    [InlineData("/Direccion/Derivaciones")]
+    [InlineData("/Direccion/Derivaciones?cerradas=true")]
+    public async Task SiFallaLaLectura_DerivacionesNoDiceQueNoHayNinguna(string url)
+    {
+        // La lectura inventada de esta clase no sabe leer derivaciones: aquí falla siempre.
+        var client = await ClientAsync(With(inner => new FakeEpisodes(inner, _ => [])));
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync(url));
+
+        Assert.Contains("Ahora mismo no se pueden mostrar las derivaciones.", page);
+        Assert.DoesNotContain("No hay derivaciones", page);
+    }
+
+    [Theory]
+    // Las tarjetas dependen del permiso, no de que se hayan podido leer los episodios.
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SiFallaLaLecturaDeLosEpisodios_LasTarjetasDeIndicadoresYCalidadSiguenSegunElPermiso(bool withPermission)
+    {
+        var app = With(inner => new FakeEpisodes(inner, _ => throw new InvalidOperationException("Fallo de prueba.")));
+        var (subject, accountId) = await SesionTests.SeedAccountAsync("DIRECCION_CLINICA");
+        if (withPermission)
+        {
+            using var connection = await new SqlConnectionFactory(ResidentsFlowTests.WebAppFactory.TestConnectionString).OpenAsync();
+            await connection.ExecuteAsync("""
+                INSERT INTO dbo.permisos_perfil (id, ambito_perfil_id, centro_id, permiso_codigo, concedido_en, concedido_por_cuenta_id)
+                SELECT NEWID(), id, centro_id, 'QUALITY_REVIEW', SYSUTCDATETIME(), cuenta_id FROM dbo.ambitos_perfil WHERE cuenta_id = @accountId
+                """, new { accountId });
+        }
+
+        var client = await SesionTests.LoginAsync(app, subject);
+        Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/ProfileScope/Select")).StatusCode);
+        var start = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion"));
+
+        Assert.Contains("Ahora mismo no se pueden mostrar las cifras de lo que requiere atención.", start);
+        Assert.Equal(withPermission, start.Contains("href=\"/Direccion/Indicadores\"", StringComparison.Ordinal));
+        Assert.Equal(withPermission, start.Contains("href=\"/Direccion/Calidad\"", StringComparison.Ordinal));
     }
 
     [Theory]

@@ -25,7 +25,7 @@ public sealed partial class AdministracionController
             ModelState.AddModelError(string.Empty, result.Error!.Message);
         }
 
-        return View(result.Value ?? []);
+        return View(result.Value);
     }
 
     [HttpPost]
