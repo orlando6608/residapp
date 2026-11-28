@@ -53,7 +53,10 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
                (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
                  WHERE i.evento_id = ea.id AND i.estado_codigo IN ('PENDIENTE_LECTURA', 'LEIDA')) AS IndicationsPending,
                (SELECT COUNT(*) FROM dbo.indicaciones_medicas i
-                 WHERE i.evento_id = ea.id AND i.estado_codigo = 'NO_REALIZADA') AS IndicationsNotDone
+                 WHERE i.evento_id = ea.id AND i.estado_codigo = 'NO_REALIZADA') AS IndicationsNotDone,
+               CAST(CASE WHEN EXISTS (SELECT 1 FROM dbo.suspensiones_residente suspension
+                                       WHERE suspension.residente_id = ea.residente_id AND suspension.centro_id = ea.centro_id
+                                         AND suspension.finalizada_en IS NULL) THEN 1 ELSE 0 END AS BIT) AS ResidentSuspended
         {ScopedEventsFrom}
           OUTER APPLY (SELECT CASE WHEN reschedule.id IS NULL THEN seg.fecha_prevista ELSE reschedule.fecha_prevista END AS DueDate,
                               CASE WHEN reschedule.id IS NULL THEN seg.hora_prevista ELSE reschedule.hora_prevista END AS DueTime
@@ -481,14 +484,14 @@ public sealed class SqlSupervisionDirectory(SqlConnectionFactory connections) : 
         EnumCode.ParseCode<ClinicalEventOrigin>(r.OriginCode), EnumCode.ParseCode<DailyChangeClassification>(r.ClassificationCode),
         EnumCode.ParseCode<ClinicalEventStatus>(r.StatusCode), Utc(r.ReceivedAt), r.Escalated, r.HasFollowUp,
         r.FollowUpDue is null ? null : DateOnly.FromDateTime(r.FollowUpDue.Value), r.HasUrgentProtocol,
-        r.IndicationsPending, r.IndicationsNotDone, r.FollowUpDueTime is { } time ? TimeOnly.FromTimeSpan(time) : null);
+        r.IndicationsPending, r.IndicationsNotDone, r.FollowUpDueTime is { } time ? TimeOnly.FromTimeSpan(time) : null, r.ResidentSuspended);
 
     private static DateTimeOffset Utc(DateTime value) => new(value, TimeSpan.Zero);
 
     private sealed record EpisodeRow(
         Guid EventId, Guid ResidentId, string ResidentDisplayName, Guid UnitId, string UnitName, string OriginCode,
         string ClassificationCode, string StatusCode, DateTime ReceivedAt, bool Escalated, bool HasFollowUp, DateTime? FollowUpDue, TimeSpan? FollowUpDueTime,
-        bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone);
+        bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone, bool ResidentSuspended);
 
     private sealed record ReferralRow(
         Guid EventId, Guid ResidentId, string ResidentName, Guid UnitId, string UnitName, string ProtocolProfileCode,

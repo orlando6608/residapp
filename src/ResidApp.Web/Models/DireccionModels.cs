@@ -5,11 +5,16 @@ using ResidApp.Domain.Supervision;
 
 namespace ResidApp.Web.Models;
 
-/// <summary>DIR-01/DIR-02: contadores por unidad del ámbito de supervisión.</summary>
-public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSummary> Units, bool CanReviewQuality = false)
+/// <summary>DIR-01/DIR-02: contadores por unidad del ámbito de supervisión. Failed: no se pudieron leer, así que no se puede decir que no
+/// haya nada pendiente.</summary>
+public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSummary> Units, bool CanReviewQuality = false, bool Failed = false)
 {
     public int Open => Units.Sum(u => u.Open);
     public int FollowUpsOverdue => Units.Sum(u => u.FollowUpsOverdue);
+    public int UrgentProtocols => Units.Sum(u => u.UrgentProtocols);
+    public int PriorityWithoutAssessment => Units.Sum(u => u.PriorityWithoutAssessment);
+    public int EpisodesWithIndicationsNotDone => Units.Sum(u => u.EpisodesWithIndicationsNotDone);
+    public bool NothingPending => UrgentProtocols + PriorityWithoutAssessment + FollowUpsOverdue + EpisodesWithIndicationsNotDone == 0;
 }
 
 /// <summary>DIR-12: la lista de derivaciones y, si se pidieron las de episodios cerrados, el periodo elegido (From y To incluidos).</summary>
@@ -105,6 +110,7 @@ public static class SupervisionDisplay
     public static string Label(SupervisionPendingType type) => type switch
     {
         SupervisionPendingType.SinValorar => "Sin valorar",
+        SupervisionPendingType.PrioritarioSinValorar => "Prioritario sin valorar",
         SupervisionPendingType.Escalado => "Escalado a Medicina",
         SupervisionPendingType.Seguimiento => "En seguimiento",
         SupervisionPendingType.SeguimientoVencido => "Seguimiento pendiente",

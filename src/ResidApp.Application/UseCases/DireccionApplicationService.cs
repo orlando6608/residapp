@@ -20,10 +20,13 @@ public sealed record CloseEpisodeExceptionallyCommand(Guid AmbitoPerfilId, Cente
 /// <summary>RecordView: es una apertura de la pantalla (no un cambio del filtro de periodo) y se deja constancia de quién la abre (CJ, 2026-10-28, 2.3).</summary>
 public sealed record ReadSupervisionIndicatorsQuery(Guid AmbitoPerfilId, CenterId CentroId, DateOnly From, DateOnly To, bool RecordView = false);
 
-/// <summary>DIR-01/DIR-02: contadores de una unidad. Open es el denominador de los demás (episodios abiertos de la unidad).</summary>
+/// <summary>DIR-01/DIR-02: contadores de una unidad. Open es el denominador de los demás (episodios abiertos de la unidad). Los dos
+/// últimos cuentan episodios para «Requiere atención»: los prioritarios sin valorar y los que tienen alguna indicación no realizada
+/// (IndicationsNotDone cuenta indicaciones, no episodios).</summary>
 public sealed record SupervisionUnitSummary(
     UnitId UnitId, string UnitName, int Open, int WithoutAssessment, int InAssessment, int Escalated, int FollowUps,
-    int FollowUpsOverdue, int IndicationsPending, int IndicationsNotDone, int UrgentProtocols);
+    int FollowUpsOverdue, int IndicationsPending, int IndicationsNotDone, int UrgentProtocols,
+    int PriorityWithoutAssessment, int EpisodesWithIndicationsNotDone);
 
 /// <summary>DIR-03: los pendientes de la lista, más los episodios abiertos totales (denominador) para decir «N de M».</summary>
 public sealed record SupervisionPendingList(IReadOnlyList<SupervisionEpisode> Episodes, int TotalOpen);
@@ -56,7 +59,9 @@ public sealed class DireccionApplicationService(
                     own.Count(e => e.Status is ClinicalEventStatus.EnValoracion or ClinicalEventStatus.EnValoracionMedica),
                     own.Count(e => e.Escalated), own.Count(e => e.HasFollowUp),
                     own.Count(e => SupervisionPendingRules.IsOverdue(e, now)),
-                    own.Sum(e => e.IndicationsPending), own.Sum(e => e.IndicationsNotDone), own.Count(e => e.HasUrgentProtocol));
+                    own.Sum(e => e.IndicationsPending), own.Sum(e => e.IndicationsNotDone), own.Count(e => e.HasUrgentProtocol),
+                    own.Count(e => SupervisionPendingRules.Matches(SupervisionPendingType.PrioritarioSinValorar, e, now)),
+                    own.Count(e => SupervisionPendingRules.Matches(SupervisionPendingType.IndicacionConIncidencia, e, now)));
             }).ToList();
         });
 

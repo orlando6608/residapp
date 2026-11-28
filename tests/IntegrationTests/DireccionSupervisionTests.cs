@@ -106,6 +106,157 @@ public class DireccionSupervisionTests
     }
 
     [Fact]
+    public async Task RequiereAtencion_CadaCifraCuentaEpisodios_YCoincideConLaListaALaQueEnlaza()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var medica = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Medicina, direccion.CenterId, direccion.UnitId);
+        var service = BuildService(enfermera.ExternalSubject);
+        async Task<Guid> PriorityAsync(SeededProfile nurse, ResidentId resident) =>
+            (await BuildService(nurse.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+                nurse.ProfileScopeId, nurse.CenterId, resident, "Fiebre alta.", DailyChangeClassification.Prioritario, null, Guid.NewGuid())))
+            .Value!.EventId;
+
+        // Uno prioritario sin valorar, uno ordinario sin valorar y uno prioritario que ya se está valorando.
+        var priorityPending = await PriorityAsync(enfermera, residentId);
+        await RegisterAsync(enfermera, residentId, "Tos productiva.");
+        var priorityStarted = await PriorityAsync(enfermera, residentId);
+        Assert.True((await service.StartNursingAssessmentAsync(new StartNursingAssessmentCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, priorityStarted, 1))).Ok);
+        // Un seguimiento con la fecha pasada.
+        var overdue = await RegisterAsync(enfermera, residentId, "Diarrea de dos días.");
+        var revision = await StartAndSaveAsync(enfermera, overdue);
+        Assert.True((await service.StartFollowUpAsync(StartFollowUpCommand(enfermera, overdue, revision, CenterTime.Today.AddDays(-2)))).Ok);
+        // Un protocolo urgente.
+        var urgent = await RegisterAsync(enfermera, residentId, "Desaturación brusca.");
+        Assert.True((await service.ActivateUrgentProtocolAsync(ActivateCommand(enfermera, urgent, await StartAndSaveAsync(enfermera, urgent)))).Ok);
+        // Un episodio con dos indicaciones, las dos no realizadas: cuenta como un episodio.
+        var indicated = await RegisterAsync(enfermera, residentId, "Disnea progresiva.");
+        revision = await StartAndSaveAsync(enfermera, indicated);
+        Assert.True((await service.EscalateClinicalEventAsync(EscalateCommand(enfermera, indicated, revision))).Ok);
+        var medicine = MedicinaApplicationServiceTests.BuildMedicina(medica.ExternalSubject);
+        revision = await MedicinaApplicationServiceTests.StartAndSaveMedicalAsync(medica, indicated);
+        for (var i = 0; i < 2; i++)
+        {
+            var emitted = await medicine.RegisterMedicalIndicationAsync(MedicinaApplicationServiceTests.Indication(medica, indicated, revision));
+            Assert.True(emitted.Ok, emitted.Error?.Message);
+            revision = emitted.Value;
+        }
+
+        var indications = (await medicine.ListMedicalIndicationsAsync(
+            new ListMedicalIndicationsCommand(medica.ProfileScopeId, medica.CenterId))).Value!.Where(i => i.EventId == indicated).ToList();
+        Assert.Equal(2, indications.Count);
+        foreach (var item in indications)
+        {
+            var read = await service.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+                enfermera.ProfileScopeId, enfermera.CenterId, indicated, item.Indication.Id, item.Indication.Revision));
+            Assert.True(read.Ok, read.Error?.Message);
+            var notDone = await service.RecordIndicationProgressAsync(new RecordIndicationProgressCommand(
+                enfermera.ProfileScopeId, enfermera.CenterId, indicated, item.Indication.Id, read.Value, Realizada: false, Incidencia: "La rechaza."));
+            Assert.True(notDone.Ok, notDone.Error?.Message);
+        }
+
+        // Lo de otro centro no cuenta.
+        var (_, otherNurse, otherResident) = await SeedCenterAsync();
+        await PriorityAsync(otherNurse, otherResident);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+
+        var unit = Assert.Single((await dir.ReadPanelAsync(Query(direccion))).Value!);
+        async Task<IReadOnlyList<Guid>> ListAsync(SupervisionPendingType type) =>
+            (await dir.ListPendingAsync(new ListSupervisionPendingQuery(direccion.ProfileScopeId, direccion.CenterId, CenterTime.Today, type)))
+            .Value!.Episodes.Select(e => e.EventId).ToList();
+
+        Assert.Equal(
+            (1, 1, 1, 1),
+            (unit.UrgentProtocols, unit.PriorityWithoutAssessment, unit.FollowUpsOverdue, unit.EpisodesWithIndicationsNotDone));
+        Assert.Equal(2, unit.IndicationsNotDone);
+        Assert.Equal([urgent], await ListAsync(SupervisionPendingType.ProtocoloUrgente));
+        Assert.Equal([priorityPending], await ListAsync(SupervisionPendingType.PrioritarioSinValorar));
+        Assert.Equal([overdue], await ListAsync(SupervisionPendingType.SeguimientoVencido));
+        Assert.Equal([indicated], await ListAsync(SupervisionPendingType.IndicacionConIncidencia));
+    }
+
+    [Fact]
+    public async Task RequiereAtencion_SumaLasUnidadesDelAmbito_YDejaFueraLasDemas_ComoLaLista()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        async Task<Guid> PriorityInNewUnitAsync(bool inScope)
+        {
+            var unit = UnitId.From(Guid.NewGuid());
+            using (var connection = await TestDatabase.ConnectionFactory.OpenAsync())
+            {
+                await connection.ExecuteAsync("""
+                    INSERT INTO dbo.unidades (id, centro_id, codigo, nombre_visible, estado, creado_en) VALUES (@unit, @center, @code, @code, 'ACTIVE', SYSUTCDATETIME());
+                    IF @inScope = 1
+                        INSERT INTO dbo.ambitos_perfil_unidad (id, ambito_perfil_id, centro_id, unidad_id, concedido_en, concedido_por_cuenta_id)
+                        VALUES (NEWID(), @scope, @center, @unit, SYSUTCDATETIME(), @account);
+                    """, new
+                {
+                    unit = unit.Value, center = direccion.CenterId.Value, code = $"TEST-UNIT-{Guid.NewGuid().ToString("N")[..12]}", inScope,
+                    scope = direccion.ProfileScopeId, account = direccion.AccountId.Value,
+                });
+            }
+
+            var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, direccion.CenterId, unit);
+            var nurse = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Enfermeria, direccion.CenterId, unit);
+            var resident = await new SqlResidentRepository(TestDatabase.ConnectionFactory).CreateWithInitialLocationAsync(new CreateResidentInput(
+                admin.AccountId, SystemProfile.Administracion, direccion.CenterId, unit,
+                "Residente de otra unidad", new DateOnly(1941, 1, 1), DocumentedSexCode.Hombre, null, null, null, null, null, Guid.NewGuid()));
+            return await PriorityAsync(nurse, resident.ResidentId);
+        }
+
+        async Task<Guid> PriorityAsync(SeededProfile nurse, ResidentId resident) =>
+            (await BuildService(nurse.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+                nurse.ProfileScopeId, nurse.CenterId, resident, "Fiebre alta.", DailyChangeClassification.Prioritario, null, Guid.NewGuid())))
+            .Value!.EventId;
+
+        var own = await PriorityAsync(enfermera, residentId);
+        var secondUnit = await PriorityInNewUnitAsync(inScope: true);
+        await PriorityInNewUnitAsync(inScope: false);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+
+        var units = (await dir.ReadPanelAsync(Query(direccion))).Value!;
+        var list = (await dir.ListPendingAsync(new ListSupervisionPendingQuery(
+            direccion.ProfileScopeId, direccion.CenterId, CenterTime.Today, SupervisionPendingType.PrioritarioSinValorar))).Value!;
+
+        Assert.Equal(2, units.Count);
+        Assert.Equal(2, units.Sum(u => u.PriorityWithoutAssessment));
+        Assert.Equal(new[] { own, secondUnit }.Order(), list.Episodes.Select(e => e.EventId).Order());
+    }
+
+    [Fact]
+    public async Task ResidenteSuspendido_SuEpisodioSigueContando_YSaleMarcadoHastaQueSeReanuda()
+    {
+        var (direccion, enfermera, residentId) = await SeedCenterAsync();
+        var admin = await SeedFixture.AddProfileToCenterAsync(SystemProfile.Administracion, direccion.CenterId, direccion.UnitId);
+        var eventId = (await BuildService(enfermera.ExternalSubject).RegisterClinicalEventAsync(new RegisterClinicalEventCommand(
+            enfermera.ProfileScopeId, enfermera.CenterId, residentId, "Fiebre alta.", DailyChangeClassification.Prioritario, null, Guid.NewGuid())))
+            .Value!.EventId;
+        var statuses = EstadoResidenteTests.Build(admin.ExternalSubject);
+        var dir = BuildDireccion(direccion.ExternalSubject);
+        async Task<(int Counted, bool InList, bool InDetail)> ReadAsync()
+        {
+            var panel = (await dir.ReadPanelAsync(Query(direccion))).Value!;
+            var list = (await dir.ListPendingAsync(new ListSupervisionPendingQuery(
+                direccion.ProfileScopeId, direccion.CenterId, CenterTime.Today, SupervisionPendingType.PrioritarioSinValorar))).Value!;
+            var detail = (await dir.FindEpisodeAsync(new FindSupervisionEpisodeQuery(direccion.ProfileScopeId, direccion.CenterId, eventId))).Value!;
+            return (panel.Sum(u => u.PriorityWithoutAssessment), Assert.Single(list.Episodes).ResidentSuspended, detail.Episode.ResidentSuspended);
+        }
+
+        var before = await ReadAsync();
+        var suspended = await statuses.SuspendAsync(new SuspendResidentCommand(
+            admin.ProfileScopeId, admin.CenterId, residentId, Guid.NewGuid(), "Hospital de referencia."));
+        Assert.True(suspended.Ok, suspended.Error?.Message);
+        var during = await ReadAsync();
+        var resumed = await statuses.ResumeAsync(admin.ProfileScopeId, admin.CenterId, residentId);
+        Assert.True(resumed.Ok, resumed.Error?.Message);
+        var after = await ReadAsync();
+
+        Assert.Equal((1, false, false), before);
+        Assert.Equal((1, true, true), during);
+        Assert.Equal((1, false, false), after);
+    }
+
+    [Fact]
     public async Task Episodio_MuestraSusHitosSinTexto()
     {
         var (direccion, enfermera, residentId) = await SeedCenterAsync();

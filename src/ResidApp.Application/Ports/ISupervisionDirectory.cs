@@ -9,11 +9,13 @@ namespace ResidApp.Application.Ports;
 /// identificación (residente, unidad), estado, fechas y contadores: ningún campo de texto clínico, así que ninguna
 /// pantalla de supervisión puede mostrarlo. FollowUpDue es la fecha prevista vigente del seguimiento (la de la última
 /// reprogramación, si la hay); IndicationsPending cuenta las indicaciones sin realizar ni marcar como no realizadas, e
-/// IndicationsNotDone las marcadas como no realizadas (con incidencia).</summary>
+/// IndicationsNotDone las marcadas como no realizadas (con incidencia). ResidentSuspended: el residente está suspendido por un ingreso
+/// hospitalario; su episodio sigue contando, pero nadie puede registrar nada sobre él (Orlando, 2026-11-27).</summary>
 public sealed record SupervisionEpisode(
     Guid EventId, ResidentId ResidentId, string ResidentDisplayName, UnitId UnitId, string UnitName, ClinicalEventOrigin Origin,
     DailyChangeClassification Classification, ClinicalEventStatus Status, DateTimeOffset ReceivedAt, bool Escalated,
-    bool HasFollowUp, DateOnly? FollowUpDue, bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone, TimeOnly? FollowUpDueTime = null);
+    bool HasFollowUp, DateOnly? FollowUpDue, bool HasUrgentProtocol, int IndicationsPending, int IndicationsNotDone, TimeOnly? FollowUpDueTime = null,
+    bool ResidentSuspended = false);
 
 /// <summary>DIR-04: hito del episodio, solo con su tipo, el perfil que lo hizo y la hora (sin texto).</summary>
 public enum SupervisionMilestoneKind
@@ -272,6 +274,7 @@ public static class SupervisionIndicatorRules
 public enum SupervisionPendingType
 {
     SinValorar,
+    PrioritarioSinValorar,
     Escalado,
     Seguimiento,
     SeguimientoVencido,
@@ -296,6 +299,8 @@ public static class SupervisionPendingRules
     public static bool Matches(SupervisionPendingType type, SupervisionEpisode episode, DateTime now) => type switch
     {
         SupervisionPendingType.SinValorar => episode.Status == ClinicalEventStatus.Pendiente,
+        SupervisionPendingType.PrioritarioSinValorar =>
+            episode.Status == ClinicalEventStatus.Pendiente && episode.Classification == DailyChangeClassification.Prioritario,
         SupervisionPendingType.Escalado => episode.Escalated,
         SupervisionPendingType.Seguimiento => episode.HasFollowUp,
         SupervisionPendingType.SeguimientoVencido => IsOverdue(episode, now),

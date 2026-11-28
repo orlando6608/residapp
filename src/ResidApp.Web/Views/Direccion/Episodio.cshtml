@@ -46,6 +46,10 @@
                 {
                     <span class="badge text-bg-danger">Prioritario</span>
                 }
+                @if (episode.ResidentSuspended)
+                {
+                    <span class="badge text-bg-warning">Residente suspendido</span>
+                }
             </dd>
             <dt class="col-sm-3">Origen</dt>
             <dd class="col-sm-9">@EnumDisplay.Label(episode.Origin)</dd>
@@ -57,8 +61,10 @@
             {
                 <dt class="col-sm-3">Seguimiento</dt>
                 <dd class="col-sm-9">
-                    @(episode.FollowUpDue is { } due ? $"Fecha prevista {due:d}" : "Sin fecha prevista (por criterio)")
-                    @if (episode.FollowUpDue < CenterTime.Today)
+                    @(episode.FollowUpDue is { } due
+                        ? $"Fecha prevista {due:d}" + (episode.FollowUpDueTime is { } time ? $" a las {time:HH:mm}" : "")
+                        : "Sin fecha prevista (por criterio)")
+                    @if (SupervisionPendingRules.IsOverdue(episode, CenterTime.Now))
                     {
                         <span class="badge text-bg-warning">Pendiente</span>
                     }

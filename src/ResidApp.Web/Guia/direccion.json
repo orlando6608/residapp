@@ -2,7 +2,7 @@
   "perfil": "DireccionClinica",
   "proposito": "Dirección / Coordinación Clínica supervisa el conjunto: cuántos episodios hay abiertos en cada unidad, en qué punto está cada derivación a Urgencias y cómo se publican los comunicados a la familia. Lo hace con cifras y sin valorar ni indicar nada: lo único que puede hacer sobre un episodio es cerrarlo, de forma excepcional, cuando tiene indicaciones que nadie va a cumplir. Con permiso, también consulta el contenido clínico declarando para qué, mira los indicadores y la calidad de proceso, y fija los rangos de referencia y los plazos de los hitos.",
   "rutina": [
-    "Entras en el **Inicio de Dirección Clínica**: arriba, las tarjetas de supervisión; debajo, la tabla «Por unidad» con los episodios abiertos y sus pendientes.",
+    "Entras en el **Inicio de Dirección Clínica**: arriba, **Requiere atención**; debajo, las tarjetas de supervisión y la tabla «Por unidad» con los episodios abiertos y sus pendientes.",
     "Miras los pendientes que llevan más tiempo y en qué punto está cada derivación a Urgencias.",
     "Revisas los comunicados a la familia: puedes publicar uno antes de su hora, corregirlo o, de forma excepcional, retirarlo.",
     "Cuando hace falta ver un caso concreto, declaras para qué lo necesitas y consultas el contenido clínico, que queda auditado."
@@ -36,13 +36,14 @@
     {
       "codigo": "DIR-01",
       "pregunta": "¿Cómo me oriento en el Inicio de Dirección y qué cuenta cada tarjeta?",
-      "palabras": ["inicio", "tarjetas", "por unidad", "episodios abiertos", "supervisión"],
+      "palabras": ["inicio", "tarjetas", "por unidad", "episodios abiertos", "supervisión", "requiere atención", "avisos"],
       "permisos": [],
       "antes": [
         "Haber entrado con el perfil Dirección Clínica. Si tu cuenta tiene más de un perfil o centro, eliges con cuál trabajas al entrar."
       ],
       "pasos": [
         { "texto": "Pulsa **Mi panel** (arriba): se abre el **Inicio de Dirección Clínica**.", "botones": ["Mi panel"], "campos": ["Inicio de Dirección Clínica"] },
+        { "texto": "Mira primero **Requiere atención**: cuántos episodios abiertos de tu ámbito tienen un protocolo urgente activo, son prioritarios sin valorar, tienen el seguimiento pendiente (pasada su fecha u hora prevista) o alguna indicación no realizada. Solo salen las líneas con algún caso, y cada una abre **Supervisión de pendientes** ya filtrada.", "campos": ["Requiere atención"] },
         { "texto": "Lee las tarjetas: **Supervisión de pendientes** (con los episodios abiertos y los seguimientos pendientes), **Derivaciones a Urgencias**, **Peticiones de historial tras un traslado**, **Comunicados a la familia**, **Mi ámbito de supervisión** y **Consulta auditada del basal**. Con el permiso de indicadores salen también **Indicadores e informe de actividad** y **Calidad de proceso**.", "campos": ["Supervisión de pendientes", "Derivaciones a Urgencias", "Peticiones de historial tras un traslado", "Comunicados a la familia", "Mi ámbito de supervisión", "Consulta auditada del basal", "Indicadores e informe de actividad", "Calidad de proceso"] },
         { "texto": "Debajo, la tabla **Por unidad** da, para cada unidad de tu ámbito, los episodios abiertos, sin valorar, en valoración, escalados, en seguimiento, pendientes, las indicaciones pendientes y no realizadas y los protocolos urgentes. Pulsa el nombre de una unidad para ver sus pendientes.", "campos": ["Por unidad", "Indicaciones pendientes", "Indicaciones no realizadas"] }
       ],
@@ -50,11 +51,13 @@
         { "para": "Dirección / Coordinación Clínica", "texto": "Mirar no cambia nada ni deja rastro en la auditoría. Los episodios cerrados no cuentan en estas cifras." }
       ],
       "dudas": [
+        { "p": "Pone «No hay nada pendiente.» pero hay episodios abiertos.", "r": "Ese bloque solo mira cuatro cosas: protocolos urgentes, prioritarios sin valorar, seguimientos pendientes e indicaciones no realizadas. Los demás episodios abiertos salen en la tabla **Por unidad** y en **Supervisión de pendientes** (ver DIR-02)." },
+        { "p": "No veo en «Requiere atención» los hitos fuera de plazo.", "r": "No salen ahí: se ven en **Calidad de proceso**, con su permiso (ver DIR-12)." },
         { "p": "No veo las tarjetas de Indicadores ni de Calidad de proceso.", "r": "Hace falta el permiso **Ver los indicadores y la calidad de proceso**, que concede Administración (ver DIR-11)." },
         { "p": "No veo las tarjetas de Rangos ni de Plazos.", "r": "Están en la pantalla de **Inicio** (la de las migas de pan) y solo salen con el permiso correspondiente (ver DIR-13 y DIR-14)." }
       ],
       "rutas": ["Direccion/Index"],
-      "mensajes": [],
+      "mensajes": ["No hay nada pendiente.", "Ahora mismo no se pueden mostrar las cifras de lo que requiere atención."],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
       "flujo": { "id": "direccion", "titulo": "Dirección Clínica mira el conjunto" }
     },
@@ -67,15 +70,17 @@
         "Saber que esta vista no muestra observaciones, valoraciones ni indicaciones, y que no ofrece ninguna acción asistencial."
       ],
       "pasos": [
-        { "texto": "En el Inicio, abre **Supervisión de pendientes**. Ves los episodios abiertos, del más antiguo al más reciente.", "botones": ["Supervisión de pendientes"] },
+        { "texto": "En el Inicio, abre **Supervisión de pendientes**. Ves los episodios abiertos, del más antiguo al más reciente. También llegas, con el filtro ya puesto, pulsando una línea de **Requiere atención**.", "botones": ["Supervisión de pendientes"] },
         { "texto": "Si quieres filtrar, elige el «Tipo de pendiente» y, si tu ámbito tiene más de una unidad, la «Unidad», y pulsa **Buscar**. **Limpiar** quita el filtro.", "botones": ["Buscar", "Limpiar"], "campos": ["Tipo de pendiente", "Unidad"] },
-        { "texto": "Cada fila indica el residente, la unidad, el estado, la situación, el registro y la antigüedad. Pulsa **Ver detalle operativo** para abrir el episodio.", "botones": ["Ver detalle operativo"], "campos": ["Residente", "Situación", "Antigüedad"] },
+        { "texto": "Cada fila indica el residente, la unidad, el estado, la situación (con las marcas «Seguimiento pendiente», «Indicación no realizada» o «Residente suspendido»), el registro y la antigüedad. Pulsa **Ver detalle operativo** para abrir el episodio.", "botones": ["Ver detalle operativo"], "campos": ["Residente", "Situación", "Antigüedad"] },
         { "texto": "En el detalle ves el estado del episodio y sus «Hitos»: quién los hizo (por perfil) y cuándo.", "campos": ["Detalle operativo del episodio", "Hitos"] }
       ],
       "despues": [
         { "para": "Dirección / Coordinación Clínica", "texto": "Leer no cambia nada. Desde el detalle no se puede valorar, indicar, escalar ni corregir; lo único que se puede hacer es el cierre excepcional de un episodio con indicaciones sin cumplir (ver DIR-03)." }
       ],
       "dudas": [
+        { "p": "Un episodio sale con la marca «Residente suspendido».", "r": "El residente está suspendido por un ingreso hospitalario: el episodio sigue contando, pero no se puede registrar nada sobre él hasta que Administración reanude la atención." },
+        { "p": "Un seguimiento escalado a Medicina no sale como seguimiento.", "r": "Aquí consta como escalado a Medicina. En **Indicadores e informe de actividad** sigue contando como seguimiento hasta que se cierra el episodio." },
         { "p": "«No hay episodios abiertos.»", "r": "No hay ninguno abierto en las unidades de tu ámbito (con ese filtro, si lo hay)." },
         { "p": "Abro un episodio y vuelvo a la lista de pendientes sin ningún aviso.", "r": "El episodio ya no está abierto, no existe o no es de tu ámbito: la pantalla no distingue el motivo ni lo explica." }
       ],
