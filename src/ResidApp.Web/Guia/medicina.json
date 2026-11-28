@@ -52,10 +52,13 @@
       ],
       "dudas": [
         { "p": "«No hay escalados ni eventos propios pendientes.»", "r": "No hay nada por valorar ahora mismo." },
-        { "p": "No veo un escalado que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito, y solo los eventos que se te escalaron o que registraste tú. Si crees que falta una unidad, pídeselo a Administración." }
+        { "p": "No veo un escalado que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito, y solo los eventos que se te escalaron o que registraste tú. Si crees que falta una unidad, pídeselo a Administración." },
+        { "p": "«Ahora mismo no se puede mostrar la cifra.»", "r": "No se ha podido leer lo de esa tarjeta: no significa que esté a cero. Mientras tanto la tarjeta no se resalta en color aunque haya algo pendiente. Vuelve a abrir el Inicio." },
+        { "p": "«Ahora mismo no se pueden mostrar los avisos de hitos fuera de plazo o a punto de vencer.»", "r": "No se han podido leer los avisos, así que puede haber hitos que no estás viendo. Vuelve a abrir el Inicio." },
+        { "p": "«No se ha podido completar la operación.» en el Inicio o en la lista de escalados.", "r": "No se ha podido leer: no significa que no haya nada por valorar. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Medicina/Index", "Medicina/Escalados"],
-      "mensajes": ["No hay escalados ni eventos propios pendientes.", "Hitos fuera de plazo o a punto de vencer", "Hitos a punto de vencer"],
+      "mensajes": ["No hay escalados ni eventos propios pendientes.", "Hitos fuera de plazo o a punto de vencer", "Hitos a punto de vencer", "Ahora mismo no se puede mostrar la cifra.", "Ahora mismo no se pueden mostrar los avisos de hitos fuera de plazo o a punto de vencer.", "No se ha podido completar la operación.", "No se puede acceder a esta operación."],
       "manual": { "id": "escalado-medicina", "titulo": "Escalar a Medicina y escalados recibidos" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
     },
@@ -78,10 +81,11 @@
       ],
       "dudas": [
         { "p": "«No hay residentes en tu ámbito.»", "r": "No hay residentes activos en las unidades de tu ámbito. Si deberías ver alguno, pídeselo a Administración." },
-        { "p": "El contacto urgente no sale o está desactualizado.", "r": "Lo designa y lo cambia Administración, no Medicina." }
+        { "p": "El contacto urgente no sale o está desactualizado.", "r": "Lo designa y lo cambia Administración, no Medicina." },
+        { "p": "«No se ha podido completar la operación.» y no sale la lista.", "r": "No se ha podido leer: no significa que no haya residentes. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Medicina/Residentes", "Medicina/Residente"],
-      "mensajes": ["No hay residentes en tu ámbito."],
+      "mensajes": ["No hay residentes en tu ámbito.", "No se ha podido completar la operación.", "No se puede acceder a esta operación."],
       "manual": { "id": "evento-propio-medicina", "titulo": "Residentes y evento propio" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
     },
@@ -383,14 +387,17 @@
       "dudas": [
         { "p": "«Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.»", "r": "Desde Medicina ya no se cambia. Administración o Dirección Clínica pueden publicar una corrección que se ve junto a la original, o retirarlo." },
         { "p": "«No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación.»", "r": "Vuelve a la lista para ver el estado actual. Lo que escribiste sigue en la pantalla por si quieres copiarlo." },
-        { "p": "«No hay comunicaciones familiares en los últimos 30 días.»", "r": "No hay ninguna en la lista; se crean al cerrar un evento con «Preparar comunicación» (MED-09)." }
+        { "p": "«No hay comunicaciones familiares en los últimos 30 días.»", "r": "No hay ninguna en la lista; se crean al cerrar un evento con «Preparar comunicación» (MED-09)." },
+        { "p": "«No se ha podido completar la operación.» y no sale la lista.", "r": "No se ha podido leer: no significa que no haya comunicaciones. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Medicina/Index", "Medicina/Comunicaciones", "Medicina/CorregirComunicacion"],
       "mensajes": [
         "Comunicado corregido. La familia verá el texto corregido.",
         "Ese comunicado ya no se puede corregir: ya llegó su hora de publicación o ya está publicado.",
         "No se ha guardado: alguien lo corrigió antes o ya llegó su hora de publicación.",
-        "No hay comunicaciones familiares en los últimos 30 días."
+        "No hay comunicaciones familiares en los últimos 30 días.",
+        "No se ha podido completar la operación.",
+        "No se puede acceder a esta operación."
       ],
       "manual": { "id": "valoracion-medica", "titulo": "Valoración médica, indicaciones y cierre médico" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }

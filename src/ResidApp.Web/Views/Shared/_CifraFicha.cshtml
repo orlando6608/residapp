@@ -1,0 +1,11 @@
+@model ResidApp.Web.Models.CardFigure
+@* La cifra de una ficha de los inicios de Enfermería y de Medicina. Si no se ha podido leer, se dice: nunca sale un cero. *@
+@if (Model.Value is not { } value)
+{
+    <span class="d-block text-body-secondary">Ahora mismo no se puede mostrar la cifra.</span>
+}
+else
+{
+    <span class="@(Model.Urgent && value > 0 ? "cifra text-danger" : "cifra")">@value</span>
+    <span class="text-body-secondary">@(value == 1 ? Model.One : Model.Many)</span>
+}

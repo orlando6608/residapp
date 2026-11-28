@@ -58,10 +58,12 @@
       ],
       "dudas": [
         { "p": "No veo la tarjeta «Alta de residente».", "r": "Está en la pantalla de **Inicio** (la de las migas de pan) y solo sale si Administración te ha concedido ese permiso: ver ENF-17." },
-        { "p": "No veo un evento que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito. Si crees que falta una unidad, pídeselo a Administración." }
+        { "p": "No veo un evento que debería ver.", "r": "Solo ves lo de las unidades de tu ámbito. Si crees que falta una unidad, pídeselo a Administración." },
+        { "p": "«Ahora mismo no se puede mostrar la cifra.»", "r": "No se ha podido leer lo de esa tarjeta: no significa que esté a cero. Mientras tanto la tarjeta no se resalta en color aunque haya algo pendiente. Vuelve a abrir el Inicio." },
+        { "p": "«Ahora mismo no se pueden mostrar los avisos de hitos fuera de plazo o a punto de vencer.»", "r": "No se han podido leer los avisos, así que puede haber hitos que no estás viendo. Vuelve a abrir el Inicio." }
       ],
       "rutas": ["Enfermeria/Index"],
-      "mensajes": ["Hitos fuera de plazo o a punto de vencer", "Hitos a punto de vencer"],
+      "mensajes": ["Hitos fuera de plazo o a punto de vencer", "Hitos a punto de vencer", "Ahora mismo no se puede mostrar la cifra.", "Ahora mismo no se pueden mostrar los avisos de hitos fuera de plazo o a punto de vencer."],
       "manual": { "id": "bandejas-enfermeria", "titulo": "Bandejas, valoración y cierre de eventos" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
     },
@@ -84,10 +86,11 @@
       ],
       "dudas": [
         { "p": "No hay residentes o falta alguno.", "r": "Solo salen los residentes de tus unidades (o los que Administración haya señalado, si tu ámbito está restringido). Si debería haber más, pídeselo a Administración." },
-        { "p": "El contacto urgente no sale o está desactualizado.", "r": "Lo designa y lo cambia Administración, no Enfermería." }
+        { "p": "El contacto urgente no sale o está desactualizado.", "r": "Lo designa y lo cambia Administración, no Enfermería." },
+        { "p": "«No se ha podido completar la operación.» y no sale la lista.", "r": "No se ha podido leer: no significa que no haya residentes. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Enfermeria/Residentes", "Enfermeria/Residente"],
-      "mensajes": [],
+      "mensajes": ["No se ha podido completar la operación.", "No se puede acceder a esta operación."],
       "manual": { "id": "residentes-enfermeria", "titulo": "Residentes" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }
     },
@@ -137,10 +140,11 @@
       ],
       "dudas": [
         { "p": "«No hay eventos prioritarios abiertos.» / «No hay eventos ordinarios abiertos.»", "r": "No hay nada abierto en esa bandeja ahora mismo." },
-        { "p": "Un evento ha desaparecido de la bandeja.", "r": "Se cerró, o pasó a seguimiento, a Medicina o al protocolo urgente: lo encuentras en la bandeja correspondiente o en el Historial del residente." }
+        { "p": "Un evento ha desaparecido de la bandeja.", "r": "Se cerró, o pasó a seguimiento, a Medicina o al protocolo urgente: lo encuentras en la bandeja correspondiente o en el Historial del residente." },
+        { "p": "«No se ha podido completar la operación.» y no sale la lista.", "r": "No se ha podido leer: no significa que la bandeja esté vacía. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Enfermeria/Index", "Enfermeria/Prioritarios", "Enfermeria/Ordinarios", "Enfermeria/DetalleCambio"],
-      "mensajes": ["No hay eventos prioritarios abiertos.", "No hay eventos ordinarios abiertos."],
+      "mensajes": ["No hay eventos prioritarios abiertos.", "No hay eventos ordinarios abiertos.", "No se ha podido completar la operación.", "No se puede acceder a esta operación."],
       "manual": { "id": "bandejas-enfermeria", "titulo": "Bandejas, valoración y cierre de eventos" },
       "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
     },
@@ -352,7 +356,8 @@
       "dudas": [
         { "p": "«Para registrarla como no realizada, describe la incidencia.»", "r": "La incidencia es obligatoria para marcarla como no realizada." },
         { "p": "«Esta indicación ha cambiado desde que abriste la bandeja…»", "r": "Otro profesional (u otra pestaña tuya) la actualizó. Mira su estado actual en la lista." },
-        { "p": "«No hay indicaciones pendientes.»", "r": "No tienes ninguna por leer ni por registrar." }
+        { "p": "«No hay indicaciones pendientes.»", "r": "No tienes ninguna por leer ni por registrar." },
+        { "p": "«No se ha podido completar la operación.» y no sale la lista.", "r": "No se ha podido leer: no significa que no haya indicaciones ni episodios para cerrar. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Enfermeria/Index", "Enfermeria/Indicaciones", "Enfermeria/ProgresoIndicacion", "Enfermeria/ParaCerrar", "Enfermeria/DetalleCambio"],
       "mensajes": [
@@ -361,7 +366,9 @@
         "Indicación registrada como no realizada, con su incidencia.",
         "Para registrarla como no realizada, describe la incidencia.",
         "Esta indicación ha cambiado desde que abriste la bandeja",
-        "No hay indicaciones pendientes."
+        "No hay indicaciones pendientes.",
+        "No se ha podido completar la operación.",
+        "No se puede acceder a esta operación."
       ],
       "manual": { "id": "bandejas-enfermeria", "titulo": "Bandejas, valoración y cierre de eventos" },
       "flujo": { "id": "episodio", "titulo": "Cuando algo cambia: el episodio" }

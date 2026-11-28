@@ -46,12 +46,15 @@
         { "p": "«No tienes residentes asignados.»", "r": "Los asigna Administración: pídeselo si deberías tenerlos." },
         { "p": "Un residente que debería salir no sale.", "r": "Solo salen los asignados a ti, activos y en tus unidades. Si no está asignado, o está fuera de tus unidades, no aparece: que lo revise Administración." },
         { "p": "«El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención.»", "r": "Puedes ver al residente, pero no registrar nada sobre él (ni cierre ni cambio) hasta que Administración reanude su atención." },
-        { "p": "Trabajo de noche y «Cerrado hoy» vuelve a «Pendiente» a una hora rara.", "r": "El «hoy» lo cuenta la aplicación por el día en hora universal (UTC), que cambia a la 1:00 en invierno y a las 2:00 en verano en la península. Después de esa hora, el residente vuelve a salir como «Pendiente»." }
+        { "p": "Trabajo de noche y «Cerrado hoy» vuelve a «Pendiente» a una hora rara.", "r": "El «hoy» lo cuenta la aplicación por el día en hora universal (UTC), que cambia a la 1:00 en invierno y a las 2:00 en verano en la península. Después de esa hora, el residente vuelve a salir como «Pendiente»." },
+        { "p": "«No se ha podido completar la operación.» y no sale la lista.", "r": "No se ha podido leer: no significa que no tengas residentes asignados. Vuelve a abrir la pantalla. Si pone «No se puede acceder a esta operación.», tu perfil activo no tiene acceso a esa lista: si deberías tenerlo, pídeselo a Administración." }
       ],
       "rutas": ["Auxiliar/Index"],
       "mensajes": [
         "No tienes residentes asignados.",
-        "El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención."
+        "El residente está suspendido por un ingreso hospitalario: no se puede actuar sobre él hasta que Administración reanude su atención.",
+        "No se ha podido completar la operación.",
+        "No se puede acceder a esta operación."
       ],
       "manual": { "id": "mis-residentes-auxiliar", "titulo": "Mis residentes" },
       "flujo": { "id": "dia", "titulo": "Un día cualquiera: el cierre de cada turno" }
