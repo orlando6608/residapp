@@ -48,7 +48,8 @@ public class AsistenciaEsquemaTests
         d.CenterId, d.ResidentId, d.AccountId, id, type, reference, from = from is null ? (DateTime?)null : Day0(from.Value), to = to is null ? (DateTime?)null : Day0(to.Value), reason, cause,
     });
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    /// <summary>El día del centro, el que usan las reglas de la base: de 00:00 a 00:00 UTC no es el mismo que el día UTC.</summary>
+    private static DateOnly Today => CenterTime.Today;
 
     [Theory]
     [InlineData("asistencia_centro")]
@@ -247,8 +248,8 @@ public class AsistenciaEsquemaTests
                 """, new { id, d.CenterId, d.ResidentId, d.AccountId }),
             "asistencia_dia" => await TryAsync("""
                 INSERT INTO dbo.asistencia_dia (id, centro_id, residente_id, fecha, numero, estado_codigo, anotado_por_cuenta_id, anotado_por_perfil, anotado_en)
-                VALUES (@id, @CenterId, @ResidentId, CAST(SYSUTCDATETIME() AS DATE), 1, 'ASISTIO', @AccountId, 'AUXILIAR', SYSUTCDATETIME())
-                """, new { id, d.CenterId, d.ResidentId, d.AccountId }),
+                VALUES (@id, @CenterId, @ResidentId, @today, 1, 'ASISTIO', @AccountId, 'AUXILIAR', SYSUTCDATETIME())
+                """, new { id, d.CenterId, d.ResidentId, d.AccountId, today = Day0(Today) }),
             _ => await AbsenceAsync(d, id, "REGISTRADA", id, Today, Today, "VACACIONES", null),
         };
         Assert.Null(inserted);

@@ -36,7 +36,7 @@ public class ResidentTests
     [Fact]
     public void BirthDate_InTheFuture_ThrowsDomainValidation()
     {
-        var future = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+        var future = CenterTime.Today.AddDays(1);
 
         var ex = Assert.Throws<DomainValidationException>(() => Build("Residente", future));
         Assert.Equal("RESIDENT_CREATE_INPUT_INVALID", ex.Code);
