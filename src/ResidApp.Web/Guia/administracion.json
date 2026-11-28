@@ -1149,7 +1149,10 @@
         { "p": "«Indica el tipo de la corrección.» o «Escribe el texto de la corrección.»", "r": "Elige «Ordinaria» o «Relevante» y escribe el texto: los dos son obligatorios." },
         { "p": "«Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.»", "r": "Solo se corrige un comunicado publicado, no retirado y que la familia aún vea." },
         { "p": "«Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.»", "r": "Solo se retira un comunicado publicado y todavía no retirado." },
-        { "p": "«Escribe el motivo de la retirada.»", "r": "El motivo es obligatorio (hasta 500 caracteres)." }
+        { "p": "«Escribe el motivo de la retirada.»", "r": "El motivo es obligatorio (hasta 500 caracteres)." },
+        { "p": "«Ahora mismo no se puede leer ese comunicado. Vuelve a intentarlo.»", "r": "Al abrir la corrección o la retirada no se ha podido leer el comunicado, así que no se sabe si la admite. Vuelves a la lista: inténtalo otra vez desde ahí." },
+        { "p": "«Ahora mismo no se puede leer el comunicado, así que no se ha cambiado nada. Lo que has escrito sigue aquí: vuelve a intentarlo.»", "r": "Ha fallado la lectura al enviar el formulario. Sigues en él con lo que habías escrito, sin ver el texto del comunicado. Vuelve a pulsar «Publicar la corrección» o «Retirar el comunicado»." },
+        { "p": "«No se puede acceder a ese comunicado.»", "r": "El comunicado no es de tu ámbito o tu perfil activo ya no tiene acceso a los comunicados." }
       ],
       "rutas": ["Administracion/Comunicados", "Administracion/PublicarCorreccion", "Administracion/RetirarComunicado"],
       "mensajes": [
@@ -1157,7 +1160,10 @@
         "Comunicado retirado. La familia ve que ya no está disponible. Queda en la auditoría con tu motivo.",
         "Ese comunicado no admite una corrección: no está publicado, está retirado, la familia ya no lo ve o no es de tu ámbito.",
         "Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.",
-        "Escribe el motivo de la retirada."
+        "Escribe el motivo de la retirada.",
+        "Ahora mismo no se puede leer ese comunicado. Vuelve a intentarlo.",
+        "Ahora mismo no se puede leer el comunicado, así que no se ha cambiado nada. Lo que has escrito sigue aquí: vuelve a intentarlo.",
+        "No se puede acceder a ese comunicado."
       ],
       "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }

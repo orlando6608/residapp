@@ -123,6 +123,18 @@ public class DireccionAvisosPagesTests(ResidentsFlowTests.WebAppFactory factory)
         Assert.DoesNotContain("No hay derivaciones", page);
     }
 
+    [Fact]
+    public async Task ConUnPeriodoImposible_DerivacionesSoloExplicaElPeriodo()
+    {
+        var client = await ClientAsync(factory);
+
+        var page = WebUtility.HtmlDecode(await client.GetStringAsync("/Direccion/Derivaciones?cerradas=true&desde=2026-10-05&hasta=2026-10-01"));
+
+        Assert.Contains("La fecha «desde» no puede ser posterior a la fecha «hasta».", page);
+        Assert.DoesNotContain("No hay derivaciones", page);
+        Assert.DoesNotContain("Ahora mismo no se pueden mostrar las derivaciones.", page);
+    }
+
     [Theory]
     // Las tarjetas dependen del permiso, no de que se hayan podido leer los episodios.
     [InlineData(true)]

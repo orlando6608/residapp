@@ -209,7 +209,10 @@
         { "p": "«No se ha publicado: el comunicado aún no está publicado, se ha retirado o la familia ya no lo ve…»", "r": "Entre que abriste la corrección y la enviaste, otra persona retiró el comunicado o la familia dejó de verlo. Vuelve a la lista para ver su estado." },
         { "p": "«Indica el tipo de la corrección.»", "r": "Elige «Ordinaria» o «Relevante» antes de pulsar «Publicar la corrección»." },
         { "p": "«Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.»", "r": "Solo se retira un comunicado publicado y todavía no retirado." },
-        { "p": "«Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.»", "r": "El motivo es obligatorio y no puede pasar de 500 caracteres." }
+        { "p": "«Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.»", "r": "El motivo es obligatorio y no puede pasar de 500 caracteres." },
+        { "p": "«Ahora mismo no se puede leer ese comunicado. Vuelve a intentarlo.»", "r": "Al abrir la corrección o la retirada no se ha podido leer el comunicado, así que no se sabe si la admite. Vuelves a la lista: inténtalo otra vez desde ahí." },
+        { "p": "«Ahora mismo no se puede leer el comunicado, así que no se ha cambiado nada. Lo que has escrito sigue aquí: vuelve a intentarlo.»", "r": "Ha fallado la lectura al enviar el formulario. Sigues en él con lo que habías escrito, sin ver el texto del comunicado. Vuelve a pulsar «Publicar la corrección» o «Retirar el comunicado»." },
+        { "p": "«No se puede acceder a ese comunicado.»", "r": "El comunicado no es de tu ámbito o tu perfil activo ya no tiene acceso a los comunicados." }
       ],
       "rutas": ["Direccion/Comunicados", "Direccion/PublicarCorreccion", "Direccion/RetirarComunicado"],
       "mensajes": [
@@ -219,7 +222,10 @@
         "Ese comunicado no se puede retirar: no está publicado, ya está retirado o no es de tu ámbito.",
         "Revisa los datos: escribe el motivo de la retirada, de hasta 500 caracteres.",
         "No se ha publicado: el comunicado aún no está publicado, se ha retirado o la familia ya no lo ve",
-        "Indica el tipo de la corrección."
+        "Indica el tipo de la corrección.",
+        "Ahora mismo no se puede leer ese comunicado. Vuelve a intentarlo.",
+        "Ahora mismo no se puede leer el comunicado, así que no se ha cambiado nada. Lo que has escrito sigue aquí: vuelve a intentarlo.",
+        "No se puede acceder a ese comunicado."
       ],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }
