@@ -51,14 +51,14 @@ public sealed partial class EnfermeriaController(
         var avisos = await milestoneWarnings.ExecuteAsync(new ListMilestoneWarningsCommand(activeScope.ProfileScopeId, centroId), ct);
         var paraCerrar = await readyToClose.ExecuteAsync(new ListEventsReadyToCloseCommand(activeScope.ProfileScopeId, centroId), ct);
         return View(new EnfermeriaInicioViewModel(
-            ordinarios.Ok ? ordinarios.Value!.Count : 0, prioritarios.Ok ? prioritarios.Value!.Count : 0,
-            seguimientos.Ok ? seguimientos.Value!.Count : 0,
+            ordinarios.Ok ? ordinarios.Value!.Count : null, prioritarios.Ok ? prioritarios.Value!.Count : null,
+            seguimientos.Ok ? seguimientos.Value!.Count : null,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate, s.DueTime)) : 0,
-            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0,
-            indicaciones.Ok ? indicaciones.Value!.Count : 0,
+            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : null,
+            indicaciones.Ok ? indicaciones.Value!.Count : null,
             indicaciones.Ok ? indicaciones.Value!.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) : 0,
-            protocolos.Ok ? protocolos.Value!.Count : 0,
-            escalados.Ok ? escalados.Value!.Count : 0, avisos.Ok ? avisos.Value : null, paraCerrar.Ok ? paraCerrar.Value!.Count : 0));
+            protocolos.Ok ? protocolos.Value!.Count : null,
+            escalados.Ok ? escalados.Value!.Count : null, avisos.Ok ? avisos.Value : null, paraCerrar.Ok ? paraCerrar.Value!.Count : null));
     }
 
     /// <summary>CJ, 4.2: episodios con las indicaciones de Medicina ya cumplidas, que cierra Enfermería.</summary>

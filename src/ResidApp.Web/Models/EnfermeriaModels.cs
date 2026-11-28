@@ -108,11 +108,15 @@ public sealed record EnfermeriaResidentDetailViewModel(
 /// <summary>ENF-01: contadores de las bandejas ya construidas (ordinarios, prioritarios y seguimientos,
 /// con cuántos de estos están vencidos), de las comunicaciones familiares pendientes de aprobación y de las
 /// indicaciones de Medicina pendientes (con cuántas faltan por leer), de los protocolos urgentes activos y de los
-/// escalados a Medicina que siguen abiertos.</summary>
+/// escalados a Medicina que siguen abiertos. Un contador o Avisos a null es que no se ha podido leer: no se enseña como cero.</summary>
 public sealed record EnfermeriaInicioViewModel(
-    int Ordinarios, int Prioritarios, int Seguimientos, int SeguimientosVencidos, int Comunicaciones,
-    int Indicaciones, int IndicacionesSinLeer, int Protocolos, int Escalados, IReadOnlyList<MilestoneEntry>? Avisos = null,
-    int ParaCerrar = 0);
+    int? Ordinarios, int? Prioritarios, int? Seguimientos, int SeguimientosVencidos, int? Comunicaciones,
+    int? Indicaciones, int IndicacionesSinLeer, int? Protocolos, int? Escalados, IReadOnlyList<MilestoneEntry>? Avisos = null,
+    int? ParaCerrar = 0);
+
+/// <summary>La cifra de una ficha de los inicios clínicos, con su texto en singular y en plural. Value a null es que no se ha podido leer;
+/// Urgent la pinta en rojo cuando pasa de cero.</summary>
+public sealed record CardFigure(int? Value, string One, string Many, bool Urgent = false);
 
 /// <summary>ENF-04: detalle de un cambio recibido más el resumen del basal vigente del residente (null si
 /// todavía no tiene ninguno firmado), igual que EnfermeriaResidentDetailViewModel. CorrectionWindow decide si

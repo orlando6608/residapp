@@ -21,11 +21,11 @@
     La clasificación inicial organiza la atención; no constituye un diagnóstico.
 </div>
 
-@if (Model.Count == 0)
+@if (ViewData.ModelState.IsValid && Model.Count == 0)
 {
     <p class="estado-vacio">No hay eventos prioritarios abiertos.</p>
 }
-else
+else if (Model.Count > 0)
 {
     @* En pantallas estrechas, una tarjeta pulsable por evento en lugar de la tabla (directrices-pwa-movil.md,
        sección 2). *@

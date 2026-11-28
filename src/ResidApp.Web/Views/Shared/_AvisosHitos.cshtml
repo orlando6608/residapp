@@ -3,7 +3,11 @@
 @model MilestoneWarningsModel
 @* DIR-11 (CJ, 2026-10-07, 4.1 C): aviso al equipo responsable de los hitos del proceso a punto de pasar de plazo o ya pasados y sin hacer.
    Solo los de su perfil, con el residente enlazado a su ficha; sin contenido clínico. *@
-@if (Model.Items is { Count: > 0 } items)
+@if (Model.Items is null)
+{
+    <p class="alert alert-warning mt-3">Ahora mismo no se pueden mostrar los avisos de hitos fuera de plazo o a punto de vencer.</p>
+}
+else if (Model.Items is { Count: > 0 } items)
 {
     var vencidos = items.Count(i => i.Status == MilestoneStatus.FueraDePlazo);
     <section class="alert @(vencidos > 0 ? "alert-danger" : "alert-warning") mt-3" aria-labelledby="avisos-hitos-titulo">

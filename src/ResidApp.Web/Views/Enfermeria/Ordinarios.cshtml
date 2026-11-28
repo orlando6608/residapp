@@ -70,7 +70,7 @@
     }
 }
 
-@if (Model.TotalCount == 0)
+@if (ViewData.ModelState.IsValid && Model.TotalCount == 0)
 {
     <p class="estado-vacio">No hay eventos ordinarios abiertos.</p>
 }

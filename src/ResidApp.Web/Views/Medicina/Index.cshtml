@@ -23,8 +23,7 @@
         <a asp-action="Escalados" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h6 card-title d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2"><partial name="_Icono" model='"escalados"' />Escalados y eventos propios</h2>
-                <span class="cifra">@Model.Escalados</span>
-                <span class="text-body-secondary">@(Model.Escalados == 1 ? "escalado de Enfermería o evento propio por valorar" : "escalados de Enfermería o eventos propios por valorar")</span>
+                <partial name="_CifraFicha" model='new ResidApp.Web.Models.CardFigure(Model.Escalados, "escalado de Enfermería o evento propio por valorar", "escalados de Enfermería o eventos propios por valorar")' />
             </div>
         </a>
     </div>
@@ -32,8 +31,7 @@
         <a asp-action="Protocolos" class="card text-decoration-none h-100 @(Model.Protocolos > 0 ? "border-start border-4 border-danger" : "")">
             <div class="card-body">
                 <h2 class="h6 card-title d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2"><partial name="_Icono" model='"protocolos"' />Protocolos urgentes</h2>
-                <span class="cifra @(Model.Protocolos > 0 ? "text-danger" : "")">@Model.Protocolos</span>
-                <span class="text-body-secondary">@(Model.Protocolos == 1 ? "protocolo urgente activo" : "protocolos urgentes activos")</span>
+                <partial name="_CifraFicha" model='new ResidApp.Web.Models.CardFigure(Model.Protocolos, "protocolo urgente activo", "protocolos urgentes activos", Urgent: true)' />
             </div>
         </a>
     </div>
@@ -41,8 +39,7 @@
         <a asp-action="Seguimientos" class="card text-decoration-none h-100 @(Model.SeguimientosVencidos > 0 ? "border-start border-4 border-danger" : "")">
             <div class="card-body">
                 <h2 class="h6 card-title d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2"><partial name="_Icono" model='"seguimientos"' />Seguimientos</h2>
-                <span class="cifra">@Model.Seguimientos</span>
-                <span class="text-body-secondary">@(Model.Seguimientos == 1 ? "seguimiento médico abierto" : "seguimientos médicos abiertos")</span>
+                <partial name="_CifraFicha" model='new ResidApp.Web.Models.CardFigure(Model.Seguimientos, "seguimiento médico abierto", "seguimientos médicos abiertos")' />
                 @if (Model.SeguimientosVencidos > 0)
                 {
                     <span class="d-block text-danger fw-semibold mt-1">@Model.SeguimientosVencidos @(Model.SeguimientosVencidos == 1 ? "pendiente" : "pendientes")</span>
@@ -54,8 +51,7 @@
         <a asp-action="Indicaciones" class="card text-decoration-none h-100 @(Model.IndicacionesConIncidencia > 0 ? "border-start border-4 border-danger" : Model.IndicacionesSinLeer > 0 ? "border-start border-4 border-warning" : "")">
             <div class="card-body">
                 <h2 class="h6 card-title d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2"><partial name="_Icono" model='"indicaciones"' />Indicaciones</h2>
-                <span class="cifra">@Model.Indicaciones</span>
-                <span class="text-body-secondary">@(Model.Indicaciones == 1 ? "indicación emitida" : "indicaciones emitidas")</span>
+                <partial name="_CifraFicha" model='new ResidApp.Web.Models.CardFigure(Model.Indicaciones, "indicación emitida", "indicaciones emitidas")' />
                 @if (Model.IndicacionesSinLeer > 0)
                 {
                     <span class="d-block text-warning-emphasis fw-semibold mt-1">@Model.IndicacionesSinLeer sin leer</span>
@@ -98,8 +94,7 @@
         <a asp-action="Comunicaciones" class="card text-decoration-none h-100">
             <div class="card-body">
                 <h2 class="h6 card-title d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2"><partial name="_Icono" model='"comunicaciones"' />Comunicaciones</h2>
-                <span class="cifra">@Model.Comunicaciones</span>
-                <span class="text-body-secondary">@(Model.Comunicaciones == 1 ? "comunicación familiar pendiente de publicar" : "comunicaciones familiares pendientes de publicar")</span>
+                <partial name="_CifraFicha" model='new ResidApp.Web.Models.CardFigure(Model.Comunicaciones, "comunicación familiar pendiente de publicar", "comunicaciones familiares pendientes de publicar")' />
             </div>
         </a>
     </div>

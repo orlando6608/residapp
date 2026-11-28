@@ -44,15 +44,15 @@ public sealed class MedicinaController(
         {
             ModelState.AddModelError(string.Empty, escalados.Error!.Message);
         }
-        var lista = indicaciones.Ok ? indicaciones.Value! : [];
+        var lista = indicaciones.Ok ? indicaciones.Value : null;
         return View(new MedicinaInicioViewModel(
-            escalados.Ok ? escalados.Value!.Count : 0, lista.Count,
-            lista.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura),
-            lista.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada),
-            seguimientos.Ok ? seguimientos.Value!.Count : 0,
+            escalados.Ok ? escalados.Value!.Count : null, lista?.Count,
+            lista?.Count(i => i.Indication.Status == MedicalIndicationStatus.PendienteLectura) ?? 0,
+            lista?.Count(i => i.Indication.Status == MedicalIndicationStatus.NoRealizada) ?? 0,
+            seguimientos.Ok ? seguimientos.Value!.Count : null,
             seguimientos.Ok ? seguimientos.Value!.Count(s => FollowUpDisplay.IsOverdue(s.DueDate, s.DueTime)) : 0,
-            protocolos.Ok ? protocolos.Value!.Count : 0, avisos.Ok ? avisos.Value : null,
-            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : 0));
+            protocolos.Ok ? protocolos.Value!.Count : null, avisos.Ok ? avisos.Value : null,
+            comunicaciones.Ok ? comunicaciones.Value!.Count(c => !FamilyCommunicationSchedule.IsPublished(c.ScheduledAt, c.PublishedEarlyAt, DateTimeOffset.UtcNow)) : null));
     }
 
     /// <summary>Comunicaciones familiares de los eventos del ámbito de Medicina (los que le escalaron o ella observó), con la hora a la que se
