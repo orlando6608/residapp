@@ -17,9 +17,10 @@ public sealed record DireccionInicioViewModel(IReadOnlyList<SupervisionUnitSumma
     public bool NothingPending => UrgentProtocols + PriorityWithoutAssessment + FollowUpsOverdue + EpisodesWithIndicationsNotDone == 0;
 }
 
-/// <summary>DIR-12: la lista de derivaciones y, si se pidieron las de episodios cerrados, el periodo elegido (From y To incluidos).</summary>
+/// <summary>DIR-12: la lista de derivaciones y, si se pidieron las de episodios cerrados, el periodo elegido (From y To incluidos). Failed: no se pudo
+/// leer, así que no se puede decir que no haya ninguna.</summary>
 public sealed record SupervisionReferralsViewModel(
-    IReadOnlyList<SupervisionReferral> Referrals, bool IncludeClosed = false, DateOnly? From = null, DateOnly? To = null)
+    IReadOnlyList<SupervisionReferral> Referrals, bool IncludeClosed = false, DateOnly? From = null, DateOnly? To = null, bool Failed = false)
 {
     public int Signed => Referrals.Count(r => r.ReportSigned);
     public int Unsigned => Referrals.Count - Signed;
@@ -50,9 +51,10 @@ public sealed class SupervisionFilter
     public bool IsEmpty => Tipo is null && Unidad is null;
 }
 
-/// <summary>DIR-03: la lista ya filtrada con las unidades para el desplegable (las del ámbito).</summary>
+/// <summary>DIR-03: la lista ya filtrada con las unidades para el desplegable (las del ámbito). Failed: no se pudo leer, así que no se puede decir que no
+/// haya episodios abiertos.</summary>
 public sealed record SupervisionPendingViewModel(
-    SupervisionPendingList List, SupervisionFilter Filter, IReadOnlyList<(Guid Id, string Name)> Units, DateOnly Today);
+    SupervisionPendingList List, SupervisionFilter Filter, IReadOnlyList<(Guid Id, string Name)> Units, DateOnly Today, bool Failed = false);
 
 /// <summary>DIR-08 a DIR-10: el periodo de los indicadores. Llega por GET (?desde=&amp;hasta=); una fecha vacía o mal formada
 /// toma el valor por defecto: los últimos 30 días, hoy incluido.</summary>

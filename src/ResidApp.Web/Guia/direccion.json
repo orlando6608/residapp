@@ -81,11 +81,12 @@
       "dudas": [
         { "p": "Un episodio sale con la marca «Residente suspendido».", "r": "El residente está suspendido por un ingreso hospitalario: el episodio sigue contando, pero no se puede registrar nada sobre él hasta que Administración reanude la atención." },
         { "p": "Un seguimiento escalado a Medicina no sale como seguimiento.", "r": "Aquí consta como escalado a Medicina. En **Indicadores e informe de actividad** sigue contando como seguimiento hasta que se cierra el episodio." },
-        { "p": "«No hay episodios abiertos.»", "r": "No hay ninguno abierto en las unidades de tu ámbito (con ese filtro, si lo hay)." },
+        { "p": "«No hay episodios abiertos.»", "r": "No hay ninguno abierto en las unidades de tu ámbito, con filtro o sin él. Si los hay pero ninguno cumple el filtro, pone «Ningún episodio coincide con la búsqueda.»." },
+        { "p": "«Ahora mismo no se puede mostrar la lista de pendientes.»", "r": "No se ha podido leer la lista, así que no se sabe si hay episodios abiertos. Mira el mensaje de arriba y vuelve a abrir la pantalla." },
         { "p": "Abro un episodio y vuelvo a la lista de pendientes sin ningún aviso.", "r": "El episodio ya no está abierto, no existe o no es de tu ámbito: la pantalla no distingue el motivo ni lo explica." }
       ],
       "rutas": ["Direccion/Pendientes", "Direccion/Episodio"],
-      "mensajes": ["No hay episodios abiertos."],
+      "mensajes": ["No hay episodios abiertos.", "Ningún episodio coincide con la búsqueda.", "Ahora mismo no se puede mostrar la lista de pendientes."],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
       "flujo": { "id": "direccion", "titulo": "Dirección Clínica mira el conjunto" }
     },
@@ -143,10 +144,11 @@
       ],
       "dudas": [
         { "p": "«No hay derivaciones en curso.»", "r": "Ningún episodio abierto de tu ámbito tiene protocolo urgente. Marca la casilla de cerrados para ver las de un periodo." },
+        { "p": "«Ahora mismo no se pueden mostrar las derivaciones.»", "r": "No se ha podido leer la lista, así que no se sabe si hay alguna derivación. Mira el mensaje de arriba y vuelve a abrir la pantalla." },
         { "p": "El informe aparece «sin firmar».", "r": "Lo firma quien activó el protocolo (Enfermería o Medicina). Dirección solo ve que está pendiente." }
       ],
       "rutas": ["Direccion/Derivaciones", "Direccion/Episodio"],
-      "mensajes": ["No hay derivaciones en curso."],
+      "mensajes": ["No hay derivaciones en curso.", "Ahora mismo no se pueden mostrar las derivaciones."],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
       "flujo": { "id": "urgencia", "titulo": "Si es urgente: protocolo y derivación" }
     },
@@ -171,13 +173,15 @@
       "dudas": [
         { "p": "«Ese comunicado ya estaba publicado.»", "r": "Otra persona (Administración, o la hora del centro) lo publicó antes. Vuelve a la lista." },
         { "p": "«No se puede acceder a ese comunicado.»", "r": "El comunicado no es de tu ámbito." },
-        { "p": "Quiero cambiar un comunicado que ya se publicó.", "r": "Ya no se edita: se publica una corrección o, en casos excepcionales, se retira (ver DIR-06)." }
+        { "p": "Quiero cambiar un comunicado que ya se publicó.", "r": "Ya no se edita: se publica una corrección o, en casos excepcionales, se retira (ver DIR-06)." },
+        { "p": "«Ahora mismo no se pueden mostrar los comunicados a la familia.»", "r": "No se ha podido leer la lista, así que no se sabe si hay comunicados; tampoco sale la tabla «Frecuencia y estado por unidad». Mira el mensaje de arriba y vuelve a abrir la pantalla." }
       ],
       "rutas": ["Direccion/Comunicados", "Direccion/PublicarComunicado"],
       "mensajes": [
         "Comunicado publicado antes de su hora. Queda en la auditoría.",
         "Ese comunicado ya estaba publicado.",
-        "No se puede acceder a ese comunicado."
+        "No se puede acceder a ese comunicado.",
+        "Ahora mismo no se pueden mostrar los comunicados a la familia."
       ],
       "manual": { "id": "supervision-direccion", "titulo": "Supervisión operativa por unidad" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }

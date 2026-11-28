@@ -1,9 +1,9 @@
 @using ResidApp.Application.UseCases
 @using ResidApp.Domain.Enfermeria
 @using ResidApp.Web.Models
-@model IReadOnlyList<FamilyCommunicationStatusView>
+@model IReadOnlyList<FamilyCommunicationStatusView>?
 @* Lista de comunicados a la familia con «Publicar ahora», de Administración y de Dirección Clínica (CJ, 2026-10-10). Las acciones
-   (PublicarComunicado) son las del controlador actual. *@
+   (PublicarComunicado) son las del controlador actual. Sin lista (null) es que no se ha podido leer. *@
 @if (TempData["Mensaje"] is string mensaje)
 {
     <div class="alert alert-success" role="status">@mensaje</div>
@@ -14,7 +14,11 @@
 }
 <div asp-validation-summary="All" class="text-danger"></div>
 
-@if (Model.Count == 0)
+@if (Model is null)
+{
+    <p class="text-muted">Ahora mismo no se pueden mostrar los comunicados a la familia.</p>
+}
+else if (Model.Count == 0)
 {
     <p class="estado-vacio">No hay comunicados a la familia en los últimos @FamilyCommunicationPublicationApplicationService.WindowDays días, ni anteriores que la familia todavía vea.</p>
 }

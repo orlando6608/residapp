@@ -41,7 +41,11 @@
     <div class="form-text">Sin marcar la casilla solo salen las derivaciones de episodios abiertos. Sin fechas, los últimos 30 días.</div>
 </form>
 
-@if (Model.Referrals.Count == 0)
+@if (Model.Failed)
+{
+    <p class="text-muted">Ahora mismo no se pueden mostrar las derivaciones.</p>
+}
+else if (Model.Referrals.Count == 0)
 {
     <p class="estado-vacio">@(Model.IncludeClosed ? "No hay derivaciones en curso ni de episodios cerrados en ese periodo." : "No hay derivaciones en curso.")</p>
 }

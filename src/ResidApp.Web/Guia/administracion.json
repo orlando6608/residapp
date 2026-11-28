@@ -1114,13 +1114,15 @@
       "dudas": [
         { "p": "«Ese comunicado ya estaba publicado.»", "r": "Se publicó a su hora o lo adelantó otra persona. Vuelve a la lista." },
         { "p": "«No se puede acceder a ese comunicado.»", "r": "El comunicado no es de tu ámbito." },
-        { "p": "Quiero cambiar un comunicado ya publicado.", "r": "Ya no se edita: se publica una corrección o, en casos excepcionales, se retira (ver ADM-35)." }
+        { "p": "Quiero cambiar un comunicado ya publicado.", "r": "Ya no se edita: se publica una corrección o, en casos excepcionales, se retira (ver ADM-35)." },
+        { "p": "«Ahora mismo no se pueden mostrar los comunicados a la familia.»", "r": "No se ha podido leer la lista, así que no se sabe si hay comunicados. Mira el mensaje de arriba y vuelve a abrir la pantalla." }
       ],
       "rutas": ["Administracion/Comunicados", "Administracion/PublicarComunicado"],
       "mensajes": [
         "Comunicado publicado antes de su hora. Queda en la auditoría.",
         "Ese comunicado ya estaba publicado.",
-        "No se puede acceder a ese comunicado."
+        "No se puede acceder a ese comunicado.",
+        "Ahora mismo no se pueden mostrar los comunicados a la familia."
       ],
       "manual": { "id": "familiares-administracion", "titulo": "Familiares, autorizaciones y contacto urgente" },
       "flujo": { "id": "familia", "titulo": "La familia, informada" }
